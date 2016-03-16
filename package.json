@@ -1,0 +1,15 @@
+{
+  "name": "ZED.CWT.VideoSiteTool",
+  "version": "0.0.0",
+  "private": true,
+  "main": "Trigger.js",
+  "scripts": {
+    "start": "electron Trigger"
+  },
+  "devDependencies": {
+    "electron-prebuilt": "^0.36.8"
+  },
+  "dependencies": {
+    "@zed.cwt/zedquery": "^0.2.6"
+  }
+}
