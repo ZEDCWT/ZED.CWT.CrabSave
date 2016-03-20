@@ -4,6 +4,7 @@ Root = __dirname,
 ZED = require('@zed.cwt/zedquery'),
 
 FS = require('fs'),
+Path = require('path'),
 
 Setting = require('./Setting'),
 
@@ -13,7 +14,14 @@ BrowserWindow = Electron.BrowserWindow,
 
 StoredWindow,
 
-Create = function()
+Common = function(Q,W,P)
+{
+	P = ZED.invokeProp('preventDefault')
+	Q.webContents.on('new-window',P)
+		.on('will-navigate',P)
+},
+
+Create = function(ID)
 {
 	var
 	Window = new BrowserWindow(
@@ -22,18 +30,21 @@ Create = function()
 		height : 600
 	});
 
-	Setting.Save()
+	StoredWindow = Window
+
+	Common(Window)
 
 	Window
 		.on('resize',function()
 		{
 			Window.getSize()
+			Setting.Save()
 		})
 		.on('closed',function()
 		{
 			StoredWindow = undefined
 		})
-		.loadURL('file://' + Root + '/Outer/Rainbow.html',
+		.loadURL('file://' + Path.join(Root,'Outer/Rainbow.html'),
 		{
 			userAgent : Setting.Config.UA
 		})
@@ -42,7 +53,7 @@ Create = function()
 App.on('ready',Create)
 	.on('activate',function()
 	{
-		StoredWindow || Create()
+		StoredWindow || Create('Main')
 	})
 	.on('window-all-closed',function()
 	{
@@ -51,6 +62,9 @@ App.on('ready',Create)
 
 ZED.Merge(global,
 {
-	Setting : Setting,
-	Config : Setting.Config
+	Pegasus :
+	{
+		Setting : Setting,
+		Config : Setting.Config
+	}
 })

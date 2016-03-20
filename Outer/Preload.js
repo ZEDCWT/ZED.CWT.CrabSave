@@ -1,0 +1,1 @@
+require('@zed.cwt/jquery'),ZEDQuery=require('@zed.cwt/zedquery')

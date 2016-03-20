@@ -1,4 +1,4 @@
-~function(window)
+~function()
 {
 	var
 	NAME = 'VideoSiteTool',
@@ -10,7 +10,7 @@
 	x00 = 0x00,
 	x01 = 0x01,
 	x02 = 0x02,
-	//x03 = 0x03,
+	x03 = 0x03,
 	x04 = 0x04,
 	x05 = 0x05,
 	//x06 = 0x06,
@@ -19,12 +19,12 @@
 	//x09 = 0x09,
 	x0A = 0x0A,
 	//x0B = 0x0B,
-	//x0C = 0x0C,
+	x0C = 0x0C,
 	x0D = 0x0D,
 	//x0E = 0x0E,
 	//x0F = 0x0F,
 	//x10 = 0x10,
-	x13 = 0x13,
+	//x13 = 0x13,
 	x14 = 0x14,
 	//x16 = 0x16,
 	//x18 = 0x18,
@@ -38,6 +38,7 @@
 	Infinity = x01 / x00,
 	NaN = x00 / x00,
 	EmptyString = '',
+	StringSpace = ' ',
 	StringDot ='.',
 	StringSolidus = '/',
 	//StringColon = ':',
@@ -54,10 +55,9 @@
 
 
 
-	$ = window.jQuery = require('./JQuery'),
 	ZED = require('@zed.cwt/zedquery'),
 	CSS = ZED.CSS,
-	//CSSMulti = ZED.CSSMulti,
+	CSSMulti = ZED.CSSMulti,
 	Mark = ZED.Mark,
 	__ = ZED.__,
 	curry = ZED.curry,
@@ -69,34 +69,61 @@
 	last = ZED.last,
 	compose = ZED.compose,
 	pipe = ZED.pipe,
+	flip = ZED.flip,
+	bind = ZED.bind_,
+	call = ZED.call_,
+	apply = ZED.apply_,
+	constructN = ZED.constructN,
+	binary = ZED.binary,
 	identity = ZED.identity,
 	path = ZED.path,
+	add = ZED.add,
+	max = ZED.max,
+	maxBy = ZED.maxBy,
+	min = ZED.min,
+	args = ZED.args,
+	nthArg = ZED.nthArg,
+	has = ZED.has,
+	prop = ZED.prop,
+	propSatisfies = ZED.propSatisfies,
+	objOf = ZED.objOf,
 	trim = ZED.trim,
+	test = ZED.test,
+	replace = ZED.replace,
 	propEq = ZED.propEq,
+	all = ZED.all,
 	when = ZED.when,
+	unless = ZED.unless,
 	iif = ZED.iif,
 	find = ZED.find,
 	range = ZED.range,
-	isDate = ZED.isDate,
+	replaceList = ZED.replaceList,
 	isFunction = ZED.isFunction,
+	isNumber = ZED.isNumber,
+	isDate = ZED.isDate,
+	Map = ZED.Map,
 	Reduce = ZED.Reduce,
 	Merge = ZED.Merge,
 	ReduceToObject = ZED.ReduceToObject,
 	Args = ZED.Args,
 	KeyGen = ZED.KeyGen,
 	Code = ZED.Code,
-	PageToken = ZED.PageToken,
+	PageToken = Code.PageToken,
 	DateToString = ZED.DateToString,
 	//Storage = ZED.Storage,
 	URLBuild = ZED.URLBuild,
 	Lang = ZED.Lang(),
 	//Select = ZED.Select,
 	Preference = ZED.Preference,
-	Logger = ZED.Logger,
 	Tips = compose(ZED.Tips,Lang),
 	EazyLog = ZED.EazyLog,
 	Replace = ZED.Replace,
 
+	$ = ZED.jQuery,
+	window = ZED.global,
+
+	WhenEnter = when(propEq('keyCode',KeyEnter)),
+	TipsAlways = compose(binary(compose)(Tips),always),
 
 
 	JSON = window.JSON,
@@ -111,6 +138,7 @@
 
 
 
+	Number = window.Number,
 	Date = window.Date,
 
 	Math = window.Math,
@@ -147,11 +175,13 @@
 
 	//mousedown = 'mousedown',
 	click = 'click',
+	keyup = 'keyup',
+	eventInput = tagInput,
 
 	color$ = '#2672EC',
 	colorFill = '#F7F7F7',
 	colorStroke = '#5A5A5A',
-	//colorShadow = '#222',
+	colorShadow = '#222',
 
 	ClassPrefix = 'ZED',
 	SelectorPrefix = StringDot + ClassPrefix,
@@ -171,14 +201,11 @@
 
 
 
-	BestQulity = function(Q,T)
+	Best = function(Q)
 	{
-		T = T || attrWidth
-		return reduce(function(D,V)
-		{
-			return D && V[T] < D[T] ? D : V
-		},EmptyObject,Q)
+		return reduce(maxBy(prop(Q)),objOf(Q,-Infinity))
 	},
+	BestQulity = Best(attrWidth),
 
 	PropUpdate = function(Q,K)
 	{
@@ -191,11 +218,11 @@
 		has(F,D) && V(D[F])
 	}),
 
-	FriendlyDate = function(Q)
-	{
-		isDate(Q) || (Q = new Date(Q))
-		return DateToString(Q).substr(x00,x13)
-	},
+	FriendlyDate = pipe
+	(
+		unless(isDate,constructN(x01,Date)),
+		binary(DateToString)('%YYYY%.%MM%.%DD%.%HH%.%NN%.%SS%')
+	),
 
 
 
@@ -236,7 +263,7 @@
 		RequestLogger[RequestTotalKey](++RequestState[RequestTotalKey])
 		A = $.ajax(
 		{
-			url : Q.U,
+			url : test(/\w+:\/\//,Q.U) ? Q.U : Protocol + Q.U,
 			type : Q.T || (Q.D ? RequestPOST : RequestGET),
 			data : Q.D,
 			dataType : 'text',
@@ -268,6 +295,7 @@
 		},RequestTimeout)
 		return A
 	},
+	API3 = curry(API,x03),
 
 
 
@@ -284,6 +312,7 @@
 	),EmptyString),
 	LangInitFail = Lang('Failed to initialize info., please try again',EmptyString),
 	LangInitError = Lang('Data got, though, not as expected'),
+	LangPageError = Lang('Failed to get page data, you may want to try again'),
 
 	LangInputURL = Lang('Input URL',EmptyString),
 	LangPageSize = Lang('Page size',EmptyString),
@@ -309,35 +338,22 @@
 	PanelInfo = ShowByRock(IDInfo),
 	PanelList = ShowByRock(IDList),
 
+	ScrollWidth = x0C,
+	MainPercent = .75,
+	MainMin = 3E2,
+	MainWidth,
+	MainMargin = x14,
+	Padding = x04,
+	TwicePadding = x02 * Padding,
+	ViewCardWidth = 2E2,
+
+	BoxShadow = 'box-shadow',
+	DefaultBoxShadow = CSSMulti(BoxShadow,'1px 1px 5px ' + colorShadow),
 
 
-	Config = Remote.getGlobal('Config'),
-
-
-
-	GlobalURL = EmptyString,
-	GlobalPageSizeKey = KeyGen(),
-	GlobalOrderKey = KeyGen(),
-	GlobalOrderASC = Mark(),
-	GlobalOrderDESC = Mark(),
-	Global = ReduceToObject
-	(
-		GlobalPageSizeKey,x1E,
-		GlobalOrderKey,GlobalOrderDESC
-	),
-
-	GoogleAPIKey = 'AIzaSyA_ltEFFYL4E_rOBYkQtA8aKHnL5QR_uMA',
-	GoogleAPIDomain = '.googleapis.com/',
-	GoogleAPIDomainWWW = 'www' + GoogleAPIDomain,
-	GoogleAPIYoutube = GoogleAPIDomainWWW + 'youtube/v3/',
-	GoogleAPIYoutubeChannel = URLBuild(ProtocolSecurity,GoogleAPIYoutube,'channels?part=contentDetails&id=',undefined,'&key=',GoogleAPIKey),
-	GoogleAPIYoutubeChannelFromUser = URLBuild(ProtocolSecurity,GoogleAPIYoutube,'channels?part=contentDetails&forUsername=',undefined,'&key=',GoogleAPIKey),
-	GoogleAPIYoutubePlaylist = URLBuild(ProtocolSecurity,GoogleAPIYoutube,'playlistItems?part=snippet%2CcontentDetails&playlistId=',undefined,'&pageToken=',undefined,'&maxResults=',undefined,'&key=',GoogleAPIKey),
-	items = 'items',
-	snippet = 'snippet',
-	position = 'position',
-	contentDetails = 'contentDetails',
-	pageInfo = 'pageInfo',
+	Pegasus = Remote.getGlobal('Pegasus'),
+	Setting = Pegasus.Setting,
+	Config = Pegasus.Config,
 
 
 
@@ -350,7 +366,7 @@
 	NailInitKey = KeyGen(),
 	NailKey = KeyGen(),
 	NailKey = KeyGen(),
-	NailInitFailDefault = compose(Tips,always(LangInitFail)),
+	NailInitFailDefault = TipsAlways(LangInitFail),
 
 
 
@@ -361,6 +377,7 @@
 	ListCountKey = KeyGen(),
 	ListCardKey = KeyGen(),
 	ListCardIDKey = KeyGen(),//Optional
+	ListCardIDDisplayKey = KeyGen(),//Optional
 	ListCardNoKey = KeyGen(),
 	ListCardImgKey = KeyGen(),
 	ListCardTitleKey = KeyGen(),
@@ -372,37 +389,65 @@
 	_ListOrderKey = KeyGen(),
 	LangListHint = Lang(Replace
 	(
-		'Page ,$0$, / ,$1$, | ,$2$, ~ ,$3$, | ,$4$, of ,$5$, ,$6$',
+		'Page ,$0$, / ,$1$, | ,$2$, ~ ,$3$, | ,$4$, in ,$5$, ,$6$',
 		ListPageKey,ListPageTotalKey,
 		_ListFromKey,_ListToKey,
 		_ListLengthKey,ListCountKey,
 		_ListOrderKey
 	),EmptyString),
-	ListStatePanel = $(div),
-	ListLogger = Logger(Lang(LangListHint),ListStatePanel,True),
+	PanelListLogger = $(div),
+	ListLogger = EazyLog(Lang(LangListHint),PanelListLogger,True),
 	ListPagerNow,
 	ListPagerTotal,
 	ListPagerGet,
 	ListPagerID,
-	ListIndicatorPanel = $(div),
-	ClassListIndicatorDisabled = KeyGen(),
-	ListIndicatorSingle = function(Q)
+	ClassListView = KeyGen(),
+	IDListIndicator = KeyGen(),
+	ListIndicatorPanel = ShowByRock(IDListIndicator),
+	ListIndicatorSingle = function(Q,N,P,D,R)
 	{
-		isFunction(Q) || (Q = always(Q))
-		ListIndicatorPanel.append()
+		isFunction(Q) || (Q = add(Q))
+		isFunction(N) || (N && (N = always(N)))
+		ListIndicatorPanel.append(D = $(div).append(R = $(span)).on(click,function()
+		{
+			ListPagerGet(ListPagerID,P)
+		}))
+		return function(Now,Total)
+		{
+			P = Q(Now,Total)
+			P === Now || P < x00 || Total < P ?
+				D.hide() :
+			(
+				R.text(N ? N(Now,Total) : P),
+				D.css('display',EmptyString)
+			)
+		}
 	},
 	ListIndicatorList = function(L,R)
 	{
-		L = range(L,R)
-
+		return compose(each(__,map(ListIndicatorSingle,range(L,R))),flip(apply),args)
 	},
-	ListIndicatorHead = ListIndicatorSingle(x00),
-	ListIndicatorPrev = ListIndicatorSingle(m01),
-	ListIndicatorLeft = ListIndicatorList(-x04,x00),
-	ListIndicatorPresent = ListIndicatorSingle(x00),
-	ListIndicatorRight = ListIndicatorList(x01,x05),
-	ListIndicatorNext = ListIndicatorSingle(x01),
-	ListIndicatorLast = ListIndicatorSingle(Infinity),
+	ListIndicator =
+	[
+		ListIndicatorSingle(always(x00),'0<<'),
+		ListIndicatorSingle(m01,'<'),
+		ListIndicatorList(-x04,x00),
+		function(R)
+		{
+			ListIndicatorPanel.append(R = ShowByRock(ClassInput,True,input))
+			R.on(eventInput,function(K,T)
+			{
+				test(/\D/,T = R.val()) && R.val(replace(/\D/,EmptyString,T))
+			}).on(keyup,WhenEnter(function()
+			{
+				ListPagerGet(ListPagerID,R.val())
+			}))
+			return bind(R.val,R)
+		}(),
+		ListIndicatorList(x01,x05),
+		ListIndicatorSingle(x01,'>'),
+		ListIndicatorSingle(nthArg(x01),compose(add('>>'),nthArg(x01)))
+	],
 	ListPager = function(Now,Total,Get,ID)
 	{
 		ListPagerNow = Now
@@ -410,19 +455,17 @@
 		ListPagerGet = Get
 		ListPagerID = ID
 
-		ListIndicatorLeft(Now)
-		ListIndicatorPresent(Now)
-		ListIndicatorRight(Now)
-		ListIndicatorLast(Total)
+		each(call(__,Now,Total),ListIndicator)
 	},
+	ListLast,
 	List = function(Q,Get,ID)
 	{
 		var
 		R = $(div),
-		CardView = $(div),
+		CardView = ShowByRock(ClassListView,True),
 		CardData = Q[ListCardKey],
-		From = head(CardData)[ListCardNoKey],
-		To = last(CardData)[ListCardNoKey];
+		From = path([ListCardNoKey],head(CardData)) || '-',
+		To = path([ListCardNoKey],last(CardData)) || '-';
 
 		--Q[ListPageTotalKey]
 
@@ -431,7 +474,7 @@
 		(
 			_ListFromKey,From,
 			_ListToKey,To,
-			_ListLengthKey,To - From + x01,
+			_ListLengthKey,all(isNumber,[From,To]) ? To - From + x01 : x00,
 			_ListOrderKey,Lang(Q[ListOrderKey] ? WordASC : WordDESC)
 		))
 
@@ -441,7 +484,12 @@
 			(
 				$(fieldset).append
 				(
-					$(legend).text(V[ListCardNoKey] + (V[ListCardIDKey] ? ' | ' + V[ListCardIDKey] : EmptyString)),
+					$(legend).text(V[ListCardNoKey] +
+					(
+						V[ListCardIDKey] ?
+						' | ' + (V[ListCardIDDisplayKey] ? V[ListCardIDDisplayKey](V[ListCardIDKey]) : V[ListCardIDKey]) :
+						EmptyString
+					)),
 					$(img).attr(attrSrc,V[ListCardImgKey]).attr(title,V[ListCardTitleKey]),
 					$(div).text(V[ListCardTitleKey]),
 					$(div).text(V[ListCardAuthorKey]),
@@ -452,11 +500,47 @@
 
 		ListPager(Q[ListPageKey],Q[ListPageTotalKey],Get,ID)
 
-		R.append(ListLogger,CardView,ListIndicatorPanel)
+		R.append(PanelListLogger,CardView,ListIndicatorPanel)
+		ListLast && ListLast.detach()
+		PanelList.append(ListLast = R)
 	},
-	ListFailed = function()
-	{
-	},
+	ListFailed = TipsAlways(LangPageError),
+
+
+
+	//	Settings and others
+	GlobalURL = EmptyString,
+	GlobalPageSizeKey = KeyGen(),
+	GlobalOrderKey = KeyGen(),
+	GlobalOrderASC = Mark(),
+	GlobalOrderDESC = Mark(),
+	Global = ReduceToObject
+	(
+		GlobalPageSizeKey,x1E,
+		GlobalOrderKey,GlobalOrderDESC
+	),
+
+	//	URLs
+	www = 'www',
+	com = compose(add(__,'.com/'),add(StringDot)),
+	//		Youtube
+	GoogleAPIKey = 'AIzaSyA_ltEFFYL4E_rOBYkQtA8aKHnL5QR_uMA',
+	GoogleAPIDomain = com('googleapis'),
+	GoogleAPIDomainWWW = www + GoogleAPIDomain,
+	GoogleAPIYoutube = GoogleAPIDomainWWW + 'youtube/v3/',
+	GoogleAPIYoutubeChannel = URLBuild(ProtocolSecurity,GoogleAPIYoutube,'channels?part=contentDetails&id=',undefined,'&key=',GoogleAPIKey),
+	GoogleAPIYoutubeChannelFromUser = URLBuild(ProtocolSecurity,GoogleAPIYoutube,'channels?part=contentDetails&forUsername=',undefined,'&key=',GoogleAPIKey),
+	GoogleAPIYoutubePlaylist = URLBuild(ProtocolSecurity,GoogleAPIYoutube,'playlistItems?part=snippet%2CcontentDetails&playlistId=',undefined,'&pageToken=',undefined,'&maxResults=',undefined,'&key=',GoogleAPIKey),
+	items = 'items',
+	snippet = 'snippet',
+	position = 'position',
+	contentDetails = 'contentDetails',
+	pageInfo = 'pageInfo',
+
+	//		Bilibili
+	BilibiliDomain = com('bilibili'),
+	BilibiliSpace = 'space' + BilibiliDomain,
+	BilibiliSubmit = URLBuild(BilibiliSpace,'ajax/member/getSubmitVideos?mid=',undefined,'&page=',undefined,'&pagesize=',undefined),
 
 
 
@@ -469,14 +553,14 @@
 
 		API
 		(
-			GoogleAPIYoutubePlaylist(ID,PageToken(PageSize * (Page || x00)),PageSize),
+			GoogleAPIYoutubePlaylist(ID,PageToken(PageSize * (Page = Page || x00)),PageSize),
 			function(Q)
 			{
 				var
 				Total = path([pageInfo,'totalResults'],Q),
 				R = ReduceToObject
 				(
-					ListPageKey,floor(path([items,x00,snippet,position],Q) / PageSize),
+					ListPageKey,Page,
 					ListPageTotalKey,ceil(Total / PageSize),
 					ListCountKey,Total,
 					ListCardKey,map(function(V)
@@ -495,7 +579,7 @@
 
 				List(R,YoutubePlaylist,ID)
 			},
-			function(){}
+			ListFailed
 		)
 	},
 	YoutubeInitDeal = pipe
@@ -509,15 +593,45 @@
 			x01
 		)
 	),
-	YoutubeInit = curry(function(URL,ID)
+	YoutubeInit = binary(compose(API3(__,YoutubeInitDeal,NailInitFailDefault),call)),
+
+	//		Bilibili
+	BilibiliSubmitList = function(ID,Page)
 	{
+		var
+		PageSize = Global[GlobalPageSizeKey];
+
+		Page = Number(Page) || x00
 		API
 		(
-			URL(ID),
-			YoutubeInitDeal,
-			NailInitFailDefault
+			BilibiliSubmit(ID,x01 + Page,PageSize),
+			function(Q,R)
+			{
+				Q = Q.data || EmptyObject
+				R = ReduceToObject
+				(
+					ListPageKey,Page,
+					ListPageTotalKey,Q.pages,
+					ListCountKey,Q.count,
+					ListCardKey,Map(Q.vlist,function(F,V)
+					{
+						return ReduceToObject
+						(
+							ListCardNoKey,F + Page * PageSize,
+							ListCardIDKey,V.aid,
+							ListCardIDDisplayKey,add('av'),
+							ListCardImgKey,V.pic,
+							ListCardTitleKey,V[title],
+							ListCardAuthorKey,V.author,
+							ListCardDateKey,replaceList([StringSpace,'T',/$/,'+0800'],V.created)
+						)
+					})
+				)
+				List(R,BilibiliSubmitList,ID)
+			},
+			ListFailed
 		)
-	}),
+	},
 
 
 
@@ -545,10 +659,7 @@
 		(
 			NailNameKey,LangUserVideo,
 			NailIDKey,/space[^\/]+\/(\d+)/i,
-			NailInitKey,function()
-			{
-
-			}
+			NailInitKey,BilibiliSubmitList
 		)]
 	)],
 
@@ -561,10 +672,7 @@
 		T,F;
 
 		GlobalURL = InputURL.val()
-		Tool = find(function(V)
-		{
-			return V[ToolJudgeKey].test(GlobalURL)
-		},ToolBox) || ToolBox[x00]
+		Tool = find(propSatisfies(test(__,GlobalURL),ToolJudgeKey),ToolBox) || ToolBox[x00]
 		Tool = Tool[ToolNailKey]
 		for (F = Tool.length;F;)
 			if (T = GlobalURL.match(Tool[--F][NailIDKey]))
@@ -573,26 +681,50 @@
 		Tool[F][NailInitKey](T)
 	};
 
-	CSS(NAME,function(W,H)
+	CSS(NAME,function(W,H,CardWidth)
 	{
+		W -= ScrollWidth
+		MainWidth = min(max(MainMin,MainPercent * W),W)
+		CardWidth = MainWidth / max(x01,ceil(MainWidth / (ViewCardWidth + TwicePadding))) - TwicePadding
 		return Replace
 		(
+			'*{font-weight:bold;/b/}' +
 			'html,body{margin:0;padding:0;background:/cf/;color:/cs/;text-align:center;font-size:14px}' +
+			'input,textarea{color:/cs/;max-width:/r/px}' +
 			'input:focus{outline:1px solid /c$/}' +
+			'fieldset{min-width:0}' +
 
-			'#/R/{margin:20px 20px 0}' +
+			'#/R/{/db/;margin-top:20px;width:/r/px;word-break:break-word}' +
 			'#/R/>div>*{margin:10px 0}' +
-			'#/E/ /P/{display:inline-block;width:80%;text-align:center}' +
-			'#/U/{width:75%;border-radius:4px 0 0 4px}' +
-			'#/G/{display:inline-block;border:0;border-radius:0 4px 4px 0}',
+			'#/E/ /P/{text-align:center}' +
+			'#/U/{width:100%}' +
+			'./L/ fieldset{/db/;margin:/p/px;padding:/p/px;width:/c/px;border:0;text-align:left;vertical-align:top;/r4/;/s/}' +
+			'./L/ legend{text-align:left}' +
+			'./L/ img{width:100%}' +
+			'#/I/ div,#/I/ input{/db/;margin:/p/px;padding:0 13px;line-height:30px;/r4/;/s/}' +
+			'#/I/ div{cursor:pointer}' +
+			'#/I/ input{width:80px;text-align:center}' +
+			'#/I/ div:hover{background:/c$/;color:/cf/}',
 			StringSolidus,
 			{
 				P : SelectorPreference,
 
 				R : IDRainbow,
+				r : MainWidth,
 				E : IDPref,
 				U : IDURL,
 				G : IDInit,
+
+				L : ClassListView,
+				c : CardWidth,
+				I : IDListIndicator,
+
+				m : MainMargin,
+				p : Padding,
+				db : 'display:inline-block',
+				r4 : CSSMulti('border-radius','4px'),
+				b : CSSMulti('box-sizing','border-box'),
+				s : DefaultBoxShadow,
 
 				c$ : color$,
 				cf : colorFill,
@@ -629,7 +761,7 @@
 	(
 		PanelPref.prepend
 		(
-			InputURL.keyup(when(propEq('keyCode',KeyEnter),GetList)),
+			InputURL.on(keyup,WhenEnter(GetList)),
 			ButtonInit.on(click,GetList)
 		),
 		PanelInfo,
@@ -638,18 +770,14 @@
 
 	$(function()
 	{
-		$('body').append(Rainbow)
+		$('body').addClass(ClassScroll).append(Rainbow)
 	})
 
 	ZED.Merge(window,
 	{
-		_ : ZED,
-		ZEDQuery : ZED
+		_ : ZED
 	})
 
-InputURL.val('https://www.youtube.com/user/kotorikun/videos')
-ZED.onError = function(E)
-{
-	console.error(E.stack)
-}
-}(window)
+InputURL.val('https://www.youtube.com/channel/UCNMIUvGvW35xL294jqY3cwg')
+ZED.onError = compose(console.error,prop('stack'))
+}()

@@ -56,6 +56,14 @@ declare module 'zedquery'
 		type
 		invokeProp
 		invoke
+		constructN
+		construct
+		bind_
+		call_
+		apply_
+		once
+		converge
+		juxt
 		defaultTo
 		chr
 		asc
@@ -68,11 +76,15 @@ declare module 'zedquery'
 		replaceList
 		split
 		join
+		reverse
 		empty
 		keys
+		keysIn
 		has
+		hasIn
 		prop
 		props
+		pluck
 		propSatisfies
 		propEq
 		propOr
@@ -81,12 +93,17 @@ declare module 'zedquery'
 		pathEq
 		pathOr
 		flip
+		nAry
+		unary
+		binary
 		nth
+		nthArg
 		first
 		head
 		last
 		slice
 		len
+		length_
 		init
 		tail
 		concat
@@ -97,7 +114,17 @@ declare module 'zedquery'
 		equals
 		eqBy
 		eqProps
+		and
+		both
+		or
+		either
 		not
+		complement
+		all
+		any
+		none
+		allPass
+		anyPass
 		negate
 		add
 		subtract
@@ -118,8 +145,11 @@ declare module 'zedquery'
 		gte
 		gte_
 		isGte
+		comparator
 		max
+		maxBy
 		min
+		minBy
 		when
 		unless
 		iif
@@ -192,15 +222,20 @@ declare module 'zedquery'
 		CHR(Q : string,Index? : number) : number
 		ASC(CharCode : number) : string
 
-
-
-		Code : Code
-
 		Range() : any
 		Range(Count : number) : number[]
 		Range(From : number,To : number) : number[]
 		Range(From : number,Step : number,To : number) : number[]
 		Range(Q : any) : any
+
+
+
+		Code : Code
+
+
+
+		Y(Outer : (Self : Function) => Function) : Function
+		y(Outer : (Self : Function) => Function) : Function
 
 
 
@@ -224,6 +259,7 @@ declare module 'zedquery'
 		Rnd<T>(Q : T[]) : T
 		RndName(Name : any) : string
 		RndRGB(Alpha? : boolean) : string
+		Shuffle<T>(Q : T[]) : T[]
 		KeyGen() : string
 		KeyGen(Q : boolean) : number
 
@@ -352,6 +388,12 @@ declare module 'zedquery'
 		FillRight(Q : number,Length : number) : string
 		Format(Q : number,Suffix? : number) : string
 		FormatSize(Q : number,Radix? : number,Mark? : string[]) : string
+
+
+
+		global : Window
+		jQuery : JQueryStatic
+
 		onError : (Error : Error) => any
 		Error : Error[]
 		Record :
@@ -399,12 +441,12 @@ declare module 'zedquery'
 
 	interface TimerBase
 	{
-			Min? : number
-			Max? : number
-			Time? : number
-			To? : number
-			Show? : (Q : TimerShow) => any
-			End : (Q : TimerBase) => any
+		Min? : number
+		Max? : number
+		Time? : number
+		To? : number
+		Show? : (Q : TimerShow) => any
+		End : (Q : TimerBase) => any
 	}
 
 	interface TimerShow
@@ -496,6 +538,11 @@ declare module 'zedquery'
 		BinBToSHA1(Q : CodeWord) : CodeWord
 
 
+
+		ROT5(Q : string) : string
+		ROT13(Q : string) : string
+		ROT18(Q : string) : string
+		ROT47(Q : string) : string
 
 		JSPackerEncode(Q : string) : string[]
 		JSPacker(Q : string,...Char : string[]) : string
