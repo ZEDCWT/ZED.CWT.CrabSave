@@ -5,8 +5,8 @@
 
 	undefined,
 	True = !undefined,
-	//False = !True,
-	//Null = null,
+	False = !True,
+	Null = null,
 	x00 = 0x00,
 	x01 = 0x01,
 	x02 = 0x02,
@@ -65,6 +65,7 @@
 	each = ZED.each,
 	map = ZED.map,
 	reduce = ZED.reduce,
+	nth = ZED.nth,
 	head = ZED.head,
 	last = ZED.last,
 	compose = ZED.compose,
@@ -74,6 +75,7 @@
 	call = ZED.call_,
 	apply = ZED.apply_,
 	constructN = ZED.constructN,
+	nAry = ZED.nAry,
 	binary = ZED.binary,
 	identity = ZED.identity,
 	path = ZED.path,
@@ -120,11 +122,14 @@
 	Replace = ZED.Replace,
 
 	$ = ZED.jQuery,
+	fn = $.fn,
+	jClick = fn.click,
+	jVal = fn.val,
 	window = ZED.global,
 
+	noary = nAry(x00),
 	WhenEnter = when(propEq('keyCode',KeyEnter)),
 	TipsAlways = compose(binary(compose)(Tips),always),
-
 
 	JSON = window.JSON,
 	JSONParse = JSON.parse,
@@ -151,6 +156,8 @@
 	Electron = require('electron'),
 	Remote = Electron.remote,
 
+	KeyboardJS = require('keyboardjs'),
+
 
 
 	div = '<div>',
@@ -169,6 +176,7 @@
 	attrSrc = 'src',
 	attrWidth = 'width',
 	attrHref = 'href',
+	attrStyle = 'style',
 	attrPlaceholder = 'placeholder',
 
 	//styleTransparent = 'transparent',
@@ -317,6 +325,8 @@
 	LangInputURL = Lang('Input URL',EmptyString),
 	LangPageSize = Lang('Page size',EmptyString),
 
+	LangTryPage = Lang('Try to get page $0$',EmptyString),
+
 	LangUserVideo = Lang('User videos',EmptyString),
 	LangChannelVideo = Lang('Channel videos',EmptyString),
 
@@ -370,13 +380,38 @@
 
 
 
+	//	Queue
+	DispatchStorage = {},
+	Dispatch = function(Q,R)
+	{
+		return isFunction(Q) ?
+		(
+			DispatchStorage[R = KeyGen()] = Q,
+			R
+		) : DispatchStorage[Q]
+	},
+	QueueStorage = {},
+	QueueStorageList = [],
+	Queue = function(ID,Action,Do,K)
+	{
+		K = ID + StringSpace + Action
+		return undefined === Do ?
+			QueueStorage[K] :
+			Do ?
+				(QueueStorage[K] = [ID,Action]) :
+				(delete QueueStorage[K])
+	},
+
+
+
 	//	List render
 	ListPageKey = KeyGen(),
 	ListPageTotalKey = KeyGen(),
 	ListOrderKey = KeyGen(),//FalseLike : DESC
 	ListCountKey = KeyGen(),
+	ListDispatchKey = KeyGen(),
 	ListCardKey = KeyGen(),
-	ListCardIDKey = KeyGen(),//Optional
+	ListCardIDKey = KeyGen(),
 	ListCardIDDisplayKey = KeyGen(),//Optional
 	ListCardNoKey = KeyGen(),
 	ListCardImgKey = KeyGen(),
@@ -397,29 +432,35 @@
 	),EmptyString),
 	PanelListLogger = $(div),
 	ListLogger = EazyLog(Lang(LangListHint),PanelListLogger,True),
-	ListPagerNow,
-	ListPagerTotal,
 	ListPagerGet,
 	ListPagerID,
+	ListPageDo = function(P)
+	{
+		Tips(Replace(Lang(LangTryPage),P))
+		ListPagerGet(ListPagerID,P)
+	},
 	ClassListView = KeyGen(),
 	IDListIndicator = KeyGen(),
 	ListIndicatorPanel = ShowByRock(IDListIndicator),
-	ListIndicatorSingle = function(Q,N,P,D,R)
+	ListIndicatorSingle = function(Q,N,P,J,D,R)
 	{
 		isFunction(Q) || (Q = add(Q))
 		isFunction(N) || (N && (N = always(N)))
 		ListIndicatorPanel.append(D = $(div).append(R = $(span)).on(click,function()
 		{
-			ListPagerGet(ListPagerID,P)
+			J && ListPageDo(P)
 		}))
 		return function(Now,Total)
 		{
 			P = Q(Now,Total)
 			P === Now || P < x00 || Total < P ?
-				D.hide() :
 			(
+				J = False,
+				D.hide()
+			) : (
+				J = True,
 				R.text(N ? N(Now,Total) : P),
-				D.css('display',EmptyString)
+				D.removeAttr(attrStyle)
 			)
 		}
 	},
@@ -438,11 +479,8 @@
 			R.on(eventInput,function(K,T)
 			{
 				test(/\D/,T = R.val()) && R.val(replace(/\D/,EmptyString,T))
-			}).on(keyup,WhenEnter(function()
-			{
-				ListPagerGet(ListPagerID,R.val())
-			}))
-			return bind(R.val,R)
+			}).on(keyup,WhenEnter(compose(ListPageDo,bind(noary(jVal),R))))
+			return bind(jVal,R)
 		}(),
 		ListIndicatorList(x01,x05),
 		ListIndicatorSingle(x01,'>'),
@@ -450,22 +488,36 @@
 	],
 	ListPager = function(Now,Total,Get,ID)
 	{
-		ListPagerNow = Now
-		ListPagerTotal = Total
 		ListPagerGet = Get
 		ListPagerID = ID
 
 		each(call(__,Now,Total),ListIndicator)
 	},
 	ListLast,
+	ListIndex = compose(unless(isNumber,always('-')),path([ListCardNoKey])),
+	ClassCardOn = KeyGen(),
+	CardSwitchStorage = [],
+	CardSwitch = function(R,ID,Action,C)
+	{
+		R = ZED(R)
+		Queue(ID,Action) && R.addClass(ClassCardOn)
+		CardSwitchStorage.push(C = function(Q)
+		{
+			undefined === Q && (Q = !Queue(ID,Action))
+			Queue(ID,Action,Q)
+			R[Q ? 'addClass' : 'RemoveClass'](ClassCardOn)
+		})
+		R.on(click,'img',noary(C))
+		return R
+	},
 	List = function(Q,Get,ID)
 	{
 		var
 		R = $(div),
 		CardView = ShowByRock(ClassListView,True),
 		CardData = Q[ListCardKey],
-		From = path([ListCardNoKey],head(CardData)) || '-',
-		To = path([ListCardNoKey],last(CardData)) || '-';
+		From = ListIndex(head(CardData)),
+		To = ListIndex(last(CardData));
 
 		--Q[ListPageTotalKey]
 
@@ -478,24 +530,21 @@
 			_ListOrderKey,Lang(Q[ListOrderKey] ? WordASC : WordDESC)
 		))
 
-		each(function(V)
+		CardSwitchStorage.splice(x00)
+		each(function(V,R)
 		{
 			CardView.append
 			(
-				$(fieldset).append
+				R = $(fieldset).append
 				(
-					$(legend).text(V[ListCardNoKey] +
-					(
-						V[ListCardIDKey] ?
-						' | ' + (V[ListCardIDDisplayKey] ? V[ListCardIDDisplayKey](V[ListCardIDKey]) : V[ListCardIDKey]) :
-						EmptyString
-					)),
+					$(legend).text(V[ListCardNoKey] +' | ' + (V[ListCardIDDisplayKey] ? V[ListCardIDDisplayKey](V[ListCardIDKey]) : V[ListCardIDKey])),
 					$(img).attr(attrSrc,V[ListCardImgKey]).attr(title,V[ListCardTitleKey]),
 					$(div).text(V[ListCardTitleKey]),
 					$(div).text(V[ListCardAuthorKey]),
 					$(div).text(FriendlyDate(V[ListCardDateKey]))
 				)
 			)
+			CardSwitch(R,V[ListCardIDKey],Q[ListDispatchKey])
 		},CardData)
 
 		ListPager(Q[ListPageKey],Q[ListPageTotalKey],Get,ID)
@@ -516,7 +565,7 @@
 	GlobalOrderDESC = Mark(),
 	Global = ReduceToObject
 	(
-		GlobalPageSizeKey,x1E,
+		GlobalPageSizeKey,5,//x1E,TODO
 		GlobalOrderKey,GlobalOrderDESC
 	),
 
@@ -563,11 +612,12 @@
 					ListPageKey,Page,
 					ListPageTotalKey,ceil(Total / PageSize),
 					ListCountKey,Total,
+					ListDispatchKey,YoutubeDispatch,
 					ListCardKey,map(function(V)
 					{
 						return ReduceToObject
 						(
-							ListCardNoKey,path([snippet,'position'],V),
+							ListCardNoKey,path([snippet,position],V),
 							ListCardIDKey,path([contentDetails,'videoId'],V),
 							ListCardImgKey,BestQulity(path([snippet,'thumbnails'],V))[url],
 							ListCardTitleKey,path([snippet,title],V),
@@ -594,6 +644,10 @@
 		)
 	),
 	YoutubeInit = binary(compose(API3(__,YoutubeInitDeal,NailInitFailDefault),call)),
+	YoutubeDispatch = Dispatch(function(ID,CB)
+	{
+
+	}),
 
 	//		Bilibili
 	BilibiliSubmitList = function(ID,Page)
@@ -613,6 +667,7 @@
 					ListPageKey,Page,
 					ListPageTotalKey,Q.pages,
 					ListCountKey,Q.count,
+					ListDispatchKey,BilibiliDispatch,
 					ListCardKey,Map(Q.vlist,function(F,V)
 					{
 						return ReduceToObject
@@ -632,6 +687,10 @@
 			ListFailed
 		)
 	},
+	BilibiliDispatch = Dispatch(function(ID,CB)
+	{
+
+	}),
 
 
 
@@ -693,14 +752,27 @@
 			'input,textarea{color:/cs/;max-width:/r/px}' +
 			'input:focus{outline:1px solid /c$/}' +
 			'fieldset{min-width:0}' +
+			'legend{padding:0}' +
 
 			'#/R/{/db/;margin-top:20px;width:/r/px;word-break:break-word}' +
 			'#/R/>div>*{margin:10px 0}' +
 			'#/E/ /P/{text-align:center}' +
 			'#/U/{width:100%}' +
-			'./L/ fieldset{/db/;margin:/p/px;padding:/p/px;width:/c/px;border:0;text-align:left;vertical-align:top;/r4/;/s/}' +
+			'./L/ fieldset' +
+			'{' +
+				'/db/;' +
+				'margin:/p/px;' +
+				'padding:/p/px;' +
+				'width:/c/px;' +
+				'border:solid transparent;' +
+				'border-width:0 0 10px;' +
+				'text-align:left;' +
+				'vertical-align:top;' +
+				'/r4/;/s/;' +
+			'}' +
 			'./L/ legend{text-align:left}' +
-			'./L/ img{width:100%}' +
+			'./L/ img{width:100%;cursor:pointer}' +
+			'./N/{border-color:/c$//i/}' +
 			'#/I/ div,#/I/ input{/db/;margin:/p/px;padding:0 13px;line-height:30px;/r4/;/s/}' +
 			'#/I/ div{cursor:pointer}' +
 			'#/I/ input{width:80px;text-align:center}' +
@@ -717,6 +789,7 @@
 
 				L : ClassListView,
 				c : CardWidth,
+				N : ClassCardOn,
 				I : IDListIndicator,
 
 				m : MainMargin,
@@ -725,6 +798,7 @@
 				r4 : CSSMulti('border-radius','4px'),
 				b : CSSMulti('box-sizing','border-box'),
 				s : DefaultBoxShadow,
+				i : '!important',
 
 				c$ : color$,
 				cf : colorFill,
@@ -768,8 +842,21 @@
 		PanelList
 	)
 
-	$(function()
+	$(function(T)
 	{
+		T = ListIndicatorPanel.children()
+		each(function(V)
+		{
+			KeyboardJS.bind(V[x01],Null,bind(noary(jClick),$(nth(V[x00],T))))
+		},[
+			[x00,'h'],
+			[x01,'j'],
+			[-x02,'k'],
+			[m01,'l']
+		])
+		KeyboardJS.bind('a',Null,compose(each(call(__,True)),always(CardSwitchStorage)))
+		KeyboardJS.bind('c',Null,compose(each(call(__,False)),always(CardSwitchStorage)))
+		KeyboardJS.watch()
 		$('body').addClass(ClassScroll).append(Rainbow)
 	})
 
@@ -778,6 +865,6 @@
 		_ : ZED
 	})
 
-InputURL.val('https://www.youtube.com/channel/UCNMIUvGvW35xL294jqY3cwg')
-ZED.onError = compose(console.error,prop('stack'))
+InputURL.val('http://space.bilibili.com/13046')
+ZED.onError = compose(bind(console.error,console),prop('stack'))
 }()

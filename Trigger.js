@@ -3,7 +3,6 @@ Root = __dirname,
 
 ZED = require('@zed.cwt/zedquery'),
 
-FS = require('fs'),
 Path = require('path'),
 
 Setting = require('./Setting'),
@@ -21,7 +20,7 @@ Common = function(Q,W,P)
 		.on('will-navigate',P)
 },
 
-Create = function(ID)
+Create = function()
 {
 	var
 	Window = new BrowserWindow(
