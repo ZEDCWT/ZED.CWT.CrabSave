@@ -44,6 +44,7 @@ declare module 'zedquery'
 
 
 		curry(Func : Function,ArgLen? : number) : Function
+		curryN(ArgLen : number,Func : Function) : Function
 		__ : Mark
 		always
 		T
@@ -61,6 +62,7 @@ declare module 'zedquery'
 		bind_
 		call_
 		apply_
+		wrap
 		once
 		converge
 		juxt
@@ -76,10 +78,37 @@ declare module 'zedquery'
 		replaceList
 		split
 		join
+		append
+		prepend
+		insert
+		insertAll
+		remove
+		adjust
+		update
+		indexOf
+		lastIndexOf
+		contains
 		reverse
+		sort
+		flatten
+		chain
+		unnest
+		times
+		repeat
+		transpose
+		zip
+		zipObj
+		zipWith
+		xprod
+		xprodAll
 		empty
 		keys
 		keysIn
+		values
+		valuesIn
+		toPairs
+		toPairsIn
+		fromPairs
 		has
 		hasIn
 		prop
@@ -92,6 +121,12 @@ declare module 'zedquery'
 		pathSatisfies
 		pathEq
 		pathOr
+		pick
+		pickAll
+		pickBy
+		omit
+		invert
+		invertObj
 		flip
 		nAry
 		unary
@@ -107,6 +142,9 @@ declare module 'zedquery'
 		init
 		tail
 		concat
+		splitAt
+		splitEvery
+		splitWhen
 		compose
 		pipe
 		sequence
@@ -157,10 +195,13 @@ declare module 'zedquery'
 		cond
 		of
 		objOf
+		pair
 		sum
 		mean
 		product
 		find
+		reject
+		partition
 		filter
 		range
 		tap
@@ -171,7 +212,9 @@ declare module 'zedquery'
 		isString
 		isNumber
 		isBoolean
+		isNil
 		isNull
+		isNaN
 		isArguments
 		isDate
 		isRegExp
@@ -299,6 +342,11 @@ declare module 'zedquery'
 
 
 
+		//Util
+		Emitter() : Emitter
+
+
+
 		//Extendex tool
 		eval(Q : string) : any
 		now(Q? : Date) : number
@@ -336,6 +384,13 @@ declare module 'zedquery'
 		Touch(DOM? : any,Release? : boolean) : void
 
 		ClearSelection() : void
+
+		ShortCut(Option? :
+		{
+			Top? : DOM
+			Target? : DOM
+			IgnoreInput : boolean
+		}) : ShortCut
 
 
 
@@ -574,6 +629,34 @@ declare module 'zedquery'
 
 
 
+	//Util
+	interface Emitter
+	{
+		on(Event : string,Action : Function,Limit? : number) : Emitter
+		on(EventAction : any,Limit? : number) : Emitter
+		off(Event : string,Action? : Function) : Emitter
+		off(Events : string[]) : Emitter
+		emit(Event : string,...Arg : any[]) : Emitter
+		bind(Event : string,Action : Function,Limit? : number) : Emitter
+		bind(EventAction : any,Limit? : number) : Emitter
+		unbind(Event : string,Action? : Function) : Emitter
+		unbind(Events : string[]) : Emitter
+		trigger(Event : string,...Arg : any[]) : Emitter
+
+		On(Event : string,Action : Function,Limit? : number) : Emitter
+		On(EventAction : any,Limit? : number) : Emitter
+		Off(Event : string,Action? : Function) : Emitter
+		Off(Events : string[]) : Emitter
+		Emit(Event : string,...Arg : any[]) : Emitter
+		Bind(Event : string,Action : Function,Limit? : number) : Emitter
+		Bind(EventAction : any,Limit? : number) : Emitter
+		Unbind(Event : string,Action? : Function) : Emitter
+		Unbind(Events : string[]) : Emitter
+		Trigger(Event : string,...Arg : any[]) : Emitter
+	}
+
+
+
 	//Auxiliary
 	interface DraggablePosition
 	{
@@ -629,6 +712,28 @@ declare module 'zedquery'
 		CCS() : SVG
 		CartesianCoordinateSystem() : SVG
 		appendTo(Q : any) : SVG
+	}
+
+	type EventedFunction = (Event : JQueryEventObject) => any
+	interface ShortCut
+	{
+		on(Key : string,UpCMD : string | EventedFunction | any,DownCMD? : string | EventedFunction | any,DownContinously? : boolean) : ShortCut
+		off(Key : string,UpCMD : string | EventedFunction | boolean | any,DownCMD? : string | EventedFunction | boolean | any) : ShortCut
+		cmd(CMD : string,Action : EventedFunction,Limit? : number) : ShortCut
+		resume() : ShortCut
+		pause() : ShortCut
+		keyCodes(Raw? : boolean) : number[]
+		keyNames(Raw? : boolean) : string[]
+		releaseAll() : ShortCut
+
+		On(Key : string,UpCMD : string | EventedFunction | any,DownCMD? : string | EventedFunction | any,DownContinously? : boolean) : ShortCut
+		Off(Key : string,UpCMD : string | EventedFunction | boolean | any,DownCMD? : string | EventedFunction | boolean | any) : ShortCut
+		CMD(CMD : string,Action : EventedFunction,Limit? : number) : ShortCut
+		Resume() : ShortCut
+		Pause() : ShortCut
+		KeyCodes(Raw? : boolean) : number[]
+		KeyNames(Raw? : boolean) : string[]
+		ReleaseAll() : ShortCut
 	}
 
 

@@ -115,6 +115,7 @@
 	//Storage = ZED.Storage,
 	URLBuild = ZED.URLBuild,
 	Lang = ZED.Lang(),
+	ShortCut = ZED.ShortCut(),
 	//Select = ZED.Select,
 	Preference = ZED.Preference,
 	Tips = compose(ZED.Tips,Lang),
@@ -155,8 +156,6 @@
 
 	Electron = require('electron'),
 	Remote = Electron.remote,
-
-	KeyboardJS = require('keyboardjs'),
 
 
 
@@ -847,16 +846,16 @@
 		T = ListIndicatorPanel.children()
 		each(function(V)
 		{
-			KeyboardJS.bind(V[x01],Null,bind(noary(jClick),$(nth(V[x00],T))))
+			ShortCut.on(V[x01],undefined,bind(noary(jClick),$(nth(V[x00],T))))
 		},[
 			[x00,'h'],
 			[x01,'j'],
 			[-x02,'k'],
 			[m01,'l']
 		])
-		KeyboardJS.bind('a',Null,compose(each(call(__,True)),always(CardSwitchStorage)))
-		KeyboardJS.bind('c',Null,compose(each(call(__,False)),always(CardSwitchStorage)))
-		KeyboardJS.watch()
+		ShortCut
+		.on('a',Null,compose(each(call(__,True)),always(CardSwitchStorage)))
+		.on('c',Null,compose(each(call(__,False)),always(CardSwitchStorage)))
 		$('body').addClass(ClassScroll).append(Rainbow)
 	})
 
