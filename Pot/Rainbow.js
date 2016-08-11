@@ -328,6 +328,7 @@
 
 	LangUserVideo = Lang('User videos',EmptyString),
 	LangChannelVideo = Lang('Channel videos',EmptyString),
+	LangPlaylistVideo = Lang('Playlist videos',EmptyString),
 
 
 
@@ -708,6 +709,11 @@
 			NailNameKey,LangChannelVideo,
 			NailIDKey,/channel\/([^\/]+)/i,
 			NailInitKey,YoutubeInit(GoogleAPIYoutubeChannel)
+		),ReduceToObject
+		(
+			NailNameKey,LangPlaylistVideo,
+			NailIDKey,/playlist.*list=([^&]+)/i,
+			NailInitKey,YoutubePlaylist
 		)]
 	),ReduceToObject
 	(
