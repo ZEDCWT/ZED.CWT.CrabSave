@@ -13,6 +13,7 @@
     "@zed.cwt/downloader": "0.0.1",
     "@zed.cwt/zedquery": "^0.3.3",
     "cli": "^0.11.2",
+    "graceful-fs": "^4.1.5",
     "request": "^2.74.0"
   }
 }

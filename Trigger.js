@@ -92,7 +92,7 @@ else
 		})
 		.on('browser-window-created',function(E,W)
 		{
-			// W.setMenu(null)
+			W.setMenu(null)
 		})
 
 	Electron.ipcMain
