@@ -10,6 +10,7 @@
 	$ = ZED.jQuery,
 
 	Request = require('request'),
+	RequestBody = Observable.wrapNode(Request,null,ZED.nthArg(1)),
 	RequestJSON = Observable.wrapNode(Request,null,ZED.flip(ZED.JTO)),
 
 
@@ -40,15 +41,20 @@
 
 	div = '<div>',
 	input = '<input>',
+	img = '<img>',
+	fieldset = '<fieldset>',
+	legend = '<legend>',
 
 	attrID = 'id',
 	attrClass = 'class',
+	attrSrc = 'src',
 
 	click = 'click',
 
 	ClassPrefix = 'ZED',
 	ClassButton = ClassPrefix + 'Button',
 	ClassInput = ClassPrefix + 'Input',
+	ClassPager = ClassPrefix + 'Pager',
 
 	ShowByRock = function(V,J,T)
 	{
@@ -68,6 +74,11 @@
 		return T
 	},
 
+	FriendlyDate = ZED.pipe
+	(
+		ZED.unless(ZED.isDate,ZED.constructN(1,Date)),
+		ZED.binary(ZED.DateToString)('%YYYY%.%MM%.%DD%.%HH%.%NN%.%SS%')
+	),
 	Best = function(Q)
 	{
 		return ZED.reduce(ZED.maxBy(ZED.prop(Q)),ZED.objOf(Q,-Infinity))
@@ -112,6 +123,7 @@
 	ListJumpKey = ZED.KeyGen(),
 	ListPageKey = ZED.KeyGen(),
 	ListPageTotalKey = ZED.KeyGen(),
+	ListPageSizeKey = ZED.KeyGen(),
 	ListCountKey = ZED.KeyGen(),
 	ListDispatchKey = ZED.KeyGen(),
 	ListCardKey = ZED.KeyGen(),
@@ -122,18 +134,6 @@
 	ListCardTitleKey = ZED.KeyGen(),
 	ListCardAuthorKey = ZED.KeyGen(),
 	ListCardDateKey = ZED.KeyGen(),
-	_ListFromKey = ZED.KeyGen(),
-	_ListToKey = ZED.KeyGen(),
-	_ListLengthKey = ZED.KeyGen(),
-	_ListOrderKey = ZED.KeyGen(),
-	LangListHint = ZED.Replace
-	(
-		'Page ,$0$, / ,$1$, | ,$2$, ~ ,$3$, | ,$4$, in ,$5$, ,$6$',
-		ListPageKey,ListPageTotalKey,
-		_ListFromKey,_ListToKey,
-		_ListLengthKey,ListCountKey,
-		_ListOrderKey
-	),
 
 
 
@@ -152,6 +152,9 @@
 	URLYoutubeChannel = ZED.URLBuild(HTTPS,URLYoutubePrefix,'channels?part=contentDetails&id=',undefined,'&key=',GoogleAPIKey),
 	URLYoutubeChannelForUser = ZED.URLBuild(HTTPS,URLYoutubePrefix,'channels?part=contentDetails&forUsername=',undefined,'&key=',GoogleAPIKey),
 	URLYoutubePlaylist = ZED.URLBuild(HTTPS,URLYoutubePrefix,'playlistItems?part=snippet%2CcontentDetails&playlistId=',undefined,'&pageToken=',undefined,'&maxResults=',undefined,'&key=',GoogleAPIKey),
+	//		Niconico
+	DomainNiconico = 'www.nicovideo.jp/',
+	URLNiconicoUser = ZED.URLBuild(HTTP,DomainNiconico,'user/',undefined,'/video?page=',undefined),
 
 	//	Action
 	//		Bilibili
@@ -171,6 +174,7 @@
 					ListIDKey,ID,
 					ListJumpKey,BilibiliUser,
 					ListPageKey,Page,
+					ListPageSizeKey,PageSize,
 					ListPageTotalKey,Q.pages,
 					ListCountKey,Q.count,
 					// ListDispatchKey,BilibiliDispatch,
@@ -178,7 +182,6 @@
 					{
 						return ZED.ReduceToObject
 						(
-							ListCardNoKey,F + Page * PageSize,
 							ListCardIDKey,V.aid,
 							ListCardIDDisplayKey,ZED.add('av'),
 							ListCardImgKey,V.pic,
@@ -208,7 +211,7 @@
 					ListIDKey,ID,
 					ListJumpKey,YoutubePlaylist,
 					ListPageKey,Page,
-					ListPageTotalKey,Total / PageSize,
+					ListPageSizeKey,PageSize,
 					ListCountKey,Total,
 					// ListDispatchKey,YoutubeDispatch,
 					ListCardKey,ZED.map(function(V)
@@ -237,6 +240,36 @@
 					Observable.throw('No provided playlist id')
 			})
 	}),
+	//		Niconico
+	NiconicoUser = function(ID,Page)
+	{
+		Page = Page || 0
+		return RequestBody(URLNiconicoUser(ID,1 + Page))
+			.map(function(Q,A)
+			{
+				A = ZED.match(/profile[^]+?<h2>([^<]+)/,Q)[1]
+				return ZED.ReduceToObject
+				(
+					ListIDKey,ID,
+					ListJumpKey,NiconicoUser,
+					ListPageKey,Page,
+					ListPageSizeKey,30,
+					ListCountKey,Number(ZED.match(/id="video[^]+?(\d+)/,Q)[1]),
+					// ListDispatchKey,NiconicoDispatch,
+					ListCardKey,ZED.Map(ZED.match(/outer"(?![^<]+<form)[^]+?<\/p/g,Q),function(F,V)
+					{
+						return ZED.ReduceToObject
+						(
+							ListCardIDKey,ZED.match(/sm(\d+)/,V)[1],
+							ListCardImgKey,ZED.match(/src="([^"]+)/,V)[1],
+							ListCardTitleKey,ZED.match(/h5>[^>]+>([^<]+)/,V)[1],
+							ListCardAuthorKey,A,
+							ListCardDateKey,ZED.trim(ZED.match(/posttime">([^<]+)/,V)[1] || '')
+						)
+					})
+				)
+			})
+	},
 
 
 
@@ -269,6 +302,16 @@
 			ToolNameKey,'Playlist',
 			ToolJudgeKey,/playlist.*list=([^&]+)/i,
 			ToolInitKey,YoutubePlaylist
+		)]
+	),ZED.ReduceToObject
+	(
+		ToolNameKey,'Niconico',
+		ToolJudgeKey,/\.nicovideo\./i,
+		ToolNailKey,[ZED.ReduceToObject
+		(
+			ToolNameKey,'User',
+			ToolJudgeKey,/user\/(\d+)/i,
+			ToolInitKey,NiconicoUser
 		)]
 	)];
 
@@ -355,7 +398,7 @@
 		SC.on(V,SendCMD(F))
 	})
 
-	ZED.Each('qwert'.split(''),function(F,V)
+	ZED.Each('qwerty'.split(''),function(F,V)
 	{
 		SC.on(V,ZED.invokeAlways(ZED.invokeProp,'Index',NS,F))
 	})
@@ -369,21 +412,87 @@
 			(
 				'#/R/{text-align:center}' +
 				'#/R/ ./C/>*{margin-top:16px}' +
-				'#/R/ ./C/>./I/{width:100%}',
+				'#/R/ ./C/>./I/{width:100%}' +
+				'#/R/ ./P/{visibility:hidden}',
 				'/',
 				{
 					R : ID,
 					C : ClassContent,
-					I : ClassInput
+					I : ClassInput,
+					P : ClassPager
 				}
 			)
 		},
 		Content : function(Q)
 		{
 			var
+			ID,Jump,
+
 			Input = ShowByRock(ClassInput,true,input).attr('placeholder','URL').val('http://space.bilibili.com/13046'),
 			Button = ShowByButton('Initialize'),
-			Panel = ShowByRock();
+			Panel = $(div),
+			State = $(div),
+			PagerUp,
+			Card = $(div),
+			PagerDown,
+			Pager,
+			Display = function(Q)
+			{
+				var
+				Page = Q[ListPageKey],
+				PageSize = Q[ListPageSizeKey],
+				Total = Q[ListPageTotalKey],
+				Offset = Page * PageSize,
+				Count = Q[ListCountKey],
+				Dispatch = Q[ListDispatchKey],
+				List = Q[ListCardKey],
+				From = List[0],
+				To = ZED.last(List);
+
+				ID = Q[ListIDKey]
+				Jump = Q[ListJumpKey]
+				ZED.isNumber(Total) && (Total = Count / Q[ListPageSizeKey])
+				Total = Math.ceil(Total)
+
+				State.text(ZED.Replace
+				(
+					'Page $0$ / $1$ | $2$ ~ $3$ | $4$ in $5$',
+					Page,Total,
+					From ? 'No.' + ZED.defaultTo(Offset,From[ListCardNoKey]) : '-',
+					To ? 'No.' + ZED.defaultTo(Offset + List.length - 1,From[ListCardNoKey]) : '-',
+					List.length,Count
+				))
+				Card.empty()
+				ZED.Each(List,function(F,V)
+				{
+					Card.append
+					(
+						$(fieldset).append
+						(
+							$(legend).text
+							(
+								ZED.defaultTo(Offset + F,V[ListCardNoKey]) +' | ' +
+								(
+									V[ListCardIDDisplayKey] ?
+										V[ListCardIDDisplayKey](V[ListCardIDKey]) :
+										V[ListCardIDKey]
+								)
+							),
+							$(img).attr(attrSrc,V[ListCardImgKey]).attr('title',V[ListCardTitleKey]),
+							$(div).text(V[ListCardTitleKey]),
+							$(div).text(V[ListCardAuthorKey]),
+							$(div).text(FriendlyDate(V[ListCardDateKey]))
+						)
+					)
+				})
+				PagerUp(Page,Total)
+				PagerDown(Page,Total)
+				Pager.css('visibility',Total ? 'visible' : 'hidden')
+			},
+			PageChange = function(Q)
+			{
+				Jump && Jump(ID,Q).start(Display)
+			};
 
 			Q = WithTitle(Q,'Browser')
 
@@ -407,17 +516,13 @@
 					console.log(e)
 				})
 				.retry()
-				.start(function(Q)
-				{
-					console.log(Q)
-				})
+				.start(Display)
 
 			Q.append
 			(
 				Input,
 				Button
 			)
-
 			ZED.Preference(
 			{
 				Set :
@@ -428,7 +533,11 @@
 				Parent : Q,
 				Table : true
 			})
-
+			Panel.append(State)
+			PagerUp = ZED.Pager({Parent : Panel},PageChange)
+			Panel.append(Card)
+			PagerDown = ZED.Pager({Parent : Panel},PageChange)
+			Pager = Panel.find('.' + ClassPager)
 			Q.append(Panel)
 		}
 	},{
@@ -448,6 +557,12 @@
 		Content : function(Q)
 		{
 			Q = WithTitle(Q,'History')
+		}
+	},{
+		Tab : 'Sign in',
+		Content : function(Q)
+		{
+			Q = WithTitle(Q,'Sign in')
 		}
 	},{
 		Tab : 'Setting',
