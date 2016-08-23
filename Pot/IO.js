@@ -40,6 +40,8 @@
 
 
 	div = '<div>',
+	span = '<span>',
+	br = '<br>',
 	input = '<input>',
 	img = '<img>',
 	fieldset = '<fieldset>',
@@ -55,6 +57,7 @@
 	ClassButton = ClassPrefix + 'Button',
 	ClassInput = ClassPrefix + 'Input',
 	ClassPager = ClassPrefix + 'Pager',
+	ClassNoSelect = ClassPrefix + 'NoSelect',
 
 	ShowByRock = function(V,J,T)
 	{
@@ -86,18 +89,30 @@
 	BestQulity = Best('width'),
 
 	Padding = 8,
-	NaviWidth = 140,
+	PaddingHalf = Padding / 2,
+	ScrollWidth = 12,
+	NaviWidth = 150,
 	StageWidth,
 	TitleHeight = 40,
+	CardWidthMin = 160,
+	CardWidthMax = 200,
 
 	IDRainbow = ZED.KeyGen(),
 	IDNavi = ZED.KeyGen(),
+	ClassNotiUp = ZED.KeyGen(),
+	ClassNotiDown = ZED.KeyGen(),
 	IDStage = ZED.KeyGen(),
 	ClassTitle = ZED.KeyGen(),
 	ClassContent = ZED.KeyGen(),
+	IDCard = ZED.KeyGen(),
+	ClassWave = ZED.KeyGen(),
+	ClassWaveHover = ZED.KeyGen(),
+	ClassWaveOn = ZED.KeyGen(),
 
-	Rainbow = ShowByRock(IDRainbow),
+	Rainbow = ShowByRock(IDRainbow).attr(attrClass,'ZEDScroll'),
 	Navi = ShowByRock(IDNavi),
+	ProcessingUp = ShowByRock(ClassNotiUp,true),
+	ProcessingDown = ShowByRock(ClassNotiDown,true),
 	Stage = ShowByRock(IDStage),
 
 	NS = ZED.Tab(
@@ -107,7 +122,69 @@
 		Default : 0
 	}),
 
-	SC = ZED.ShortCut(),
+	SC = ZED.ShortCut()
+		.on('ctrl+a',null,function(K)
+		{
+			K.preventDefault()
+		}),
+
+
+
+	//	Task
+	TaskSKG = ZED.StableKeyGen(84941),
+	TaskHashKey = TaskSKG(),
+	TaskIDKey = TaskSKG(),
+	TaskStateKey = TaskSKG(),
+	TaskStateCold = TaskSKG(),
+	TaskStatePlay = TaskSKG(),
+	TaskStatePause = TaskSKG(),
+	TaskStateDone = TaskSKG(),
+	TaskDispatchKey = TaskSKG(),
+	TaskStorage = [],//TODO : read from json
+	HistoryStorage = [],
+	TaskSolveHash = ZED.reduce(function(D,V){D[V[TaskHashKey]] = V}),
+	TaskHash = TaskSolveHash({},TaskStorage),
+	HistoryHash = TaskSolveHash({},HistoryStorage),
+	TaskGenHash = function(P,ID){return P + '|' + ID},
+	TaskSearch = function(P,ID)
+	{
+		P = ZED.propEq(TaskHashKey,TaskGenHash(P,ID))
+		return ZED.find(P,TaskStorage) || ZED.find(P,HistoryStorage)
+	},
+	TaskUpdateProcessing = function(F,L)
+	{
+		L = 0
+		for (F = TaskStorage.length;F;)
+			if (TaskStateCold === TaskStorage[--F][TaskStateKey])
+				++L
+		ProcessingDown.css('visibility',L ? 'visible' : 'hidden').text(L)
+		L = TaskStorage.length - L
+		ProcessingUp.css('visibility',L ? 'visible' : 'hidden').text(L)
+	},
+	TaskColdOn = function(P,ID,D)
+	{
+		if (!TaskHash[P = TaskGenHash(P,ID)])
+		{
+			TaskStorage.push(TaskHash[P] = ZED.ReduceToObject
+			(
+				TaskHashKey,P,
+				TaskStateKey,TaskStateCold,
+				TaskIDKey,ID,
+				TaskDispatchKey,D
+			))
+			TaskUpdateProcessing()
+		}
+	},
+	TaskColdOff = function(P,ID,F)
+	{
+		if (TaskHash[P = TaskGenHash(P,ID)] && TaskStateCold === TaskHash[P][TaskStateKey])
+		{
+			F = ZED.indexOf(TaskHash[P],TaskStorage)
+			0 <= F && TaskStorage.splice(F,1)
+			ZED.delete_(P,TaskHash)
+			TaskUpdateProcessing()
+		}
+	},
 
 
 
@@ -137,6 +214,17 @@
 
 
 
+	DispatchSKG = ZED.StableKeyGen(39021),
+	DispatchStorage = {},
+	DispatchWrap = function(Q,T)
+	{
+		return ZED.isFunction(Q) ?
+		(
+			DispatchStorage[T = DispatchSKG()] = Q,
+			T
+		) : DispatchStorage[Q]
+	},
+
 	HTTP = 'http://',
 	HTTPS = 'https://',
 	//	URL
@@ -162,8 +250,8 @@
 	{
 		var
 		PageSize = Session[SessionPageSizeKey];
-
-		return RequestJSON(URLBilibiliUser(ID,Page = Number(Page) || 0,PageSize))
+		Page = Page || 0
+		return RequestJSON(URLBilibiliUser(ID,1 + Page,PageSize))
 			.map(function(Q)
 			{
 				if (!Q.status) throw Q.data && Q.data.error
@@ -177,7 +265,7 @@
 					ListPageSizeKey,PageSize,
 					ListPageTotalKey,Q.pages,
 					ListCountKey,Q.count,
-					// ListDispatchKey,BilibiliDispatch,
+					ListDispatchKey,BilibiliDispatch,
 					ListCardKey,ZED.Map(Q.vlist,function(F,V)
 					{
 						return ZED.ReduceToObject
@@ -193,6 +281,10 @@
 				)
 			})
 	},
+	BilibiliDispatch = DispatchWrap(function()
+	{
+
+	}),
 	//		Youtube
 	YoutubePlaylist = function(ID,Page)
 	{
@@ -213,7 +305,7 @@
 					ListPageKey,Page,
 					ListPageSizeKey,PageSize,
 					ListCountKey,Total,
-					// ListDispatchKey,YoutubeDispatch,
+					ListDispatchKey,YoutubeDispatch,
 					ListCardKey,ZED.map(function(V)
 					{
 						return ZED.ReduceToObject
@@ -240,11 +332,22 @@
 					Observable.throw('No provided playlist id')
 			})
 	}),
+	YoutubeDispatch = DispatchWrap(function()
+	{
+
+	}),
 	//		Niconico
 	NiconicoUser = function(ID,Page)
 	{
 		Page = Page || 0
-		return RequestBody(URLNiconicoUser(ID,1 + Page))
+		return RequestBody(
+		{
+			url : URLNiconicoUser(ID,1 + Page),
+			headers :
+			{
+				Cookie : ''
+			}
+		})
 			.map(function(Q,A)
 			{
 				A = ZED.match(/profile[^]+?<h2>([^<]+)/,Q)[1]
@@ -255,7 +358,7 @@
 					ListPageKey,Page,
 					ListPageSizeKey,30,
 					ListCountKey,Number(ZED.match(/id="video[^]+?(\d+)/,Q)[1]),
-					// ListDispatchKey,NiconicoDispatch,
+					ListDispatchKey,NiconicoDispatch,
 					ListCardKey,ZED.Map(ZED.match(/outer"(?![^<]+<form)[^]+?<\/p/g,Q),function(F,V)
 					{
 						return ZED.ReduceToObject
@@ -270,6 +373,10 @@
 				)
 			})
 	},
+	NiconicoDispatch = DispatchWrap(function()
+	{
+
+	}),
 
 
 
@@ -322,7 +429,7 @@
 		return ZED.Replace
 		(
 			'html,body{margin:0;padding:0;background:#F7F7F7;color:#5A5A5A;overflow:hidden}' +
-			'#/R/{width:/r/px;height:/h/px}' +
+			'#/R/{width:/r/px;height:/h/px;word-break:break-word}' +
 			'#/R/ *{/b/}' +
 			'#/R/ table{width:100%}' +
 			'#/N/,#/S/{display:inline-block;height:/h/px;vertical-align:top}' +
@@ -346,15 +453,27 @@
 				'border-left-color:#FFF;' +
 				'/f/' +
 			'}' +
+			'#/N/ ./U/,#/N/ ./D/' +
+			'{' +
+				'position:absolute;' +
+				'right:24px;' +
+				'padding:0 5px;' +
+				'background:#007ACC;' +
+				'color:#FFF;' +
+				'min-width:8px;' +
+				'height:18px;' +
+				'line-height:18px;' +
+				'font-size:11px;' +
+				'border-radius:20px;' +
+				'text-align:center' +
+			'}' +
+			'#/N/ ./U/{top:0}' +
+			'#/N/ ./D/{bottom:0}' +
 			'#/S/{position:relative;width:/s/px;overflow-y:auto}' +
 			'#/S/ table{text-align:left}' +
 			'#/S/ th,#/S/ td{padding:4px}' +
 			'./T/' +
 			'{' +
-				'position:absolute;' +
-				'left:0;' +
-				'right:0;' +
-				'top:0;' +
 				'background:#F4F4F4;' +
 				'height:/t/px;' +
 				'line-height:/t/px;' +
@@ -362,7 +481,7 @@
 				'border-bottom:1px solid #D1D9DB;' +
 				'/i/' +
 			'}' +
-			'./C/{margin:/p/px;margin-top:/t/px}' +
+			'./C/{margin:/p/px}' +
 			'.ZEDPreferenceContent .ZEDInput{width:60%}' +
 
 			'#/N/,./T/,#/R/ .ZEDPreferenceTitle{font-weight:bold}',
@@ -372,6 +491,8 @@
 				r : NaviWidth + StageWidth,
 				h : H,
 				N : IDNavi,
+				U : ClassNotiUp,
+				D : ClassNotiDown,
 				n : NaviWidth,
 				a : ZED.CSSMulti('box-shadow','1px 0 3px rgba(0,0,0,.3)'),
 				f : ZED.CSSMulti('transform','translateY(-6px)'),
@@ -398,7 +519,7 @@
 		SC.on(V,SendCMD(F))
 	})
 
-	ZED.Each('qwerty'.split(''),function(F,V)
+	ZED.Each('qwert'.split(''),function(F,V)
 	{
 		SC.on(V,ZED.invokeAlways(ZED.invokeProp,'Index',NS,F))
 	})
@@ -406,36 +527,126 @@
 	NS.Add(
 	{
 		Tab : 'Browser',
-		CSS : function(ID)
+		CSS : function(ID,W,F)
 		{
 			return ZED.Replace
 			(
 				'#/R/{text-align:center}' +
 				'#/R/ ./C/>*{margin-top:16px}' +
 				'#/R/ ./C/>./I/{width:100%}' +
-				'#/R/ ./P/{visibility:hidden}',
+				'#/R/ ./P/{visibility:hidden}' +
+				'#/R/ #/D/{margin-left:-/h/px;margin-right:-/h/px;text-align:left;font-size:14px}' +
+				'#/R/ fieldset{display:inline-block;margin:0 /h/px /p/px;padding:/p/px;width:/f/px;max-width:/f/px;border:0;vertical-align:top;/s/;cursor:pointer}' +
+				'#/R/ legend{padding:0;cursor:auto}' +
+				'#/R/ ./W/{background:transparent;color:transparent;font-weight:bold;text-align:center}' +
+				'#/R/ fieldset:hover ./W/,#/R/ ./H/ ./W/{background:#CCD0D7;color:white}' +
+				'#/R/ ./O/ ./W/{background:#2672EC!important;color:white!important}' +
+				'#/R/ img{width:/m/px}' +
+				'#/R/ fieldset span{cursor:auto}',
 				'/',
 				{
 					R : ID,
 					C : ClassContent,
 					I : ClassInput,
-					P : ClassPager
+					P : ClassPager,
+					D : IDCard,
+					W : ClassWave,
+					H : ClassWaveHover,
+					O : ClassWaveOn,
+
+					p : Padding,
+					h : PaddingHalf,
+					f : F = ZED.FlexibleFit(W - ScrollWidth - NaviWidth - Padding - Padding,CardWidthMin,CardWidthMax,Padding),
+					s : ZED.CSSMulti('box-shadow','0 5px 10px rgba(0,0,0,.3)'),
+					m : F - Padding - Padding
 				}
 			)
 		},
 		Content : function(Q)
 		{
 			var
-			ID,Jump,
+			ID,Jump,Dispatch,
 
 			Input = ShowByRock(ClassInput,true,input).attr('placeholder','URL').val('http://space.bilibili.com/13046'),
 			Button = ShowByButton('Initialize'),
-			Panel = $(div),
 			State = $(div),
 			PagerUp,
-			Card = $(div),
+			CardPanel = ShowByRock(IDCard),
 			PagerDown,
 			Pager,
+			Wave = [],
+			WaveDisplay = function(ID,Card,W,Last,Now,Say,Class)
+			{
+				switch (Last)
+				{
+					case TaskStateCold :
+						Class = ClassWaveOn
+						break
+					case TaskStateDone :
+						Class = ClassWaveHover
+				}
+				Class && Card.removeClass(Class)
+				Class = undefined
+				switch (Now)
+				{
+					case TaskStateCold :
+						Say = 'Selected'
+						Class = ClassWaveOn
+						break
+					case TaskStatePlay :
+					case TaskStatePause :
+						break
+					case TaskStateDone :
+						Say = 'Downloaded'
+						Class = ClassWaveHover
+						break
+					default :
+						Say = 'Select'
+				}
+				Say && W.text(Say)
+				Class && Card.addClass(Class)
+			},
+			Waving = function(ID,Card,W)
+			{
+				var
+				StartAt,
+				Now = TaskSearch(Dispatch,ID),
+				Go = function(J,L)
+				{
+					switch (L = Now)
+					{
+						case TaskStateCold :
+							true === J ||
+							(
+								TaskColdOff(Dispatch,ID),
+								Now = StartAt
+							)
+							break
+						case TaskStatePlay :
+						case TaskStatePause :
+							break
+						case TaskStateDone :
+							if (true !== J) break
+						default :
+							false === J ||
+							(
+								TaskColdOn(Dispatch,ID),
+								Now = TaskStateCold
+							)
+					}
+					L === Now || WaveDisplay(ID,Card,W,L,Now)
+				};
+
+				Now = Now && Now[TaskStateKey]
+				TaskStateDone === Now && (StartAt = Now)
+				WaveDisplay(ID,Card,W,undefined,Now)
+
+				Wave.push(Go)
+				Card.on(click,function(D)
+				{
+					/span|legend/i.test(D.target.tagName) || Go()
+				})
+			},
 			Display = function(Q)
 			{
 				var
@@ -444,30 +655,31 @@
 				Total = Q[ListPageTotalKey],
 				Offset = Page * PageSize,
 				Count = Q[ListCountKey],
-				Dispatch = Q[ListDispatchKey],
 				List = Q[ListCardKey],
 				From = List[0],
 				To = ZED.last(List);
 
 				ID = Q[ListIDKey]
 				Jump = Q[ListJumpKey]
-				ZED.isNumber(Total) && (Total = Count / Q[ListPageSizeKey])
-				Total = Math.ceil(Total)
+				Dispatch = Q[ListDispatchKey]
+				ZED.isNumber(Total) || (Total = Count / Q[ListPageSizeKey])
+				Total = Math.ceil(Total) - 1
 
 				State.text(ZED.Replace
 				(
 					'Page $0$ / $1$ | $2$ ~ $3$ | $4$ in $5$',
 					Page,Total,
 					From ? 'No.' + ZED.defaultTo(Offset,From[ListCardNoKey]) : '-',
-					To ? 'No.' + ZED.defaultTo(Offset + List.length - 1,From[ListCardNoKey]) : '-',
+					To ? 'No.' + ZED.defaultTo(Offset + List.length - 1,To[ListCardNoKey]) : '-',
 					List.length,Count
 				))
-				Card.empty()
-				ZED.Each(List,function(F,V)
+				CardPanel.empty()
+				Wave.length = 0
+				ZED.Each(List,function(F,V,W)
 				{
-					Card.append
+					CardPanel.append
 					(
-						$(fieldset).append
+						F = $(fieldset).attr('title',V[ListCardTitleKey]).append
 						(
 							$(legend).text
 							(
@@ -478,12 +690,16 @@
 										V[ListCardIDKey]
 								)
 							),
-							$(img).attr(attrSrc,V[ListCardImgKey]).attr('title',V[ListCardTitleKey]),
-							$(div).text(V[ListCardTitleKey]),
-							$(div).text(V[ListCardAuthorKey]),
-							$(div).text(FriendlyDate(V[ListCardDateKey]))
+							W = ShowByRock(ClassWave + ' ' + ClassNoSelect,true),
+							ShowByRock(ClassNoSelect,true,img).attr(attrSrc,V[ListCardImgKey]),
+							$(span).text(V[ListCardTitleKey]),
+							br,
+							$(span).text(V[ListCardAuthorKey]),
+							br,
+							$(span).text(FriendlyDate(V[ListCardDateKey]))
 						)
 					)
+					Waving(V[ListCardIDKey],F,W)
 				})
 				PagerUp(Page,Total)
 				PagerDown(Page,Total)
@@ -491,8 +707,13 @@
 			},
 			PageChange = function(Q)
 			{
-				Jump && Jump(ID,Q).start(Display)
-			};
+				ZED.Tips('Jumping to page ' + Q)
+				Jump && Jump(ID,Q).start(Display,function(e)
+				{
+					ZED.Tips('Unable to jump to page ' + Q + ', maybe you want to try agagin\n' + (e || ''))
+				})
+			},
+			T;
 
 			Q = WithTitle(Q,'Browser')
 
@@ -513,7 +734,7 @@
 				.tap(null,function(e)
 				{
 					ZED.Tips('Unable to initialize from the given url\n' + (e || ''))
-					console.log(e)
+					console.error(e)
 				})
 				.retry()
 				.start(Display)
@@ -533,21 +754,32 @@
 				Parent : Q,
 				Table : true
 			})
-			Panel.append(State)
-			PagerUp = ZED.Pager({Parent : Panel},PageChange)
-			Panel.append(Card)
-			PagerDown = ZED.Pager({Parent : Panel},PageChange)
-			Pager = Panel.find('.' + ClassPager)
-			Q.append(Panel)
+			Q.append(State)
+			PagerUp = ZED.Pager({Parent : Q},PageChange)
+			Q.append(CardPanel)
+			PagerDown = ZED.Pager({Parent : Q},PageChange)
+			Pager = Q.find('.' + ClassPager)
+			T = Pager[0].children
+			ZED.Each(
+			{
+				h : 0,
+				j : 1,
+				k : -2,
+				l : -1
+			},function(F,V)
+			{
+				SC.on(F,ZED.invokeAlways(ZED.invokeProp,click,ZED.nth(V,T)))
+			})
+			SC.on('ctrl+a',null,ZED.invokeAlways(ZED.each,ZED.call_(ZED.__,true),Wave))
+				.on('ctrl+shift+a',null,ZED.invokeAlways(ZED.each,ZED.call_(ZED.__,false),Wave))
 		}
 	},{
-		Tab : 'Queue',
-		Content : function(Q)
-		{
-			Q = WithTitle(Q,'Queue')
-		}
-	},{
-		Tab : 'Processing',
+		Tab : $(div).append
+		(
+			'Processing',
+			ProcessingUp,
+			ProcessingDown
+		),
 		Content : function(Q)
 		{
 			Q = WithTitle(Q,'Processing')
@@ -571,6 +803,8 @@
 			Q = WithTitle(Q,'Setting')
 		}
 	})
+
+	TaskUpdateProcessing()
 
 	Rainbow.append(Navi,Stage)
 
