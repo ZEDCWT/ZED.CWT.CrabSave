@@ -50,11 +50,13 @@
 	attrID = 'id',
 	attrClass = 'class',
 	attrSrc = 'src',
+	attrTitle = 'title',
 
 	click = 'click',
 
 	ClassPrefix = 'ZED',
 	ClassButton = ClassPrefix + 'Button',
+	ClassScroll = ClassPrefix + 'Scroll',
 	ClassInput = ClassPrefix + 'Input',
 	ClassPager = ClassPrefix + 'Pager',
 	ClassNoSelect = ClassPrefix + 'NoSelect',
@@ -97,6 +99,9 @@
 	CardWidthMin = 160,
 	CardWidthMax = 200,
 
+	ColorCold = '#989898',
+	ColorHot = '#69A0D7',
+
 	IDRainbow = ZED.KeyGen(),
 	IDNavi = ZED.KeyGen(),
 	ClassNotiUp = ZED.KeyGen(),
@@ -108,8 +113,16 @@
 	ClassWave = ZED.KeyGen(),
 	ClassWaveHover = ZED.KeyGen(),
 	ClassWaveOn = ZED.KeyGen(),
+	ClassOver = ZED.KeyGen(),
+	ClassOverCold = ZED.KeyGen(),
+	ClassOverHot = ZED.KeyGen(),
+	ClassOverTitle = ZED.KeyGen(),
+	ClassOverState = ZED.KeyGen(),
+	ClassOverEnd = ZED.KeyGen(),
+	ClassOverAction = ZED.KeyGen(),
+	ClassOverProgress = ZED.KeyGen(),
 
-	Rainbow = ShowByRock(IDRainbow).attr(attrClass,'ZEDScroll'),
+	Rainbow = ShowByRock(IDRainbow).attr(attrClass,ClassScroll),
 	Navi = ShowByRock(IDNavi),
 	ProcessingUp = ShowByRock(ClassNotiUp,true),
 	ProcessingDown = ShowByRock(ClassNotiDown,true),
@@ -121,6 +134,13 @@
 		Content : Stage,
 		Default : 0
 	}),
+	NSMakeIndex = function(Q,C)
+	{
+		return function()
+		{
+			Q === NS.Index() && C()
+		}
+	},
 
 	SC = ZED.ShortCut()
 		.on('ctrl+a',null,function(K)
@@ -139,6 +159,7 @@
 	TaskStatePlay = TaskSKG(),
 	TaskStatePause = TaskSKG(),
 	TaskStateDone = TaskSKG(),
+	TaskTitleKey = TaskSKG(),
 	TaskDispatchKey = TaskSKG(),
 	TaskStorage = [],//TODO : read from json
 	HistoryStorage = [],
@@ -161,28 +182,34 @@
 		L = TaskStorage.length - L
 		ProcessingUp.css('visibility',L ? 'visible' : 'hidden').text(L)
 	},
-	TaskColdOn = function(P,ID,D)
+	TaskOnAddCold = ZED.KeyGen(),
+	TaskOnRemoveCold = ZED.KeyGen(),
+	TaskEmitter = ZED.Emitter(),
+	TaskColdOn = function(P,ID,Title,H)
 	{
-		if (!TaskHash[P = TaskGenHash(P,ID)])
+		if (!TaskHash[H = TaskGenHash(P,ID)])
 		{
-			TaskStorage.push(TaskHash[P] = ZED.ReduceToObject
+			TaskStorage.push(ID = TaskHash[H] = ZED.ReduceToObject
 			(
-				TaskHashKey,P,
+				TaskHashKey,H,
 				TaskStateKey,TaskStateCold,
 				TaskIDKey,ID,
-				TaskDispatchKey,D
+				TaskTitleKey,Title,
+				TaskDispatchKey,P
 			))
 			TaskUpdateProcessing()
+			TaskEmitter.emit(TaskOnAddCold,ID)
 		}
 	},
 	TaskColdOff = function(P,ID,F)
 	{
 		if (TaskHash[P = TaskGenHash(P,ID)] && TaskStateCold === TaskHash[P][TaskStateKey])
 		{
-			F = ZED.indexOf(TaskHash[P],TaskStorage)
+			F = ZED.indexOf(ID = TaskHash[P],TaskStorage)
 			0 <= F && TaskStorage.splice(F,1)
 			ZED.delete_(P,TaskHash)
 			TaskUpdateProcessing()
+			TaskEmitter.emit(TaskOnRemoveCold,ID)
 		}
 	},
 
@@ -428,7 +455,7 @@
 
 		return ZED.Replace
 		(
-			'html,body{margin:0;padding:0;background:#F7F7F7;color:#5A5A5A;overflow:hidden}' +
+			'html,body{margin:0;padding:0;background:#F7F7F7;font-size:14px;overflow:hidden}' +
 			'#/R/{width:/r/px;height:/h/px;word-break:break-word}' +
 			'#/R/ *{/b/}' +
 			'#/R/ table{width:100%}' +
@@ -456,20 +483,21 @@
 			'#/N/ ./U/,#/N/ ./D/' +
 			'{' +
 				'position:absolute;' +
-				'right:24px;' +
+				'right:34px;' +
 				'padding:0 5px;' +
 				'background:#007ACC;' +
 				'color:#FFF;' +
 				'min-width:8px;' +
 				'height:18px;' +
 				'line-height:18px;' +
-				'font-size:11px;' +
+				'font-size:10px;' +
 				'border-radius:20px;' +
 				'text-align:center' +
 			'}' +
 			'#/N/ ./U/{top:0}' +
 			'#/N/ ./D/{bottom:0}' +
 			'#/S/{position:relative;width:/s/px;overflow-y:auto}' +
+			'#/S/>div{height:100%}' +
 			'#/S/ table{text-align:left}' +
 			'#/S/ th,#/S/ td{padding:4px}' +
 			'./T/' +
@@ -481,7 +509,6 @@
 				'border-bottom:1px solid #D1D9DB;' +
 				'/i/' +
 			'}' +
-			'./C/{margin:/p/px}' +
 			'.ZEDPreferenceContent .ZEDInput{width:60%}' +
 
 			'#/N/,./T/,#/R/ .ZEDPreferenceTitle{font-weight:bold}',
@@ -501,7 +528,6 @@
 				t : TitleHeight,
 				T : ClassTitle,
 				i : ZED.CSSMulti('box-shadow','0 1px 1px rgba(0,0,0,.3)'),
-				C : ClassContent,
 
 				p : Padding,
 
@@ -532,6 +558,7 @@
 			return ZED.Replace
 			(
 				'#/R/{text-align:center}' +
+				'#/R/ ./C/{margin:/p/px}' +
 				'#/R/ ./C/>*{margin-top:16px}' +
 				'#/R/ ./C/>./I/{width:100%}' +
 				'#/R/ ./P/{visibility:hidden}' +
@@ -542,7 +569,7 @@
 				'#/R/ fieldset:hover ./W/,#/R/ ./H/ ./W/{background:#CCD0D7;color:white}' +
 				'#/R/ ./O/ ./W/{background:#2672EC!important;color:white!important}' +
 				'#/R/ img{width:/m/px}' +
-				'#/R/ fieldset span{cursor:auto}',
+				'#/R/ fieldset span{font-size:12px;cursor:auto}',
 				'/',
 				{
 					R : ID,
@@ -562,7 +589,7 @@
 				}
 			)
 		},
-		Content : function(Q)
+		Content : function(Q,Index)
 		{
 			var
 			ID,Jump,Dispatch,
@@ -606,7 +633,7 @@
 				Say && W.text(Say)
 				Class && Card.addClass(Class)
 			},
-			Waving = function(ID,Card,W)
+			Waving = function(ID,Card,W,Title)
 			{
 				var
 				StartAt,
@@ -630,7 +657,7 @@
 						default :
 							false === J ||
 							(
-								TaskColdOn(Dispatch,ID),
+								TaskColdOn(Dispatch,ID,Title),
 								Now = TaskStateCold
 							)
 					}
@@ -699,7 +726,7 @@
 							$(span).text(FriendlyDate(V[ListCardDateKey]))
 						)
 					)
-					Waving(V[ListCardIDKey],F,W)
+					Waving(V[ListCardIDKey],F,W,V[ListCardTitleKey])
 				})
 				PagerUp(Page,Total)
 				PagerDown(Page,Total)
@@ -768,10 +795,11 @@
 				l : -1
 			},function(F,V)
 			{
-				SC.on(F,ZED.invokeAlways(ZED.invokeProp,click,ZED.nth(V,T)))
+				SC.on(F,NSMakeIndex(Index,ZED.invokeAlways(ZED.invokeProp,click,ZED.nth(V,T))))
 			})
-			SC.on('ctrl+a',null,ZED.invokeAlways(ZED.each,ZED.call_(ZED.__,true),Wave))
-				.on('ctrl+shift+a',null,ZED.invokeAlways(ZED.each,ZED.call_(ZED.__,false),Wave))
+
+			SC.on('ctrl+a',null,NSMakeIndex(Index,ZED.invokeAlways(ZED.each,ZED.call_(ZED.__,true),Wave)))
+				.on('ctrl+shift+a',null,NSMakeIndex(Index,ZED.invokeAlways(ZED.each,ZED.call_(ZED.__,false),Wave)))
 		}
 	},{
 		Tab : $(div).append
@@ -780,15 +808,158 @@
 			ProcessingUp,
 			ProcessingDown
 		),
+		CSS : function(ID,W,H)
+		{
+			return ZED.Replace
+			(
+				'#/R/ ./C/{height:/h/px}' +
+				'#/R/ ./V/{padding-top:/p/px;border-bottom:1px solid #E4E4E4}' +
+				'#/R/ ./V/>*{vertical-align:middle}' +
+				'#/R/ ./T/,#/R/ ./S/{margin-left:/p/px;width:/w/px}' +
+				'#/R/ ./T/{/i/;overflow:hidden;font-size:15px;white-space:nowrap;text-overflow:ellipsis}' +
+				'#/R/ ./S/{/i/;font-size:12px}' +
+				'#/R/ ./E/,#/R/ ./A/{/i/;width:16px;height:16px}' +
+				'#/R/ ./E/{}' +
+				'#/R/ ./A/{}' +
+				'#/R/ ./P/{margin-top:4px;height:3px;width:0}' +
+				'#/R/ ./D/ ./P/{background:/c/}' +
+				'#/R/ ./H/ ./P/{background:/l/}',
+				'/',
+				{
+					R : ID,
+					C : ClassContent,
+
+					V : ClassOver,
+					D : ClassOverCold,
+					H : ClassOverHot,
+					T : ClassOverTitle,
+					w : StageWidth - Padding - Padding - ScrollWidth - 20,
+					S : ClassOverState,
+					E : ClassOverEnd,
+					A : ClassOverAction,
+					P : ClassOverProgress,
+
+					p : Padding,
+					i : 'display:inline-block',
+					h : H - TitleHeight,
+					c : ColorCold,
+					l : ColorHot
+				}
+			)
+		},
+		Show : ZED.flip(ZED.call_),
 		Content : function(Q)
 		{
-			Q = WithTitle(Q,'Processing')
+			var
+			Q = WithTitle(Q,'Processing'),
+			Above = {},
+			OverPanelKey = ZED.KeyGen(),
+			OverTitleKey = ZED.KeyGen(),
+			OverStateKey = ZED.KeyGen(),
+			OverEndKey = ZED.KeyGen(),
+			OverActionKey = ZED.KeyGen(),
+			OverFigureKey = ZED.KeyGen(),
+			OverProgressKey = ZED.KeyGen(),
+			OverFigure = function(C,T,Q,ID)
+			{
+				return ZED.Shape(Q).attr(attrTitle,T).on(click,ZED.invokeAlways(C,ID))
+			},
+			Over = function(Q)
+			{
+				return Above[Q] || (Above[Q] = ZED.ReduceToObject
+				(
+					OverTitleKey,ShowByRock(ClassOverTitle,true),
+					OverStateKey,ShowByRock(ClassOverState,true),
+					OverEndKey,ShowByRock(ClassOverEnd,true),
+					OverActionKey,ShowByRock(ClassOverAction,true),
+					OverFigureKey,
+					[
+						OverFigure(RollCommit,'Commit',{Type : 'Tick',Line : '24%',Fill : 'transparent',Stroke : '#6FB139'},Q),
+						OverFigure(RollPlay,'Start or resume',{Type : 'Polygon',General : 3,Padding : '12%',Rotate : -90},Q),
+						OverFigure(RollPause,'Pause',{Type : 'Pause',Padding : '20%'},Q)
+					],
+					OverProgressKey,ShowByRock(ClassOverProgress,true)
+				))
+			},
+			Bright = ZED.contains(ZED.__,
+			[
+				TaskStatePlay,
+				TaskStatePause
+			]),
+			What = function(P,Q)
+			{
+				P.addClass(Bright(Q[TaskHashKey]) ? ClassOverHot : ClassOverCold)
+			},
+			List = ZED.ListView(
+			{
+				Scroll : Q,
+				Data : TaskStorage,
+				Make : function(Q,A,R)
+				{
+					A = Over(Q[TaskHashKey])
+					A[OverPanelKey] = R = ShowByRock(ClassOver,true).append
+					(
+						A[OverTitleKey],
+						A[OverEndKey],
+						br,
+						A[OverStateKey],
+						A[OverActionKey],
+						br,
+						A[OverProgressKey]
+					)
+					What(R,Q)
+					R.attr(attrTitle,Q[TaskTitleKey])
+					return R
+				}
+			}),
+
+			RollCommit = function()
+			{
+
+			},
+			RollPlay = function()
+			{
+
+			},
+			RollPause = function()
+			{
+
+			};
+
+			TaskEmitter.on(TaskOnAddCold,function(Q,A)
+			{
+				A = Over(Q[TaskHashKey])
+				A[OverTitleKey].text(Q[TaskTitleKey])
+			}).on(TaskOnRemoveCold,function(Q,A)
+			{
+				A = Over(Q[TaskHashKey])
+				A[OverPanelKey] = undefined
+			})
+
+			return List.redraw
 		}
 	},{
 		Tab : 'History',
+		Show : ZED.flip(ZED.call_),
 		Content : function(Q)
 		{
-			Q = WithTitle(Q,'History')
+			var
+			Q = WithTitle(Q,'History'),
+			List = ZED.ListView(
+			{
+				Scroll : Q,
+				Data : HistoryStorage,
+				Make : function()
+				{
+
+				},
+				Destroy : function()
+				{
+
+				}
+			});
+
+			return List.redraw
 		}
 	},{
 		Tab : 'Sign in',
