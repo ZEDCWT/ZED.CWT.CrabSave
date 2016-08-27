@@ -148,6 +148,22 @@
 			K.preventDefault()
 		}),
 
+	RedrawStorage = [true],
+	Redraw = function(F,J)
+	{
+		F = RedrawStorage.length - 1
+		if (J = RedrawStorage[F]) RedrawStorage[F] = false
+		else RedrawStorage.push(true)
+
+		return J ? function(S,Q)
+		{
+			Q.redraw().scroll(RedrawStorage[F])
+		} : function(S,Q)
+		{
+			RedrawStorage[F] = Q.scroll()
+		}
+	},
+
 
 
 	//	Task
@@ -169,8 +185,7 @@
 	TaskGenHash = function(P,ID){return P + '|' + ID},
 	TaskSearch = function(P,ID)
 	{
-		P = ZED.propEq(TaskHashKey,TaskGenHash(P,ID))
-		return ZED.find(P,TaskStorage) || ZED.find(P,HistoryStorage)
+		return TaskHash[P = TaskGenHash(P,ID)] || HistoryHash[P]
 	},
 	TaskUpdateProcessing = function(F,L)
 	{
@@ -818,7 +833,7 @@
 				'#/R/ ./T/,#/R/ ./S/{margin-left:/p/px;width:/w/px}' +
 				'#/R/ ./T/{/i/;overflow:hidden;font-size:15px;white-space:nowrap;text-overflow:ellipsis}' +
 				'#/R/ ./S/{/i/;font-size:12px}' +
-				'#/R/ ./E/,#/R/ ./A/{/i/;width:16px;height:16px}' +
+				'#/R/ ./E/,#/R/ ./A/{/i/;width:16px;height:16px;cursor:pointer}' +
 				'#/R/ ./E/{}' +
 				'#/R/ ./A/{}' +
 				'#/R/ ./P/{margin-top:4px;height:3px;width:0}' +
@@ -847,7 +862,8 @@
 				}
 			)
 		},
-		Show : ZED.flip(ZED.call_),
+		Show : Redraw(),
+		BeforeHide : Redraw(),
 		Content : function(Q)
 		{
 			var
@@ -860,23 +876,23 @@
 			OverActionKey = ZED.KeyGen(),
 			OverFigureKey = ZED.KeyGen(),
 			OverProgressKey = ZED.KeyGen(),
-			OverFigure = function(C,T,Q,ID)
+			OverFigure = function(C,T,Q,L,ID)
 			{
-				return ZED.Shape(Q).attr(attrTitle,T).on(click,ZED.invokeAlways(C,ID))
+				return ZED.Shape(Q).attr(attrClass,L).attr(attrTitle,T).on(click,ZED.invokeAlways(C,ID))
 			},
-			Over = function(Q)
+			Over = function(Q,T)
 			{
 				return Above[Q] || (Above[Q] = ZED.ReduceToObject
 				(
 					OverTitleKey,ShowByRock(ClassOverTitle,true),
 					OverStateKey,ShowByRock(ClassOverState,true),
-					OverEndKey,ShowByRock(ClassOverEnd,true),
-					OverActionKey,ShowByRock(ClassOverAction,true),
+					OverEndKey,OverFigure(RollEnd,'Remove',{Type : 'X',Line : '20%',Padding : '10%',Fill : 'transparent',Stroke : '#656565'},ClassOverEnd,Q),
+					OverActionKey,T = OverFigure(RollCommit,'Commit',{Type : 'Tick',Line : '24%',Fill : 'transparent',Stroke : '#6FB139'},ClassOverAction,Q),
 					OverFigureKey,
 					[
-						OverFigure(RollCommit,'Commit',{Type : 'Tick',Line : '24%',Fill : 'transparent',Stroke : '#6FB139'},Q),
-						OverFigure(RollPlay,'Start or resume',{Type : 'Polygon',General : 3,Padding : '12%',Rotate : -90},Q),
-						OverFigure(RollPause,'Pause',{Type : 'Pause',Padding : '20%'},Q)
+						T,
+						OverFigure(RollPlay,'Start or resume',{Type : 'Polygon',General : 3,Padding : '12%',Rotate : -90},ClassOverAction,Q),
+						OverFigure(RollPause,'Pause',{Type : 'Pause',Padding : '20%'},ClassOverAction,Q)
 					],
 					OverProgressKey,ShowByRock(ClassOverProgress,true)
 				))
@@ -899,7 +915,7 @@
 					A = Over(Q[TaskHashKey])
 					A[OverPanelKey] = R = ShowByRock(ClassOver,true).append
 					(
-						A[OverTitleKey],
+						A[OverTitleKey].attr(attrTitle,Q[TaskTitleKey]),
 						A[OverEndKey],
 						br,
 						A[OverStateKey],
@@ -908,11 +924,14 @@
 						A[OverProgressKey]
 					)
 					What(R,Q)
-					R.attr(attrTitle,Q[TaskTitleKey])
 					return R
 				}
 			}),
 
+			RollEnd = function()
+			{
+
+			},
 			RollCommit = function()
 			{
 
@@ -936,11 +955,12 @@
 				A[OverPanelKey] = undefined
 			})
 
-			return List.redraw
+			return List
 		}
 	},{
 		Tab : 'History',
-		Show : ZED.flip(ZED.call_),
+		Show : Redraw(),
+		BeforeHide : Redraw(),
 		Content : function(Q)
 		{
 			var
@@ -959,7 +979,7 @@
 				}
 			});
 
-			return List.redraw
+			return List
 		}
 	},{
 		Tab : 'Sign in',
