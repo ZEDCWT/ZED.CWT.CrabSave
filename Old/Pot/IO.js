@@ -8,6 +8,9 @@
 	Observable = ZED.Observable,
 
 	$ = ZED.jQuery,
+	EmptyJQuery = $(),
+
+	Path = require('path'),
 
 	Request = require('request'),
 	RequestBody = Observable.wrapNode(Request,null,ZED.nthArg(1)),
@@ -22,11 +25,17 @@
 	SendCMD = SendRenderer('CMD'),
 
 	SKG = ZED.StableKeyGen(114514),
+	GlobalPathKey = SKG(),
+	GlobalOnlineKey = SKG(),
+	GlobalCookieKey = SKG(),
 	Global = ZED.Merge
 	(
 		ZED.pick(ZED.times(ZED.compose(SKG,ZED.inc),2),ipcRenderer.sendSync('Mirror')),
 		ZED.ReduceToObject
 		(
+			GlobalPathKey,Path.join(ZED.HOME,'ZED/CrabSave/Download'),
+			GlobalOnlineKey,5,
+			GlobalCookieKey,{}
 		)
 	),
 	GlobalSave = SendRenderer('Mirror',Global),
@@ -124,8 +133,8 @@
 
 	Rainbow = ShowByRock(IDRainbow).attr(attrClass,ClassScroll),
 	Navi = ShowByRock(IDNavi),
-	ProcessingUp = ShowByRock(ClassNotiUp,true),
-	ProcessingDown = ShowByRock(ClassNotiDown,true),
+	ProcessingUp = ShowByRock(ClassNotiUp,true).attr(attrTitle,'Queuing'),
+	ProcessingDown = ShowByRock(ClassNotiDown,true).attr(attrTitle,'Uncommitted'),
 	Stage = ShowByRock(IDStage),
 
 	NS = ZED.Tab(
@@ -169,6 +178,7 @@
 	//	Task
 	TaskSKG = ZED.StableKeyGen(84941),
 	TaskHashKey = TaskSKG(),
+	TaskWaveKey = TaskSKG(),
 	TaskIDKey = TaskSKG(),
 	TaskStateKey = TaskSKG(),
 	TaskStateCold = TaskSKG(),
@@ -197,9 +207,20 @@
 		L = TaskStorage.length - L
 		ProcessingUp.css('visibility',L ? 'visible' : 'hidden').text(L)
 	},
-	TaskOnAddCold = ZED.KeyGen(),
-	TaskOnRemoveCold = ZED.KeyGen(),
+	TaskOnColdAdd = ZED.KeyGen(),
+	TaskOnColdRemove = ZED.KeyGen(),
+	TaskOnProcessingEnd = ZED.KeyGen(),
+	TaskOnStateChange = ZED.KeyGen(),
+	TaskOnNotice = ZED.KeyGen(),
 	TaskEmitter = ZED.Emitter(),
+	TaskRemove = function(H,N,Q,F)
+	{
+		F = ZED.indexOf(Q = TaskHash[H],TaskStorage)
+		0 <= F && TaskStorage.splice(F,1)
+		ZED.delete_(H,TaskHash)
+		TaskUpdateProcessing()
+		TaskEmitter.emit(N,H)
+	},
 	TaskColdOn = function(P,ID,Title,H)
 	{
 		if (!TaskHash[H = TaskGenHash(P,ID)])
@@ -213,18 +234,135 @@
 				TaskDispatchKey,P
 			))
 			TaskUpdateProcessing()
-			TaskEmitter.emit(TaskOnAddCold,ID)
+			TaskEmitter.emit(TaskOnColdAdd,ID)
 		}
 	},
-	TaskColdOff = function(P,ID,F)
+	TaskColdOff = function(P,ID)
 	{
 		if (TaskHash[P = TaskGenHash(P,ID)] && TaskStateCold === TaskHash[P][TaskStateKey])
+			TaskRemove(P,TaskOnColdRemove)
+	},
+	TaskPlay = function(H,Q)
+	{
+		Q = TaskHash[H]
+		if (TaskStateCold === Q[TaskStateKey] || TaskStatePause === Q[TaskStateKey])
 		{
-			F = ZED.indexOf(ID = TaskHash[P],TaskStorage)
-			0 <= F && TaskStorage.splice(F,1)
-			ZED.delete_(P,TaskHash)
+			Q[TaskStateKey] = TaskStatePlay
+			TaskEmitter.emit(TaskOnStateChange,H,TaskStatePlay)
+			TaskDispatch()
 			TaskUpdateProcessing()
-			TaskEmitter.emit(TaskOnRemoveCold,ID)
+		}
+	},
+	TaskPause = function(H,Q)
+	{
+		Q = TaskHash[H]
+		if (TaskStatePlay === Q[TaskStateKey])
+		{
+			Q[TaskStateKey] = TaskStatePause
+			TaskEmitter.emit(TaskOnStateChange,H,TaskStatePause)
+			TaskDispatch()
+			TaskUpdateProcessing()
+		}
+	},
+	TaskEnd = function(Q)
+	{
+		TaskPause(Q)
+		TaskRemove(Q,TaskOnProcessingEnd)
+		TaskEmitter.emit(TaskOnStateChange,Q,undefined)
+	},
+	TaskOnline = [],
+	TaskOnlineHash = {},
+	TaskDownload = function(B,R)
+	{
+		B = ZED.Downloader(B)
+			.on('connected',function()
+			{
+				R.push(true)
+			})
+			.on('drain',function()
+			{
+
+			})
+			.on('done',function()
+			{
+
+			})
+			.on('die',function()
+			{
+
+			})
+		R.push(B)
+	},
+	TaskBear = function(Q,R)
+	{
+		R = [Q]
+		if (Q[TaskWaveKey])
+		{
+			R.push(ZED.End.empty)
+			TaskDownload(Q[TaskWaveKey],R)
+		}
+		else
+		{
+			R.push(DispatchWrap(Q[TaskDispatchKey])(Q[TaskIDKey],Q)
+				.start(function(B)
+				{
+					TaskDownload(Q[TaskWaveKey] =
+					{
+						request : B[0],
+						path : Path.join(Global[GlobalPathKey],B[1]),
+						interval : Infinity
+					},R)
+				},function()
+				{
+					//TODO
+				}))
+		}
+		return R
+	},
+	TaskKill = function(Q)
+	{
+		console.log(Q)
+		Q[1].end()
+		Q[2] && Q[2].Stop()
+	},
+	TaskDispatch = function(T,F)
+	{
+		for (F = TaskOnline.length;F;)
+		{
+			T = TaskOnline[--F]
+			if (TaskStatePause === T[0][TaskStateKey])
+			{
+				TaskKill(T)
+				ZED.delete_(T[0][TaskHashKey],TaskOnlineHash)
+				TaskOnline.splice(F,1)
+			}
+		}
+
+		if (Global[GlobalOnlineKey] < TaskOnline.length)
+		{
+			for (F = TaskOnline.length;Global[GlobalOnlineKey] < F;)
+			{
+				TaskKill(T = TaskOnline[--F])
+				if (TaskStatePause !== T[0][TaskStateKey])
+				{
+					T[0][TaskStateKey] = TaskStatePause
+					TaskEmitter.emit(TaskOnStateChange,T[0][TaskHashKey],TaskStatePause)
+				}
+				ZED.delete_(T[0][TaskHashKey],TaskOnlineHash)
+			}
+			TaskOnline.splice(Global[GlobalOnlineKey])
+		}
+		else
+		{
+			for (F = 0;TaskOnline.length < Global[GlobalOnlineKey] && F < TaskStorage.length;++F)
+			{
+				T = TaskStorage[F]
+				if (TaskStatePlay === T[TaskStateKey] && !TaskOnlineHash[T[TaskHashKey]])
+				{
+					TaskOnlineHash[T[TaskHashKey]] = true
+					TaskOnline.push(TaskBear(T))
+				}
+			}
 		}
 	},
 
@@ -273,7 +411,37 @@
 	//		Bilibili
 	DomainBilibili = '.bilibili.com/',
 	DomainBilibiliSpace = 'space' + DomainBilibili,
+	DomainBilibiliAPI = 'api' + DomainBilibili,
+	DomainBilibiliInterface = 'interface' + DomainBilibili,
+	URLBilibiliAPPAppkey = '1d8b6e7d45233436',
+	URLBilibiliAPPSecretKey = '560c52ccd288fed045859ed18bffd973',
+	URLBilibiliAPPAccessKey = 'd83e170b84ddd7c0bb1fa5510087f13d',
+	URLBilibiliParam = function(Q,R)
+	{
+		Q = ZED.Merge(
+		{
+			access_key : URLBilibiliAPPAccessKey,
+			appkey : URLBilibiliAPPAppkey
+		},Q)
+		R = ZED.Reduce(Q,function(D,F,V)
+		{
+			D.push(F + '=' + V)
+		},[])
+		R.sort()
+		R = R.join('&')
+		return R + '&sign=' + ZED.toLower(ZED.Code.MD5(R + URLBilibiliAPPSecretKey))
+	},
 	URLBilibiliUser = ZED.URLBuild(HTTP,DomainBilibiliSpace,'ajax/member/getSubmitVideos?mid=',undefined,'&page=',undefined,'&pagesize=',undefined),
+	URLBilibiliView = ZED.URLBuild(HTTP,DomainBilibiliAPI,'view?id=',undefined,'&batch=1&appkey=20bee1f7a18a425c&type=json'),
+	URLBilibiliPlayURL = function(Q)
+	{
+		return DomainBilibiliInterface + 'playurl?' + URLBilibiliParam(
+		{
+			cid : Q,
+			quality : 3,
+			otype : 'json'
+		})
+	},
 	//		Youtube
 	GoogleAPIKey = 'AIzaSyA_ltEFFYL4E_rOBYkQtA8aKHnL5QR_uMA',
 	DomainGoogleAPI = '.googleapis.com/',
@@ -288,6 +456,23 @@
 
 	//	Action
 	//		Bilibili
+	BilibiliDispatch = DispatchWrap(function(Q)
+	{
+		return RequestJSON(URLBilibiliView(Q))
+			.flatMap(function(Q)
+			{
+				return ZED.isArray(Q.list) ?
+					Observable.from(Q.list)
+						.flatMapOnline(1,function(Q)
+						{
+							return RequestJSON(URLBilibiliPlayURL(Q))
+								.map(function(Q)
+								{
+								})
+						}) :
+					Observable.throw('No provided cid list')
+			})
+	}),
 	BilibiliUser = function(ID,Page)
 	{
 		var
@@ -323,11 +508,11 @@
 				)
 			})
 	},
-	BilibiliDispatch = DispatchWrap(function()
+	//		Youtube
+	YoutubeDispatch = DispatchWrap(function()
 	{
 
 	}),
-	//		Youtube
 	YoutubePlaylist = function(ID,Page)
 	{
 		var
@@ -374,11 +559,11 @@
 					Observable.throw('No provided playlist id')
 			})
 	}),
-	YoutubeDispatch = DispatchWrap(function()
+	//		Niconico
+	NiconicoDispatch = DispatchWrap(function()
 	{
 
 	}),
-	//		Niconico
 	NiconicoUser = function(ID,Page)
 	{
 		Page = Page || 0
@@ -415,10 +600,6 @@
 				)
 			})
 	},
-	NiconicoDispatch = DispatchWrap(function()
-	{
-
-	}),
 
 
 
@@ -609,7 +790,7 @@
 			var
 			ID,Jump,Dispatch,
 
-			Input = ShowByRock(ClassInput,true,input).attr('placeholder','URL').val('http://space.bilibili.com/13046'),
+			Input = ShowByRock(ClassInput,true,input).attr('placeholder','URL').val('http://space.bilibili.com/374377'),
 			Button = ShowByButton('Initialize'),
 			State = $(div),
 			PagerUp,
@@ -622,6 +803,8 @@
 				switch (Last)
 				{
 					case TaskStateCold :
+					case TaskStatePlay :
+					case TaskStatePause :
 						Class = ClassWaveOn
 						break
 					case TaskStateDone :
@@ -637,6 +820,8 @@
 						break
 					case TaskStatePlay :
 					case TaskStatePause :
+						Say = 'Processing'
+						Class = ClassWaveOn
 						break
 					case TaskStateDone :
 						Say = 'Downloaded'
@@ -680,6 +865,12 @@
 				};
 
 				Now = Now && Now[TaskStateKey]
+				Go[TaskHashKey] = TaskGenHash(Dispatch,ID)
+				Go[TaskDispatchKey] = function(Q)
+				{
+					if (TaskStateDone === Q) StartAt = Q
+					WaveDisplay(ID,Card,W,Now,Now = Q)
+				}
 				TaskStateDone === Now && (StartAt = Now)
 				WaveDisplay(ID,Card,W,undefined,Now)
 
@@ -759,7 +950,7 @@
 
 			Q = WithTitle(Q,'Browser')
 
-			Observable.wrapEmitter(Button,click)
+			Observable.fromEmitter(Button,click)
 				.flatMapLatest(function()
 				{
 					var
@@ -813,6 +1004,18 @@
 				SC.on(F,NSMakeIndex(Index,ZED.invokeAlways(ZED.invokeProp,click,ZED.nth(V,T))))
 			})
 
+			TaskEmitter.on(TaskOnStateChange,function(H,Q)
+			{
+				ZED.each(function(V)
+				{
+					if (H === V[TaskHashKey])
+					{
+						V[TaskDispatchKey](Q)
+						return false
+					}
+				},Wave)
+			})
+
 			SC.on('ctrl+a',null,NSMakeIndex(Index,ZED.invokeAlways(ZED.each,ZED.call_(ZED.__,true),Wave)))
 				.on('ctrl+shift+a',null,NSMakeIndex(Index,ZED.invokeAlways(ZED.each,ZED.call_(ZED.__,false),Wave)))
 		}
@@ -833,7 +1036,8 @@
 				'#/R/ ./T/,#/R/ ./S/{margin-left:/p/px;width:/w/px}' +
 				'#/R/ ./T/{/i/;overflow:hidden;font-size:15px;white-space:nowrap;text-overflow:ellipsis}' +
 				'#/R/ ./S/{/i/;font-size:12px}' +
-				'#/R/ ./E/,#/R/ ./A/{/i/;width:16px;height:16px;cursor:pointer}' +
+				'#/R/ ./E/,#/R/ ./A/{/i/}' +
+				'#/R/ svg{width:16px;height:16px;cursor:pointer}' +
 				'#/R/ ./E/{}' +
 				'#/R/ ./A/{}' +
 				'#/R/ ./P/{margin-top:4px;height:3px;width:0}' +
@@ -864,7 +1068,7 @@
 		},
 		Show : Redraw(),
 		BeforeHide : Redraw(),
-		Content : function(Q)
+		Content : function(Q,Index)
 		{
 			var
 			Q = WithTitle(Q,'Processing'),
@@ -872,39 +1076,44 @@
 			OverPanelKey = ZED.KeyGen(),
 			OverTitleKey = ZED.KeyGen(),
 			OverStateKey = ZED.KeyGen(),
-			OverEndKey = ZED.KeyGen(),
 			OverActionKey = ZED.KeyGen(),
 			OverFigureKey = ZED.KeyGen(),
 			OverProgressKey = ZED.KeyGen(),
-			OverFigure = function(C,T,Q,L,ID)
+			OverFigure = function(C,Q,ID,L)
 			{
-				return ZED.Shape(Q).attr(attrClass,L).attr(attrTitle,T).on(click,ZED.invokeAlways(C,ID))
+				Q = ZED.Shape(Q).on(click,function(){C(ID)})
+				return L ? ShowByRock(L,true).append(Q) : Q
 			},
-			Over = function(Q,T)
+			Over = function(Q)
 			{
+				var
+				Title,
+				State,
+				Action,
+				Progress;
+
 				return Above[Q] || (Above[Q] = ZED.ReduceToObject
 				(
-					OverTitleKey,ShowByRock(ClassOverTitle,true),
-					OverStateKey,ShowByRock(ClassOverState,true),
-					OverEndKey,OverFigure(RollEnd,'Remove',{Type : 'X',Line : '20%',Padding : '10%',Fill : 'transparent',Stroke : '#656565'},ClassOverEnd,Q),
-					OverActionKey,T = OverFigure(RollCommit,'Commit',{Type : 'Tick',Line : '24%',Fill : 'transparent',Stroke : '#6FB139'},ClassOverAction,Q),
+					OverTitleKey,Title = ShowByRock(ClassOverTitle,true),
+					OverStateKey,State = ShowByRock(ClassOverState,true).html('Ready to be committed'),
+					OverActionKey,Action = OverFigure(RollPlay,{Type : 'Tick',Line : '24%',Fill : 'transparent',Stroke : '#6FB139'},Q,ClassOverAction).attr(attrTitle,'Commit'),
 					OverFigureKey,
 					[
-						T,
-						OverFigure(RollPlay,'Start or resume',{Type : 'Polygon',General : 3,Padding : '12%',Rotate : -90},ClassOverAction,Q),
-						OverFigure(RollPause,'Pause',{Type : 'Pause',Padding : '20%'},ClassOverAction,Q)
+						OverFigure(RollPause,{Type : 'Pause',Padding : '20%'},Q),
+						OverFigure(RollPlay,{Type : 'Polygon',General : 3,Padding : '12%',Rotate : -90},Q)
 					],
-					OverProgressKey,ShowByRock(ClassOverProgress,true)
+					OverProgressKey,Progress = ShowByRock(ClassOverProgress,true),
+					OverPanelKey,ShowByRock(ClassOver,true).append
+					(
+						Title,
+						OverFigure(TaskEnd,{Type : 'X',Line : '20%',Padding : '10%',Fill : 'transparent',Stroke : '#656565'},Q,ClassOverEnd).attr(attrTitle,'Remove'),
+						br,
+						State,
+						Action,
+						br,
+						Progress
+					)
 				))
-			},
-			Bright = ZED.contains(ZED.__,
-			[
-				TaskStatePlay,
-				TaskStatePause
-			]),
-			What = function(P,Q)
-			{
-				P.addClass(Bright(Q[TaskHashKey]) ? ClassOverHot : ClassOverCold)
 			},
 			List = ZED.ListView(
 			{
@@ -913,47 +1122,78 @@
 				Make : function(Q,A,R)
 				{
 					A = Over(Q[TaskHashKey])
-					A[OverPanelKey] = R = ShowByRock(ClassOver,true).append
-					(
-						A[OverTitleKey].attr(attrTitle,Q[TaskTitleKey]),
-						A[OverEndKey],
-						br,
-						A[OverStateKey],
-						A[OverActionKey],
-						br,
-						A[OverProgressKey]
-					)
-					What(R,Q)
+					R = A[OverPanelKey]
+					A[OverTitleKey].attr(attrTitle,Q[TaskTitleKey])
+					A[OverProgressKey].css('width','50%')//DEBUG
 					return R
 				}
 			}),
 
-			RollEnd = function()
+			RollAction = function(Q,I,T)
 			{
-
+				Q[OverActionKey].attr(attrTitle,T).children().detach()
+				Q[OverActionKey].append(Q[OverFigureKey][I])
 			},
-			RollCommit = function()
+			RollClass = function(Q,H)
 			{
-
+				Q[OverPanelKey].removeClass(H ? ClassOverCold : ClassOverHot).addClass(H ? ClassOverHot : ClassOverCold)
 			},
-			RollPlay = function()
+			RollPlay = function(ID,Q)
 			{
-
+				Q = Over(ID)
+				RollAction(Q,0,'Pause')
+				RollClass(Q,true)
+				Q[OverStateKey].text('Queuing')
+				TaskPlay(ID)
 			},
-			RollPause = function()
+			RollPause = function(ID,Q)
 			{
-
+				Q = Over(ID)
+				RollAction(Q,1,'Resume')
+				RollClass(Q,false)
+				Q[OverStateKey].text('Paused')
+				TaskPause(ID)
 			};
 
-			TaskEmitter.on(TaskOnAddCold,function(Q,A)
+			Q.on('mousedown','svg',function(E)
+			{
+				ZED.ClearSelection()
+				E.stopPropagation()
+				E.preventDefault()
+			})
+
+			TaskEmitter.on(TaskOnColdAdd,function(Q,A)
 			{
 				A = Over(Q[TaskHashKey])
 				A[OverTitleKey].text(Q[TaskTitleKey])
-			}).on(TaskOnRemoveCold,function(Q,A)
+			}).on(TaskOnColdRemove,function(A)
 			{
-				A = Over(Q[TaskHashKey])
-				A[OverPanelKey] = undefined
-			})
+				A = Over(Q)
+				A[OverPanelKey] = EmptyJQuery
+			}).on(TaskOnProcessingEnd,function(Q)
+			{
+				ZED.delete_(Q,Above)
+				Index === NS.Index() && List.redraw()
+			}).on(TaskOnNotice,ZED.each(function(H,I,A)
+			{
+				I = H[1]
+				Over(H[0])[OverStateKey].text
+				(
+					A.Total ? ZED.Replace
+					(
+						'$0$ / $1$, $2$%, $3$/s, -$4$',
+						ZED.FormatSize(A.Saved),ZED.FormatSize(A.Total),
+						ZED.Format(100 * A.Percentage),
+						ZED.FormatSize(1000 * A.Speed),
+						ZED.SecondsToString(A.Rest / 1000)
+					) : ZED.Replace
+					(
+						'$0$, $1$/s',
+						ZED.FormatSize(A.Saved),
+						ZED.FormatSize(1000 * A.Speed)
+					)
+				)
+			}))
 
 			return List
 		}
@@ -969,11 +1209,7 @@
 			{
 				Scroll : Q,
 				Data : HistoryStorage,
-				Make : function()
-				{
-
-				},
-				Destroy : function()
+				Make : function(Q)
 				{
 
 				}
@@ -989,11 +1225,46 @@
 		}
 	},{
 		Tab : 'Setting',
+		CSS : function(ID)
+		{
+			return ZED.Replace
+			(
+				'#/R/ ./C/{margin:/p/px}',
+				'/',
+				{
+					R : ID,
+					C : ClassContent,
+					p : Padding
+				}
+			)
+		},
 		Content : function(Q)
 		{
 			Q = WithTitle(Q,'Setting')
+			ZED.Preference(
+			{
+				Set :
+				[
+					['Path',[{T : 'I'}],GlobalPathKey],
+					['Online',[1,2,3,4,5,6,7,8,9,10],GlobalOnlineKey]
+				],
+				Data : Global,
+				Change : GlobalSave,
+				Parent : Q
+			})
 		}
 	})
+
+	setInterval(function()
+	{
+		TaskEmitter.emit(TaskOnNotice,ZED.reduce(function(D,V)
+		{
+			if (V[3])
+			{
+				D.push(V[0][TaskHashKey],V[2].Calc())
+			}
+		},[],TaskOnline))
+	},1E3)
 
 	TaskUpdateProcessing()
 

@@ -1,57 +1,39 @@
 var
 ZED = require('@zed.cwt/zedquery'),
 
-Deploy = require('./Deploy'),
+Config = require('./Config'),
 
 FS = require('fs'),
 Path = require('path'),
 
 Read = function(Name,R)
 {
-	try
-	{
-		R = ZED.JTO(FS.readFileSync(Name))
-	}
+	try{R = ZED.JTO(FS.readFileSync(Name))}
 	catch(e){}
 	return ZED.isObject(R) ? R : {}
-},
-Save = ZED.Emitter(),
-
-Reuse = {};
+};
 
 module.exports = function(Name)
 {
 	var
-	Data,
-	File = Path.join(Deploy.Root,Name + '.json');
-
-	if (!Reuse[Name])
+	File = Path.join(Config.Root,Name + '.json'),
+	Latest = Read(File),
+	Data = function(Q)
 	{
-		Save.on(Name,function(Q)
-		{
-			ZED.Merge(true,Data,Q)
-			FS.writeFile(File,ZED.OTJ(Data,'\t'))
-		},300)
+		return ZED.isNull(Q) ? Latest : Latest[Q]
+	};
 
-		Data = Read(File)
-
-		Reuse[Name] =
+	return {
+		Data : Data,
+		Save : ZED.throttle(Config.Throttle,function(Q)
 		{
-			Data : function(Q)
-			{
-				return ZED.isNull(Q) ? Data : Data[Q]
-			},
-			Save : function(Q)
-			{
-				Save.emit(Name,Q)
-			},
-			Read : function(Q)
-			{
-				Data = Read(File)
-				return ZED.isNull(Q) ? Data : Data[Q]
-			}
+			ZED.Merge(true,Latest,Q)
+			FS.writeFile(File,ZED.OTJ(Latest,'\t'))
+		}),
+		Read : function(Q)
+		{
+			Latest = Read(File)
+			return Data(Q)
 		}
 	}
-
-	return Reuse[Name]
 }

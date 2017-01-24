@@ -1,49 +1,23 @@
 var
-Root = __dirname,
-
 ZED = require('@zed.cwt/zedquery'),
+splitSpace = ZED.split(' '),
 
-Deploy = require('./Deploy'),
+Config = require('./Config'),
 Setting = require('./Setting'),
 
 Path = require('path'),
 
 Electron = require('electron'),
+App = Electron.app,
 
-splitSpace = ZED.split(' '),
+
 
 ONS = function(Q,O,E)
 {
 	ZED.each(function(V){Q.on(V,E)},splitSpace(O))
 },
 
-Created,
-Create = function()
-{
-	var
-	Window = new Electron.BrowserWindow(ZED.pick(splitSpace('width height x y'),Setting.Data()));
 
-	Setting.Data('Max') && Window.maximize()
-	Created = true
-
-	ONS(Window.webContents,'new-window will-navigate',ZED.invokeProp('preventDefault'))
-	ONS(Window,'resize move maximize minimize',function(M,R)
-	{
-		R = {Max : M = Window.isMaximized()}
-		M || ZED.Merge(R,Window.getBounds())
-		Setting.Save(R)
-	})
-	Window
-		.on('closed',function()
-		{
-			Action.off(false)
-			Created = undefined
-		})
-		.loadURL('file://' + Path.join(Root,'Pot/IO.html'),
-		{
-			userAgent : Deploy.UA
-		})
-},
 
 ActionWindow = ZED.curry(function(Q,W)
 {
@@ -69,6 +43,35 @@ Action = ZED.Emitter()
 
 
 
+Created,
+Create = function()
+{
+	var
+	Window = new Electron.BrowserWindow(ZED.pick(splitSpace('width height x y'),Setting.Data()));
+
+	Setting.Data('Max') && Window.maximize()
+	Created = true
+Window.webContents.toggleDevTools()
+	ONS(Window.webContents,'new-window will-navigate',ZED.invokeProp('preventDefault'))
+	ONS(Window,'resize move maximize minimize',function(M,R)
+	{
+		R = {Max : M = Window.isMaximized()}
+		M || ZED.Merge(R,Window.getBounds())
+		Setting.Save(R)
+	})
+	Window.on('closed',function()
+	{
+		Action.off(false)
+		Created = undefined
+	})
+	.loadURL('file://' + Path.join(__dirname,'KKK/Base.htm'),
+	{
+		userAgent : Config.UA
+	})
+},
+
+
+
 Roll = function(Q)
 {
 	if (2 < Q.length)
@@ -77,10 +80,10 @@ Roll = function(Q)
 	}
 };
 
-if (Electron.app.makeSingleInstance(Roll)) Electron.app.quit()
+if (App.makeSingleInstance(Roll)) App.quit()
 else
 {
-	Electron.app
+	App
 		.on('ready',Create)
 		.on('activate',function()
 		{
@@ -88,7 +91,7 @@ else
 		})
 		.on('window-all-closed',function()
 		{
-			'darwin' === process.platform || Electron.app.quit()
+			'darwin' === process.platform || App.quit()
 		})
 		.on('browser-window-created',function(E,W)
 		{
@@ -97,16 +100,6 @@ else
 
 	Electron.ipcMain
 		.on('CMD',ZED.flip(ZED.bind_(Action.emit,Action)))
-		.on('Mirror',function(E,R)
-		{
-			if (R) Setting.Save({Mirror : R})
-			else
-			{
-				R = Setting.Read('Mirror')
-				ZED.isObject(R) || (R = {})
-				E.returnValue = R
-			}
-		})
 
 	Roll(process.argv)
 }
