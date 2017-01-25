@@ -1,5 +1,5 @@
 {
-  "name": "ZED.CWT.ElectronBase",
+  "name": "ZED.CWT.CrabSave",
   "version": "0.0.0",
   "private": true,
   "main": "Trigger.js",
@@ -7,13 +7,14 @@
     "start": "electron Trigger"
   },
   "devDependencies": {
-    "electron-prebuilt": "^1.2.7"
+    "electron": "^1.5.0"
   },
   "dependencies": {
     "@zed.cwt/downloader": "0.0.1",
-    "@zed.cwt/zedquery": "^0.3.3",
-    "cli": "^0.11.2",
-    "graceful-fs": "^4.1.5",
-    "request": "^2.74.0"
+    "@zed.cwt/jquery": "0.0.3",
+    "@zed.cwt/zedquery": "^0.4.5",
+    "cli": "^1.0.1",
+    "graceful-fs": "^4.1.11",
+    "request": "^2.79.0"
   }
 }

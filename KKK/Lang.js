@@ -7,10 +7,17 @@ module.exports =
 {
 	L : _Lang,
 
+	//Tab
 	Browser : Lang('Browser'),
-	Uncommitted : Lang('Uncommitted'),
-	Processing : Lang('Processing'),
+	Cold : Lang('Cold'),
+	Hot : Lang('Hot'),
 	History : Lang('History'),
 	SignIn : Lang('Sign in'),
-	Setting : Lang('Setting')
+	Setting : Lang('Setting'),
+
+	//Browser
+	User : Lang('User'),
+	UexRtn : Lang('Unexpected return from the server'),
+	UknSite : Lang('Unknown site id $0$'),
+	UknURL : Lang('Unknown URL format $0$')
 }
