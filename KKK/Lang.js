@@ -15,9 +15,22 @@ module.exports =
 	SignIn : Lang('Sign in'),
 	Setting : Lang('Setting'),
 
+	//StatucBar
+	Loading : Lang('Loading...'),
+
 	//Browser
+	Processing : Lang('Processing `/0/`'),
+	Info : Lang('/0/,~,/1/,. ,/2/, in ,/3/,. ,/4/, page,/5/,.'),
 	User : Lang('User'),
 	UexRtn : Lang('Unexpected return from the server'),
-	UknSite : Lang('Unknown site id $0$'),
-	UknURL : Lang('Unknown URL format $0$')
+	UknSite : Lang('Unknown site id `/0/`'),
+	UknURL : Lang('Unknown URL format `/0/`'),
+
+	//Cold
+	Select : Lang('Select'),
+	//Cold : Lang('Cold'),
+	//Hot : Lang('Hot'),
+	//History : Lang('History'),
+	AddCold : Lang('Append to cold list'),
+	RmCold : Lang('Remove from cold list')
 }

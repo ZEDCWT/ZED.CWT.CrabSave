@@ -1,13 +1,14 @@
 var
 ZED = require('@zed.cwt/zedquery'),
 
-Key = require('./Key').Queue,
+Key = require('./Key'),
+KeyQueue = Key.Queue,
 Event = require('./Event').Queue,
 
 NoMoreUseful =
 [
-	Key.Active,
-	Key.Running
+	KeyQueue.Active,
+	KeyQueue.Running
 ],
 
 Bus = ZED.Emitter(),
@@ -15,7 +16,9 @@ Bus = ZED.Emitter(),
 Max = 5,
 Current = 0,
 Online = [],
+OnlineMap = {},
 Offline = [],
+OfflineMap = {},
 
 Dispatch = function(T,F)
 {
@@ -24,9 +27,9 @@ Dispatch = function(T,F)
 		for (F = 0;Current < Max && F < Online.length;++F)
 		{
 			T = Online[F]
-			if (T[Key.Active] && !T[Key.Running])
+			if (T[KeyQueue.Active] && !T[KeyQueue.Running])
 			{
-				T[Key.Running] = true
+				T[KeyQueue.Running] = true
 				++Current
 				Bus.emit(Event.Play,T)
 			}
@@ -37,14 +40,22 @@ Dispatch = function(T,F)
 		for (F = Online.length;Max < Current && F;)
 		{
 			T = Online[--F]
-			if (T[Key.Running])
+			if (T[KeyQueue.Running])
 			{
-				T[Key.Running] = false
+				T[KeyQueue.Running] = false
 				--Current
 				Bus.emit(Event.Pause,T)
 			}
 		}
 	}
+},
+
+MakeMap = function(Q,S)
+{
+	ZED.each(function(V)
+	{
+		S[V[KeyQueue.ID]] = V
+	},Q)
 };
 
 module.exports =
@@ -57,20 +68,31 @@ module.exports =
 		Offline = S
 		ZED.each(function(V)
 		{
-			V[Key.Running] = false
+			V[KeyQueue.Running] = false
 		},Q)
+		MakeMap(Q,OnlineMap)
+		MakeMap(S,OfflineMap)
 		Dispatch()
 	},
 	Online : function(){return Online},
 	Offline : function(){return Offline},
 	Max : function(Q){Max = Q},
 
+	HasOnline : function(ID)
+	{
+		return ZED.has(ID,OnlineMap)
+	},
+	HasOffline : function(ID)
+	{
+		return ZED.has(ID,OfflineMap)
+	},
+
 	//Append a new task
 	Push : function(Q)
 	{
-		var ID = Q[Key.ID];
+		var ID = Q[KeyQueue.ID];
 
-		if (!ZED.find(function(V){return ID === V[Key.ID]},Online))
+		if (!ZED.find(function(V){return ID === V[KeyQueue.ID]},Online))
 		{
 			Bus.emit(Event.Refresh)
 			Dispatch()
@@ -119,7 +141,7 @@ module.exports =
 	{
 		ZED.each(function(V)
 		{
-			V[Key.Active] = true
+			V[KeyQueue.Active] = true
 		},ZED.isArray(Q) ? Q : [Q])
 		Dispatch()
 	},
@@ -127,8 +149,8 @@ module.exports =
 	{
 		ZED.each(function(V)
 		{
-			V[Key.Running] && Bus.emit(Event.Pause,V)
-			V[Key.Active] = V[Key.Running] = false
+			V[KeyQueue.Running] && Bus.emit(Event.Pause,V)
+			V[KeyQueue.Active] = V[KeyQueue.Running] = false
 		},ZED.isArray(Q) ? Q : [Q])
 		Dispatch()
 	}

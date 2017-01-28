@@ -7,12 +7,13 @@ Key = require('./Key').Site,
 Lang = require('./Lang'),
 L = Lang.L,
 
+Name = 'Bilibili',
 PageSize = 30,
-URLSpace = ZED.URLBuild('http://space.bilibili.com/ajax/member/getSubmitVideos?mid=',undefined,'&pagesize=',PageSize,'&page=',undefined);
+URLSpace = ZED.URLBuild('http://space.bilibili.com/ajax/member/getSubmitVideos?mid=',undefined,'&pagesize=',PageSize,'&page=',undefined),
 
-module.exports = ZED.ReduceToObject
+R = ZED.ReduceToObject
 (
-	Key.Name,'Bilibili',
+	Key.Name,Name,
 	Key.Judge,/\.bilibili\./i,
 	Key.Login,function()
 	{
@@ -25,7 +26,7 @@ module.exports = ZED.ReduceToObject
 	Key.Map,[ZED.ReduceToObject
 	(
 		Key.Name,L(Lang.User),
-		Key.Judge,[/space\D*(\d+)/i],
+		Key.Judge,[/(?:^|.*[^a-z])space(?:[^a-z]\D*)??(\d+)/i],
 		Key.Page,function(ID,X)
 		{
 			return Util.RequestBody(URLSpace(ID,X))
@@ -39,10 +40,12 @@ module.exports = ZED.ReduceToObject
 					(
 						Key.Pages,Q.pages,
 						Key.Total,Q.count,
-						Key.Item,ZED.Map(Q.vlist,function(F,V)
+						Key.Item,ZED.Map(Q.vlist || [],function(F,V)
 						{
 							return ZED.ReduceToObject
 							(
+								Key.Name,Name,
+								Key.Unique,Util.MakeUnique(Name,V.aid),
 								Key.Index,PageSize * (X - 1) + F,
 								Key.ID,'av' + V.aid,
 								Key.Img,V.pic,
@@ -59,4 +62,6 @@ module.exports = ZED.ReduceToObject
 	{
 
 	}
-)
+);
+
+module.exports = R

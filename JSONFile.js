@@ -28,7 +28,7 @@ module.exports = function(Name)
 		Save : ZED.throttle(Config.Throttle,function(Q)
 		{
 			ZED.Merge(true,Latest,Q)
-			FS.writeFile(File,ZED.OTJ(Latest,'\t'))
+			FS.writeFile(File,ZED.OTJ(Latest,'\t',{Line : '\r\n'}),ZED.noop)
 		}),
 		Read : function(Q)
 		{

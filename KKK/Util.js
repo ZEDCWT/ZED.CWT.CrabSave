@@ -2,11 +2,32 @@ var
 ZED = require('@zed.cwt/zedquery'),
 Observable = ZED.Observable,
 
-Request = require('request').defaults({timeout : 20E3});
+Request = require('request').defaults({timeout : 20E3}),
+RequestBase = function(H)
+{
+	return function(Q)
+	{
+		return Observable.create(function(O)
+		{
+			Q = Request(Q,function(E,I,R)
+			{
+				E ? O.error(E) : O.data(H(I,R)).finish()
+			})
+			return function()
+			{
+				Q.abort()
+			}
+		})
+	}
+};
 
 module.exports =
 {
-	RequestHead : Observable.wrapNode(Request,null,ZED.identity),
-	RequestBody : Observable.wrapNode(Request,null,ZED.nthArg(1)),
-	RequestFull : Observable.wrapNode(Request)
+	RequestHead : RequestBase(ZED.identity),
+	RequestBody : RequestBase(ZED.nthArg(1)),
+	RequestFull : RequestBase(function(I,R){return [I,R]}),
+
+	MakeUnique : function(Q,S){return Q + '.' + S},
+
+	StopProp : function(E){E.stopPropagation()}
 }

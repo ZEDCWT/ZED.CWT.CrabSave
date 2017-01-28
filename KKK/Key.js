@@ -35,6 +35,7 @@ module.exports =
 		Total : SiteKey(),
 		Item : SiteKey(),//array
 		//Item
+		Unique : SiteKey(),
 		Index : SiteKey(),
 		ID : SiteKey(),
 		Img : SiteKey(),

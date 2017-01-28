@@ -11,5 +11,9 @@ module.exports =
 		Play : EventKey(),
 		Pause : EventKey(),
 		Stop : EventKey()
+	},
+	Cold :
+	{
+		Change : EventKey()
 	}
 }
