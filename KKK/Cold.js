@@ -42,10 +42,11 @@ Remove = function(ID,R,T)
 		R[0].attr(DOM.cls,Prefix + (Map[ID] = T ? Card.History : Card.Init))
 			.text(L(T ? Lang.History : Lang.Select))
 		R = R[1][Key.Unique]
-		ZED.Each(Cold,function(F,V)
+		T = ZED.findIndex(function(V)
 		{
-			return V[Key.Unique] !== R || (Cold.splice(F,1),false)
-		})
+			return V[Key.Unique] === R
+		},Cold)
+		T < 0 || Cold.splice(T,1)
 	}
 },
 

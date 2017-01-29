@@ -20,7 +20,7 @@ module.exports =
 
 	//Browser
 	Processing : Lang('Processing `/0/`'),
-	Info : Lang('/0/,~,/1/,. ,/2/, in ,/3/,. ,/4/, page,/5/,.'),
+	Info : Lang('/0/,~,/1/,. ,/2/,//,/3/, item,/4/,. ,/5/,//,/6/, page,/7/,.'),
 	User : Lang('User'),
 	UexRtn : Lang('Unexpected return from the server'),
 	UknSite : Lang('Unknown site id `/0/`'),

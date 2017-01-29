@@ -40,6 +40,8 @@
 	{
 		return ZED.Replace(L(Q),'/',ZED.isArray(S) ? S : ZED.tail(arguments))
 	},
+
+	MakeS = function(Q){return 1 === Q ? '' : 's'},
 	ShowByRock = function(Q)
 	{
 		return $(DOM.div).attr(DOM.id,Q)
@@ -73,6 +75,7 @@
 	YNaviWidth = 150,
 	YStageHeight,
 	YStageWidth,
+	YListSVG = 20,
 	YToolBarHeight = 40,
 	YStatusBarHeight = 40,
 	YShadowSize = 10,
@@ -88,6 +91,7 @@
 	ClassCount = ZED.KeyGen(),
 	IDStage = ZED.KeyGen(),
 	ClassStageScroll = ZED.KeyGen(),
+	ClassListSelected = ZED.KeyGen(),
 	IDStatusBar = ZED.KeyGen(),
 	IDStatusBarLeft = ZED.KeyGen(),
 	IDStatusBarRight = ZED.KeyGen(),
@@ -104,9 +108,6 @@
 	IDBrowserInfo = ZED.KeyGen(),
 	IDBrowserList = ZED.KeyGen(),
 	ClassBrowserHover = ZED.KeyGen(),
-	//	Cold
-	ClassColdInfo = ZED.KeyGen(),
-	ClassColdCommit = ZED.KeyGen(),
 
 	Rainbow = ShowByRock(IDRainbow),
 	RToolBar = ShowByRock(IDToolBar).append(ShowByClass(ClassShadowBar)),
@@ -145,29 +146,155 @@
 	RColdCount = EMakeCount(Lang.Cold),
 	RHotCount = EMakeCount(Lang.Hot),
 
-	MakeSelectableList = function(Scroll,Data,Make)
+	MakeSelectableList = function(Scroll,Index,Data,Make,Change)
 	{
 		var
+		LastScroll = 0,
+
+		Selected = false,
+		LastIndex,
+		LastID,
+		Selecting = {},
+		Active = {},
+
+		Clear = function()
+		{
+			Selected = false
+			ZED.Each(Selecting,function(F,V)
+			{
+				V &&
+				(
+					F = Active[F],
+					F && F.removeClass(ClassListSelected)
+				)
+			})
+			Selecting = {}
+		},
+
 		List = ZED.ListView(
 		{
 			Scroll : Scroll,
 			Data : Data,
-			Make : Make
-		}),
+			Make : function(Q,X)
+			{
+				var
+				ID = Q[KeySite.Unique],
+				On = Selecting[ID],
+				R = Active[ID] = Make(Q,X);
 
-		Last;
+				R.on(DOM.click,function(E)
+				{
+					var
+					Shift = E.shiftKey,
+					Ctrl = E.ctrlKey,
+					J = true,
+					S,L,T,F;
+
+					On = Selecting[ID]
+					if (Selected)
+					{
+						if (Shift)
+						{
+							S = Selecting
+							Selecting = {}
+							LastIndex < X ?
+							(
+								F = LastIndex,
+								L = X
+							) : (
+								L = LastIndex,
+								F = X
+							)
+							for (;F <= L;++F)
+							{
+								T = Data[F][KeySite.Unique]
+								Selecting[T] = Data[F]
+								if (!S[T])
+								{
+									J = Active[T]
+									J && J.addClass(ClassListSelected)
+								}
+							}
+							ZED.Each(S,function(F,V)
+							{
+								V && !Selecting[F] &&
+								(
+									V = Active[F],
+									V && V.removeClass(ClassListSelected)
+								)
+							})
+							J = false
+						}
+						else if (Ctrl)
+						{
+							J = false
+							LastIndex = X
+							LastID = ID
+							On = !On
+							Selecting[ID] = On && Q
+							On ?
+								R.addClass(ClassListSelected) :
+								R.removeClass(ClassListSelected)
+						}
+					}
+					if (J)
+					{
+						Clear()
+						Selected = true
+						LastIndex = X
+						LastID = ID
+						Selecting[ID] = Q
+						R.addClass(ClassListSelected)
+					}
+					Change()
+				})
+				On && R.addClass(ClassListSelected)
+				return R
+			},
+			Destroy : function(Q,V)
+			{
+				Q.off(DOM.click)
+				Active[V[KeySite.Unique]] = false
+			}
+		});
+
+		Scroll.addClass(DOM.NoSelect)
+		UShortCut.on('esc',MakeIndex(Index,ZED.pipe(Clear,Change)))
+			.on('ctrl+a',MakeIndex(Index,function()
+			{
+				ZED.each(function(V,ID)
+				{
+					ID = V[KeySite.Unique]
+					if (!Selecting[ID])
+					{
+						Selecting[ID] = V
+						V = Active[ID]
+						V && V.addClass(ClassListSelected)
+					}
+				},Data)
+				Change()
+			}))
 
 		return {
-			Show : function()
+			Selecting : function()
+			{
+				return ZED.reduce(function(D,V){V && D.push(V)},[],Selecting)
+			},
+			Show : function(T)
 			{
 				RStage.removeAttr(DOM.cls)
-				List.scroll(Last)
-				List.redraw()
+				Active = {}
+				List.scroll(LastScroll).recalc().redraw()
+				if (Selected)
+				{
+					T = ZED.findIndex(function(V){return LastID === V[KeySite.Unique]},Data)
+					Selected = LastIndex === T
+				}
 			},
 			Hide : function()
 			{
 				RStage.attr(DOM.cls,ClassStageScroll)
-				Last = List.scroll()
+				LastScroll = List.scroll()
 			}
 		}
 	},
@@ -175,7 +302,10 @@
 	MakeSelectableListHide = ZED.flip(ZED.invokeProp('Hide')),
 
 	UShortCut = ZED.ShortCut(),
-	MakeIndex = function(X,Q){},
+	MakeIndex = ZED.curry(function(X,Q,E)
+	{
+		X === UTab.Index() && Q()
+	}),
 	UTab = ZED.Tab(
 	{
 		Tab : RNavi,
@@ -218,6 +348,11 @@
 			'#/G/{width:/g/px}' +
 			'./Y/,./W/{overflow-x:hidden;overflow-y:scroll}' +
 			'#/G/ ./W/{height:100%}' +
+			'#/G/ ./Z/{cursor:default}' +
+			'#/G/ ./Z/:hover{background:#EFE5F9}' +
+			'#/G/ ./F/{background:#E6D5F5!important}' +
+			'#/G/ ./W/ svg{cursor:pointer}' +
+			'#/G/ ./W/ svg:hover>rect{fill:#0065CB!important}' +
 
 			//StatusBar
 			'#/S/{position:relative;height:/s/px}' +
@@ -255,6 +390,7 @@
 				O : DOM.TabOn,
 				W : DOM.ListView,
 				X : DOM.ListViewParent,
+				Z : DOM.ListViewItem,
 
 				R : IDRainbow,
 				r : H,//Rainbow Height
@@ -268,6 +404,7 @@
 				g : YStageWidth,
 				h : YStageHeight,
 				Y : ClassStageScroll,
+				F : ClassListSelected,
 				V : ClassCount,
 
 				S : IDStatusBar,
@@ -378,9 +515,16 @@
 			InfoKeyTo = ZED.KeyGen(),
 			InfoKeyCount = ZED.KeyGen(),
 			InfoKeyTotal = ZED.KeyGen(),
+			InfoKeyTotalS = ZED.KeyGen(),
+			InfoKeyAt = ZED.KeyGen(),
 			InfoKeyPages = ZED.KeyGen(),
-			InfoKeyS = ZED.KeyGen(),
-			InfoLog = ReplaceLang(Lang.Info,[InfoKeyFrom,InfoKeyTo,InfoKeyCount,InfoKeyTotal,InfoKeyPages,InfoKeyS]),
+			InfoKeyPagesS = ZED.KeyGen(),
+			InfoLog = ReplaceLang(Lang.Info,
+			[
+				InfoKeyFrom,InfoKeyTo,
+				InfoKeyCount,InfoKeyTotal,InfoKeyTotalS,
+				InfoKeyAt,InfoKeyPages,InfoKeyPagesS
+			]),
 
 			GoError = function(Q)
 			{
@@ -453,8 +597,10 @@
 				}
 				GoInfo[InfoKeyCount](Item.length)
 				GoInfo[InfoKeyTotal](Q[KeySite.Total])
+				GoInfo[InfoKeyTotalS](MakeS(Q[KeySite.Total]))
+				GoInfo[InfoKeyAt](S)
 				GoInfo[InfoKeyPages](Pages)
-				GoInfo[InfoKeyS](1 === Pages ? '' : 's')
+				GoInfo[InfoKeyPagesS](MakeS(Pages))
 
 				PagerUp(S,Pages)
 				PagerBotton(S,Pages)
@@ -517,10 +663,10 @@
 			PagerBotton = ZED.Pager({Parent : M,Offset : 1},Jump)
 			UShortCut.cmd(ShortCutCommand.SelAll,MakeIndex(X,Cold.AddAll))
 				.cmd(ShortCutCommand.UnAll,MakeIndex(X,Cold.RemoveAll))
-				.cmd(ShortCutCommand.PageHead,MakeIndex(X,FnClick.bind(T[0])))
-				.cmd(ShortCutCommand.PagePrev,MakeIndex(X,FnClick.bind(T[1])))
-				.cmd(ShortCutCommand.PageNext,MakeIndex(X,FnClick.bind(ZED.last(T))))
-				.cmd(ShortCutCommand.PageTail,MakeIndex(X,FnClick.bind(T[T.length - 2])))
+				.cmd(ShortCutCommand.PageHead,MakeIndex(X,FnClick.bind($(T[0]))))
+				.cmd(ShortCutCommand.PagePrev,MakeIndex(X,FnClick.bind($(T[1]))))
+				.cmd(ShortCutCommand.PageNext,MakeIndex(X,FnClick.bind($(T[T.length - 2]))))
+				.cmd(ShortCutCommand.PageTail,MakeIndex(X,FnClick.bind($(ZED.last(T)))))
 		}
 	},{
 		Tab : RColdCount(),
@@ -528,17 +674,19 @@
 		{
 			return ZED.Replace
 			(
-				'#/R/ ./M/{position:relative;display:inline-block}' +
-				'#/R/ ./N/{margin-right:50px}' +
-				'#/R/ ./I/{position:absolute;right:0;top:50%;weight:50px;height:50px;transform:translateY(-25px)}' +
-				'#/R/ ./M/{}',
+				'#/R/ ./M/>div{margin-right:/m/px;padding:/p/px}' +
+				'#/R/ ./M/>div>div{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}' +
+				'#/R/ ./M/ span{margin:0 4px;color:#00F;font-weight:bold}' +
+				'#/R/ ./M/ svg{position:absolute;right:/p/px;top:50%;width:/v/px;height:/v/px;transform:translateY(-/l/px)}',
 				'/',
 				{
 					M : DOM.ListViewItem,
 
 					R : ID,
-					N : ClassColdInfo,
-					I : ClassColdCommit
+					m : YPadding + YListSVG + YPadding,
+					v : YListSVG,
+					l : YListSVG / 2,
+					p : YPadding
 				}
 			)
 		},
@@ -547,24 +695,39 @@
 		Content : function(M,X)
 		{
 			var
-			R = MakeSelectableList(M,Cold.Cold(),function(Q)
+			ShapeConfig =
+			{
+				Type : 'Tick',
+				Fill : '#A9A9A9',
+				Line : '20%'
+			},
+
+			R = MakeSelectableList(M,X,Cold.Cold(),function(Q)
 			{
 				return $(DOM.div).append
 				(
-					ShowByClass(ClassColdInfo).append
+					$(DOM.div).append
 					(
-						Q[KeySite.ID],ShowByText('@',DOM.span),Q[KeySite.Name],
-						DOM.br,
-						Q[KeySite.Title],ShowByText('@',DOM.span),Q[KeySite.Author],
-						DOM.br,
-						ZED.DateToString(Q[KeySite.Date],DateToStringFormat)
+						MakeAt(Q[KeySite.ID],Q[KeySite.Name]),
+						MakeAt(Q[KeySite.Title],Q[KeySite.Author]),
+						$(DOM.div).text(ZED.DateToString(Q[KeySite.Date],DateToStringFormat))
 					),
-					ShowByClass(ClassColdCommit).on(DOM.click,function()
+					Q = ZED.Shape(ShapeConfig).on(DOM.click,function(E)
 					{
 						console.log('commit')
+						E.stopPropagation()
 					})
 				)
-			});
+			},function()
+			{
+				console.log(R.Selecting().length)
+			}),
+
+			MakeAt = function(Q,S)
+			{
+				return $(DOM.div).attr(DOM.title,Q + '@' + S)
+					.append(Q,ShowByText('@',DOM.span),S)
+			};
 
 			Cold.Bus.on(Event.Cold.Change,RColdCount)
 
@@ -660,7 +823,7 @@
 			)
 		)
 	)
-
+ZED.Each(ShortCut.DefaultMap,function(F,V){UShortCut.on(V,F)})
 	$(function()
 	{
 		Rainbow.appendTo('body')
