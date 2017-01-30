@@ -1,14 +1,13 @@
 var
 ZED = require('@zed.cwt/zedquery'),
 
-Key = require('./Key'),
-KeyQueue = Key.Queue,
+Key = require('./Key').Queue,
 Event = require('./Event').Queue,
 
 NoMoreUseful =
 [
-	KeyQueue.Active,
-	KeyQueue.Running
+	Key.Active,
+	Key.Running
 ],
 
 Bus = ZED.Emitter(),
@@ -27,9 +26,9 @@ Dispatch = function(T,F)
 		for (F = 0;Current < Max && F < Online.length;++F)
 		{
 			T = Online[F]
-			if (T[KeyQueue.Active] && !T[KeyQueue.Running])
+			if (T[Key.Active] && !T[Key.Running])
 			{
-				T[KeyQueue.Running] = true
+				T[Key.Running] = true
 				++Current
 				Bus.emit(Event.Play,T)
 			}
@@ -40,9 +39,9 @@ Dispatch = function(T,F)
 		for (F = Online.length;Max < Current && F;)
 		{
 			T = Online[--F]
-			if (T[KeyQueue.Running])
+			if (T[Key.Running])
 			{
-				T[KeyQueue.Running] = false
+				T[Key.Running] = false
 				--Current
 				Bus.emit(Event.Pause,T)
 			}
@@ -52,31 +51,40 @@ Dispatch = function(T,F)
 
 MakeMap = function(Q,S)
 {
-	ZED.each(function(V)
-	{
-		S[V[KeyQueue.ID]] = V
-	},Q)
+	ZED.each(function(V){S[V[Key.ID]] = V},Q)
+},
+
+ChangeOnline = function()
+{
+	Bus.emit(Event.ChangeOnline,Online.length)
+},
+ChangeOffline = function()
+{
+	Bus.emit(Event.ChangeOffline,Offline.length)
 };
 
 module.exports =
 {
 	Bus : Bus,
+	Online : Online,
+	OnlineMap : OnlineMap,
+	Offline : Offline,
+	OfflineMap : OfflineMap,
 
 	Recover : function(Q,S)
 	{
 		Online = Q
 		Offline = S
-		ZED.each(function(V)
-		{
-			V[KeyQueue.Running] = false
-		},Q)
+		ZED.each(function(V){V[Key.Running] = false},Q)
 		MakeMap(Q,OnlineMap)
 		MakeMap(S,OfflineMap)
 		Dispatch()
 	},
-	Online : function(){return Online},
-	Offline : function(){return Offline},
-	Max : function(Q){Max = Q},
+	Max : function(Q)
+	{
+		Max = Q
+		Dispatch()
+	},
 
 	HasOnline : function(ID)
 	{
@@ -88,13 +96,18 @@ module.exports =
 	},
 
 	//Append a new task
-	Push : function(Q)
+	New : function(Name,Unique,ID,Title)
 	{
-		var ID = Q[KeyQueue.ID];
-
-		if (!ZED.find(function(V){return ID === V[KeyQueue.ID]},Online))
+		if (!ZED.has(Unique,OnlineMap))
 		{
-			Bus.emit(Event.Refresh)
+			Online.push(OnlineMap[Unique] = ZED.ReduceToObject
+			(
+				Key.Name,Name,
+				Key.Unique,Unique,
+				Key.ID,ID,
+				Key.Title,Title
+			))
+			ChangeOnline()
 			Dispatch()
 		}
 	},
@@ -109,7 +122,8 @@ module.exports =
 			Online.splice(T,1)
 			ZED.each(ZED.delete_(ZED.__,Q),NoMoreUseful)
 			Offline.unshift(Q)
-			Bus.emit(Event.Refresh)
+			ChangeOnline()
+			ChangeOffline()
 			Dispatch()
 		}
 	},
@@ -134,14 +148,14 @@ module.exports =
 				}
 			}
 		}
-		Bus.emit(Event.Refresh)
+		J ? ChangeOnline() : ChangeOffline()
 	},
 
 	Play : function(Q)
 	{
 		ZED.each(function(V)
 		{
-			V[KeyQueue.Active] = true
+			V[Key.Active] = true
 		},ZED.isArray(Q) ? Q : [Q])
 		Dispatch()
 	},
@@ -149,8 +163,8 @@ module.exports =
 	{
 		ZED.each(function(V)
 		{
-			V[KeyQueue.Running] && Bus.emit(Event.Pause,V)
-			V[KeyQueue.Active] = V[KeyQueue.Running] = false
+			V[Key.Running] && Bus.emit(Event.Pause,V)
+			V[Key.Active] = V[Key.Running] = false
 		},ZED.isArray(Q) ? Q : [Q])
 		Dispatch()
 	}

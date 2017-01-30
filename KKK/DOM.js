@@ -35,6 +35,7 @@ module.exports =
 	ListView : Prefix + 'ListView',
 	ListViewParent : Prefix + 'ListViewParent',
 	ListViewItem : Prefix + 'ListViewItem',
+	VerticalMiddle : Prefix + 'VerticalMiddle',
 
 	Card :
 	{

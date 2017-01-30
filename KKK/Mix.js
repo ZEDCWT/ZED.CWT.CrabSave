@@ -10,6 +10,7 @@
 	DOMCard = DOM.Card,
 	Key = require('./Key'),
 	KeySite = Key.Site,
+	KeyQueue = Key.Queue,
 	ShortCut = require('./ShortCut'),
 	ShortCutCommand = ShortCut.Command,
 	Event = require('./Event'),
@@ -21,8 +22,6 @@
 
 	$ = ZED.jQuery,
 	FnClick = $.fn.click,
-	global = ZED.global,
-	document = global.document,
 
 
 
@@ -40,15 +39,15 @@
 	{
 		return ZED.Replace(L(Q),'/',ZED.isArray(S) ? S : ZED.tail(arguments))
 	},
+	MakeShape = function(S,Q,C)
+	{
+		return ShowByClassX(ClassShape + (C ? ' ' + C : ''),DOM.span).attr(DOM.title,L(S)).append(ZED.Shape(Q))
+	},
 
 	MakeS = function(Q){return 1 === Q ? '' : 's'},
 	ShowByRock = function(Q)
 	{
 		return $(DOM.div).attr(DOM.id,Q)
-	},
-	ShowByRockX = function(Q,S)
-	{
-		return $(S).attr(DOM.id,Q)
 	},
 	ShowByClass = function(Q)
 	{
@@ -66,27 +65,51 @@
 	{
 		S.append($(DOM.div).text(Q))
 	},
+	MakeAt = function(Q,S)
+	{
+		return ShowByClass(ClassSingleLine).attr(DOM.title,Q + '@' + S)
+			.append(Q,ShowByText('@',DOM.span),S)
+	},
 
 
 
+	//Config
+	//	Misc
+	YTabCount = 6,
+	//	Global
 	YPadding = 10,
 	YPaddingHalf = 5,
-	YScrollWidth = 12,
+	YScrollWidth = 20,
+	YShadowSize = 10,
+	YShadowColor = 'rgba(0,0,0,.4)',
+	//		ToolBar
+	YToolBarHeight = 40,
+	//		Navi
 	YNaviWidth = 150,
+	//		Stage
 	YStageHeight,
 	YStageWidth,
 	YListSVG = 20,
-	YToolBarHeight = 40,
-	YStatusBarHeight = 40,
-	YShadowSize = 10,
-	YShadowColor = 'rgba(0,0,0,.4)',
 	YCardWidthMin = 160,
 	YCardWidthMax = 200,
+	//		StatusBar
+	YStatusBarHeight = 40,
+	//		Tab
+	//			Hot
+	YHotTitlePercentage = .8,
+	YHotControlSize = 16,
+	YHotControlPadding = 6,
+	YHotControlMoreWidth = YHotControlSize + YHotControlPadding + YHotControlSize,
+	YHotControlWidth = YHotControlPadding + YHotControlSize + YHotControlPadding + YHotControlMoreWidth,
 
 	//ID & Class
 	//	Global
 	IDRainbow = ZED.KeyGen(),
 	IDToolBar = ZED.KeyGen(),
+	IDToolBarIcon = ZED.KeyGen(),
+	IDToolBarItem = ZED.KeyGen(),
+	ClassToolBarDisabled = ZED.KeyGen(),
+	IDNaviStage = ZED.KeyGen(),
 	IDNavi = ZED.KeyGen(),
 	ClassCount = ZED.KeyGen(),
 	IDStage = ZED.KeyGen(),
@@ -103,36 +126,120 @@
 	IDSpeed = ZED.KeyGen(),
 	ClassShadowBar = ZED.KeyGen(),
 	ClassError = ZED.KeyGen(),
+	//	Util
+	ClassShape = ZED.KeyGen(),
+	ClassSingleLine = ZED.KeyGen(),
 	//	Browser
 	IDBrowserInput = ZED.KeyGen(),
 	IDBrowserInfo = ZED.KeyGen(),
 	IDBrowserList = ZED.KeyGen(),
 	ClassBrowserHover = ZED.KeyGen(),
+	//	Hot
+	ClassHotTitleInfo = ZED.KeyGen(),
+	ClassHotTitle = ZED.KeyGen(),
+	ClassHotInfo = ZED.KeyGen(),
+	ClassHotStatus = ZED.KeyGen(),
+	ClassHotControl = ZED.KeyGen(),
+	ClassHotControlRemove = ZED.KeyGen(),
+	ClassHotControlPP = ZED.KeyGen(),
+	ClassHotControlMore = ZED.KeyGen(),
+	ClassHotPercentage = ZED.KeyGen(),
+	ClassHotPercentageActive = ZED.KeyGen(),
+	ClassHotSizeUnknown = ZED.KeyGen(),
 
+	//Element
 	Rainbow = ShowByRock(IDRainbow),
-	RToolBar = ShowByRock(IDToolBar).append(ShowByClass(ClassShadowBar)),
-	RNavi = ShowByRock(IDNavi).append(ShowByClass(ClassShadowBar)),
+	RToolBar = ShowByRock(IDToolBar),
+	RToolBarIcon = ShowByRock(IDToolBarIcon),
+	RToolBarItem = ShowByRock(IDToolBarItem),
+	RNavi = ShowByRock(IDNavi),
 	RStage = ShowByRock(IDStage).attr(DOM.cls,ClassStageScroll),
-	RStatusBar = ShowByRock(IDStatusBar).append(ShowByClass(ClassShadowBar)),
+	RStatusBar = ShowByRock(IDStatusBar),
 	RStatus = ShowByRock(IDStatus),
-	RStatusIcon = ShowByRock(IDStatusIcon).on(DOM.aniend,function(){RStatusIcon.removeClass(ClassStatusIconAnimation)}),
+	RStatusIcon = ShowByRock(IDStatusIcon)
+		.on(DOM.aniend,function(){RStatusIcon.removeClass(ClassStatusIconAnimation)}),
 	RStatusText = $(DOM.div),
 	RSpeed = ShowByRock(IDSpeed),
 
-	EStatus = function(Q,S)
+
+
+	ShapeConfigColorTransparent = 'transparent',
+	ShapeConfigColorDisabled = '#D1D1D1',
+	ShapeConfigColorEnabled = '#7D7D7D',
+	ShapeConfigColorHover = '#852ED9',
+	ShapeConfigColorBackground = '#A9A9A9',
+	ShapeConfigBrowserSelectAll,
+	ShapeConfigBrowserUnselectAll,
+	ShapeConfigColdCommit =
 	{
-		if (Q)
-		{
-			RStatusText.text(Q)
-			S && RStatusIcon.attr(DOM.cls,S + ' ' + ClassStatusIconAnimation)
-		}
-		else RStatusText.text('')
-		S || RStatusIcon.removeAttr(DOM.cls)
+		Type : 'Tick',
+		Fill : false,
+		Stroke : ShapeConfigColorEnabled,
+		Line : '12%'
+	},
+	ShapeConfigColdRemove =
+	{
+		Fill : false,
+		Stroke : ShapeConfigColorEnabled,
+		Line : '12%',
+		Padding : '10%'
+	},
+	ShapeConfigColdCommitAll =
+	{
+		Type : 'Tick',
+		Fill : false,
+		Stroke : ShapeConfigColorEnabled,
+		Line : '8%'
+	},
+	ShapeConfigColdListCommit =
+	{
+		Type : 'Tick',
+		Fill : ShapeConfigColorBackground,
+		Line : '20%'
+	},
+	ShapeConfigHotRemove = ShapeConfigColdRemove,
+	ShapeConfigHotPlay =
+	{
+		Type : 'Polygon',
+		General : 4,
+		Fill : ShapeConfigColorBackground,
+		Stroke : '#F7F7F7',
+		Line : '20%'
+	},
+	ShapeConfigHotPause =
+	{
+		Type : 'Pause',
+		Padding : '25%',
+		Fill : ShapeConfigColorBackground,
+		Line : '18.75%'
+	},
+	ShapeConfigHotMore =
+	{
+		Type : 'More',
+		Fill : false,
+		Stroke : ShapeConfigColorBackground
 	},
 
+	MakeToolBarStorage = Array(YTabCount),
+	MakeToolBarLast,
+	MakeToolBarChange = function()
+	{
+		MakeToolBarLast && MakeToolBarLast.detach()
+		if (MakeToolBarLast = MakeToolBarStorage[UTab.Index()])
+			RToolBarItem.append(MakeToolBarLast)
+	},
+	MakeToolBar = function(X,Q)
+	{
+		MakeToolBarStorage[X] = Q
+	},
+	MakeToolBarActive = function(S,Q)
+	{
+		Q ?
+			S.removeClass(ClassToolBarDisabled) :
+			S.addClass(ClassToolBarDisabled)
+	},
 
-
-	EMakeCount = function(Q)
+	MakeCount = function(Q)
 	{
 		var
 		S = ShowByClassX(ClassCount,DOM.span),
@@ -143,23 +250,29 @@
 			return ZED.isNull(Q) ? R : S.text(Q ? '[' + Q + ']' : '')
 		}
 	},
-	RColdCount = EMakeCount(Lang.Cold),
-	RHotCount = EMakeCount(Lang.Hot),
+	RColdCount = MakeCount(Lang.Cold),
+	RHotCount = MakeCount(Lang.Hot),
 
-	MakeSelectableList = function(Scroll,Index,Data,Make,Change)
+	MakeScroll = function(S)
+	{
+		return {
+			Show : function(){RStage.scrollTop(S)},
+			Hide : function(){S = RStage.scrollTop()}
+		}
+	},
+	MakeSelectableList = function(Scroll,Index,Data,Map,Key,Make,Destroy,SelectChange)
 	{
 		var
 		LastScroll = 0,
 
-		Selected = false,
-		LastIndex,
+		LastIndex = 0,
 		LastID,
 		Selecting = {},
+		Count = 0,
 		Active = {},
 
 		Clear = function()
 		{
-			Selected = false
 			ZED.Each(Selecting,function(F,V)
 			{
 				V &&
@@ -169,8 +282,16 @@
 				)
 			})
 			Selecting = {}
+			LastIndex = 0
+			LastID = false
+			Count = 0
 		},
-
+		Change = function()
+		{
+			SelectChange(Count)
+			MakeStatus(Index,Count ? ReplaceLang(Lang.Selecting,Count,MakeS(Count)) : '')
+		},
+		ClearChange = ZED.pipe(Clear,Change),
 		List = ZED.ListView(
 		{
 			Scroll : Scroll,
@@ -178,7 +299,7 @@
 			Make : function(Q,X)
 			{
 				var
-				ID = Q[KeySite.Unique],
+				ID = Q[Key],
 				On = Selecting[ID],
 				R = Active[ID] = Make(Q,X);
 
@@ -191,62 +312,67 @@
 					S,L,T,F;
 
 					On = Selecting[ID]
-					if (Selected)
+					if (Shift)
 					{
-						if (Shift)
+						S = Selecting
+						Selecting = {}
+						LastIndex < X ?
+						(
+							F = LastIndex,
+							L = X
+						) : (
+							L = LastIndex,
+							F = X
+						)
+						Count = L - F + 1
+						for (;F <= L;++F)
 						{
-							S = Selecting
-							Selecting = {}
-							LastIndex < X ?
-							(
-								F = LastIndex,
-								L = X
-							) : (
-								L = LastIndex,
-								F = X
-							)
-							for (;F <= L;++F)
+							T = Data[F][Key]
+							Selecting[T] = true
+							if (!S[T])
 							{
-								T = Data[F][KeySite.Unique]
-								Selecting[T] = Data[F]
-								if (!S[T])
-								{
-									J = Active[T]
-									J && J.addClass(ClassListSelected)
-								}
+								J = Active[T]
+								J && J.addClass(ClassListSelected)
 							}
-							ZED.Each(S,function(F,V)
-							{
-								V && !Selecting[F] &&
-								(
-									V = Active[F],
-									V && V.removeClass(ClassListSelected)
-								)
-							})
-							J = false
 						}
-						else if (Ctrl)
+						ZED.Each(S,function(F,V)
 						{
-							J = false
-							LastIndex = X
-							LastID = ID
-							On = !On
-							Selecting[ID] = On && Q
-							On ?
-								R.addClass(ClassListSelected) :
-								R.removeClass(ClassListSelected)
-						}
+							Selecting[F] ||
+							(
+								V = Active[F],
+								V && V.removeClass(ClassListSelected)
+							)
+						})
+						J = false
+					}
+					else if (Ctrl)
+					{
+						J = false
+						LastIndex = X
+						LastID = ID
+						On = !On
+						On ?
+						(
+							++Count,
+							R.addClass(ClassListSelected),
+							Selecting[ID] = true
+						) : (
+							--Count,
+							R.removeClass(ClassListSelected),
+							ZED.delete_(ID,Selecting)
+						)
 					}
 					if (J)
 					{
 						Clear()
-						Selected = true
 						LastIndex = X
 						LastID = ID
-						Selecting[ID] = Q
+						Selecting[ID] = true
+						Count = 1
 						R.addClass(ClassListSelected)
 					}
 					Change()
+					Util.StopProp(E)
 				})
 				On && R.addClass(ClassListSelected)
 				return R
@@ -254,63 +380,112 @@
 			Destroy : function(Q,V)
 			{
 				Q.off(DOM.click)
-				Active[V[KeySite.Unique]] = false
+				Active[V[Key]] = false
+				Destroy(V,Q)
 			}
-		});
+		}),
 
-		Scroll.addClass(DOM.NoSelect)
-		UShortCut.on('esc',MakeIndex(Index,ZED.pipe(Clear,Change)))
+		Redraw = function()
+		{
+			Active = {}
+			if (Count)
+			{
+				ZED.Each(Selecting,function(F)
+				{
+					ZED.has(F,Map) ||
+					(
+						--Count,
+						ZED.delete_(F,Selecting)
+					)
+				})
+				LastIndex = LastID ? ZED.max(0,Data.indexOf(Map[LastID])) : 0
+			}
+			List.recalc().redraw().scroll(LastScroll)
+			Change()
+		};
+
+		Scroll.addClass(DOM.NoSelect).on(DOM.click,ClearChange)
+		UShortCut.on('esc',MakeIndex(Index,ClearChange))
 			.on('ctrl+a',MakeIndex(Index,function()
 			{
 				ZED.each(function(V,ID)
 				{
-					ID = V[KeySite.Unique]
+					ID = V[Key]
 					if (!Selecting[ID])
 					{
-						Selecting[ID] = V
+						Selecting[ID] = true
 						V = Active[ID]
 						V && V.addClass(ClassListSelected)
 					}
 				},Data)
+				LastIndex = 0
+				LastID = false
+				Count = Data.length
 				Change()
 			}))
 
 		return {
-			Selecting : function()
-			{
-				return ZED.reduce(function(D,V){V && D.push(V)},[],Selecting)
-			},
-			Show : function(T)
+			Count : function(){return Count},
+			Selecting : function(){return Selecting},
+			Show : function()
 			{
 				RStage.removeAttr(DOM.cls)
-				Active = {}
-				List.scroll(LastScroll).recalc().redraw()
-				if (Selected)
-				{
-					T = ZED.findIndex(function(V){return LastID === V[KeySite.Unique]},Data)
-					Selected = LastIndex === T
-				}
+				Redraw()
 			},
 			Hide : function()
 			{
 				RStage.attr(DOM.cls,ClassStageScroll)
 				LastScroll = List.scroll()
+			},
+			Redraw : function()
+			{
+				LastScroll = List.scroll()
+				Redraw()
 			}
 		}
 	},
 	MakeSelectableListShow = ZED.flip(ZED.invokeProp('Show')),
 	MakeSelectableListHide = ZED.flip(ZED.invokeProp('Hide')),
 
+	MakeStatusText = Array(YTabCount),
+	MakeStatusClass = Array(YTabCount),
+	MakeStatusChange = function(X,Q,S)
+	{
+		X = UTab.Index()
+		Q = MakeStatusText[X]
+		S = MakeStatusClass[X]
+		if (Q)
+		{
+			RStatusText.text(Q)
+			S && RStatusIcon.attr(DOM.cls,S + ' ' + ClassStatusIconAnimation)
+		}
+		else RStatusText.text('')
+		S || RStatusIcon.removeAttr(DOM.cls)
+	},
+	MakeStatus = function(X,Q,S)
+	{
+		MakeStatusText[X] = Q
+		MakeStatusClass[X] = S
+		X === UTab.Index() && MakeStatusChange()
+	},
+
+
+
 	UShortCut = ZED.ShortCut(),
-	MakeIndex = ZED.curry(function(X,Q,E)
+	MakeIndex = ZED.curry(function(X,Q)
 	{
 		X === UTab.Index() && Q()
-	}),
+	},3),
 	UTab = ZED.Tab(
 	{
 		Tab : RNavi,
 		Content : RStage,
-		Default : 0
+		Default : 0,
+		Show : function()
+		{
+			MakeToolBarChange()
+			MakeStatusChange()
+		}
 	});
 
 	ZED.CSS(ZED.KeyGen(),function(W,H)
@@ -330,36 +505,58 @@
 
 			//ToolBar
 			'#/T/{height:/t/px}' +
+			'#/M/,#/P/{display:inline-block;height:30px;vertical-align:middle}' +
+			//	Icon
+			'#/M/{width:/n/px;border-right:solid 1px #BBB}' +
+			//	Control
+			'#/P/{border-left:solid 1px #BBB}' +
+			'#/P/>div{line-height:0}' +
+			//		Default
+			'#/P/ ./HP/{margin-left:/p/px;line-height:0;cursor:pointer}' +
+			'#/P/ ./HP/ svg{width:30px;height:30px}' +
+			'#/P/ ./HP/:hover path{fill:/v/!important}' +
+			//		Disabled
+			'#/P/ ./PD/{cursor:auto}' +
+			'#/P/ ./PD/ path,#/P/ ./PD/:hover path{fill:/x/!important}' +
 
 			//Navi, Stage
 			//	Navi
+			'#/NG/{background:inherit;width:/ng/px}' +
 			'#/N/,#/G/{display:inline-block;height:/h/px;vertical-align:top}' +
 			'#/N/{width:/n/px;background:#F3F3F3!important;font-size:1.15rem;font-weight:bold;overflow:hidden;z-index:200200}' +
 			//		Tab
 			'#/N/ ./I/{position:relative;margin:/b/px 0;padding:18px 0 18px 18px;}' +
 			'#/N/ ./I/,#/N/ ./I/ ./B/{transition:all .2s linear}' +
 			'#/N/ ./I/:hover,#/N/ ./O/{box-shadow:0 0 /b/px /a/}' +
+			//			TabOn
 			'#/N/ ./O/{background:#F7F7F7}' +
+			//			ShadowBar
 			'#/N/ ./I/ ./B/{background:#F3F3F3}' +
 			'#/N/ ./O/ ./B/{background:#F7F7F7;box-shadow:none}' +
 			//		Count
 			'./V/{margin-right:20px;float:right}' +
 			//	Stage
 			'#/G/{width:/g/px}' +
+			//		ListView
 			'./Y/,./W/{overflow-x:hidden;overflow-y:scroll}' +
 			'#/G/ ./W/{height:100%}' +
+			//		ListViewItem
 			'#/G/ ./Z/{cursor:default}' +
 			'#/G/ ./Z/:hover{background:#EFE5F9}' +
+			//		Selected item
 			'#/G/ ./F/{background:#E6D5F5!important}' +
-			'#/G/ ./W/ svg{cursor:pointer}' +
-			'#/G/ ./W/ svg:hover>rect{fill:#0065CB!important}' +
+			//		Item Control
+			'#/G/ ./HP/{cursor:pointer}' +
+			'#/G/ ./HP/:hover svg>rect,#/G/ ./HP/:hover circle{fill:#0065CB!important}' +
 
 			//StatusBar
-			'#/S/{position:relative;height:/s/px}' +
+			'#/S/{height:/s/px}' +
+			//	Wrapper
 			'#/L/,#/H/{position:absolute;bottom:10px}' +
 			'#/L/ div,#/H/ div{display:inline-block;vertical-align:middle}' +
 			'#/L/{left:8px}' +
 			'#/H/{right:8px}' +
+			//	Icon
 			'#/C/{position:relative;width:20px;height:20px}' +
 			'#/C/[class]{margin-right:8px}' +
 			'#/C/>div{position:absolute}' +
@@ -378,12 +575,20 @@
 			//ShadowBar
 			'#/T/,#/N/,#/S/{position:relative}' +
 			'./B/{position:absolute;z-index:200400;pointer-events:none}' +
+			//	ToolBar
 			'#/T/ ./B/{left:0;bottom:-/b/px;width:100%;height:/b/px;box-shadow:inset 0 /b/px /b/px -/b/px /a/}' +
+			//	Navi
 			'#/N/ ./B/{right:0;top:0;width:/b/px;height:100%;box-shadow:inset -/b/px 0 /b/px -/b/px /a/;z-index:200000}' +
+			//	StatusBar
 			'#/S/ ./B/{left:0;top:-/b/px;width:100%;height:/b/px;box-shadow:inset 0 -/b/px /b/px -/b/px /a/}' +
 
 			//Error
-			'./E/{color:red;font-size:1.1em;font-weight:bold}',
+			'./E/{color:red;font-size:1.1em;font-weight:bold}' +
+
+			//Util
+			'./HP/{display:inline-block;line-height:0}' +
+			//Single line
+			'./SL/{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}',
 			'/',
 			{
 				I : DOM.Tab,
@@ -397,7 +602,14 @@
 
 				T : IDToolBar,
 				t : YToolBarHeight,
+				M : IDToolBarIcon,
+				P : IDToolBarItem,
+				PD : ClassToolBarDisabled,
+				x : ShapeConfigColorDisabled,
+				v : ShapeConfigColorHover,
 
+				NG : IDNaviStage,
+				ng : YNaviWidth + YStageWidth,
 				N : IDNavi,
 				n : YNaviWidth,
 				G : IDStage,
@@ -426,7 +638,12 @@
 				b : YShadowSize,
 				a : YShadowColor,
 
-				E : ClassError
+				E : ClassError,
+
+				HP : ClassShape,
+				SL : ClassSingleLine,
+
+				p : YPadding
 			}
 		)
 	})
@@ -442,10 +659,13 @@
 				'#/R/{text-align:center}' +
 				'#/R/>div{margin-top:10px!important}' +
 
+				//URL input
 				'#/I/{position:relative;display:inline-block;padding:0 10px;width:100%}' +
+				//	input
 				'#/I/ input{padding:12px 60px 4px 20px;width:100%;font-size:1.6rem;border:0;border-bottom:solid 2px #DCDCDC}' +
 				'#/I/ input:hover{border-bottom-color:#CCCEDB}' +
 				'#/I/ input:focus{border-bottom-color:#3399FF}' +
+				//	Enter button
 				'#/I/>div' +
 				'{' +
 					'position:absolute;' +
@@ -462,8 +682,10 @@
 				'}' +
 				'#/I/>div:hover{background:#F3F3F3}' +
 
+				//Info panel
 				'#/O/{margin:0 10px;padding:10px;border:solid #66AFE0;border-width:2px 0;font-size:1.1rem}' +
 
+				//List
 				'#/R/ fieldset' +
 				'{' +
 					'display:inline-block;' +
@@ -475,9 +697,12 @@
 					'vertical-align:top;' +
 					'box-shadow:0 5px 10px /a/;' +
 				'}' +
+				//	Card
 				'./J/{color:#F7F7F7;font-weight:bold;text-align:center;cursor:pointer}' +
+				//		Select bar
 				'./H/ ./K/,./N/{background:rgba(102,175,224,.7)}' +
 				'./L/,./M/{background:#66AFE0}' +
+				//		Image
 				'#/R/ img{width:/i/px;cursor:pointer}',
 				'/',
 				{
@@ -499,6 +724,8 @@
 				}
 			)
 		},
+		Show : MakeSelectableListShow,
+		BeforeHide : MakeSelectableListHide,
 		Content : function(M,X)
 		{
 			var
@@ -530,7 +757,7 @@
 			{
 				Q = ZED.isNumber(Q) ? ReplaceLang(Q,ZED.tail(arguments)) : Q
 				RInfo.append(ShowByClass(ClassError).text(Q))
-				EStatus(Q.split('\n')[0],ClassStatusError)
+				MakeStatus(X,Q.split('\n')[0],ClassStatusError)
 			},
 			GoLast,
 			GoInfo,
@@ -629,20 +856,23 @@
 					RList.append(D)
 				},Item)
 			},
-			Jump = function(X)
+			Jump = function(S)
 			{
-				X = ZED.max(1,X)
-				EStatus(L(Lang.Loading),ClassStatusLoading)
-				GoLast = GoDetail[KeySite.Page](GoID,X).start(function(Q)
+				if (GoDetail)
 				{
-					GoLast = false
-					EStatus()
-					GoInfo = GoInfo || ZED.EazyLog(InfoLog,$(DOM.div).appendTo(RInfo),true)
-					Render(Q,X)
-				},function(E)
-				{
-					E && EStatus(ZED.isString(E) ? E : E + (E.stack || ''),ClassStatusError)
-				})
+					S = ZED.max(1,S)
+					MakeStatus(X,L(Lang.Loading),ClassStatusLoading)
+					GoLast = GoDetail[KeySite.Page](GoID,S).start(function(Q)
+					{
+						GoLast = false
+						MakeStatus(X)
+						GoInfo = GoInfo || ZED.EazyLog(InfoLog,$(DOM.div).appendTo(RInfo),true)
+						Render(Q,S)
+					},function(E)
+					{
+						E && MakeStatus(X,ZED.isString(E) ? E : E + (E.stack || ''),ClassStatusError)
+					})
+				}
 			},
 			T;
 
@@ -661,12 +891,14 @@
 			T = M.find('.' + DOM.Pager).children()
 			M.append(RList)
 			PagerBotton = ZED.Pager({Parent : M,Offset : 1},Jump)
-			UShortCut.cmd(ShortCutCommand.SelAll,MakeIndex(X,Cold.AddAll))
-				.cmd(ShortCutCommand.UnAll,MakeIndex(X,Cold.RemoveAll))
+			UShortCut.cmd(ShortCutCommand.SelAll,MakeIndex(X,Cold.SelAll))
+				.cmd(ShortCutCommand.UnAll,MakeIndex(X,Cold.UnAll))
 				.cmd(ShortCutCommand.PageHead,MakeIndex(X,FnClick.bind($(T[0]))))
 				.cmd(ShortCutCommand.PagePrev,MakeIndex(X,FnClick.bind($(T[1]))))
 				.cmd(ShortCutCommand.PageNext,MakeIndex(X,FnClick.bind($(T[T.length - 2]))))
 				.cmd(ShortCutCommand.PageTail,MakeIndex(X,FnClick.bind($(ZED.last(T)))))
+
+			return MakeScroll()
 		}
 	},{
 		Tab : RColdCount(),
@@ -674,10 +906,14 @@
 		{
 			return ZED.Replace
 			(
+				//Info block
 				'#/R/ ./M/>div{margin-right:/m/px;padding:/p/px}' +
-				'#/R/ ./M/>div>div{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}' +
-				'#/R/ ./M/ span{margin:0 4px;color:#00F;font-weight:bold}' +
-				'#/R/ ./M/ svg{position:absolute;right:/p/px;top:50%;width:/v/px;height:/v/px;transform:translateY(-/l/px)}',
+				//@ mark
+				'#/R/ div>span{margin:0 4px;color:#00F;font-weight:bold}' +
+				//Commit wrap
+				'#/R/ ./M/>span{position:absolute;right:/p/px;top:50%;transform:translateY(-/l/px)}' +
+				//Commit
+				'#/R/ svg{width:/v/px;height:/v/px}',
 				'/',
 				{
 					M : DOM.ListViewItem,
@@ -691,64 +927,186 @@
 			)
 		},
 		Show : MakeSelectableListShow,
-		Hide : MakeSelectableListHide,
+		BeforeHide : MakeSelectableListHide,
 		Content : function(M,X)
 		{
 			var
-			ShapeConfig =
+			Tool = $(DOM.div),
+			ToolCommit = MakeShape(Lang.Commit,ShapeConfigColdCommit),
+			ToolRemove = MakeShape(Lang.Remove,ShapeConfigColdRemove),
+			ToolCommitAll = MakeShape(Lang.CommitAll,ShapeConfigColdCommitAll),
+
+			MakeClick = function(Q,L,H)
 			{
-				Type : 'Tick',
-				Fill : '#A9A9A9',
-				Line : '20%'
+				return Q.on(DOM.click,function(T)
+				{
+					Util.StopProp(T)
+					T = Cold.Cold.length
+					H()
+					R.Redraw()
+					T -= Cold.Cold.length
+					0 < T && MakeStatus(X,ReplaceLang(L,T,MakeS(T)))
+				})
 			},
 
-			R = MakeSelectableList(M,X,Cold.Cold(),function(Q)
-			{
-				return $(DOM.div).append
-				(
-					$(DOM.div).append
+			R = MakeSelectableList
+			(
+				M,X,
+				Cold.Cold,Cold.Map,KeySite.Unique,
+				function(Q)
+				{
+					return $(DOM.div).append
 					(
-						MakeAt(Q[KeySite.ID],Q[KeySite.Name]),
-						MakeAt(Q[KeySite.Title],Q[KeySite.Author]),
-						$(DOM.div).text(ZED.DateToString(Q[KeySite.Date],DateToStringFormat))
-					),
-					Q = ZED.Shape(ShapeConfig).on(DOM.click,function(E)
-					{
-						console.log('commit')
-						E.stopPropagation()
-					})
-				)
-			},function()
-			{
-				console.log(R.Selecting().length)
-			}),
+						$(DOM.div).append
+						(
+							MakeAt(Q[KeySite.ID],Q[KeySite.Name]),
+							MakeAt(Q[KeySite.Title],Q[KeySite.Author]),
+							$(DOM.div).text(ZED.DateToString(Q[KeySite.Date],DateToStringFormat))
+						),
+						MakeClick(MakeShape(Lang.Commit,ShapeConfigColdListCommit),Lang.Committed,function()
+						{
+							Cold.Commit(ZED.objOf(Q[KeySite.Unique],Q))
+						})
+					)
+				},ZED.noop,function(Q)
+				{
+					MakeToolBarActive(ToolCommit,Q)
+					MakeToolBarActive(ToolRemove,Q)
+				}
+			);
 
-			MakeAt = function(Q,S)
-			{
-				return $(DOM.div).attr(DOM.title,Q + '@' + S)
-					.append(Q,ShowByText('@',DOM.span),S)
-			};
-
+			MakeToolBarActive(ToolCommit)
+			MakeToolBarActive(ToolRemove)
+			MakeToolBar(X,Tool.append
+			(
+				MakeClick(ToolCommit,Lang.Committed,function()
+				{
+					R.Count() && Cold.Commit(R.Selecting())
+				}),
+				MakeClick(ToolRemove,Lang.Removed,function()
+				{
+					R.Count() && Cold.Remove(R.Selecting())
+				}),
+				MakeClick(ToolCommitAll,Lang.Committed,Cold.CommitAll)
+			))
 			Cold.Bus.on(Event.Cold.Change,RColdCount)
 
 			return R
 		}
 	},{
 		Tab : RHotCount(),
-		CSS : function(ID)
+		CSS : function(ID,W,T)
 		{
+			W = YStageWidth - YScrollWidth - YHotControlWidth
+			T = YHotTitlePercentage * W
 			return ZED.Replace
 			(
-				'',
+				'./H/,./S/,./C/,./O/{display:inline-block;vertical-align:middle}' +
+				//Title
+				'./H/{padding:/p/px;width:/t/px}' +
+				'./T/{font-size:1.1rem}' +
+				'./N/{color:#979797}' +
+				//Status
+				'./S/{padding:/p/px 0;width:/s/px}' +
+				'./S/>*{display:inline-block;max-width:100%;vertical-align:bottom}' +
+				//Control
+				'./C/{margin:0 /_/px;line-height:0}' +
+				'./C/ svg{width:/c/px;height:/c/px}' +
+				'./M/:hover{background:#EF3000}' +
+				'./M/:hover path{fill:#F7F7F7!important}' +
+				'./P/{margin-top:/_/px}' +
+				//	More
+				'./O/ svg{width:/o/px;height:/o/px}' +
+				//Percentage
+				'./G/{position:absolute;left:0;bottom:0;height:3px;background:#979797;transition:width .2s linear}' +
+				'./A/{background:#69A0D7}' +
+				'./U/{}',
 				'/',
 				{
-					R : ID
+					I : DOM.ListViewItem,
+
+					R : ID,
+					H : ClassHotTitleInfo,
+					T : ClassHotTitle,
+					N : ClassHotInfo,
+					t : T,
+					S : ClassHotStatus,
+					s : W - T,
+					C : ClassHotControl,
+					c : YHotControlSize,
+					_ : YHotControlPadding,
+					M : ClassHotControlRemove,
+					P : ClassHotControlPP,
+					O : ClassHotControlMore,
+					o : YHotControlMoreWidth,
+					G : ClassHotPercentage,
+					A : ClassHotPercentageActive,
+					U : ClassHotSizeUnknown,
+
+					p : YPadding
 				}
 			)
 		},
+		Show : MakeSelectableListShow,
+		BeforeHide : MakeSelectableListHide,
 		Content : function(M,X)
 		{
+			var
+			Tool = $(DOM.div),
 
+			ActiveKeyTitle = 0,
+			ActiveKeyInfo = 1 + ActiveKeyTitle,
+			ActiveKeySpeed = 1 + ActiveKeyInfo,
+			ActiveKeyRemain = 1 + ActiveKeySpeed,
+			ActiveKeyPercentage = 1 + ActiveKeyRemain,
+			Active = {},
+
+			R = MakeSelectableList
+			(
+				M,X,
+				Queue.Online,Queue.OnlineMap,KeyQueue.Unique,
+				function(Q)
+				{
+					var
+					ID = Q[KeyQueue.Unique],
+
+					Title = ShowByClass(ClassSingleLine + ' ' + ClassHotTitle).text(Q[KeyQueue.Title]),
+					Info = ShowByClass(ClassSingleLine + ' ' + ClassHotInfo).text(L(Lang.GetInfo)),
+					Speed = ShowByClass(ClassSingleLine),
+					Remain = ShowByClass(ClassSingleLine),
+					Percentage = ShowByClass(ClassHotPercentage);
+
+					Active[ID] = [Title,Info,Speed,Remain,Percentage]
+
+					return $(DOM.div).append
+					(
+						$(DOM.div).append
+						(
+							ShowByClass(ClassHotTitleInfo).append(Title,Info),
+							ShowByClass(ClassHotStatus).append(Speed,' ',Remain),
+							ShowByClass(ClassHotControl).append
+							(
+								MakeShape(Lang.Remove,ShapeConfigHotRemove,ClassHotControlRemove),
+								DOM.br,
+								MakeShape(Lang.Pause,ShapeConfigHotPause,ClassHotControlPP)
+							),
+							MakeShape(Lang.More,ShapeConfigHotMore,ClassHotControlMore)
+						),
+						Percentage
+					)
+				},function(Q)
+				{
+					ZED.delete_(Q[KeyQueue.Unique],Active)
+				},function(Q)
+				{
+
+				}
+			);
+
+			MakeToolBar(X,Tool)
+			Queue.Bus.on(Event.Queue.ChangeOnline,RHotCount)
+
+			return R
 		}
 	},{
 		Tab : L(Lang.History),
@@ -808,11 +1166,20 @@
 
 	Rainbow.append
 	(
-		RToolBar,
-		RNavi,
-		RStage,
+		RToolBar.append
+		(
+			ShowByClass(ClassShadowBar),
+			ShowByClass(DOM.VerticalMiddle),
+			RToolBarIcon,RToolBarItem
+		),
+		ShowByRock(IDNaviStage).append
+		(
+			RNavi.prepend(ShowByClass(ClassShadowBar)),
+			RStage
+		),
 		RStatusBar.append
 		(
+			ShowByClass(ClassShadowBar),
 			ShowByRock(IDStatusBarLeft).append
 			(
 				RStatus.append(RStatusIcon,RStatusText)

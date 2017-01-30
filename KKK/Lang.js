@@ -17,6 +17,18 @@ module.exports =
 
 	//StatucBar
 	Loading : Lang('Loading...'),
+	Selecting : Lang('Selecting /0/ item/1/'),
+	Committed : Lang('Committed /0/ item/1/'),
+	Removed : Lang('Removed /0/ item/1/'),
+
+	//Shape
+	SelAll : Lang('Select all'),
+	UnAll : Lang('Unselect all'),
+	Commit : Lang('Commit'),
+	CommitAll : Lang('Commit all'),
+	Remove : Lang('Remove'),
+
+
 
 	//Browser
 	Processing : Lang('Processing `/0/`'),
@@ -28,9 +40,16 @@ module.exports =
 
 	//Cold
 	Select : Lang('Select'),
-	//Cold : Lang('Cold'),
-	//Hot : Lang('Hot'),
-	//History : Lang('History'),
+	//[Cold]
+	//[Hot]
+	//[History]
 	AddCold : Lang('Append to cold list'),
-	RmCold : Lang('Remove from cold list')
+	RmCold : Lang('Remove from cold list'),
+
+	//Hot
+	//[Remove]
+	Restart : Lang('Restart'),
+	Pause : Lang('Pause'),
+	More : Lang('More info'),
+	GetInfo : Lang('Getting infomation...')
 }

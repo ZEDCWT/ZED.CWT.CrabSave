@@ -8,7 +8,10 @@ module.exports =
 {
 	Queue :
 	{
+		Name : QueueKey(),
+		Unique : QueueKey(),
 		ID : QueueKey(),
+		Title : QueueKey(),
 		Active : QueueKey(),
 		Running : QueueKey(),
 		URL : QueueKey(),

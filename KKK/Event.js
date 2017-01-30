@@ -7,7 +7,8 @@ module.exports =
 {
 	Queue :
 	{
-		Refresh : EventKey(),
+		ChangeOnline : EventKey(),
+		ChangeOffline : EventKey(),
 		Play : EventKey(),
 		Pause : EventKey(),
 		Stop : EventKey()
