@@ -1,3 +1,4 @@
+'use strict'
 var
 ZED = require('@zed.cwt/zedquery'),
 Prefix = 'ZED';
@@ -26,6 +27,8 @@ module.exports =
 	mouseup : 'mouseup',
 	click : 'click',
 	aniend : 'animationend',
+
+	nbsp : '\xa0',
 
 	Input : Prefix + 'Input',
 	NoSelect : Prefix + 'NoSelect',

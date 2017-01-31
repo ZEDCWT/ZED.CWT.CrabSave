@@ -1,6 +1,6 @@
+'use strict'
 var
 ZED = require('@zed.cwt/zedquery'),
-Observable = ZED.Observable,
 
 Util = require('./Util'),
 Key = require('./Key').Site,

@@ -1,13 +1,19 @@
+'use strict'
 var
 ZED = require('@zed.cwt/zedquery'),
 
-Key = require('./Key').Site,
-Event = require('./Event').Cold,
-Queue = require('./Queue'),
+Key = require('./Key'),
+KeySite = Key.Site,
+KeyQueue = Key.Queue,
+Event = require('./Event'),
+EventCold = Event.Cold,
+EventQueue = Event.Queue,
 Lang = require('./Lang'),
 L = Lang.L,
 DOM = require('./DOM'),
 Card = DOM.Card,
+Queue = require('./Queue'),
+
 Prefix = DOM.NoSelect + ' ' + Card.R + ' ',
 
 LangMap = ZED.ReduceToObject
@@ -47,10 +53,10 @@ Unselect = function(ID,R,T)
 	{
 		R = Active[ID]
 		ReleseState(R,ID)
-		R = R[1][Key.Unique]
+		R = R[1][KeySite.Unique]
 		T = ZED.findIndex(function(V)
 		{
-			return V[Key.Unique] === R
+			return V[KeySite.Unique] === R
 		},Cold)
 		T < 0 ||
 		(
@@ -62,14 +68,14 @@ Unselect = function(ID,R,T)
 
 Commit = function(Q,ID,R)
 {
-	ID = Q[Key.Unique]
+	ID = Q[KeySite.Unique]
 	R = Active[ID]
 	R && R[0].attr(DOM.cls,Prefix + (StatusMap[ID] = Card.Hot)).text(L(Lang.Hot))
-	Queue.New(Q[Key.Name],Q[Key.Unique],ID,Q[Key.Title])
+	Queue.New(Q[KeySite.Name],Q[KeySite.Unique],ID,Q[KeySite.Title])
 },
 Remove = function(Q,ID)
 {
-	ID = Q[Key.Unique]
+	ID = Q[KeySite.Unique]
 	Q = Active[ID]
 	Q && ReleseState(Q,ID)
 },
@@ -81,11 +87,11 @@ MakeAction = ZED.curry(function(H,Q)
 	for (F = Cold.length;F;)
 	{
 		T = Cold[--F]
-		if (Q[T[Key.Unique]])
+		if (Q[T[KeySite.Unique]])
 		{
 			H(T)
 			Cold.splice(F,1)
-			ZED.delete_(T[Key.Unique],ColdMap)
+			ZED.delete_(T[KeySite.Unique],ColdMap)
 		}
 	}
 	ChangeCount()
@@ -93,10 +99,17 @@ MakeAction = ZED.curry(function(H,Q)
 
 ChangeCount = function()
 {
-	Bus.emit(Event.Change,Cold.length)
+	Bus.emit(EventCold.Change,Cold.length)
 };
 
-Queue.Bus
+Queue.Bus.on(EventQueue.Remove,function(ID,R)
+{
+	ID = ID[KeyQueue.Unique]
+	R = Active[ID]
+	R ?
+		ReleseState(R,ID) :
+		StatusMap[ID] = Queue.HasOffline(ID) ? Card.History : Card.Init
+})
 
 module.exports =
 {
@@ -107,7 +120,7 @@ module.exports =
 	Reset : function(){Active = {}},
 	New : function(Target,O,R,S,ID)
 	{
-		ID = O[Key.Unique]
+		ID = O[KeySite.Unique]
 		S = StatusMap[ID]
 		if (!S)
 		{
@@ -144,10 +157,14 @@ module.exports =
 	},
 	Commit : MakeAction(Commit),
 	Remove : MakeAction(Remove),
-	CommitAll : function()
+	CommitAll : function(R)
 	{
-		ZED.each(Commit,Cold)
-		Cold.length = 0
-		ChangeCount()
+		if (R = Cold.length)
+		{
+			ZED.each(Commit,Cold)
+			Cold.length = 0
+			ChangeCount()
+		}
+		return R
 	}
 }

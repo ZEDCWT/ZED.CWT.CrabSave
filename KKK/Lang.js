@@ -1,3 +1,4 @@
+'use strict'
 var
 ZED = require('@zed.cwt/zedquery'),
 _Lang = ZED.Lang(),
@@ -20,6 +21,8 @@ module.exports =
 	Selecting : Lang('Selecting /0/ item/1/'),
 	Committed : Lang('Committed /0/ item/1/'),
 	Removed : Lang('Removed /0/ item/1/'),
+	Restarted : Lang('Restarted /0/ item/1/'),
+	Paused : Lang('Paused /0/ item/1/'),
 
 	//Shape
 	SelAll : Lang('Select all'),
@@ -51,5 +54,5 @@ module.exports =
 	Restart : Lang('Restart'),
 	Pause : Lang('Pause'),
 	More : Lang('More info'),
-	GetInfo : Lang('Getting infomation...')
+	GetInfo : Lang('Getting infomation...'),
 }

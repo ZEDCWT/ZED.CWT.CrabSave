@@ -1,56 +1,65 @@
+'use strict'
 var
 ZED = require('@zed.cwt/zedquery'),
 
-QueueKey = ZED.StableKeyGen(20170122),
-SiteKey = ZED.StableKeyGen(20170125);
+KeyKey = ZED.StableKeyGen(20170122);
 
 module.exports =
 {
-	Queue :
-	{
-		Name : QueueKey(),
-		Unique : QueueKey(),
-		ID : QueueKey(),
-		Title : QueueKey(),
-		Active : QueueKey(),
-		Running : QueueKey(),
-		URL : QueueKey(),
-		Word : QueueKey(),
-		//[URL] reuse, a request object
-		Suffix : QueueKey(),
-		Index : QueueKey()
-	},
 	Site :
 	{
-		Name : SiteKey(),
-		Judge : SiteKey(),
+		Name : KeyKey(),
+		Judge : KeyKey(),
 		//Login
-		Login : SiteKey(),
-		Check : SiteKey(),
-		Require : SiteKey(),
+		Login : KeyKey(),
+		Check : KeyKey(),
+		Require : KeyKey(),
 		//Map
-		Map : SiteKey(),
+		Map : KeyKey(),
 		//[Name] reuse
 		//[Judge] reuse
-		Page : SiteKey(),
+		Page : KeyKey(),
 		//Page returns an object
-		Pages : SiteKey(),//number | false for
-		Total : SiteKey(),
-		Item : SiteKey(),//array
+		Pages : KeyKey(),//number | false for
+		Total : KeyKey(),
+		Item : KeyKey(),//array
 		//Item
-		Unique : SiteKey(),
-		Index : SiteKey(),
-		ID : SiteKey(),
-		Img : SiteKey(),
-		Title : SiteKey(),
-		Author : SiteKey(),
-		Date : SiteKey(),
+		Unique : KeyKey(),
+		Index : KeyKey(),
+		ID : KeyKey(),
+		Img : KeyKey(),
+		Title : KeyKey(),
+		Author : KeyKey(),
+		Date : KeyKey(),
 		//URL
-		URL : SiteKey(),
+		URL : KeyKey(),
 		//URL returns an array
-		Word : SiteKey(),
+		Word : KeyKey(),
 		//[URL] reuse, a request object
-		Suffix : SiteKey()
+		Suffix : KeyKey()
 		//[Index] reuse
+	},
+	Queue :
+	{
+		Name : KeyKey(),
+		Unique : KeyKey(),
+		ID : KeyKey(),
+		Title : KeyKey(),
+
+		Info : KeyKey(),//false : not got, 1 : getting, true : got
+		Active : KeyKey(),
+		Running : KeyKey(),
+
+		Author : KeyKey(),
+		Date : KeyKey(),
+		Suffix : KeyKey(),
+		Size : KeyKey(),
+
+		Part : KeyKey(),
+		//[Title] reuse, optional part title
+		//[URL] reuse, URL list
+		//	URL
+		//[URL] reuse, a request object
+		//[Size] reuse
 	}
 }

@@ -1,24 +1,28 @@
 ~function()
 {
+	'use strict'
 	var
 	ZED = require('@zed.cwt/zedquery'),
 
 	Util = require('./Util'),
+	Key = require('./Key'),
+	KeySite = Key.Site,
+	KeyQueue = Key.Queue,
+	Event = require('./Event'),
+	EventQueue = Event.Queue,
+	EventDownload = Event.Download,
 	Lang = require('./Lang'),
 	L = Lang.L,
 	DOM = require('./DOM'),
 	DOMCard = DOM.Card,
-	Key = require('./Key'),
-	KeySite = Key.Site,
-	KeyQueue = Key.Queue,
 	ShortCut = require('./ShortCut'),
 	ShortCutCommand = ShortCut.Command,
-	Event = require('./Event'),
-	Cold = require('./Cold'),
-	Queue = require('./Queue'),
 	Site = require('./Site'),
 	SiteAll = Site.All,
 	SiteMap = Site.Map,
+	Cold = require('./Cold'),
+	Queue = require('./Queue'),
+	Download = require('./Download'),
 
 	$ = ZED.jQuery,
 	FnClick = $.fn.click,
@@ -163,28 +167,25 @@
 
 
 
-	ShapeConfigColorTransparent = 'transparent',
 	ShapeConfigColorDisabled = '#D1D1D1',
 	ShapeConfigColorEnabled = '#7D7D7D',
 	ShapeConfigColorHover = '#852ED9',
 	ShapeConfigColorBackground = '#A9A9A9',
-	ShapeConfigBrowserSelectAll,
-	ShapeConfigBrowserUnselectAll,
-	ShapeConfigColdCommit =
+	ShapeConfigColdToolCommit =
 	{
 		Type : 'Tick',
 		Fill : false,
 		Stroke : ShapeConfigColorEnabled,
 		Line : '12%'
 	},
-	ShapeConfigColdRemove =
+	ShapeConfigColdToolRemove =
 	{
 		Fill : false,
 		Stroke : ShapeConfigColorEnabled,
 		Line : '12%',
 		Padding : '10%'
 	},
-	ShapeConfigColdCommitAll =
+	ShapeConfigColdToolCommitAll =
 	{
 		Type : 'Tick',
 		Fill : false,
@@ -197,23 +198,39 @@
 		Fill : ShapeConfigColorBackground,
 		Line : '20%'
 	},
-	ShapeConfigHotRemove = ShapeConfigColdRemove,
-	ShapeConfigHotPlay =
+	ShapeConfigHotToolPlay =
 	{
-		Type : 'Polygon',
-		General : 4,
-		Fill : ShapeConfigColorBackground,
-		Stroke : '#F7F7F7',
-		Line : '20%'
+		Type : 'Play',
+		Fill : false,
+		Stroke : ShapeConfigColorEnabled,
+		Line : '80%'
 	},
-	ShapeConfigHotPause =
+	ShapeConfigHotToolPause =
+	{
+		Type : 'Pause',
+		Padding : '10%',
+		Line : '12%',
+		Fill : false,
+		Stroke : ShapeConfigColorEnabled,
+		Pause : 3 / 10
+	},
+	ShapeConfigHotToolRemove = ShapeConfigColdToolRemove,
+	ShapeConfigHotListRemove = ShapeConfigColdToolRemove,
+	ShapeConfigHotListPlay =
+	{
+		Type : 'Play',
+		Line : '60%',
+		Fill : ShapeConfigColorBackground,
+		Stroke : '#F7F7F7'
+	},
+	ShapeConfigHotListPause =
 	{
 		Type : 'Pause',
 		Padding : '25%',
 		Fill : ShapeConfigColorBackground,
-		Line : '18.75%'
+		Line : '37.5%'
 	},
-	ShapeConfigHotMore =
+	ShapeConfigHotListMore =
 	{
 		Type : 'More',
 		Fill : false,
@@ -238,6 +255,17 @@
 			S.removeClass(ClassToolBarDisabled) :
 			S.addClass(ClassToolBarDisabled)
 	},
+	MakeToolBarClick = function(R,X,Q,L,H)
+	{
+		return Q.on(DOM.click,function(T)
+		{
+			Util.StopProp(T)
+			T = R.Count()
+			H(T) && R.Redraw()
+			0 < T && MakeStatus(X,ReplaceLang(L,T,MakeS(T)))
+		})
+	},
+
 
 	MakeCount = function(Q)
 	{
@@ -514,10 +542,10 @@
 			//		Default
 			'#/P/ ./HP/{margin-left:/p/px;line-height:0;cursor:pointer}' +
 			'#/P/ ./HP/ svg{width:30px;height:30px}' +
-			'#/P/ ./HP/:hover path{fill:/v/!important}' +
+			'#/P/ ./HP/:hover defs>*,#/P/ ./HP/:hover g>*{fill:/v/!important}' +
 			//		Disabled
 			'#/P/ ./PD/{cursor:auto}' +
-			'#/P/ ./PD/ path,#/P/ ./PD/:hover path{fill:/x/!important}' +
+			'#/P/ ./PD/ defs>*,#/P/ ./PD/ g>*,#/P/ ./PD/:hover defs>*,#/P/ ./PD/:hover g>*{fill:/x/!important}' +
 
 			//Navi, Stage
 			//	Navi
@@ -932,22 +960,8 @@
 		{
 			var
 			Tool = $(DOM.div),
-			ToolCommit = MakeShape(Lang.Commit,ShapeConfigColdCommit),
-			ToolRemove = MakeShape(Lang.Remove,ShapeConfigColdRemove),
-			ToolCommitAll = MakeShape(Lang.CommitAll,ShapeConfigColdCommitAll),
-
-			MakeClick = function(Q,L,H)
-			{
-				return Q.on(DOM.click,function(T)
-				{
-					Util.StopProp(T)
-					T = Cold.Cold.length
-					H()
-					R.Redraw()
-					T -= Cold.Cold.length
-					0 < T && MakeStatus(X,ReplaceLang(L,T,MakeS(T)))
-				})
-			},
+			ToolCommit = MakeShape(Lang.Commit,ShapeConfigColdToolCommit),
+			ToolRemove = MakeShape(Lang.Remove,ShapeConfigColdToolRemove),
 
 			R = MakeSelectableList
 			(
@@ -963,10 +977,17 @@
 							MakeAt(Q[KeySite.Title],Q[KeySite.Author]),
 							$(DOM.div).text(ZED.DateToString(Q[KeySite.Date],DateToStringFormat))
 						),
-						MakeClick(MakeShape(Lang.Commit,ShapeConfigColdListCommit),Lang.Committed,function()
-						{
-							Cold.Commit(ZED.objOf(Q[KeySite.Unique],Q))
-						})
+						MakeToolBarClick
+						(
+							R,X,
+							MakeShape(Lang.Commit,ShapeConfigColdListCommit),
+							Lang.Committed,
+							function()
+							{
+								Cold.Commit(ZED.objOf(Q[KeySite.Unique],Q))
+								return true
+							}
+						)
 					)
 				},ZED.noop,function(Q)
 				{
@@ -979,15 +1000,23 @@
 			MakeToolBarActive(ToolRemove)
 			MakeToolBar(X,Tool.append
 			(
-				MakeClick(ToolCommit,Lang.Committed,function()
+				MakeToolBarClick(R,X,ToolCommit,Lang.Committed,function(Q)
 				{
-					R.Count() && Cold.Commit(R.Selecting())
+					Q && Cold.Commit(R.Selecting())
+					return Q
 				}),
-				MakeClick(ToolRemove,Lang.Removed,function()
+				MakeToolBarClick(R,X,ToolRemove,Lang.Removed,function(Q)
 				{
-					R.Count() && Cold.Remove(R.Selecting())
+					Q && Cold.Remove(R.Selecting())
+					return Q
 				}),
-				MakeClick(ToolCommitAll,Lang.Committed,Cold.CommitAll)
+				MakeToolBarClick
+				(
+					R,X,
+					MakeShape(Lang.CommitAll,ShapeConfigColdToolCommitAll),
+					Lang.Committed,
+					Cold.CommitAll
+				)
 			))
 			Cold.Bus.on(Event.Cold.Change,RColdCount)
 
@@ -1018,9 +1047,9 @@
 				//	More
 				'./O/ svg{width:/o/px;height:/o/px}' +
 				//Percentage
-				'./G/{position:absolute;left:0;bottom:0;height:3px;background:#979797;transition:width .2s linear}' +
+				'./G/{position:absolute;left:0;bottom:0;height:3px;width:0;background:#979797;transition:width .2s linear}' +
 				'./A/{background:#69A0D7}' +
-				'./U/{}',
+				'./U/{width:100%}',
 				'/',
 				{
 					I : DOM.ListViewItem,
@@ -1053,13 +1082,57 @@
 		{
 			var
 			Tool = $(DOM.div),
+			ToolPlay = MakeShape(Lang.Restart,ShapeConfigHotToolPlay),
+			ToolPause = MakeShape(Lang.Pause,ShapeConfigHotToolPause),
+			ToolRemove = MakeShape(Lang.Remove,ShapeConfigHotToolRemove),
 
-			ActiveKeyTitle = 0,
-			ActiveKeyInfo = 1 + ActiveKeyTitle,
+			ActiveKeyInfo = 0,
 			ActiveKeySpeed = 1 + ActiveKeyInfo,
 			ActiveKeyRemain = 1 + ActiveKeySpeed,
 			ActiveKeyPercentage = 1 + ActiveKeyRemain,
+			ActiveKeyPP = 1 + ActiveKeyPercentage,
+			ActiveKeyPPS = 1 + ActiveKeyPP,
 			Active = {},
+
+			SetPlay = function(Q)
+			{
+				Q[ActiveKeyPP].attr(DOM.title,L(Lang.Restart))
+				ZED.Shape(ShapeConfigHotListPlay,{Target : Q[ActiveKeyPPS]})
+			},
+			SetPause = function(Q)
+			{
+				Q[ActiveKeyPP].attr(DOM.title,L(Lang.Pause))
+				ZED.Shape(ShapeConfigHotListPause,{Target : Q[ActiveKeyPPS]})
+			},
+
+			ClickRemove = function(Q)
+			{
+				Queue.Remove(Q)
+				R.Redraw()
+			},
+			ClickPP = function(Q)
+			{
+				Q[0][KeyQueue.Active] ?
+				(
+					Queue.Pause(Q[1]),
+					SetPlay(Q[2])
+				) : (
+					Queue.Play(Q[1]),
+					SetPause(Q[2])
+				)
+			},
+			ClickMore = function(Q)
+			{
+				MakeStatus('TODO ' + Q[Key.Unique])
+			},
+			MakeAction = function(R,H,Q)
+			{
+				return R.on(DOM.click,function(E)
+				{
+					H(Q)
+					Util.StopProp(E)
+				})
+			},
 
 			R = MakeSelectableList
 			(
@@ -1071,12 +1144,19 @@
 					ID = Q[KeyQueue.Unique],
 
 					Title = ShowByClass(ClassSingleLine + ' ' + ClassHotTitle).text(Q[KeyQueue.Title]),
-					Info = ShowByClass(ClassSingleLine + ' ' + ClassHotInfo).text(L(Lang.GetInfo)),
+					Info = ShowByClass(ClassSingleLine + ' ' + ClassHotInfo).text(DOM.nbsp),
 					Speed = ShowByClass(ClassSingleLine),
 					Remain = ShowByClass(ClassSingleLine),
-					Percentage = ShowByClass(ClassHotPercentage);
+					Percentage = ShowByClass(ClassHotPercentage),
+					PP = Q[KeyQueue.Active] ?
+						MakeShape(Lang.Pause,ShapeConfigHotListPause,ClassHotControlPP) :
+						MakeShape(Lang.Restart,ShapeConfigHotListPlay,ClassHotControlPP),
+					PPS = PP.children(),
+					ActiveObj = [Info,Speed,Remain,Percentage,PP,PPS],
 
-					Active[ID] = [Title,Info,Speed,Remain,Percentage]
+					ActionObj = ZED.objOf(ID,Q);
+
+					Active[ID] = ActiveObj
 
 					return $(DOM.div).append
 					(
@@ -1086,11 +1166,19 @@
 							ShowByClass(ClassHotStatus).append(Speed,' ',Remain),
 							ShowByClass(ClassHotControl).append
 							(
-								MakeShape(Lang.Remove,ShapeConfigHotRemove,ClassHotControlRemove),
+								MakeAction
+								(
+									MakeShape(Lang.Remove,ShapeConfigHotListRemove,ClassHotControlRemove),
+									ClickRemove,ActionObj
+								),
 								DOM.br,
-								MakeShape(Lang.Pause,ShapeConfigHotPause,ClassHotControlPP)
+								MakeAction(PP,ClickPP,[Q,ActionObj,ActiveObj])
 							),
-							MakeShape(Lang.More,ShapeConfigHotMore,ClassHotControlMore)
+							MakeAction
+							(
+								MakeShape(Lang.More,ShapeConfigHotListMore,ClassHotControlMore),
+								ClickMore,Q
+							)
 						),
 						Percentage
 					)
@@ -1099,12 +1187,43 @@
 					ZED.delete_(Q[KeyQueue.Unique],Active)
 				},function(Q)
 				{
-
+					MakeToolBarActive(ToolPlay,Q)
+					MakeToolBarActive(ToolPause,Q)
+					MakeToolBarActive(ToolRemove,Q)
 				}
 			);
 
-			MakeToolBar(X,Tool)
-			Queue.Bus.on(Event.Queue.ChangeOnline,RHotCount)
+			MakeToolBarActive(ToolPlay)
+			MakeToolBarActive(ToolPause)
+			MakeToolBarActive(ToolRemove)
+			MakeToolBar(X,Tool.append
+			(
+				MakeToolBarClick(R,X,ToolPlay,Lang.Restarted,function(Q)
+				{
+					Q && Queue.Play(R.Selecting())
+					ZED.EachKey(R.Selecting(),function(F)
+					{
+						(F = Active[F]) && SetPause(F)
+					})
+					return false
+				}),
+				MakeToolBarClick(R,X,ToolPause,Lang.Paused,function(Q)
+				{
+					Q && Queue.Pause(R.Selecting())
+					ZED.EachKey(R.Selecting(),function(F)
+					{
+						(F = Active[F]) && SetPlay(F)
+					})
+					return false
+				}),
+				MakeToolBarClick(R,X,ToolRemove,Lang.Removed,function(Q)
+				{
+					Q && Queue.Remove(R.Selecting())
+					return Q
+				})
+			))
+			Queue.Bus.on(EventQueue.ChangeOnline,RHotCount)
+			Download.Bus
 
 			return R
 		}
@@ -1121,9 +1240,11 @@
 				}
 			)
 		},
+		Show : MakeSelectableListShow,
+		BeforeHide : MakeSelectableListHide,
 		Content : function(M,X)
 		{
-
+			return MakeScroll()
 		}
 	},{
 		Tab : L(Lang.SignIn),
@@ -1138,9 +1259,11 @@
 				}
 			)
 		},
+		Show : MakeSelectableListShow,
+		BeforeHide : MakeSelectableListHide,
 		Content : function(M,X)
 		{
-
+			return MakeScroll()
 		}
 	},{
 		Tab : L(Lang.Setting),
@@ -1155,9 +1278,11 @@
 				}
 			)
 		},
+		Show : MakeSelectableListShow,
+		BeforeHide : MakeSelectableListHide,
 		Content : function(M,X)
 		{
-
+			return MakeScroll()
 		}
 	})
 

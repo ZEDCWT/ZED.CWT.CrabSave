@@ -1,3 +1,4 @@
+'use strict'
 var
 ZED = require('@zed.cwt/zedquery'),
 Observable = ZED.Observable,
