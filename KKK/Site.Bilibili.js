@@ -3,7 +3,9 @@ var
 ZED = require('@zed.cwt/zedquery'),
 
 Util = require('./Util'),
-Key = require('./Key').Site,
+Key = require('./Key'),
+KeySite = Key.Site,
+KeyQueue = Key.Queue,
 Lang = require('./Lang'),
 L = Lang.L,
 
@@ -13,21 +15,21 @@ URLSpace = ZED.URLBuild('http://space.bilibili.com/ajax/member/getSubmitVideos?m
 
 R = ZED.ReduceToObject
 (
-	Key.Name,Name,
-	Key.Judge,/\.bilibili\./i,
-	Key.Login,function()
+	KeySite.Name,Name,
+	KeySite.Judge,/\.bilibili\./i,
+	KeySite.Login,function()
 	{
 
 	},
-	Key.Check,function()
+	KeySite.Check,function()
 	{
 
 	},
-	Key.Map,[ZED.ReduceToObject
+	KeySite.Map,[ZED.ReduceToObject
 	(
-		Key.Name,L(Lang.User),
-		Key.Judge,[/(?:^|.*[^a-z])space(?:[^a-z]\D*)??(\d+)/i],
-		Key.Page,function(ID,X)
+		KeySite.Name,L(Lang.User),
+		KeySite.Judge,[/(?:^|.*[^a-z])space(?:[^a-z]\D*)??(\d+)/i],
+		KeySite.Page,function(ID,X)
 		{
 			return Util.RequestBody(URLSpace(ID,X))
 				.map(function(Q)
@@ -38,29 +40,53 @@ R = ZED.ReduceToObject
 
 					return ZED.ReduceToObject
 					(
-						Key.Pages,Q.pages,
-						Key.Total,Q.count,
-						Key.Item,ZED.Map(Q.vlist || [],function(F,V)
+						KeySite.Pages,Q.pages,
+						KeySite.Total,Q.count,
+						KeySite.Item,ZED.Map(Q.vlist || [],function(F,V)
 						{
 							return ZED.ReduceToObject
 							(
-								Key.Name,Name,
-								Key.Unique,Util.MakeUnique(Name,V.aid),
-								Key.Index,PageSize * (X - 1) + F,
-								Key.ID,'av' + V.aid,
-								Key.Img,V.pic,
-								Key.Title,V.title,
-								Key.Author,V.author,
-								Key.Date,new Date(1000 * V.created)
+								KeySite.Name,Name,
+								KeySite.Unique,Util.MakeUnique(Name,V.aid),
+								KeySite.Index,PageSize * (X - 1) + F,
+								KeySite.ID,'av' + V.aid,
+								KeySite.Img,V.pic,
+								KeySite.Title,V.title,
+								KeySite.Author,V.author,
+								KeySite.Date,new Date(1000 * V.created)
 							)
 						})
 					)
 				})
 		}
 	)],
-	Key.URL,function()
+	KeySite.URL,function(ID,R)
 	{
+		return ZED.Observable.create(function(O)
+		{
+			var S = setTimeout(function()
+			{
+				ZED.Merge(true,R,ZED.ReduceToObject
+				(
+					KeyQueue.Author,'AUTHOR',
+					KeyQueue.Date,new Date,
+					KeyQueue.Part,[ZED.ReduceToObject
+					(
+						KeyQueue.Title,'PARTA',
+						KeyQueue.URL,['http://WWW.WWW.WWW/WWW'],
+						KeyQueue.Suffix,'.flv'
+					)],
+					KeyQueue.File,1
+				))
+				O.data().finish()
+			},1000)
 
+			return function()
+			{
+				console.log('suspend','URL')
+
+			}
+		})
 	}
 );
 

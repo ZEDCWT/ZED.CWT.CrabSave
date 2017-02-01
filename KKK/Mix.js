@@ -5,6 +5,7 @@
 	ZED = require('@zed.cwt/zedquery'),
 
 	Util = require('./Util'),
+	Bus = Util.Bus,
 	Key = require('./Key'),
 	KeySite = Key.Site,
 	KeyQueue = Key.Queue,
@@ -74,6 +75,20 @@
 		return ShowByClass(ClassSingleLine).attr(DOM.title,Q + '@' + S)
 			.append(Q,ShowByText('@',DOM.span),S)
 	},
+	MakeSizeJust = function(Q)
+	{
+		return (Q = Q[KeyQueue.Size]) ? ZED.FormatSize(Q) : L(Lang.SizeUn)
+	},
+	MakeSizePercentage = function(S,D)
+	{
+		return ZED.isNull(S) ?
+			L(Lang.Calculating) :
+			S ?
+				S === D ?
+					L(Lang.Completed) :
+					ReplaceLang(Lang.SizeP,ZED.FormatSize(D),ZED.FormatSize(S),ZED.Format(D / S)) :
+				ReplaceLang(Lang.SizeNP,ZED.FormatSize(D))
+	},
 
 
 
@@ -119,6 +134,11 @@
 	IDStage = ZED.KeyGen(),
 	ClassStageScroll = ZED.KeyGen(),
 	ClassListSelected = ZED.KeyGen(),
+	IDDetail = ZED.KeyGen(),
+	IDDetailHead = ZED.KeyGen(),
+	IDDetailInfo = ZED.KeyGen(),
+	ClassDetailLabel = ZED.KeyGen(),
+	IDDetailPart = ZED.KeyGen(),
 	IDStatusBar = ZED.KeyGen(),
 	IDStatusBarLeft = ZED.KeyGen(),
 	IDStatusBarRight = ZED.KeyGen(),
@@ -158,6 +178,11 @@
 	RToolBarItem = ShowByRock(IDToolBarItem),
 	RNavi = ShowByRock(IDNavi),
 	RStage = ShowByRock(IDStage).attr(DOM.cls,ClassStageScroll),
+	RDetail = ShowByRock(IDDetail),
+	RDetailHead = ShowByRock(IDDetailHead),
+	RDetailInfo = ShowByRock(IDDetailInfo),
+	RDetailPart = ShowByRock(IDDetailPart),
+	RDetailChildren = $(ZED.flatten([RDetailHead,RDetailInfo,RDetailPart])),
 	RStatusBar = ShowByRock(IDStatusBar),
 	RStatus = ShowByRock(IDStatus),
 	RStatusIcon = ShowByRock(IDStatusIcon)
@@ -317,7 +342,7 @@
 		Change = function()
 		{
 			SelectChange(Count)
-			MakeStatus(Index,Count ? ReplaceLang(Lang.Selecting,Count,MakeS(Count)) : '')
+			MakeStatus(Index,Count ? ReplaceLang(Lang.SelectingN,Count,MakeS(Count)) : '')
 		},
 		ClearChange = ZED.pipe(Clear,Change),
 		List = ZED.ListView(
@@ -475,6 +500,115 @@
 	MakeSelectableListShow = ZED.flip(ZED.invokeProp('Show')),
 	MakeSelectableListHide = ZED.flip(ZED.invokeProp('Hide')),
 
+	MakeDetailActive,
+	MakeDetailAt,
+	MakeDetailInfoDir,
+	MakeDetailInfoTTS,
+	MakeDetailInfoDownloaded,
+	MakeDetailURL,
+	MakeDetailSetupSingle = function(S,Q)
+	{
+		return ShowByClass(ClassSingleLine).append
+		(
+			ShowByClassX(ClassDetailLabel,DOM.span).text(L(S)),
+			' ',
+			ZED.isObject(Q) ? Q : ShowByText(Q,DOM.span)
+		)
+	},
+	MakeDetailSetupURL = ZED.each(function(Q)
+	{
+		var I = MakeDetailURL.length,R;
+
+		RDetailPart.append($(DOM.div).append
+		(
+			ShowByClass(ClassSingleLine).attr(DOM.title,Q).text(Q),
+			R = ShowByText
+			(
+				MakeDetailActive[KeyQueue.Sizes] ?
+					MakeSizePercentage(MakeDetailActive[KeyQueue.Sizes][I],MakeDetailActive[KeyQueue.Done][I]) :
+					L(Lang.GetSize),
+				DOM.span
+			)
+		))
+		MakeDetailURL.push(R)
+	}),
+	MakeDetailSetup = function()
+	{
+		var
+		Part = MakeDetailActive[KeyQueue.Part];
+
+		RDetailInfo.empty().append
+		(
+			MakeDetailSetupSingle(Lang.Created,MakeDetailActive[KeyQueue.Created]),
+			MakeDetailSetupSingle(Lang.Author,MakeDetailActive[KeyQueue.Author]),
+			MakeDetailSetupSingle(Lang.UpDate,ZED.DateToString(MakeDetailActive[KeyQueue.Date],DateToStringFormat)),
+			MakeDetailSetupSingle(Lang.Parts,Part.length),
+			MakeDetailSetupSingle(Lang.Files,MakeDetailActive[KeyQueue.File]),
+			MakeDetailSetupSingle(Lang.Directory,MakeDetailInfoDir = ShowByText('TODO',DOM.span)),
+			MakeDetailSetupSingle
+			(
+				Lang.TTS,
+				MakeDetailActive[KeyQueue.Size] < 0 ?
+					MakeDetailInfoTTS = ShowByText(L(Lang.Calculating),DOM.span) :
+					ZED.FormatSize(MakeDetailActive[KeyQueue.Size])
+			),
+			MakeDetailSetupSingle
+			(
+				Lang.Downloaded,
+				MakeDetailInfoDownloaded = ShowByText(Util.CalcSize(MakeDetailActive[KeyQueue.Done]),DOM.span)
+			)
+		)
+
+		MakeDetailURL = []
+		if (Part.length) ZED.Each(Part,function(F,V)
+		{
+			RDetailPart.append
+			(
+				ShowByText(ReplaceLang(Lang.PartN,F,Part.length),DOM.span)
+					.attr(DOM.cls,ClassDetailLabel),
+				V[KeyQueue.Title] ? ' ' + V[KeyQueue.Title] : ''
+			)
+			MakeDetailSetupURL(V[KeyQueue.URL])
+		})
+		else MakeDetailSetupURL(Part[0][KeyQueue.URL])
+	},
+	MakeDetail = function(Q)
+	{
+		if (MakeDetailActive) RDetailChildren.empty()
+		else RStage.append(RDetail)
+		MakeDetailActive = Q
+		MakeDetailAt = UTab.Index()
+		MakeToolBarLast && MakeToolBarLast.detach()
+
+		RDetailHead.append
+		(
+			ShowByText(Q[KeyQueue.Title]),
+			ShowByText(Q[KeyQueue.Name] + ' ' + Q[KeyQueue.ID])
+		)
+		if (Q[KeyQueue.Part]) MakeDetailSetup()
+		else RDetailInfo.text(L(Lang.ReadyInfo))
+	},
+	MakeDetailClose = function()
+	{
+		if (MakeDetailActive)
+		{
+			RDetailChildren.empty()
+			RDetail.detach()
+			MakeDetailAt === UTab.Index() && MakeToolBarChange()
+			MakeDetailActive =
+			MakeDetailInfoDir =
+			MakeDetailInfoTTS =
+			MakeDetailInfoDownloaded = false
+		}
+	},
+	MakeDetailMake = function(H)
+	{
+		return function(Q)
+		{
+			MakeDetailActive === Q && H()
+		}
+	},
+
 	MakeStatusText = Array(YTabCount),
 	MakeStatusClass = Array(YTabCount),
 	MakeStatusChange = function(X,Q,S)
@@ -502,7 +636,7 @@
 	UShortCut = ZED.ShortCut(),
 	MakeIndex = ZED.curry(function(X,Q)
 	{
-		X === UTab.Index() && Q()
+		!MakeDetailActive && X === UTab.Index() && Q()
 	},3),
 	UTab = ZED.Tab(
 	{
@@ -518,7 +652,8 @@
 
 	ZED.CSS(ZED.KeyGen(),function(W,H)
 	{
-		YStageWidth = ZED.max(YNaviWidth,W - YNaviWidth)
+		W = ZED.max(YNaviWidth,W - YNaviWidth)
+		YStageWidth = W - YScrollWidth
 		YStageHeight = ZED.max(YToolBarHeight + YStatusBarHeight,H - YToolBarHeight - YStatusBarHeight)
 
 		return ZED.Replace
@@ -564,18 +699,35 @@
 			//		Count
 			'./V/{margin-right:20px;float:right}' +
 			//	Stage
-			'#/G/{width:/g/px}' +
+			'#/G/{position:relative;width:/g/px;background:inherit}' +
+			//		Scroll
+			'./Y/,./W/,#/DT/{overflow-x:hidden;overflow-y:scroll}' +
 			//		ListView
-			'./Y/,./W/{overflow-x:hidden;overflow-y:scroll}' +
 			'#/G/ ./W/{height:100%}' +
-			//		ListViewItem
+			//			ListViewItem
 			'#/G/ ./Z/{cursor:default}' +
 			'#/G/ ./Z/:hover{background:#EFE5F9}' +
-			//		Selected item
+			//			Selected item
 			'#/G/ ./F/{background:#E6D5F5!important}' +
-			//		Item Control
+			//			Item Control
 			'#/G/ ./HP/{cursor:pointer}' +
 			'#/G/ ./HP/:hover svg>rect,#/G/ ./HP/:hover circle{fill:#0065CB!important}' +
+			//		Detail
+			'#/DT/{position:absolute;left:0;top:0;width:100%;height:100%;background:inherit;text-align:center}' +
+			'#/DT/>div{text-align:left}' +
+			//			Info
+			'#/DI/{display:inline-block;padding:/p/px}' +
+			//			Head
+			'#/DH/{padding:/p/px;background:#F3EBFA}' +
+			//			Label
+			'./DL/{font-weight:bold;opacity:.7}' +
+			//			Part
+			'#/DP/{padding-left:/p/px}' +
+			'#/DP/>div{padding-bottom:/p/px}' +
+			//			URL
+			'#/DP/ ./SL/{padding-left:/p/px;color:blue}' +
+			//			URL status
+			'#/DP/ div>span{padding-left:/p/px}' +
 
 			//StatusBar
 			'#/S/{height:/s/px}' +
@@ -637,15 +789,20 @@
 				v : ShapeConfigColorHover,
 
 				NG : IDNaviStage,
-				ng : YNaviWidth + YStageWidth,
+				ng : YNaviWidth + W,
 				N : IDNavi,
 				n : YNaviWidth,
+				V : ClassCount,
 				G : IDStage,
-				g : YStageWidth,
+				g : W,
 				h : YStageHeight,
 				Y : ClassStageScroll,
 				F : ClassListSelected,
-				V : ClassCount,
+				DT : IDDetail,
+				DH : IDDetailHead,
+				DI : IDDetailInfo,
+				DL : ClassDetailLabel,
+				DP : IDDetailPart,
 
 				S : IDStatusBar,
 				s : YStatusBarHeight,
@@ -681,7 +838,7 @@
 		Tab : L(Lang.Browser),
 		CSS : function(ID,W)
 		{
-			W = ZED.FlexibleFit(W - YScrollWidth - YNaviWidth - YPadding - YPadding,YCardWidthMin,YCardWidthMax,YPadding)
+			W = ZED.FlexibleFit(YStageWidth - YPadding - YPadding,YCardWidthMin,YCardWidthMax,YPadding)
 			return ZED.Replace
 			(
 				'#/R/{text-align:center}' +
@@ -774,7 +931,7 @@
 			InfoKeyAt = ZED.KeyGen(),
 			InfoKeyPages = ZED.KeyGen(),
 			InfoKeyPagesS = ZED.KeyGen(),
-			InfoLog = ReplaceLang(Lang.Info,
+			InfoLog = ReplaceLang(Lang.PageInfo,
 			[
 				InfoKeyFrom,InfoKeyTo,
 				InfoKeyCount,InfoKeyTotal,InfoKeyTotalS,
@@ -798,7 +955,7 @@
 
 				GoLast && GoLast.end()
 
-				ShowByTextS(ReplaceLang(Lang.Processing,URL),RInfo.empty())
+				ShowByTextS(ReplaceLang(Lang.ProcURL,URL),RInfo.empty())
 				if (T = URL.match(/^([0-9A-Z]+)[^0-9A-Z]\s*([^]+?)\s*$/i))
 				{
 					GoTarget = ZED.toLower(T[1])
@@ -981,7 +1138,7 @@
 						(
 							R,X,
 							MakeShape(Lang.Commit,ShapeConfigColdListCommit),
-							Lang.Committed,
+							Lang.CommittedN,
 							function()
 							{
 								Cold.Commit(ZED.objOf(Q[KeySite.Unique],Q))
@@ -1000,12 +1157,12 @@
 			MakeToolBarActive(ToolRemove)
 			MakeToolBar(X,Tool.append
 			(
-				MakeToolBarClick(R,X,ToolCommit,Lang.Committed,function(Q)
+				MakeToolBarClick(R,X,ToolCommit,Lang.CommittedN,function(Q)
 				{
 					Q && Cold.Commit(R.Selecting())
 					return Q
 				}),
-				MakeToolBarClick(R,X,ToolRemove,Lang.Removed,function(Q)
+				MakeToolBarClick(R,X,ToolRemove,Lang.RemovedN,function(Q)
 				{
 					Q && Cold.Remove(R.Selecting())
 					return Q
@@ -1014,11 +1171,16 @@
 				(
 					R,X,
 					MakeShape(Lang.CommitAll,ShapeConfigColdToolCommitAll),
-					Lang.Committed,
-					Cold.CommitAll
+					Lang.CommittedN,
+					function(Q)
+					{
+						Q = Cold.CommitAll()
+						Q && UTab.Index(1 + X)
+						return Q
+					}
 				)
 			))
-			Cold.Bus.on(Event.Cold.Change,RColdCount)
+			Bus.on(Event.Cold.Change,RColdCount)
 
 			return R
 		}
@@ -1026,7 +1188,7 @@
 		Tab : RHotCount(),
 		CSS : function(ID,W,T)
 		{
-			W = YStageWidth - YScrollWidth - YHotControlWidth
+			W = YStageWidth - YHotControlWidth
 			T = YHotTitlePercentage * W
 			return ZED.Replace
 			(
@@ -1086,7 +1248,9 @@
 			ToolPause = MakeShape(Lang.Pause,ShapeConfigHotToolPause),
 			ToolRemove = MakeShape(Lang.Remove,ShapeConfigHotToolRemove),
 
-			ActiveKeyInfo = 0,
+			ActiveKeyTarget = 0,
+			ActiveKeyAction = 1 + ActiveKeyTarget,
+			ActiveKeyInfo = 1 + ActiveKeyAction,
 			ActiveKeySpeed = 1 + ActiveKeyInfo,
 			ActiveKeyRemain = 1 + ActiveKeySpeed,
 			ActiveKeyPercentage = 1 + ActiveKeyRemain,
@@ -1094,15 +1258,26 @@
 			ActiveKeyPPS = 1 + ActiveKeyPP,
 			Active = {},
 
+			MakeSpeedStatus = function(Q)
+			{
+				return L
+				(
+					Q[KeyQueue.Running] ?
+						Lang.Processing :
+						Q[KeyQueue.Active] ? Lang.Queuing : Lang.Paused
+				)
+			},
 			SetPlay = function(Q)
 			{
 				Q[ActiveKeyPP].attr(DOM.title,L(Lang.Restart))
 				ZED.Shape(ShapeConfigHotListPlay,{Target : Q[ActiveKeyPPS]})
+				Q[ActiveKeySpeed].text(MakeSpeedStatus(Q[ActiveKeyTarget]))
 			},
 			SetPause = function(Q)
 			{
 				Q[ActiveKeyPP].attr(DOM.title,L(Lang.Pause))
 				ZED.Shape(ShapeConfigHotListPause,{Target : Q[ActiveKeyPPS]})
+				Q[ActiveKeySpeed].text(MakeSpeedStatus(Q[ActiveKeyTarget]))
 			},
 
 			ClickRemove = function(Q)
@@ -1112,19 +1287,16 @@
 			},
 			ClickPP = function(Q)
 			{
-				Q[0][KeyQueue.Active] ?
+				Q[ActiveKeyTarget][KeyQueue.Active] ?
 				(
-					Queue.Pause(Q[1]),
-					SetPlay(Q[2])
+					Queue.Pause(Q[ActiveKeyAction]),
+					SetPlay(Q)
 				) : (
-					Queue.Play(Q[1]),
-					SetPause(Q[2])
+					Queue.Play(Q[ActiveKeyAction]),
+					SetPause(Q)
 				)
 			},
-			ClickMore = function(Q)
-			{
-				MakeStatus('TODO ' + Q[Key.Unique])
-			},
+			ClickMore = MakeDetail,
 			MakeAction = function(R,H,Q)
 			{
 				return R.on(DOM.click,function(E)
@@ -1144,19 +1316,32 @@
 					ID = Q[KeyQueue.Unique],
 
 					Title = ShowByClass(ClassSingleLine + ' ' + ClassHotTitle).text(Q[KeyQueue.Title]),
-					Info = ShowByClass(ClassSingleLine + ' ' + ClassHotInfo).text(DOM.nbsp),
-					Speed = ShowByClass(ClassSingleLine),
+					Info = ShowByClass(ClassSingleLine + ' ' + ClassHotInfo),
+					Speed = ShowByClass(ClassSingleLine).text(MakeSpeedStatus(Q)),
 					Remain = ShowByClass(ClassSingleLine),
 					Percentage = ShowByClass(ClassHotPercentage),
 					PP = Q[KeyQueue.Active] ?
 						MakeShape(Lang.Pause,ShapeConfigHotListPause,ClassHotControlPP) :
 						MakeShape(Lang.Restart,ShapeConfigHotListPlay,ClassHotControlPP),
 					PPS = PP.children(),
-					ActiveObj = [Info,Speed,Remain,Percentage,PP,PPS],
+					ActionObj = ZED.objOf(ID,Q),
+					ActiveObj = [Q,ActionObj,Info,Speed,Remain,Percentage,PP,PPS],
 
-					ActionObj = ZED.objOf(ID,Q);
+					T;
 
 					Active[ID] = ActiveObj
+					Info.text
+					(
+						Q[KeyQueue.Part] ?
+							Q[KeyQueue.Size] < 0 ?
+								L(Lang.GetSize) :
+								(T = ZED.sum(Q[KeyQueue.Done])) ?
+									MakeSizePercentage(Q[KeyQueue.Size],T) :
+									MakeSizeJust(Q) :
+							Queue.IsInfo(Q) ?
+								L(Lang.GetInfo) :
+								L(Lang.ReadyInfo)
+					)
 
 					return $(DOM.div).append
 					(
@@ -1172,7 +1357,7 @@
 									ClickRemove,ActionObj
 								),
 								DOM.br,
-								MakeAction(PP,ClickPP,[Q,ActionObj,ActiveObj])
+								MakeAction(PP,ClickPP,ActiveObj)
 							),
 							MakeAction
 							(
@@ -1191,39 +1376,56 @@
 					MakeToolBarActive(ToolPause,Q)
 					MakeToolBarActive(ToolRemove,Q)
 				}
-			);
+			),
+
+			MakeActiveString = function(H)
+			{
+				return function(Q)
+				{
+					(Q = Active[Q]) && H(Q)
+				}
+			},
+			MakeActiveTextObject = function(K,H)
+			{
+				return function(S,Q)
+				{
+					(Q = Active[S[KeyQueue.Unique]]) && Q[K].text(H(S,Q))
+				}
+			};
 
 			MakeToolBarActive(ToolPlay)
 			MakeToolBarActive(ToolPause)
 			MakeToolBarActive(ToolRemove)
 			MakeToolBar(X,Tool.append
 			(
-				MakeToolBarClick(R,X,ToolPlay,Lang.Restarted,function(Q)
+				MakeToolBarClick(R,X,ToolPlay,Lang.RestartedN,function(Q)
 				{
 					Q && Queue.Play(R.Selecting())
-					ZED.EachKey(R.Selecting(),function(F)
-					{
-						(F = Active[F]) && SetPause(F)
-					})
+					ZED.EachKey(R.Selecting(),MakeActiveString(SetPause))
 					return false
 				}),
-				MakeToolBarClick(R,X,ToolPause,Lang.Paused,function(Q)
+				MakeToolBarClick(R,X,ToolPause,Lang.PausedN,function(Q)
 				{
 					Q && Queue.Pause(R.Selecting())
-					ZED.EachKey(R.Selecting(),function(F)
-					{
-						(F = Active[F]) && SetPlay(F)
-					})
+					ZED.EachKey(R.Selecting(),MakeActiveString(SetPlay))
 					return false
 				}),
-				MakeToolBarClick(R,X,ToolRemove,Lang.Removed,function(Q)
+				MakeToolBarClick(R,X,ToolRemove,Lang.RemovedN,function(Q)
 				{
 					Q && Queue.Remove(R.Selecting())
 					return Q
 				})
 			))
-			Queue.Bus.on(EventQueue.ChangeOnline,RHotCount)
-			Download.Bus
+			Bus.on(EventQueue.ChangeOnline,RHotCount)
+				.on(EventQueue.Info,MakeActiveTextObject(ActiveKeyInfo,ZED.always(L(Lang.GetInfo))))
+				.on(EventQueue.InfoGot,MakeActiveTextObject(ActiveKeyInfo,ZED.always(L(Lang.GetSize))))
+				.on(EventQueue.SizeGot,MakeActiveTextObject(ActiveKeyInfo,MakeSizeJust))
+				.on(EventQueue.Play,MakeActiveTextObject(ActiveKeySpeed,MakeSpeedStatus))
+				.on(EventQueue.Pause,MakeActiveTextObject(ActiveKeySpeed,function(S,Q)
+				{
+					Q[ActiveKeyRemain].text('')
+					return MakeSpeedStatus(Q)
+				}))
 
 			return R
 		}
@@ -1286,7 +1488,28 @@
 		}
 	})
 
+	//ShadowBar
 	RNavi.find('.' + DOM.Tab).append(ShowByClass(ClassShadowBar))
+	//Detail
+	RNavi.on(DOM.click,'.' + DOM.Tab,MakeDetailClose)
+	RDetail.append(RDetailHead,RDetailInfo,RDetailPart)
+	Bus
+		//Queue
+		.on(EventQueue.Info,MakeDetailMake(function()
+		{
+			RDetailInfo.text(L(Lang.GetInfo))
+		}))
+		.on(EventQueue.InfoGot,MakeDetailMake(MakeDetailSetup))
+		.on(EventQueue.SizeGot,MakeDetailMake(function()
+		{
+			MakeDetailInfoTTS.text(ZED.FormatSize(MakeDetailActive[KeyQueue.Size]))
+		}))
+		//Download
+		.on(EventDownload.Size,function(Q,S,F)
+		{
+			MakeDetailActive === Q && MakeDetailURL[F].text(MakeSizePercentage(S,0))
+		})
+	//StatusBar Icon
 	ZED.each(function(V){RStatusIcon.append(ShowByRock(IDStatusIcon + ZED.chr(65 + V)))},ZED.range(0,5))
 
 	Rainbow.append
@@ -1316,6 +1539,7 @@
 		)
 	)
 ZED.Each(ShortCut.DefaultMap,function(F,V){UShortCut.on(V,F)})
+ZED.onError=function(E){console.log(E)}
 	$(function()
 	{
 		Rainbow.appendTo('body')

@@ -2,6 +2,7 @@
 var
 ZED = require('@zed.cwt/zedquery'),
 
+Bus = require('./Util').Bus,
 Key = require('./Key'),
 KeySite = Key.Site,
 KeyQueue = Key.Queue,
@@ -28,8 +29,6 @@ Cold = [],
 ColdMap = {},
 StatusMap = {},
 Active,
-
-Bus = ZED.Emitter(),
 
 Select = function(ID,J,R)
 {
@@ -102,7 +101,7 @@ ChangeCount = function()
 	Bus.emit(EventCold.Change,Cold.length)
 };
 
-Queue.Bus.on(EventQueue.Remove,function(ID,R)
+Bus.on(EventQueue.Remove,function(ID,R)
 {
 	ID = ID[KeyQueue.Unique]
 	R = Active[ID]
@@ -113,7 +112,6 @@ Queue.Bus.on(EventQueue.Remove,function(ID,R)
 
 module.exports =
 {
-	Bus : Bus,
 	Cold : Cold,
 	Map : ColdMap,
 

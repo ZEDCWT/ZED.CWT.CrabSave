@@ -16,11 +16,14 @@ module.exports =
 		ChangeOffline : EventKey(),
 		Play : EventKey(),
 		Pause : EventKey(),
-		Remove : EventKey()
+		Remove : EventKey(),
+		Info : EventKey(),
+		InfoGot : EventKey(),
+		SizeGot : EventKey()
 	},
 	Download :
 	{
-		InfoGot : EventKey(),
+		Size : EventKey(),
 		Played : EventKey(),
 		Paused : EventKey(),
 		Finish : EventKey()

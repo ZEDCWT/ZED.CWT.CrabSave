@@ -18,11 +18,11 @@ module.exports =
 
 	//StatucBar
 	Loading : Lang('Loading...'),
-	Selecting : Lang('Selecting /0/ item/1/'),
-	Committed : Lang('Committed /0/ item/1/'),
-	Removed : Lang('Removed /0/ item/1/'),
-	Restarted : Lang('Restarted /0/ item/1/'),
-	Paused : Lang('Paused /0/ item/1/'),
+	SelectingN : Lang('Selecting /0/ item/1/'),
+	CommittedN : Lang('Committed /0/ item/1/'),
+	RemovedN : Lang('Removed /0/ item/1/'),
+	RestartedN : Lang('Restarted /0/ item/1/'),
+	PausedN : Lang('Paused /0/ item/1/'),
 
 	//Shape
 	SelAll : Lang('Select all'),
@@ -34,8 +34,8 @@ module.exports =
 
 
 	//Browser
-	Processing : Lang('Processing `/0/`'),
-	Info : Lang('/0/,~,/1/,. ,/2/,//,/3/, item,/4/,. ,/5/,//,/6/, page,/7/,.'),
+	ProcURL : Lang('Processing `/0/`'),
+	PageInfo : Lang('/0/,~,/1/,. ,/2/,//,/3/, item,/4/,. ,/5/,//,/6/, page,/7/,.'),
 	User : Lang('User'),
 	UexRtn : Lang('Unexpected return from the server'),
 	UknSite : Lang('Unknown site id `/0/`'),
@@ -53,6 +53,27 @@ module.exports =
 	//[Remove]
 	Restart : Lang('Restart'),
 	Pause : Lang('Pause'),
-	More : Lang('More info'),
+	More : Lang('View detail'),
+	ReadyInfo : Lang('Ready to get infomation'),
 	GetInfo : Lang('Getting infomation...'),
+	GetSize : Lang('Getting size...'),
+	SizeUn : Lang('Unknow size'),
+	Queuing : Lang('Queuing'),
+	Processing : Lang('Processing'),
+	Paused : Lang('Paused'),
+
+	//Detail
+	Created : Lang('Created'),
+	Author : Lang('Author'),
+	UpDate : Lang('Uploaded date'),
+	Parts : Lang('Parts'),
+	Files : Lang('Files'),
+	Directory : Lang('Directory'),
+	Downloaded : Lang('Downloaded'),
+	TTS : Lang('Total size'),
+	Calculating : Lang('Calculating'),
+	PartN : Lang('Part /0/ // /1/'),
+	SizeP : Lang('/0/ // /1/, /2/%'),
+	SizeNP : Lang('/0/ // Unknown'),
+	Completed : Lang('Completed'),
 }

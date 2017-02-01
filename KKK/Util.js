@@ -24,11 +24,15 @@ RequestBase = function(H)
 
 module.exports =
 {
+	Bus : ZED.Emitter(),
+
 	RequestHead : RequestBase(ZED.identity),
 	RequestBody : RequestBase(ZED.nthArg(1)),
 	RequestFull : RequestBase(function(I,R){return [I,R]}),
 
 	MakeUnique : function(Q,S){return Q + '.' + S},
+
+	CalcSize : ZED.pipe(ZED.sum,ZED.FormatSize),
 
 	StopProp : function(E){E.stopPropagation()}
 }

@@ -32,34 +32,30 @@ module.exports =
 		Author : KeyKey(),
 		Date : KeyKey(),
 		//URL
-		URL : KeyKey(),
-		//URL returns an array
-		Word : KeyKey(),
-		//[URL] reuse, a request object
-		Suffix : KeyKey()
-		//[Index] reuse
+		URL : KeyKey()
 	},
 	Queue :
 	{
+		Created : KeyKey(),
 		Name : KeyKey(),
 		Unique : KeyKey(),
 		ID : KeyKey(),
 		Title : KeyKey(),
 
-		Info : KeyKey(),//false : not got, 1 : getting, true : got
 		Active : KeyKey(),
 		Running : KeyKey(),
 
 		Author : KeyKey(),
 		Date : KeyKey(),
-		Suffix : KeyKey(),
 		Size : KeyKey(),
+		Sizes : KeyKey(),
+		Done : KeyKey(),
 
 		Part : KeyKey(),
 		//[Title] reuse, optional part title
-		//[URL] reuse, URL list
-		//	URL
-		//[URL] reuse, a request object
-		//[Size] reuse
+		URL : KeyKey(),
+		Suffix : KeyKey(),
+
+		File : KeyKey()
 	}
 }
