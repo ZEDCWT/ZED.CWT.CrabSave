@@ -64,6 +64,9 @@ module.exports =
 
 	//Detail
 	Created : Lang('Created'),
+	Progress : Lang('Progress'),
+	Unfinished : Lang('Unfinished'),
+	FinishedAt : Lang('Finished at /0/'),
 	Author : Lang('Author'),
 	UpDate : Lang('Uploaded date'),
 	Parts : Lang('Parts'),
@@ -75,5 +78,5 @@ module.exports =
 	PartN : Lang('Part /0/ // /1/'),
 	SizeP : Lang('/0/ // /1/, /2/%'),
 	SizeNP : Lang('/0/ // Unknown'),
-	Completed : Lang('Completed'),
+	Completed : Lang('Completed')
 }

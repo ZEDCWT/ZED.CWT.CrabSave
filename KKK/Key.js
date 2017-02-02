@@ -27,19 +27,24 @@ module.exports =
 		Unique : KeyKey(),
 		Index : KeyKey(),
 		ID : KeyKey(),
+		IDView : KeyKey(),
 		Img : KeyKey(),
 		Title : KeyKey(),
 		Author : KeyKey(),
 		Date : KeyKey(),
 		//URL
-		URL : KeyKey()
+		URL : KeyKey(),
+		//Pack
+		Pack : KeyKey()
 	},
 	Queue :
 	{
 		Created : KeyKey(),
+		Finished : KeyKey(),
 		Name : KeyKey(),
 		Unique : KeyKey(),
 		ID : KeyKey(),
+		IDView : KeyKey(),
 		Title : KeyKey(),
 
 		Active : KeyKey(),

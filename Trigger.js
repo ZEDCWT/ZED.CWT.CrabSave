@@ -62,7 +62,7 @@ Window.webContents.toggleDevTools()
 	Window.on('closed',function()
 	{
 		Action.off(false)
-		Created = undefined
+		Created = false
 	})
 	.loadURL('file://' + Path.join(__dirname,'KKK/Base.htm'),
 	{

@@ -12,20 +12,22 @@ module.exports =
 	},
 	Queue :
 	{
-		ChangeOnline : EventKey(),
-		ChangeOffline : EventKey(),
+		Change : EventKey(),
 		Play : EventKey(),
 		Pause : EventKey(),
 		Remove : EventKey(),
 		Info : EventKey(),
 		InfoGot : EventKey(),
-		SizeGot : EventKey()
+		SizeGot : EventKey(),
+		Finish : EventKey()
 	},
 	Download :
 	{
 		Size : EventKey(),
 		Played : EventKey(),
 		Paused : EventKey(),
-		Finish : EventKey()
+		Finish : EventKey(),
+		Speed : EventKey(),
+		SpeedTotal : EventKey()
 	}
 }

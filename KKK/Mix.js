@@ -169,6 +169,7 @@
 	ClassHotControlMore = ZED.KeyGen(),
 	ClassHotPercentage = ZED.KeyGen(),
 	ClassHotPercentageActive = ZED.KeyGen(),
+	ClassHotPercentageAlways = ZED.KeyGen(),
 	ClassHotSizeUnknown = ZED.KeyGen(),
 
 	//Element
@@ -199,13 +200,13 @@
 	ShapeConfigColdToolCommit =
 	{
 		Type : 'Tick',
-		Fill : false,
+		Fill : Util.F,
 		Stroke : ShapeConfigColorEnabled,
 		Line : '12%'
 	},
 	ShapeConfigColdToolRemove =
 	{
-		Fill : false,
+		Fill : Util.F,
 		Stroke : ShapeConfigColorEnabled,
 		Line : '12%',
 		Padding : '10%'
@@ -213,7 +214,7 @@
 	ShapeConfigColdToolCommitAll =
 	{
 		Type : 'Tick',
-		Fill : false,
+		Fill : Util.F,
 		Stroke : ShapeConfigColorEnabled,
 		Line : '8%'
 	},
@@ -226,7 +227,7 @@
 	ShapeConfigHotToolPlay =
 	{
 		Type : 'Play',
-		Fill : false,
+		Fill : Util.F,
 		Stroke : ShapeConfigColorEnabled,
 		Line : '80%'
 	},
@@ -235,7 +236,7 @@
 		Type : 'Pause',
 		Padding : '10%',
 		Line : '12%',
-		Fill : false,
+		Fill : Util.F,
 		Stroke : ShapeConfigColorEnabled,
 		Pause : 3 / 10
 	},
@@ -258,7 +259,7 @@
 	ShapeConfigHotListMore =
 	{
 		Type : 'More',
-		Fill : false,
+		Fill : Util.F,
 		Stroke : ShapeConfigColorBackground
 	},
 
@@ -282,11 +283,16 @@
 	},
 	MakeToolBarClick = function(R,X,Q,L,H)
 	{
-		return Q.on(DOM.click,function(T)
+		return Q.on(DOM.click,function(T,C)
 		{
 			Util.StopProp(T)
 			T = R.Count()
-			H(T) && R.Redraw()
+			C = H(T)
+			Util.T === C ?
+				R.Redraw() :
+				0 < C ?
+					(T = C,R.Redraw()) :
+					T = -C
 			0 < T && MakeStatus(X,ReplaceLang(L,T,MakeS(T)))
 		})
 	},
@@ -313,7 +319,14 @@
 			Hide : function(){S = RStage.scrollTop()}
 		}
 	},
-	MakeSelectableList = function(Scroll,Index,Data,Map,Key,Make,Destroy,SelectChange)
+	MakeSelectableList = function
+	(
+		Scroll,Index,
+		Data,Map,Key,
+		Make,Destroy,
+		SelectChange,
+		OnSelect,OnUnselect,OnClear
+	)
 	{
 		var
 		LastScroll = 0,
@@ -336,8 +349,9 @@
 			})
 			Selecting = {}
 			LastIndex = 0
-			LastID = false
+			LastID = Util.F
 			Count = 0
+			OnClear()
 		},
 		Change = function()
 		{
@@ -361,7 +375,7 @@
 					var
 					Shift = E.shiftKey,
 					Ctrl = E.ctrlKey,
-					J = true,
+					J = Util.T,
 					S,L,T,F;
 
 					On = Selecting[ID]
@@ -381,26 +395,28 @@
 						for (;F <= L;++F)
 						{
 							T = Data[F][Key]
-							Selecting[T] = true
+							Selecting[T] = Data[F]
 							if (!S[T])
 							{
 								J = Active[T]
 								J && J.addClass(ClassListSelected)
+								OnSelect(Data[F])
 							}
 						}
 						ZED.Each(S,function(F,V)
 						{
 							Selecting[F] ||
 							(
-								V = Active[F],
-								V && V.removeClass(ClassListSelected)
+								F = Active[F],
+								F && F.removeClass(ClassListSelected),
+								OnUnselect(V)
 							)
 						})
-						J = false
+						J = Util.F
 					}
 					else if (Ctrl)
 					{
-						J = false
+						J = Util.F
 						LastIndex = X
 						LastID = ID
 						On = !On
@@ -408,11 +424,13 @@
 						(
 							++Count,
 							R.addClass(ClassListSelected),
-							Selecting[ID] = true
+							Selecting[ID] = Q,
+							OnSelect(Q)
 						) : (
 							--Count,
 							R.removeClass(ClassListSelected),
-							ZED.delete_(ID,Selecting)
+							ZED.delete_(ID,Selecting),
+							OnUnselect(Q)
 						)
 					}
 					if (J)
@@ -420,9 +438,10 @@
 						Clear()
 						LastIndex = X
 						LastID = ID
-						Selecting[ID] = true
+						Selecting[ID] = Q
 						Count = 1
 						R.addClass(ClassListSelected)
+						OnSelect(Q)
 					}
 					Change()
 					Util.StopProp(E)
@@ -433,7 +452,7 @@
 			Destroy : function(Q,V)
 			{
 				Q.off(DOM.click)
-				Active[V[Key]] = false
+				Active[V[Key]] = Util.F
 				Destroy(V,Q)
 			}
 		}),
@@ -443,12 +462,13 @@
 			Active = {}
 			if (Count)
 			{
-				ZED.Each(Selecting,function(F)
+				ZED.Each(Selecting,function(F,V)
 				{
 					ZED.has(F,Map) ||
 					(
 						--Count,
-						ZED.delete_(F,Selecting)
+						ZED.delete_(F,Selecting),
+						OnUnselect(V)
 					)
 				})
 				LastIndex = LastID ? ZED.max(0,Data.indexOf(Map[LastID])) : 0
@@ -466,13 +486,14 @@
 					ID = V[Key]
 					if (!Selecting[ID])
 					{
-						Selecting[ID] = true
-						V = Active[ID]
-						V && V.addClass(ClassListSelected)
+						Selecting[ID] = V
+						ID = Active[ID]
+						ID && ID.addClass(ClassListSelected)
+						OnSelect(V)
 					}
 				},Data)
 				LastIndex = 0
-				LastID = false
+				LastID = Util.F
 				Count = Data.length
 				Change()
 			}))
@@ -492,8 +513,11 @@
 			},
 			Redraw : function()
 			{
-				LastScroll = List.scroll()
-				Redraw()
+				if (Index === UTab.Index() && !MakeDetailActive)
+				{
+					LastScroll = List.scroll()
+					Redraw()
+				}
 			}
 		}
 	},
@@ -502,6 +526,7 @@
 
 	MakeDetailActive,
 	MakeDetailAt,
+	MakeDetailInfoProgress,
 	MakeDetailInfoDir,
 	MakeDetailInfoTTS,
 	MakeDetailInfoDownloaded,
@@ -514,6 +539,24 @@
 			' ',
 			ZED.isObject(Q) ? Q : ShowByText(Q,DOM.span)
 		)
+	},
+	MakeDetailProgress = function()
+	{
+		return MakeDetailActive[KeyQueue.Finished] ?
+			ReplaceLang(Lang.FinishedAt,ZED.DateToString(new Date(MakeDetailActive[KeyQueue.Finished]))) :
+			MakeDetailActive[KeyQueue.Done] ?
+				0 < MakeDetailActive[KeyQueue.Size] ?
+					ZED.Format(ZED.sum(MakeDetailActive[KeyQueue.Done]) / MakeDetailActive[KeyQueue.Size]) + '%' :
+					L(Lang.Unfinished) :
+				'0%'
+	},
+	MakeDetailSize = function()
+	{
+		return MakeDetailActive[KeyQueue.Size] < 0 ?
+			L(Lang.Calculating) :
+			MakeDetailActive[KeyQueue.Size] ?
+				ZED.FormatSize(MakeDetailActive[KeyQueue.Size]) :
+				L(Lang.SizeUn)
 	},
 	MakeDetailSetupURL = ZED.each(function(Q)
 	{
@@ -539,19 +582,14 @@
 
 		RDetailInfo.empty().append
 		(
-			MakeDetailSetupSingle(Lang.Created,MakeDetailActive[KeyQueue.Created]),
+			MakeDetailSetupSingle(Lang.Created,ZED.DateToString(new Date(MakeDetailActive[KeyQueue.Created]))),
+			MakeDetailSetupSingle(Lang.Completed,MakeDetailInfoProgress = ShowByText(MakeDetailProgress(),DOM.span)),
 			MakeDetailSetupSingle(Lang.Author,MakeDetailActive[KeyQueue.Author]),
-			MakeDetailSetupSingle(Lang.UpDate,ZED.DateToString(MakeDetailActive[KeyQueue.Date],DateToStringFormat)),
+			MakeDetailSetupSingle(Lang.UpDate,ZED.DateToString(DateToStringFormat,MakeDetailActive[KeyQueue.Date])),
 			MakeDetailSetupSingle(Lang.Parts,Part.length),
 			MakeDetailSetupSingle(Lang.Files,MakeDetailActive[KeyQueue.File]),
 			MakeDetailSetupSingle(Lang.Directory,MakeDetailInfoDir = ShowByText('TODO',DOM.span)),
-			MakeDetailSetupSingle
-			(
-				Lang.TTS,
-				MakeDetailActive[KeyQueue.Size] < 0 ?
-					MakeDetailInfoTTS = ShowByText(L(Lang.Calculating),DOM.span) :
-					ZED.FormatSize(MakeDetailActive[KeyQueue.Size])
-			),
+			MakeDetailSetupSingle(Lang.TTS,MakeDetailInfoTTS = ShowByText(MakeDetailSize(),DOM.span)),
 			MakeDetailSetupSingle
 			(
 				Lang.Downloaded,
@@ -572,6 +610,16 @@
 		})
 		else MakeDetailSetupURL(Part[0][KeyQueue.URL])
 	},
+	MakeDetailRefresh = function()
+	{
+		var
+		Size = MakeDetailActive[KeyQueue.Sizes],
+		Done = MakeDetailActive[KeyQueue.Done];
+
+		MakeDetailInfoProgress.text(MakeDetailProgress())
+		Done && MakeDetailInfoDownloaded.text(Util.CalcSize(Done))
+		Size && ZED.Each(MakeDetailURL,function(F,V){V.text(MakeSizePercentage(Size[F],Done[F]))})
+	},
 	MakeDetail = function(Q)
 	{
 		if (MakeDetailActive) RDetailChildren.empty()
@@ -583,10 +631,10 @@
 		RDetailHead.append
 		(
 			ShowByText(Q[KeyQueue.Title]),
-			ShowByText(Q[KeyQueue.Name] + ' ' + Q[KeyQueue.ID])
+			ShowByText(Q[KeyQueue.Name] + ' ' + (Q[KeyQueue.IDView] || Q[KeyQueue.ID]))
 		)
 		if (Q[KeyQueue.Part]) MakeDetailSetup()
-		else RDetailInfo.text(L(Lang.ReadyInfo))
+		else RDetailInfo.text(L(Queue.IsInfo(Q) ? Lang.GetInfo : Lang.ReadyInfo))
 	},
 	MakeDetailClose = function()
 	{
@@ -598,7 +646,7 @@
 			MakeDetailActive =
 			MakeDetailInfoDir =
 			MakeDetailInfoTTS =
-			MakeDetailInfoDownloaded = false
+			MakeDetailInfoDownloaded = Util.F
 		}
 	},
 	MakeDetailMake = function(H)
@@ -815,8 +863,8 @@
 				j : ReKeyGen(),
 				K : ClassStatusError,
 				k : ReKeyGen(),
-				e : ZED.CSSKeyframe(ReKeyGen(true),{to : {transform : 'rotate(360deg)'}}) +
-					ZED.CSSKeyframe(ReKeyGen(true),{to : {transform : 'rotate(405deg)'}}),
+				e : ZED.CSSKeyframe(ReKeyGen(Util.T),{to : {transform : 'rotate(360deg)'}}) +
+					ZED.CSSKeyframe(ReKeyGen(Util.T),{to : {transform : 'rotate(405deg)'}}),
 				D : IDSpeed,
 
 				B : ClassShadowBar,
@@ -982,7 +1030,7 @@
 				GoID = GoID[1]
 				ShowByTextS([GoTarget[KeySite.Name],GoDetail[KeySite.Name],GoID].join(' '),RInfo)
 
-				GoInfo = false
+				GoInfo = Util.F
 				Jump(1)
 			},
 			Hover = function(C,I,Q)
@@ -1023,7 +1071,7 @@
 					D = $(DOM.fieldset)
 					D.append
 					(
-						ShowByText(V[KeySite.Index] + ' | ' + V[KeySite.ID],DOM.legend),
+						ShowByText(V[KeySite.Index] + ' | ' + (V[KeySite.IDView] || V[KeySite.ID]),DOM.legend),
 						Hover(D,V[KeySite.Unique],Cold.New(GoTarget,V)),
 						Hover
 						(
@@ -1036,7 +1084,7 @@
 						DOM.br,
 						V[KeySite.Author],
 						DOM.br,
-						ZED.DateToString(V[KeySite.Date],DateToStringFormat)
+						ZED.DateToString(DateToStringFormat,V[KeySite.Date])
 					)
 					RList.append(D)
 				},Item)
@@ -1049,9 +1097,9 @@
 					MakeStatus(X,L(Lang.Loading),ClassStatusLoading)
 					GoLast = GoDetail[KeySite.Page](GoID,S).start(function(Q)
 					{
-						GoLast = false
+						GoLast = Util.F
 						MakeStatus(X)
-						GoInfo = GoInfo || ZED.EazyLog(InfoLog,$(DOM.div).appendTo(RInfo),true)
+						GoInfo = GoInfo || ZED.EazyLog(InfoLog,$(DOM.div).appendTo(RInfo),Util.T)
 						Render(Q,S)
 					},function(E)
 					{
@@ -1064,7 +1112,7 @@
 			ZED.ShortCut(
 			{
 				Target : RURL,
-				IgnoreInput : false
+				IgnoreInput : Util.F
 			}).on('enter',Go)
 			RGo.on(DOM.click,Go)
 			M.append
@@ -1130,9 +1178,9 @@
 					(
 						$(DOM.div).append
 						(
-							MakeAt(Q[KeySite.ID],Q[KeySite.Name]),
+							MakeAt(Q[KeySite.IDView] || Q[KeySite.ID],Q[KeySite.Name]),
 							MakeAt(Q[KeySite.Title],Q[KeySite.Author]),
-							$(DOM.div).text(ZED.DateToString(Q[KeySite.Date],DateToStringFormat))
+							$(DOM.div).text(ZED.DateToString(DateToStringFormat,Q[KeySite.Date]))
 						),
 						MakeToolBarClick
 						(
@@ -1142,7 +1190,7 @@
 							function()
 							{
 								Cold.Commit(ZED.objOf(Q[KeySite.Unique],Q))
-								return true
+								return 1
 							}
 						)
 					)
@@ -1150,7 +1198,8 @@
 				{
 					MakeToolBarActive(ToolCommit,Q)
 					MakeToolBarActive(ToolRemove,Q)
-				}
+				},
+				ZED.noop,ZED.noop,ZED.noop
 			);
 
 			MakeToolBarActive(ToolCommit)
@@ -1159,13 +1208,11 @@
 			(
 				MakeToolBarClick(R,X,ToolCommit,Lang.CommittedN,function(Q)
 				{
-					Q && Cold.Commit(R.Selecting())
-					return Q
+					return Q && Cold.Commit(R.Selecting())
 				}),
 				MakeToolBarClick(R,X,ToolRemove,Lang.RemovedN,function(Q)
 				{
-					Q && Cold.Remove(R.Selecting())
-					return Q
+					return Q && Cold.Remove(R.Selecting())
 				}),
 				MakeToolBarClick
 				(
@@ -1232,6 +1279,7 @@
 					o : YHotControlMoreWidth,
 					G : ClassHotPercentage,
 					A : ClassHotPercentageActive,
+					W : ClassHotPercentageAlways,
 					U : ClassHotSizeUnknown,
 
 					p : YPadding
@@ -1257,27 +1305,67 @@
 			ActiveKeyPP = 1 + ActiveKeyPercentage,
 			ActiveKeyPPS = 1 + ActiveKeyPP,
 			Active = {},
+			CountActive = 0,
+			CountPaused = 0,
 
-			MakeSpeedStatus = function(Q)
+			UpdateToolBar = function()
 			{
-				return L
+				MakeToolBarActive(ToolPlay,CountPaused)
+				MakeToolBarActive(ToolPause,CountActive)
+				MakeToolBarActive(ToolRemove,R.Count())
+			},
+
+			MakeSpeedStatus = function(A,S)
+			{
+				var
+				Q = A[ActiveKeyTarget],
+				ID = Q[KeyQueue.Unique],
+				D;
+
+				A[ActiveKeyInfo].text
+				(
+					Q[KeyQueue.Part] ?
+						Q[KeyQueue.Size] < 0 ?
+							L(Lang.GetSize) :
+							Q[KeyQueue.Done] && (D = ZED.sum(Q[KeyQueue.Done])) ?
+								MakeSizePercentage(Q[KeyQueue.Size],D) :
+								MakeSizeJust(Q) :
+						L(Queue.IsInfo(Q) ? Lang.GetInfo : Lang.ReadyInfo)
+				)
+				A[ActiveKeySpeed].text
 				(
 					Q[KeyQueue.Running] ?
-						Lang.Processing :
-						Q[KeyQueue.Active] ? Lang.Queuing : Lang.Paused
+						(0 <= S || (Download.Active[ID] && (S = Download.Active[ID].Speed()))) ?
+							ZED.FormatSize(S) + '/s' :
+							L(Lang.Processing) :
+						L(Q[KeyQueue.Active] ? Lang.Queuing : Lang.Paused)
 				)
+				A[ActiveKeyRemain].text
+				(
+					0 <= S && Q[KeyQueue.Size] ?
+						'-' + ZED.SecondsToString(Q[KeyQueue.Size] / S) :
+						''
+				)
+				Download.Active[ID] ?
+					A[ActiveKeyPercentage].addClass(ClassHotPercentageActive) :
+					A[ActiveKeyPercentage].removeClass(ClassHotPercentageActive)
+				Q[KeyQueue.Size] ?
+					0 <= D && 0 < Q[KeyQueue.Size] &&
+						A[ActiveKeyPercentage].css(DOM.width,ZED.Format(D / Q[KeyQueue.Size]) + '%') :
+					A[ActiveKeyPercentage].addClass(ClassHotPercentageAlways)
+
 			},
 			SetPlay = function(Q)
 			{
 				Q[ActiveKeyPP].attr(DOM.title,L(Lang.Restart))
 				ZED.Shape(ShapeConfigHotListPlay,{Target : Q[ActiveKeyPPS]})
-				Q[ActiveKeySpeed].text(MakeSpeedStatus(Q[ActiveKeyTarget]))
+				MakeSpeedStatus(Q)
 			},
 			SetPause = function(Q)
 			{
 				Q[ActiveKeyPP].attr(DOM.title,L(Lang.Pause))
 				ZED.Shape(ShapeConfigHotListPause,{Target : Q[ActiveKeyPPS]})
-				Q[ActiveKeySpeed].text(MakeSpeedStatus(Q[ActiveKeyTarget]))
+				MakeSpeedStatus(Q)
 			},
 
 			ClickRemove = function(Q)
@@ -1289,12 +1377,21 @@
 			{
 				Q[ActiveKeyTarget][KeyQueue.Active] ?
 				(
-					Queue.Pause(Q[ActiveKeyAction]),
+					Queue.Pause(Q[ActiveKeyAction]) && R.Selecting()[Q[ActiveKeyTarget][KeyQueue.Unique]] &&
+					(
+						--CountActive,
+						++CountPaused
+					),
 					SetPlay(Q)
 				) : (
-					Queue.Play(Q[ActiveKeyAction]),
+					Queue.Play(Q[ActiveKeyAction]) && R.Selecting()[Q[ActiveKeyTarget][KeyQueue.Unique]] &&
+					(
+						--CountPaused,
+						++CountActive
+					),
 					SetPause(Q)
 				)
+				UpdateToolBar()
 			},
 			ClickMore = MakeDetail,
 			MakeAction = function(R,H,Q)
@@ -1317,7 +1414,7 @@
 
 					Title = ShowByClass(ClassSingleLine + ' ' + ClassHotTitle).text(Q[KeyQueue.Title]),
 					Info = ShowByClass(ClassSingleLine + ' ' + ClassHotInfo),
-					Speed = ShowByClass(ClassSingleLine).text(MakeSpeedStatus(Q)),
+					Speed = ShowByClass(ClassSingleLine),
 					Remain = ShowByClass(ClassSingleLine),
 					Percentage = ShowByClass(ClassHotPercentage),
 					PP = Q[KeyQueue.Active] ?
@@ -1325,23 +1422,10 @@
 						MakeShape(Lang.Restart,ShapeConfigHotListPlay,ClassHotControlPP),
 					PPS = PP.children(),
 					ActionObj = ZED.objOf(ID,Q),
-					ActiveObj = [Q,ActionObj,Info,Speed,Remain,Percentage,PP,PPS],
-
-					T;
+					ActiveObj = [Q,ActionObj,Info,Speed,Remain,Percentage,PP,PPS];
 
 					Active[ID] = ActiveObj
-					Info.text
-					(
-						Q[KeyQueue.Part] ?
-							Q[KeyQueue.Size] < 0 ?
-								L(Lang.GetSize) :
-								(T = ZED.sum(Q[KeyQueue.Done])) ?
-									MakeSizePercentage(Q[KeyQueue.Size],T) :
-									MakeSizeJust(Q) :
-							Queue.IsInfo(Q) ?
-								L(Lang.GetInfo) :
-								L(Lang.ReadyInfo)
-					)
+					MakeSpeedStatus(ActiveObj)
 
 					return $(DOM.div).append
 					(
@@ -1370,27 +1454,32 @@
 				},function(Q)
 				{
 					ZED.delete_(Q[KeyQueue.Unique],Active)
-				},function(Q)
+				},
+				UpdateToolBar,
+				function(Q)
 				{
-					MakeToolBarActive(ToolPlay,Q)
-					MakeToolBarActive(ToolPause,Q)
-					MakeToolBarActive(ToolRemove,Q)
+					Q[KeyQueue.Active] ? ++CountActive : ++CountPaused
+				},
+				function(Q)
+				{
+					Q[KeyQueue.Active] ? --CountActive : --CountPaused
+				},
+				function()
+				{
+					CountActive = CountPaused = 0
 				}
 			),
 
-			MakeActiveString = function(H)
+			MakeActive = function(H)
 			{
 				return function(Q)
 				{
 					(Q = Active[Q]) && H(Q)
 				}
 			},
-			MakeActiveTextObject = function(K,H)
+			UpdateSpeedStatus = function(Q)
 			{
-				return function(S,Q)
-				{
-					(Q = Active[S[KeyQueue.Unique]]) && Q[K].text(H(S,Q))
-				}
+				(Q = Active[Q[KeyQueue.Unique]]) && MakeSpeedStatus(Q)
 			};
 
 			MakeToolBarActive(ToolPlay)
@@ -1400,32 +1489,38 @@
 			(
 				MakeToolBarClick(R,X,ToolPlay,Lang.RestartedN,function(Q)
 				{
-					Q && Queue.Play(R.Selecting())
-					ZED.EachKey(R.Selecting(),MakeActiveString(SetPause))
-					return false
+					Q = Q && Queue.Play(R.Selecting())
+					ZED.EachKey(R.Selecting(),MakeActive(SetPause))
+					CountActive += Q
+					CountPaused -= Q
+					UpdateToolBar()
+					return -Q
 				}),
 				MakeToolBarClick(R,X,ToolPause,Lang.PausedN,function(Q)
 				{
-					Q && Queue.Pause(R.Selecting())
-					ZED.EachKey(R.Selecting(),MakeActiveString(SetPlay))
-					return false
+					Q = Q && Queue.Pause(R.Selecting())
+					ZED.EachKey(R.Selecting(),MakeActive(SetPlay))
+					CountActive -= Q
+					CountPaused += Q
+					UpdateToolBar()
+					return -Q
 				}),
 				MakeToolBarClick(R,X,ToolRemove,Lang.RemovedN,function(Q)
 				{
-					Q && Queue.Remove(R.Selecting())
-					return Q
+					return Q && Queue.Remove(R.Selecting())
 				})
 			))
-			Bus.on(EventQueue.ChangeOnline,RHotCount)
-				.on(EventQueue.Info,MakeActiveTextObject(ActiveKeyInfo,ZED.always(L(Lang.GetInfo))))
-				.on(EventQueue.InfoGot,MakeActiveTextObject(ActiveKeyInfo,ZED.always(L(Lang.GetSize))))
-				.on(EventQueue.SizeGot,MakeActiveTextObject(ActiveKeyInfo,MakeSizeJust))
-				.on(EventQueue.Play,MakeActiveTextObject(ActiveKeySpeed,MakeSpeedStatus))
-				.on(EventQueue.Pause,MakeActiveTextObject(ActiveKeySpeed,function(S,Q)
+			Bus.on(EventQueue.Change,RHotCount)
+				.on(EventQueue.Play,UpdateSpeedStatus)
+				.on(EventQueue.Pause,UpdateSpeedStatus)
+				.on(EventQueue.Info,UpdateSpeedStatus)
+				.on(EventQueue.InfoGot,UpdateSpeedStatus)
+				.on(EventQueue.SizeGot,UpdateSpeedStatus)
+				.on(EventQueue.Finish,R.Redraw)
+				.on(EventDownload.Speed,function(S,Q,A)
 				{
-					Q[ActiveKeyRemain].text('')
-					return MakeSpeedStatus(Q)
-				}))
+					(A = Active[Q[KeyQueue.Unique]]) && MakeSpeedStatus(A,S)
+				})
 
 			return R
 		}
@@ -1504,13 +1599,23 @@
 		{
 			MakeDetailInfoTTS.text(ZED.FormatSize(MakeDetailActive[KeyQueue.Size]))
 		}))
+		.on(EventQueue.Finish,MakeDetailMake(MakeDetailRefresh))
 		//Download
 		.on(EventDownload.Size,function(Q,S,F)
 		{
 			MakeDetailActive === Q && MakeDetailURL[F].text(MakeSizePercentage(S,0))
 		})
+		.on(EventDownload.SpeedTotal,function()
+		{
+			MakeDetailActive && MakeDetailActive[KeyQueue.Running] && MakeDetailRefresh()
+		})
 	//StatusBar Icon
 	ZED.each(function(V){RStatusIcon.append(ShowByRock(IDStatusIcon + ZED.chr(65 + V)))},ZED.range(0,5))
+	//Speed
+	Bus.on(EventDownload.SpeedTotal,function(Q)
+	{
+		RSpeed.text(ZED.FormatSize(Q) + '/s')
+	})
 
 	Rainbow.append
 	(
@@ -1539,7 +1644,7 @@
 		)
 	)
 ZED.Each(ShortCut.DefaultMap,function(F,V){UShortCut.on(V,F)})
-ZED.onError=function(E){console.log(E)}
+ZED.onError=function(E){console.error('CATCHED',E)}
 	$(function()
 	{
 		Rainbow.appendTo('body')

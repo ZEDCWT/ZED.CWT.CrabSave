@@ -2,18 +2,21 @@
 var
 ZED = require('@zed.cwt/zedquery'),
 
-Bus = require('./Util').Bus,
+Util = require('./Util'),
+Bus = Util.Bus,
 Key = require('./Key'),
 KeySite = Key.Site,
 KeyQueue = Key.Queue,
-Event = require('./Event').Queue,
+Event = require('./Event'),
+EventQueue = Event.Queue,
+EventDownload = Event.Download,
 Site = require('./Site'),
 Download = require('./Download'),
 
 NoMoreUseful =
 [
 	KeyQueue.Active,
-	KeyQueue.Running
+	KeyQueue.Running,
 ],
 
 Max = 5,
@@ -36,9 +39,9 @@ MaybePause = function(Q)
 {
 	if (Q[KeyQueue.Running])
 	{
-		Q[KeyQueue.Running] = false
+		Q[KeyQueue.Running] = Util.F
 		--Current
-		Bus.emit(Event.Pause,Q)
+		Bus.emit(EventQueue.Pause,Q)
 	}
 },
 Dispatch = function(T,F)
@@ -50,9 +53,9 @@ Dispatch = function(T,F)
 			T = Online[F]
 			if (T[KeyQueue.Active] && !T[KeyQueue.Running])
 			{
-				T[KeyQueue.Running] = true
+				T[KeyQueue.Running] = Util.T
 				++Current
-				Bus.emit(Event.Play,T)
+				Bus.emit(EventQueue.Play,T)
 			}
 		}
 	}
@@ -65,12 +68,12 @@ Dispatch = function(T,F)
 },
 DispatchInfoGot = function()
 {
-	Bus.emit(Event.InfoGot,InfoNow)
+	Bus.emit(EventQueue.InfoGot,InfoNow)
 	return Download.Size(InfoNow)
 },
 DispatchInfoData = function()
 {
-	Bus.emit(Event.SizeGot,InfoNow)
+	Bus.emit(EventQueue.SizeGot,InfoNow)
 },
 DispatchInfoError = function()
 {
@@ -79,7 +82,7 @@ DispatchInfoError = function()
 },
 DispatchInfoFinish = function()
 {
-	InfoEnd = InfoNow = false
+	InfoEnd = InfoNow = Util.F
 	DispatchInfo()
 },
 DispatchInfo = function(T)
@@ -87,17 +90,17 @@ DispatchInfo = function(T)
 	if (InfoEnd && !ZED.has(InfoNow[KeyQueue.Unique],OnlineMap))
 	{
 		InfoEnd.end()
-		InfoEnd = InfoNow = false
+		InfoEnd = InfoNow = Util.F
 	}
 	if (!InfoEnd && Online.length)
 	{
 		if (T = ZED.find(function(V){return !V[KeyQueue.Part] || V[KeyQueue.Size] < 0},Online))
 		{
-			Bus.emit(Event.Info,T)
+			Bus.emit(EventQueue.Info,T)
 			InfoNow = T
 			T = T[KeyQueue.Part] ?
 				Download.Size(T) :
-				Site.Map[ZED.toLower(T[KeyQueue.Name])][KeySite.URL](T[KeyQueue.ID],T)
+				Site.Map[T[KeyQueue.Name]][KeySite.URL](T[KeyQueue.ID],T)
 					.flatMap(DispatchInfoGot)
 			InfoEnd = T.start(DispatchInfoData,DispatchInfoError,DispatchInfoFinish)
 		}
@@ -110,27 +113,47 @@ MakeAction = function(O,H,C)
 {
 	return function(Q)
 	{
-		var T,F;
+		var R = 0,T,F;
 
 		for (F = O.length;F;)
 		{
 			T = O[--F]
-			Q[T[KeyQueue.Unique]] && H(T,F)
+			Q[T[KeyQueue.Unique]] && H(T,F) && ++R
 		}
 		C && C()
+		return R
 	}
 },
 
 
 
-EventOnlineChange = function(J)
+EventOnlineChange = function()
 {
-	Bus.emit(Event.ChangeOnline,Online.length,J)
-},
-EventOfflineChange = function()
-{
-	Bus.emit(Event.ChangeOffline,Offline.length)
+	Bus.emit(EventQueue.Change,Online.length)
 };
+
+Bus.on(EventDownload.Finish,function(Q)
+{
+	var T;
+
+	if (Q[KeyQueue.Running])
+	{
+		T = ZED.findIndex(ZED.identical(Q),Online)
+		if (0 <= T)
+		{
+			Q[KeyQueue.Finished] = (new Date).toISOString()
+			Online.splice(T,1)
+			ZED.delete_(Q[KeyQueue.Unique],OnlineMap)
+			--Current
+			EventOnlineChange()
+
+			ZED.each(ZED.delete_(ZED.__,Q),NoMoreUseful)
+			Offline.unshift(Q)
+			Bus.emit(EventQueue.Finish,Q)
+			Dispatch()
+		}
+	}
+})
 
 module.exports =
 {
@@ -143,10 +166,7 @@ module.exports =
 	{
 		Online = Q
 		Offline = S
-		ZED.each(function(V)
-		{
-			V[KeyQueue.Running] = false
-		},Q)
+		ZED.each(function(V){V[KeyQueue.Running] = Util.F},Q)
 		MakeMap(Q,OnlineMap)
 		MakeMap(S,OfflineMap)
 		Dispatch()
@@ -166,19 +186,22 @@ module.exports =
 		return ZED.has(ID,OfflineMap)
 	},
 
-	New : function(Name,Unique,ID,Title)
+	New : function(Q)
 	{
+		var Unique = Q[KeySite.Unique];
+
 		if (!ZED.has(Unique,OnlineMap))
 		{
 			Online.push(OnlineMap[Unique] = ZED.ReduceToObject
 			(
-				KeyQueue.Created,ZED.DateToString(),
-				KeyQueue.Name,Name,
+				KeyQueue.Created,(new Date).toISOString(),
+				KeyQueue.Name,Q[KeySite.Name],
 				KeyQueue.Unique,Unique,
-				KeyQueue.ID,ID,
-				KeyQueue.Title,Title,
-				KeyQueue.Active,true,
-				KeyQueue.Running,false,
+				KeyQueue.ID,Q[KeySite.ID],
+				KeyQueue.IDView,Q[KeySite.IDView],
+				KeyQueue.Title,Q[KeySite.Title],
+				KeyQueue.Active,Util.T,
+				KeyQueue.Running,Util.F,
 				KeyQueue.Size,-1
 			))
 			EventOnlineChange()
@@ -187,20 +210,27 @@ module.exports =
 	},
 	Play : MakeAction(Online,function(Q)
 	{
-		Q[KeyQueue.Active] = true
+		return Q[KeyQueue.Active] ?
+			Util.F :
+			Q[KeyQueue.Active] = Util.T
 	},Dispatch),
 	Pause : MakeAction(Online,function(Q)
 	{
-		Q[KeyQueue.Active] = false
-		MaybePause(Q)
+		return Q[KeyQueue.Active] &&
+		(
+			Q[KeyQueue.Active] = Util.F,
+			MaybePause(Q),
+			Util.T
+		)
 	},Dispatch),
 	Remove : MakeAction(Online,function(Q,F)
 	{
-		InfoNow === Q && (InfoEnd.end(),InfoNow = InfoEnd = false)
+		InfoNow === Q && (InfoEnd.end(),InfoNow = InfoEnd = Util.F)
 		MaybePause(Q)
 		Online.splice(F,1)
 		ZED.delete_(Q[KeyQueue.Unique],OnlineMap)
-		Bus.emit(Event.Remove,Q)
+		Bus.emit(EventQueue.Remove,Q)
+		return Util.T
 	},function()
 	{
 		Dispatch()

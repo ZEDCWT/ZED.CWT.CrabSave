@@ -11,7 +11,7 @@ L = Lang.L,
 
 Name = 'Bilibili',
 PageSize = 30,
-URLSpace = ZED.URLBuild('http://space.bilibili.com/ajax/member/getSubmitVideos?mid=',undefined,'&pagesize=',PageSize,'&page=',undefined),
+URLSpace = ZED.URLBuild('http://space.bilibili.com/ajax/member/getSubmitVideos?mid=',Util.U,'&pagesize=',PageSize,'&page=',Util.U),
 
 R = ZED.ReduceToObject
 (
@@ -49,7 +49,8 @@ R = ZED.ReduceToObject
 								KeySite.Name,Name,
 								KeySite.Unique,Util.MakeUnique(Name,V.aid),
 								KeySite.Index,PageSize * (X - 1) + F,
-								KeySite.ID,'av' + V.aid,
+								KeySite.ID,V.aid,
+								KeySite.IDView,'av' + V.aid,
 								KeySite.Img,V.pic,
 								KeySite.Title,V.title,
 								KeySite.Author,V.author,
@@ -64,12 +65,12 @@ R = ZED.ReduceToObject
 	{
 		return ZED.Observable.create(function(O)
 		{
-			var S = setTimeout(function()
+			setTimeout(function()
 			{
 				ZED.Merge(true,R,ZED.ReduceToObject
 				(
 					KeyQueue.Author,'AUTHOR',
-					KeyQueue.Date,new Date,
+					KeyQueue.Date,(new Date).toISOString(),
 					KeyQueue.Part,[ZED.ReduceToObject
 					(
 						KeyQueue.Title,'PARTA',
@@ -80,13 +81,11 @@ R = ZED.ReduceToObject
 				))
 				O.data().finish()
 			},1000)
-
-			return function()
-			{
-				console.log('suspend','URL')
-
-			}
 		})
+	},
+	KeySite.Pack,function(S,Q)
+	{
+		return S
 	}
 );
 

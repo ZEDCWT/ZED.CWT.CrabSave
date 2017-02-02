@@ -2,7 +2,8 @@
 var
 ZED = require('@zed.cwt/zedquery'),
 
-Bus = require('./Util').Bus,
+Util = require('./Util'),
+Bus = Util.Bus,
 Key = require('./Key'),
 KeySite = Key.Site,
 KeyQueue = Key.Queue,
@@ -70,7 +71,7 @@ Commit = function(Q,ID,R)
 	ID = Q[KeySite.Unique]
 	R = Active[ID]
 	R && R[0].attr(DOM.cls,Prefix + (StatusMap[ID] = Card.Hot)).text(L(Lang.Hot))
-	Queue.New(Q[KeySite.Name],Q[KeySite.Unique],ID,Q[KeySite.Title])
+	Queue.New(Q)
 },
 Remove = function(Q,ID)
 {
@@ -81,19 +82,21 @@ Remove = function(Q,ID)
 
 MakeAction = ZED.curry(function(H,Q)
 {
-	var T,F;
+	var R = 0,T,F;
 
 	for (F = Cold.length;F;)
 	{
 		T = Cold[--F]
 		if (Q[T[KeySite.Unique]])
 		{
+			++R
 			H(T)
 			Cold.splice(F,1)
 			ZED.delete_(T[KeySite.Unique],ColdMap)
 		}
 	}
 	ChangeCount()
+	return R
 }),
 
 ChangeCount = function()
@@ -140,7 +143,7 @@ module.exports =
 		ZED.ClearSelection()
 		Card.Cold === State ?
 			Unselect(ID) :
-			Card.Hot === State || Select(ID,true)
+			Card.Hot === State || Select(ID,Util.T)
 		ChangeCount()
 	},
 	SelAll : function()
@@ -159,7 +162,11 @@ module.exports =
 	{
 		if (R = Cold.length)
 		{
-			ZED.each(Commit,Cold)
+			ZED.each(function(V)
+			{
+				Commit(V)
+				ZED.delete_(V[KeySite.Unique],ColdMap)
+			},Cold)
 			Cold.length = 0
 			ChangeCount()
 		}

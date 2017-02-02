@@ -1,5 +1,7 @@
 'use strict'
 var
+undefined,
+
 ZED = require('@zed.cwt/zedquery'),
 Observable = ZED.Observable,
 
@@ -24,6 +26,11 @@ RequestBase = function(H)
 
 module.exports =
 {
+	U : undefined,
+	N : null,
+	T : !undefined,
+	F : !!undefined,
+
 	Bus : ZED.Emitter(),
 
 	RequestHead : RequestBase(ZED.identity),

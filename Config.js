@@ -11,8 +11,10 @@ ZED.mkdirpSync(Root)
 
 module.exports =
 {
-	Throttle : 300,
 	Version : Package.version,
 	Root : Root,
-	UA : 'ZED.CWT/255.255.255.0(Unix) CrabSave/' + Package.version
+	UA : 'ZED.CWT/255.255.255.0(Unix) CrabSave/' + Package.version,
+
+	Throttle : 300,
+	Speed : 500
 }
