@@ -33,7 +33,6 @@ Active,
 
 Select = function(ID,J,R)
 {
-	J = !J
 	if (Card.Init === StatusMap[ID] || (J && Card.History === StatusMap[ID]))
 	{
 		R = Active[ID]
@@ -102,16 +101,20 @@ MakeAction = ZED.curry(function(H,Q)
 ChangeCount = function()
 {
 	Bus.emit(EventCold.Change,Cold.length)
-};
+},
 
-Bus.on(EventQueue.Remove,function(ID,R)
+RefreshState = function(ID,R)
 {
 	ID = ID[KeyQueue.Unique]
 	R = Active[ID]
 	R ?
 		ReleseState(R,ID) :
 		StatusMap[ID] = Queue.HasOffline(ID) ? Card.History : Card.Init
-})
+};
+
+Bus.on(EventQueue.Remove,RefreshState)
+	.on(EventQueue.Finish,RefreshState)
+	.on(EventQueue.Bye,RefreshState)
 
 module.exports =
 {

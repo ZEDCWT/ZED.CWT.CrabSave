@@ -50,7 +50,6 @@ R = ZED.ReduceToObject
 								KeySite.Unique,Util.MakeUnique(Name,V.aid),
 								KeySite.Index,PageSize * (X - 1) + F,
 								KeySite.ID,V.aid,
-								KeySite.IDView,'av' + V.aid,
 								KeySite.Img,V.pic,
 								KeySite.Title,V.title,
 								KeySite.Author,V.author,
@@ -83,6 +82,7 @@ R = ZED.ReduceToObject
 			},1000)
 		})
 	},
+	KeySite.IDView,ZED.add('av'),
 	KeySite.Pack,function(S,Q)
 	{
 		return S

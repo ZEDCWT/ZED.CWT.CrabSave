@@ -24,13 +24,14 @@ Current = 0,
 Online = [],
 OnlineMap = {},
 Offline = [],
-OfflineMap = {},
+OfflineHistoryMap = {},
+OfflineCardMap = {},
 InfoEnd,
 InfoNow,
 
-MakeMap = function(Q,S)
+OfflineCardMapUp = function(Q)
 {
-	ZED.each(function(V){S[V[KeyQueue.ID]] = V},Q)
+	OfflineCardMap[Q] ? ++OfflineCardMap[Q] : OfflineCardMap[Q] = 1
 },
 
 
@@ -55,7 +56,7 @@ Dispatch = function(T,F)
 			{
 				T[KeyQueue.Running] = Util.T
 				++Current
-				Bus.emit(EventQueue.Play,T)
+				Bus.emit(T[KeyQueue.Size] < 0 ? EventQueue.FakeRun : EventQueue.Play,T)
 			}
 		}
 	}
@@ -74,6 +75,7 @@ DispatchInfoGot = function()
 DispatchInfoData = function()
 {
 	Bus.emit(EventQueue.SizeGot,InfoNow)
+	InfoNow[KeyQueue.Running] && Bus.emit(EventQueue.Play,InfoNow)
 },
 DispatchInfoError = function()
 {
@@ -85,7 +87,7 @@ DispatchInfoFinish = function()
 	InfoEnd = InfoNow = Util.F
 	DispatchInfo()
 },
-DispatchInfo = function(T)
+DispatchInfo = function(T,P)
 {
 	if (InfoEnd && !ZED.has(InfoNow[KeyQueue.Unique],OnlineMap))
 	{
@@ -94,7 +96,16 @@ DispatchInfo = function(T)
 	}
 	if (!InfoEnd && Online.length)
 	{
-		if (T = ZED.find(function(V){return !V[KeyQueue.Part] || V[KeyQueue.Size] < 0},Online))
+		//Pick a task, processing one is prior
+		T = ZED.find(function(V)
+		{
+			return !V[KeyQueue.Part] || V[KeyQueue.Size] < 0 &&
+			(
+				P = V,
+				V[KeyQueue.Running]
+			)
+		},Online) || P
+		if (T)
 		{
 			Bus.emit(EventQueue.Info,T)
 			InfoNow = T
@@ -109,8 +120,9 @@ DispatchInfo = function(T)
 
 
 
-MakeAction = function(O,H,C)
+MakeAction = function(O,H,C,K)
 {
+	K = K || KeyQueue.Unique
 	return function(Q)
 	{
 		var R = 0,T,F;
@@ -118,7 +130,7 @@ MakeAction = function(O,H,C)
 		for (F = O.length;F;)
 		{
 			T = O[--F]
-			Q[T[KeyQueue.Unique]] && H(T,F) && ++R
+			Q[T[K]] && H(T,F) && ++R
 		}
 		C && C()
 		return R
@@ -141,14 +153,18 @@ Bus.on(EventDownload.Finish,function(Q)
 		T = ZED.findIndex(ZED.identical(Q),Online)
 		if (0 <= T)
 		{
-			Q[KeyQueue.Finished] = (new Date).toISOString()
 			Online.splice(T,1)
-			ZED.delete_(Q[KeyQueue.Unique],OnlineMap)
+			T = Q[KeyQueue.Unique]
+			ZED.delete_(T,OnlineMap)
 			--Current
 			EventOnlineChange()
 
 			ZED.each(ZED.delete_(ZED.__,Q),NoMoreUseful)
 			Offline.unshift(Q)
+			OfflineCardMapUp(T)
+			Q[KeyQueue.IDHis] = T += '.' + ZED.now() + '.' + ZED.Code.MD5(Math.random()).substr(0,6)
+			OfflineHistoryMap[T] = Q
+			Q[KeyQueue.Finished] = (new Date).toISOString()
 			Bus.emit(EventQueue.Finish,Q)
 			Dispatch()
 		}
@@ -160,15 +176,22 @@ module.exports =
 	Online : Online,
 	OnlineMap : OnlineMap,
 	Offline : Offline,
-	OfflineMap : OfflineMap,
+	OfflineMap : OfflineHistoryMap,
 
 	Recover : function(Q,S)
 	{
 		Online = Q
 		Offline = S
-		ZED.each(function(V){V[KeyQueue.Running] = Util.F},Q)
-		MakeMap(Q,OnlineMap)
-		MakeMap(S,OfflineMap)
+		ZED.each(function(V)
+		{
+			V[KeyQueue.Running] = Util.F
+			OnlineMap[V[KeyQueue.Unique]] = V
+		},Q)
+		ZED.each(function(V)
+		{
+			OfflineHistoryMap[V[KeyQueue.IDHis]] = V
+			OfflineCardMapUp(V[KeyQueue.Unique])
+		},Q)
 		Dispatch()
 	},
 	Max : function(Q)
@@ -183,8 +206,11 @@ module.exports =
 	},
 	HasOffline : function(ID)
 	{
-		return ZED.has(ID,OfflineMap)
+		return ZED.has(ID,OfflineCardMap)
 	},
+
+	//Hot
+	IsInfo : function(Q){return InfoNow === Q},
 
 	New : function(Q)
 	{
@@ -198,7 +224,6 @@ module.exports =
 				KeyQueue.Name,Q[KeySite.Name],
 				KeyQueue.Unique,Unique,
 				KeyQueue.ID,Q[KeySite.ID],
-				KeyQueue.IDView,Q[KeySite.IDView],
 				KeyQueue.Title,Q[KeySite.Title],
 				KeyQueue.Active,Util.T,
 				KeyQueue.Running,Util.F,
@@ -237,5 +262,14 @@ module.exports =
 		EventOnlineChange()
 	}),
 
-	IsInfo : function(Q){return InfoNow === Q}
+	//History
+	Bye : MakeAction(Offline,function(Q,F)
+	{
+		Offline.splice(F,1)
+		ZED.delete_(Q[KeyQueue.IDHis],OfflineHistoryMap)
+		F = Q[KeyQueue.Unique]
+		1 === OfflineCardMap[F] ? ZED.delete_(F,OfflineCardMap) : --OfflineCardMap[F]
+		Bus.emit(EventQueue.Bye,Q)
+		return Util.T
+	},ZED.noop,KeyQueue.IDHis)
 }

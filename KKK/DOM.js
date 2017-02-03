@@ -9,6 +9,7 @@ module.exports =
 	cls : 'class',
 	src : 'src',
 	title : 'title',
+	width : 'width',
 	placeholder : 'placeholder',
 
 	br : '<br>',

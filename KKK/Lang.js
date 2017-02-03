@@ -78,5 +78,8 @@ module.exports =
 	PartN : Lang('Part /0/ // /1/'),
 	SizeP : Lang('/0/ // /1/, /2/%'),
 	SizeNP : Lang('/0/ // Unknown'),
-	Completed : Lang('Completed')
+	Completed : Lang('Completed'),
+
+	//History
+	HiInfo : Lang('/0/, /1/ file/2/')
 }

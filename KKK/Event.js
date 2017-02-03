@@ -13,13 +13,16 @@ module.exports =
 	Queue :
 	{
 		Change : EventKey(),
+		FakeRun : EventKey(),
 		Play : EventKey(),
 		Pause : EventKey(),
 		Remove : EventKey(),
 		Info : EventKey(),
 		InfoGot : EventKey(),
 		SizeGot : EventKey(),
-		Finish : EventKey()
+		Finish : EventKey(),
+
+		Bye : EventKey()
 	},
 	Download :
 	{

@@ -27,13 +27,14 @@ module.exports =
 		Unique : KeyKey(),
 		Index : KeyKey(),
 		ID : KeyKey(),
-		IDView : KeyKey(),
 		Img : KeyKey(),
 		Title : KeyKey(),
 		Author : KeyKey(),
 		Date : KeyKey(),
 		//URL
 		URL : KeyKey(),
+		//IDView
+		IDView : KeyKey(),
 		//Pack
 		Pack : KeyKey()
 	},
@@ -44,7 +45,7 @@ module.exports =
 		Name : KeyKey(),
 		Unique : KeyKey(),
 		ID : KeyKey(),
-		IDView : KeyKey(),
+		IDHis : KeyKey(),
 		Title : KeyKey(),
 
 		Active : KeyKey(),

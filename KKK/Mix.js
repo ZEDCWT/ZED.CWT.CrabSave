@@ -30,7 +30,8 @@
 
 
 
-	DateToStringFormat = '%YYYY%.%MM%.%DD%.%HH%.%NN%.%SS%',
+	DateToStringFormatFile = '%YYYY%.%MM%.%DD%.%HH%.%NN%.%SS%',
+	DateToStringFormatDisplay = '%YYYY%.%MM%.%DD% %HH%:%NN%:%SS%.%MS%',
 	ReKeyGenStore = [],
 	ReKeyGen = function(Q)
 	{
@@ -86,7 +87,7 @@
 			S ?
 				S === D ?
 					L(Lang.Completed) :
-					ReplaceLang(Lang.SizeP,ZED.FormatSize(D),ZED.FormatSize(S),ZED.Format(D / S)) :
+					ReplaceLang(Lang.SizeP,ZED.FormatSize(D),ZED.FormatSize(S),ZED.Format(100 * D / S)) :
 				ReplaceLang(Lang.SizeNP,ZED.FormatSize(D))
 	},
 
@@ -120,6 +121,11 @@
 	YHotControlPadding = 6,
 	YHotControlMoreWidth = YHotControlSize + YHotControlPadding + YHotControlSize,
 	YHotControlWidth = YHotControlPadding + YHotControlSize + YHotControlPadding + YHotControlMoreWidth,
+	//			History
+	YHistoryTitlePercentage = .75,
+	YHistoryControlPadding = YHotControlPadding,
+	YHistoryControlMoreWidth = YHotControlMoreWidth,
+	YHistoryControlWidth = YHotControlWidth,
 
 	//ID & Class
 	//	Global
@@ -158,6 +164,8 @@
 	IDBrowserInfo = ZED.KeyGen(),
 	IDBrowserList = ZED.KeyGen(),
 	ClassBrowserHover = ZED.KeyGen(),
+	//	Cold
+	ClassColdCommitAll = ZED.KeyGen(),
 	//	Hot
 	ClassHotTitleInfo = ZED.KeyGen(),
 	ClassHotTitle = ZED.KeyGen(),
@@ -171,6 +179,13 @@
 	ClassHotPercentageActive = ZED.KeyGen(),
 	ClassHotPercentageAlways = ZED.KeyGen(),
 	ClassHotSizeUnknown = ZED.KeyGen(),
+	//	History
+	ClassHistoryTitleInfo = ZED.KeyGen(),
+	ClassHistoryTitle = ClassHotTitle,
+	ClassHistoryInfo = ClassHotInfo,
+	ClassHistoryDate = ZED.KeyGen(),
+	ClassHistoryControlRemove = ClassHotControlRemove,
+	ClassHistoryControlMore = ClassHotControlMore,
 
 	//Element
 	Rainbow = ShowByRock(IDRainbow),
@@ -188,7 +203,7 @@
 	RStatus = ShowByRock(IDStatus),
 	RStatusIcon = ShowByRock(IDStatusIcon)
 		.on(DOM.aniend,function(){RStatusIcon.removeClass(ClassStatusIconAnimation)}),
-	RStatusText = $(DOM.div),
+	RStatusText = ShowByClass(ClassSingleLine),
 	RSpeed = ShowByRock(IDSpeed),
 
 
@@ -216,7 +231,7 @@
 		Type : 'Tick',
 		Fill : Util.F,
 		Stroke : ShapeConfigColorEnabled,
-		Line : '8%'
+		Line : '5%'
 	},
 	ShapeConfigColdListCommit =
 	{
@@ -262,6 +277,9 @@
 		Fill : Util.F,
 		Stroke : ShapeConfigColorBackground
 	},
+	ShapeConfigHistoryToolRemove = ShapeConfigHotToolRemove,
+	ShapeConfigHistoryListRemove = ShapeConfigHotListRemove,
+	ShapeConfigHistoryListMore = ShapeConfigHotListMore,
 
 	MakeToolBarStorage = Array(YTabCount),
 	MakeToolBarLast,
@@ -513,7 +531,7 @@
 			},
 			Redraw : function()
 			{
-				if (Index === UTab.Index() && !MakeDetailActive)
+				if (Index === UTab.Index())
 				{
 					LastScroll = List.scroll()
 					Redraw()
@@ -543,10 +561,10 @@
 	MakeDetailProgress = function()
 	{
 		return MakeDetailActive[KeyQueue.Finished] ?
-			ReplaceLang(Lang.FinishedAt,ZED.DateToString(new Date(MakeDetailActive[KeyQueue.Finished]))) :
+			ReplaceLang(Lang.FinishedAt,ZED.DateToString(DateToStringFormatDisplay,MakeDetailActive[KeyQueue.Finished])) :
 			MakeDetailActive[KeyQueue.Done] ?
 				0 < MakeDetailActive[KeyQueue.Size] ?
-					ZED.Format(ZED.sum(MakeDetailActive[KeyQueue.Done]) / MakeDetailActive[KeyQueue.Size]) + '%' :
+					ZED.Format(100 * ZED.sum(MakeDetailActive[KeyQueue.Done]) / MakeDetailActive[KeyQueue.Size]) + '%' :
 					L(Lang.Unfinished) :
 				'0%'
 	},
@@ -582,10 +600,10 @@
 
 		RDetailInfo.empty().append
 		(
-			MakeDetailSetupSingle(Lang.Created,ZED.DateToString(new Date(MakeDetailActive[KeyQueue.Created]))),
-			MakeDetailSetupSingle(Lang.Completed,MakeDetailInfoProgress = ShowByText(MakeDetailProgress(),DOM.span)),
+			MakeDetailSetupSingle(Lang.Created,ZED.DateToString(DateToStringFormatDisplay,MakeDetailActive[KeyQueue.Created])),
+			MakeDetailSetupSingle(Lang.Progress,MakeDetailInfoProgress = ShowByText(MakeDetailProgress(),DOM.span)),
 			MakeDetailSetupSingle(Lang.Author,MakeDetailActive[KeyQueue.Author]),
-			MakeDetailSetupSingle(Lang.UpDate,ZED.DateToString(DateToStringFormat,MakeDetailActive[KeyQueue.Date])),
+			MakeDetailSetupSingle(Lang.UpDate,ZED.DateToString(DateToStringFormatFile,MakeDetailActive[KeyQueue.Date])),
 			MakeDetailSetupSingle(Lang.Parts,Part.length),
 			MakeDetailSetupSingle(Lang.Files,MakeDetailActive[KeyQueue.File]),
 			MakeDetailSetupSingle(Lang.Directory,MakeDetailInfoDir = ShowByText('TODO',DOM.span)),
@@ -631,10 +649,10 @@
 		RDetailHead.append
 		(
 			ShowByText(Q[KeyQueue.Title]),
-			ShowByText(Q[KeyQueue.Name] + ' ' + (Q[KeyQueue.IDView] || Q[KeyQueue.ID]))
+			ShowByText(Q[KeyQueue.Name] + ' ' + SiteMap[Q[KeyQueue.Name]][KeySite.IDView](Q[KeyQueue.ID]))
 		)
 		if (Q[KeyQueue.Part]) MakeDetailSetup()
-		else RDetailInfo.text(L(Queue.IsInfo(Q) ? Lang.GetInfo : Lang.ReadyInfo))
+		else RDetailInfo.text(L(Queue.IsInfo(Q[KeyQueue.Unique]) ? Lang.GetInfo : Lang.ReadyInfo))
 	},
 	MakeDetailClose = function()
 	{
@@ -990,7 +1008,7 @@
 			{
 				Q = ZED.isNumber(Q) ? ReplaceLang(Q,ZED.tail(arguments)) : Q
 				RInfo.append(ShowByClass(ClassError).text(Q))
-				MakeStatus(X,Q.split('\n')[0],ClassStatusError)
+				MakeStatus(X,Q,ClassStatusError)
 			},
 			GoLast,
 			GoInfo,
@@ -1071,7 +1089,13 @@
 					D = $(DOM.fieldset)
 					D.append
 					(
-						ShowByText(V[KeySite.Index] + ' | ' + (V[KeySite.IDView] || V[KeySite.ID]),DOM.legend),
+						ShowByText
+						(
+							V[KeySite.Index] +
+							' | ' +
+							SiteMap[V[KeySite.Name]][KeySite.IDView](V[KeySite.ID]),
+							DOM.legend
+						),
 						Hover(D,V[KeySite.Unique],Cold.New(GoTarget,V)),
 						Hover
 						(
@@ -1084,7 +1108,7 @@
 						DOM.br,
 						V[KeySite.Author],
 						DOM.br,
-						ZED.DateToString(DateToStringFormat,V[KeySite.Date])
+						ZED.DateToString(DateToStringFormatFile,V[KeySite.Date])
 					)
 					RList.append(D)
 				},Item)
@@ -1139,6 +1163,11 @@
 		{
 			return ZED.Replace
 			(
+				//Commit all
+				'./A/{position:relative}' +
+				'./A/A,./A/B{position:absolute;top:0}' +
+				'./A/A{left:20%}' +
+				'./A/B{left:40%}' +
 				//Info block
 				'#/R/ ./M/>div{margin-right:/m/px;padding:/p/px}' +
 				//@ mark
@@ -1150,6 +1179,8 @@
 				'/',
 				{
 					M : DOM.ListViewItem,
+
+					A : ClassColdCommitAll,
 
 					R : ID,
 					m : YPadding + YListSVG + YPadding,
@@ -1164,7 +1195,6 @@
 		Content : function(M,X)
 		{
 			var
-			Tool = $(DOM.div),
 			ToolCommit = MakeShape(Lang.Commit,ShapeConfigColdToolCommit),
 			ToolRemove = MakeShape(Lang.Remove,ShapeConfigColdToolRemove),
 
@@ -1178,9 +1208,9 @@
 					(
 						$(DOM.div).append
 						(
-							MakeAt(Q[KeySite.IDView] || Q[KeySite.ID],Q[KeySite.Name]),
+							MakeAt(SiteMap[Q[KeySite.Name]][KeySite.IDView](Q[KeySite.ID]),Q[KeySite.Name]),
 							MakeAt(Q[KeySite.Title],Q[KeySite.Author]),
-							$(DOM.div).text(ZED.DateToString(DateToStringFormat,Q[KeySite.Date]))
+							$(DOM.div).text(ZED.DateToString(DateToStringFormatFile,Q[KeySite.Date]))
 						),
 						MakeToolBarClick
 						(
@@ -1204,7 +1234,7 @@
 
 			MakeToolBarActive(ToolCommit)
 			MakeToolBarActive(ToolRemove)
-			MakeToolBar(X,Tool.append
+			MakeToolBar(X,$(DOM.div).append
 			(
 				MakeToolBarClick(R,X,ToolCommit,Lang.CommittedN,function(Q)
 				{
@@ -1217,7 +1247,11 @@
 				MakeToolBarClick
 				(
 					R,X,
-					MakeShape(Lang.CommitAll,ShapeConfigColdToolCommitAll),
+					MakeShape(Lang.CommitAll,ShapeConfigColdToolCommitAll,ClassColdCommitAll).append
+					(
+						ZED.Shape(ShapeConfigColdToolCommitAll).attr(DOM.cls,ClassColdCommitAll + 'A'),
+						ZED.Shape(ShapeConfigColdToolCommitAll).attr(DOM.cls,ClassColdCommitAll + 'B')
+					),
 					Lang.CommittedN,
 					function(Q)
 					{
@@ -1245,11 +1279,11 @@
 				'./T/{font-size:1.1rem}' +
 				'./N/{color:#979797}' +
 				//Status
-				'./S/{padding:/p/px 0;width:/s/px}' +
+				'./S/{margin:/p/px 0;width:/s/px}' +
 				'./S/>*{display:inline-block;max-width:100%;vertical-align:bottom}' +
 				//Control
 				'./C/{margin:0 /_/px;line-height:0}' +
-				'./C/ svg{width:/c/px;height:/c/px}' +
+				'./M/ svg,./P/ svg{width:/c/px;height:/c/px}' +
 				'./M/:hover{background:#EF3000}' +
 				'./M/:hover path{fill:#F7F7F7!important}' +
 				'./P/{margin-top:/_/px}' +
@@ -1291,7 +1325,6 @@
 		Content : function(M,X)
 		{
 			var
-			Tool = $(DOM.div),
 			ToolPlay = MakeShape(Lang.Restart,ShapeConfigHotToolPlay),
 			ToolPause = MakeShape(Lang.Pause,ShapeConfigHotToolPause),
 			ToolRemove = MakeShape(Lang.Remove,ShapeConfigHotToolRemove),
@@ -1330,7 +1363,7 @@
 							Q[KeyQueue.Done] && (D = ZED.sum(Q[KeyQueue.Done])) ?
 								MakeSizePercentage(Q[KeyQueue.Size],D) :
 								MakeSizeJust(Q) :
-						L(Queue.IsInfo(Q) ? Lang.GetInfo : Lang.ReadyInfo)
+						L(Queue.IsInfo(Q[KeyQueue.Unique]) ? Lang.GetInfo : Lang.ReadyInfo)
 				)
 				A[ActiveKeySpeed].text
 				(
@@ -1351,7 +1384,7 @@
 					A[ActiveKeyPercentage].removeClass(ClassHotPercentageActive)
 				Q[KeyQueue.Size] ?
 					0 <= D && 0 < Q[KeyQueue.Size] &&
-						A[ActiveKeyPercentage].css(DOM.width,ZED.Format(D / Q[KeyQueue.Size]) + '%') :
+						A[ActiveKeyPercentage].css(DOM.width,ZED.Format(100 * D / Q[KeyQueue.Size]) + '%') :
 					A[ActiveKeyPercentage].addClass(ClassHotPercentageAlways)
 
 			},
@@ -1393,7 +1426,6 @@
 				)
 				UpdateToolBar()
 			},
-			ClickMore = MakeDetail,
 			MakeAction = function(R,H,Q)
 			{
 				return R.on(DOM.click,function(E)
@@ -1446,7 +1478,7 @@
 							MakeAction
 							(
 								MakeShape(Lang.More,ShapeConfigHotListMore,ClassHotControlMore),
-								ClickMore,Q
+								MakeDetail,Q
 							)
 						),
 						Percentage
@@ -1462,7 +1494,7 @@
 				},
 				function(Q)
 				{
-					Q[KeyQueue.Active] ? --CountActive : --CountPaused
+					Q[KeyQueue.Active] || !ZED.has(KeyQueue.Running,Q) ? --CountActive : --CountPaused
 				},
 				function()
 				{
@@ -1485,7 +1517,7 @@
 			MakeToolBarActive(ToolPlay)
 			MakeToolBarActive(ToolPause)
 			MakeToolBarActive(ToolRemove)
-			MakeToolBar(X,Tool.append
+			MakeToolBar(X,$(DOM.div).append
 			(
 				MakeToolBarClick(R,X,ToolPlay,Lang.RestartedN,function(Q)
 				{
@@ -1511,29 +1543,59 @@
 				})
 			))
 			Bus.on(EventQueue.Change,RHotCount)
+				.on(EventQueue.FakeRun,UpdateSpeedStatus)
 				.on(EventQueue.Play,UpdateSpeedStatus)
 				.on(EventQueue.Pause,UpdateSpeedStatus)
 				.on(EventQueue.Info,UpdateSpeedStatus)
 				.on(EventQueue.InfoGot,UpdateSpeedStatus)
 				.on(EventQueue.SizeGot,UpdateSpeedStatus)
 				.on(EventQueue.Finish,R.Redraw)
-				.on(EventDownload.Speed,function(S,Q,A)
+				.on(EventDownload.Speed,function(S,Q)
 				{
-					(A = Active[Q[KeyQueue.Unique]]) && MakeSpeedStatus(A,S)
+					(Q = Active[Q]) && MakeSpeedStatus(Q,S)
 				})
 
 			return R
 		}
 	},{
 		Tab : L(Lang.History),
-		CSS : function(ID)
+		CSS : function(ID,W,T)
 		{
+			W = YStageWidth - YHistoryControlWidth
+			T = YHistoryTitlePercentage * W
 			return ZED.Replace
 			(
-				'',
+				'#/R/ ./I/>*{display:inline-block;vertical-align:middle}' +
+				//Title
+				'./H/{padding:/p/px;width:/t/px}' +
+				//Date
+				'#/R/ ./D/' +
+				'{' +
+					'display:-webkit-inline-box;' +
+					'-webkit-box-orient:vertical;' +
+					'-webkit-line-clamp:2;' +
+					'margin:/p/px 0;' +
+					'width:/d/px;' +
+					'overflow:hidden;' +
+					'word-break:break-all' +
+				'}' +
+				//Remove
+				'#/R/ ./M/{margin:0 /_/px;line-height:0}',
 				'/',
 				{
-					R : ID
+					I : DOM.ListViewItem,
+
+					R : ID,
+					H : ClassHistoryTitleInfo,
+					t : T,
+					D : ClassHistoryDate,
+					d : W - T,
+					M : ClassHistoryControlRemove,
+					_ : YHistoryControlPadding,
+					O : ClassHistoryControlMore,
+					o : YHistoryControlMoreWidth,
+
+					p : YPadding
 				}
 			)
 		},
@@ -1541,7 +1603,70 @@
 		BeforeHide : MakeSelectableListHide,
 		Content : function(M,X)
 		{
-			return MakeScroll()
+			var
+			ToolRemove = MakeShape(Lang.Remove,ShapeConfigHistoryToolRemove),
+
+			ClickRemove = function(Q)
+			{
+				Queue.Bye(Q)
+				R.Redraw()
+			},
+			MakeAction = function(R,H,Q)
+			{
+				return R.on(DOM.click,function(E)
+				{
+					H(Q)
+					Util.StopProp(E)
+				})
+			},
+
+			R = MakeSelectableList
+			(
+				M,X,
+				Queue.Offline,Queue.OfflineMap,KeyQueue.IDHis,
+				function(Q)
+				{
+					return $(DOM.div).append
+					(
+						ShowByClass(ClassHistoryTitleInfo).append
+						(
+							ShowByClass(ClassSingleLine + ' ' + ClassHistoryTitle).text(Q[KeyQueue.Title]),
+							ShowByClass(ClassSingleLine + ' ' + ClassHistoryInfo).text(ReplaceLang
+							(
+								Lang.HiInfo,
+								ZED.FormatSize(Q[KeyQueue.Size]),Q[KeyQueue.File],MakeS(Q[KeyQueue.File])
+							))
+						),
+						ShowByClassX(ClassHistoryDate,DOM.span).text(ZED.DateToString(DateToStringFormatDisplay,Q[KeyQueue.Finished])),
+						MakeAction
+						(
+							MakeShape(Lang.Remove,ShapeConfigHistoryListRemove,ClassHistoryControlRemove),
+							ClickRemove,ZED.objOf(Q[KeyQueue.IDHis],Q)
+						),
+						MakeAction
+						(
+							MakeShape(Lang.More,ShapeConfigHistoryListMore,ClassHistoryControlMore),
+							MakeDetail,Q
+						)
+					)
+				},ZED.noop,function(Q)
+				{
+					MakeToolBarActive(ToolRemove,Q)
+				},
+				ZED.noop,ZED.noop,ZED.noop
+			);
+
+			MakeToolBarActive(ToolRemove)
+			MakeToolBar(X,$(DOM.div).append
+			(
+				MakeToolBarClick(R,X,ToolRemove,Lang.RemovedN,function(Q)
+				{
+					return Q && Queue.Bye(R.Selecting())
+				})
+			))
+			Bus.on(EventQueue.Finish,R.Redraw)
+
+			return R
 		}
 	},{
 		Tab : L(Lang.SignIn),

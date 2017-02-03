@@ -34,15 +34,21 @@ Download = function(Q)
 			T = Size[I] && Size[I] <= Done[I]
 	}
 
-	if (T) Bus.emit(EventDownload.Finish,Q)
+	if (T)
+	{
+		ZED.delete_(Q[Key.Unique],Active)
+		Bus.emit(EventDownload.Finish,Q)
+	}
 	else
 	{
+		--I
+
 		Part = Target
 		URL = URL[Fa]
 
 		F = ZED.Timer(
 		{
-			Time : T = 10000,
+			Time : T = 10000 || 120000,
 			Max : 500,
 			Show : function(P)
 			{
@@ -50,6 +56,7 @@ Download = function(Q)
 			},
 			End : function()
 			{
+				Done[I] = Size[I]
 				Download(Q)
 			}
 		})
@@ -57,10 +64,9 @@ Download = function(Q)
 		{
 			Stop : function()
 			{
-				console.log('STOPPED',Q,I)
 				F()
 			},
-			Speed : function(){return ZED.Rnd(100000,1000000)}
+			Speed : function(){return ZED.Rnd(100,1000)}
 		}
 	}
 },
@@ -72,7 +78,7 @@ Play = function(Q)
 Pause = function(Q)
 {
 	Q = Q[Key.Unique]
-	if (!Active[Q])
+	if (Active[Q])
 	{
 		Active[Q].Stop()
 		ZED.delete_(Q,Active)
