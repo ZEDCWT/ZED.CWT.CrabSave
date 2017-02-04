@@ -25,13 +25,10 @@ module.exports = function(Name)
 
 	return {
 		Data : Data,
-		Default : function(Q)
-		{
-			ZED.Merge(Latest,Q)
-		},
+		Replace : function(Q){Latest = Q},
 		Save : ZED.throttle(Config.Throttle,function(Q)
 		{
-			ZED.Merge(true,Latest,Q)
+			Q && ZED.Merge(true,Latest,Q)
 			FS.writeFile(File,ZED.OTJ(Latest,'\t',{Line : '\r\n'}),ZED.noop)
 		}),
 		Read : function(Q)

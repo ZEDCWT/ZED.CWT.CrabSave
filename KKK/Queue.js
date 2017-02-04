@@ -12,11 +12,17 @@ EventQueue = Event.Queue,
 EventDownload = Event.Download,
 Site = require('./Site'),
 Download = require('./Download'),
+SaveOnline = require('../JSONFile')('Online'),
+SaveOnlineSave = SaveOnline.Save,
+SaveOffline = require('../JSONFile')('Offline'),
+SaveOfflineSave = SaveOffline.Save,
 
 NoMoreUseful =
 [
 	KeyQueue.Active,
 	KeyQueue.Running,
+	KeyQueue.Root,
+	KeyQueue.Format
 ],
 
 Max = 5,
@@ -69,11 +75,13 @@ Dispatch = function(T,F)
 },
 DispatchInfoGot = function()
 {
+	SaveOnlineSave()
 	Bus.emit(EventQueue.InfoGot,InfoNow)
 	return Download.Size(InfoNow)
 },
 DispatchInfoData = function()
 {
+	SaveOnlineSave()
 	Bus.emit(EventQueue.SizeGot,InfoNow)
 	InfoNow[KeyQueue.Running] && Bus.emit(EventQueue.Play,InfoNow)
 },
@@ -99,9 +107,9 @@ DispatchInfo = function(T,P)
 		//Pick a task, processing one is prior
 		T = ZED.find(function(V)
 		{
-			return !V[KeyQueue.Part] || V[KeyQueue.Size] < 0 &&
+			return (!V[KeyQueue.Part] || V[KeyQueue.Size] < 0) &&
 			(
-				P = V,
+				P = P || V,
 				V[KeyQueue.Running]
 			)
 		},Online) || P
@@ -144,32 +152,55 @@ EventOnlineChange = function()
 	Bus.emit(EventQueue.Change,Online.length)
 };
 
-Bus.on(EventDownload.Finish,function(Q)
+Online = SaveOnline.Data()
+ZED.isArray(Online) || (Online = [])
+SaveOnline.Replace(Online)
+Offline = SaveOffline.Data()
+ZED.isArray(Offline) || (Offline = [])
+SaveOffline.Replace(Offline)
+ZED.each(function(V)
 {
-	var T;
+	V[KeyQueue.Running] = Util.F
+	OnlineMap[V[KeyQueue.Unique]] = V
+},Online)
+ZED.each(function(V)
+{
+	OfflineHistoryMap[V[KeyQueue.IDHis]] = V
+	OfflineCardMapUp(V[KeyQueue.Unique])
+},Offline)
 
-	if (Q[KeyQueue.Running])
-	{
-		T = ZED.findIndex(ZED.identical(Q),Online)
-		if (0 <= T)
-		{
-			Online.splice(T,1)
-			T = Q[KeyQueue.Unique]
-			ZED.delete_(T,OnlineMap)
-			--Current
-			EventOnlineChange()
-
-			ZED.each(ZED.delete_(ZED.__,Q),NoMoreUseful)
-			Offline.unshift(Q)
-			OfflineCardMapUp(T)
-			Q[KeyQueue.IDHis] = T += '.' + ZED.now() + '.' + ZED.Code.MD5(Math.random()).substr(0,6)
-			OfflineHistoryMap[T] = Q
-			Q[KeyQueue.Finished] = (new Date).toISOString()
-			Bus.emit(EventQueue.Finish,Q)
-			Dispatch()
-		}
-	}
+Bus.on(EventDownload.SpeedTotal,function(Q)
+{
+	Q && SaveOnlineSave()
 })
+	.on(EventDownload.Finish,function(Q)
+	{
+		var T;
+
+		if (Q[KeyQueue.Running])
+		{
+			T = ZED.findIndex(ZED.identical(Q),Online)
+			if (0 <= T)
+			{
+				Online.splice(T,1)
+				SaveOnlineSave()
+				T = Q[KeyQueue.Unique]
+				ZED.delete_(T,OnlineMap)
+				--Current
+				EventOnlineChange()
+
+				ZED.each(ZED.delete_(ZED.__,Q),NoMoreUseful)
+				Offline.unshift(Q)
+				SaveOfflineSave()
+				OfflineCardMapUp(T)
+				Q[KeyQueue.IDHis] = T += '.' + ZED.now() + '.' + ZED.Code.MD5(Math.random()).substr(0,6)
+				OfflineHistoryMap[T] = Q
+				Q[KeyQueue.Finished] = (new Date).toISOString()
+				Bus.emit(EventQueue.Finish,Q)
+				Dispatch()
+			}
+		}
+	})
 
 module.exports =
 {
@@ -178,22 +209,6 @@ module.exports =
 	Offline : Offline,
 	OfflineMap : OfflineHistoryMap,
 
-	Recover : function(Q,S)
-	{
-		Online = Q
-		Offline = S
-		ZED.each(function(V)
-		{
-			V[KeyQueue.Running] = Util.F
-			OnlineMap[V[KeyQueue.Unique]] = V
-		},Q)
-		ZED.each(function(V)
-		{
-			OfflineHistoryMap[V[KeyQueue.IDHis]] = V
-			OfflineCardMapUp(V[KeyQueue.Unique])
-		},Q)
-		Dispatch()
-	},
 	Max : function(Q){Max = Q},
 
 	Dispatch : Dispatch,
@@ -227,6 +242,7 @@ module.exports =
 				KeyQueue.Running,Util.F,
 				KeyQueue.Size,-1
 			))
+			SaveOnlineSave()
 			EventOnlineChange()
 			Dispatch()
 		}
@@ -236,7 +252,11 @@ module.exports =
 		return Q[KeyQueue.Active] ?
 			Util.F :
 			Q[KeyQueue.Active] = Util.T
-	},Dispatch),
+	},function()
+	{
+		SaveOnlineSave()
+		Dispatch()
+	}),
 	Pause : MakeAction(Online,function(Q)
 	{
 		return Q[KeyQueue.Active] &&
@@ -245,7 +265,11 @@ module.exports =
 			MaybePause(Q),
 			Util.T
 		)
-	},Dispatch),
+	},function()
+	{
+		SaveOnlineSave()
+		Dispatch()
+	}),
 	Remove : MakeAction(Online,function(Q,F)
 	{
 		InfoNow === Q && (InfoEnd.end(),InfoNow = InfoEnd = Util.F)
@@ -256,6 +280,7 @@ module.exports =
 		return Util.T
 	},function()
 	{
+		SaveOnlineSave()
 		Dispatch()
 		EventOnlineChange()
 	}),
@@ -269,5 +294,5 @@ module.exports =
 		1 === OfflineCardMap[F] ? ZED.delete_(F,OfflineCardMap) : --OfflineCardMap[F]
 		Bus.emit(EventQueue.Bye,Q)
 		return Util.T
-	},ZED.noop,KeyQueue.IDHis)
+	},SaveOfflineSave,KeyQueue.IDHis)
 }

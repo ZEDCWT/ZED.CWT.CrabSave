@@ -1518,6 +1518,7 @@
 				(Q = Active[Q[KeyQueue.Unique]]) && MakeSpeedStatus(Q)
 			};
 
+			RHotCount(Queue.Online.length)
 			MakeToolBarActive(ToolPlay)
 			MakeToolBarActive(ToolPause)
 			MakeToolBarActive(ToolRemove)

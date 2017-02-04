@@ -29,7 +29,7 @@ LangMap = ZED.ReduceToObject
 Cold = [],
 ColdMap = {},
 StatusMap = {},
-Active,
+Active = {},
 
 Select = function(ID,J,R)
 {
