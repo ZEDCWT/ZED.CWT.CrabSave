@@ -51,7 +51,6 @@ Create = function()
 
 	Position.Data('Max') && Window.maximize()
 	Created = true
-Window.webContents.toggleDevTools()
 	ONS(Window.webContents,'new-window will-navigate',ZED.invokeProp('preventDefault'))
 	ONS(Window,'resize move maximize minimize',function(M,R)
 	{

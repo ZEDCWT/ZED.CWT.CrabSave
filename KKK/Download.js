@@ -1,6 +1,7 @@
 'use strict'
 var
 ZED = require('@zed.cwt/zedquery'),
+Observable = ZED.Observable,
 Downloader = require('@zed.cwt/downloader'),
 
 Config = require('../Config'),
@@ -13,7 +14,7 @@ KeySetting = Key.Setting,
 Event = require('./Event'),
 EventQueue = Event.Queue,
 EventDownload = Event.Download,
-Site = require('./Site'),
+SiteMap = require('./Site').Map,
 Setting = require('./Setting'),
 
 Path = require('path'),
@@ -23,7 +24,7 @@ Active = {},
 Download = function(Q)
 {
 	var
-	Target = Site.Map[Q[KeyQueue.Name]],
+	Target = SiteMap[Q[KeyQueue.Name]],
 	Part = Q[KeyQueue.Part],
 	PL = Part.length,
 	URL,UL,
@@ -147,28 +148,33 @@ module.exports =
 
 	Size : function(Q)
 	{
-		return ZED.Observable.create(function(O)
-		{
+		var
+		Pack = SiteMap[Q[KeyQueue.Name]][KeySite.Pack],
+		URL = ZED.flatten(ZED.pluck(KeyQueue.URL,Q[KeyQueue.Part])),
+		Size = 0,
+		Sizes = Array(URL.length);
 
-			var
-			URL = ZED.reduce(function(D,V){return D.concat(V[KeyQueue.URL])},[],Q[KeyQueue.Part]),
-			Size = 0,
-			Sizes = Array(URL.length);
-
-			setTimeout(function()
+		return Observable.from(URL)
+			.flatMapOnline(1,function(V,F)
 			{
-				for (var F = 0;F < Sizes.length;++F)
-				{
-					var T = ZED.Rnd(7000000,100000000)
-					Size += T
-					Sizes[F] = T
-					Bus.emit(EventDownload.Size,Q,T,F)
-				}
+				return Util.RequestHead(Pack(V,Q))
+					.tap(function(H)
+					{
+						if (200 !== H.statusCode)
+						{
+
+						}
+						H = Number(H.headers['content-length'])
+						Size += H
+						Sizes[F] = H
+						Bus.emit(EventDownload.Size,Q,H,F)
+					})
+			})
+			.tap(ZED.noop,ZED.noop,function()
+			{
 				Q[KeyQueue.Size] = Size
 				Q[KeyQueue.Sizes] = Sizes
 				Q[KeyQueue.Done] = ZED.repeat(0,Sizes.length)
-				O.data().finish()
-			},1000)
-		})
+			})
 	}
 }

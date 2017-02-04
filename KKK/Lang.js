@@ -36,21 +36,21 @@ module.exports =
 	//Browser
 	ProcURL : Lang('Processing `/0/`'),
 	PageInfo : Lang('/0/,~,/1/,. ,/2/,//,/3/, item,/4/,. ,/5/,//,/6/, page,/7/,.'),
+	Video : Lang('Video'),
 	User : Lang('User'),
-	UexRtn : Lang('Unexpected return from the server'),
+	Channel : Lang('Channel'),
+	Mylist : Lang('Mylist'),
 	UknSite : Lang('Unknown site id `/0/`'),
 	UknURL : Lang('Unknown URL format `/0/`'),
+	Bad : Lang('Bad response'),
+	BadCE : Lang('Bad response, code : /0/, message : /1/'),
 
 	//Cold
 	Select : Lang('Select'),
-	//[Cold]
-	//[Hot]
-	//[History]
 	AddCold : Lang('Append to cold list'),
 	RmCold : Lang('Remove from cold list'),
 
 	//Hot
-	//[Remove]
 	Restart : Lang('Restart'),
 	Pause : Lang('Pause'),
 	More : Lang('View detail'),

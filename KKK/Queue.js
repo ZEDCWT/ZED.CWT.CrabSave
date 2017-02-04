@@ -75,25 +75,27 @@ Dispatch = function(T,F)
 },
 DispatchInfoGot = function()
 {
+	InfoNow[KeyQueue.File] = ZED.flatten(ZED.pluck(KeyQueue.URL,InfoNow[KeyQueue.Part])).length
 	SaveOnlineSave()
 	Bus.emit(EventQueue.InfoGot,InfoNow)
 	return Download.Size(InfoNow)
 },
-DispatchInfoData = function()
+DispatchInfoEnd = function()
+{
+	InfoEnd = InfoNow = Util.F
+	DispatchInfo()
+},
+DispatchInfoError = function(E)
+{
+console.log(E)
+	DispatchInfoEnd()
+},
+DispatchInfoFinish = function()
 {
 	SaveOnlineSave()
 	Bus.emit(EventQueue.SizeGot,InfoNow)
 	InfoNow[KeyQueue.Running] && Bus.emit(EventQueue.Play,InfoNow)
-},
-DispatchInfoError = function()
-{
-
-	DispatchInfoFinish()
-},
-DispatchInfoFinish = function()
-{
-	InfoEnd = InfoNow = Util.F
-	DispatchInfo()
+	DispatchInfoEnd()
 },
 DispatchInfo = function(T,P)
 {
@@ -120,8 +122,9 @@ DispatchInfo = function(T,P)
 			T = T[KeyQueue.Part] ?
 				Download.Size(T) :
 				Site.Map[T[KeyQueue.Name]][KeySite.URL](T[KeyQueue.ID],T)
+					.reduce(ZED.noop)
 					.flatMap(DispatchInfoGot)
-			InfoEnd = T.start(DispatchInfoData,DispatchInfoError,DispatchInfoFinish)
+			InfoEnd = T.start(ZED.noop,DispatchInfoError,DispatchInfoFinish)
 		}
 	}
 },
@@ -195,7 +198,7 @@ Bus.on(EventDownload.SpeedTotal,function(Q)
 				OfflineCardMapUp(T)
 				Q[KeyQueue.IDHis] = T += '.' + ZED.now() + '.' + ZED.Code.MD5(Math.random()).substr(0,6)
 				OfflineHistoryMap[T] = Q
-				Q[KeyQueue.Finished] = (new Date).toISOString()
+				Q[KeyQueue.Finished] = ZED.now()
 				Bus.emit(EventQueue.Finish,Q)
 				Dispatch()
 			}
@@ -233,7 +236,7 @@ module.exports =
 		{
 			Online.push(OnlineMap[Unique] = ZED.ReduceToObject
 			(
-				KeyQueue.Created,(new Date).toISOString(),
+				KeyQueue.Created,ZED.now(),
 				KeyQueue.Name,Q[KeySite.Name],
 				KeyQueue.Unique,Unique,
 				KeyQueue.ID,Q[KeySite.ID],

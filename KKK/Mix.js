@@ -6,6 +6,7 @@
 
 	Config = require('../Config'),
 	Util = require('./Util'),
+	ReplaceLang = Util.ReplaceLang,
 	Bus = Util.Bus,
 	Key = require('./Key'),
 	KeySite = Key.Site,
@@ -44,10 +45,6 @@
 			ReKeyGenStore.push(Q = ZED.KeyGen()),
 			Q
 		)
-	},
-	ReplaceLang = function(Q,S)
-	{
-		return ZED.Replace(L(Q),'/',ZED.isArray(S) ? S : ZED.tail(arguments))
 	},
 	MakeShape = function(S,Q,C)
 	{
@@ -150,7 +147,7 @@
 	ClassDetailLabel = ZED.KeyGen(),
 	IDDetailPart = ZED.KeyGen(),
 	IDStatusBar = ZED.KeyGen(),
-	IDStatusBarLeft = ZED.KeyGen(),
+	IDStatusBarWrap = ZED.KeyGen(),
 	IDStatusBarRight = ZED.KeyGen(),
 	IDStatus = ZED.KeyGen(),
 	IDStatusIcon = ZED.KeyGen(),
@@ -638,7 +635,7 @@
 		Size = MakeDetailActive[KeyQueue.Sizes],
 		Done = MakeDetailActive[KeyQueue.Done];
 
-		MakeDetailInfoProgress.text(MakeDetailProgress())
+		MakeDetailInfoProgress && MakeDetailInfoProgress.text(MakeDetailProgress())
 		Done && MakeDetailInfoDownloaded.text(Util.CalcSize(Done))
 		Size && ZED.Each(MakeDetailURL,function(F,V){V.text(MakeSizePercentage(Size[F],Done[F]))})
 	},
@@ -720,10 +717,10 @@
 		}
 	});
 
-	ZED.CSS(ZED.KeyGen(),function(W,H)
+	ZED.CSS(ZED.KeyGen(),function(W,H,S)
 	{
-		W = ZED.max(YNaviWidth,W - YNaviWidth)
-		YStageWidth = W - YScrollWidth
+		S = ZED.max(YNaviWidth,W - YNaviWidth)
+		YStageWidth = S - YScrollWidth
 		YStageHeight = ZED.max(YToolBarHeight + YStatusBarHeight,H - YToolBarHeight - YStatusBarHeight)
 
 		return ZED.Replace
@@ -800,12 +797,14 @@
 			'#/DP/ div>span{padding-left:/p/px}' +
 
 			//StatusBar
-			'#/S/{height:/s/px}' +
+			'#/S/{padding:0 /p/px;height:/s/px}' +
 			//	Wrapper
-			'#/L/,#/H/{position:absolute;bottom:10px}' +
+			'#/L/,#/H/{display:inline-block}' +
 			'#/L/ div,#/H/ div{display:inline-block;vertical-align:middle}' +
-			'#/L/{left:8px}' +
-			'#/H/{right:8px}' +
+			'#/L/{width:100%}' +
+			'#/H/{float:right}' +
+			//	Text
+			'#/L/ ./SL/{width:/u/px}' +
 			//	Icon
 			'#/C/{position:relative;width:20px;height:20px}' +
 			'#/C/[class]{margin-right:8px}' +
@@ -859,12 +858,12 @@
 				v : ShapeConfigColorHover,
 
 				NG : IDNaviStage,
-				ng : YNaviWidth + W,
+				ng : YNaviWidth + S,
 				N : IDNavi,
 				n : YNaviWidth,
 				V : ClassCount,
 				G : IDStage,
-				g : W,
+				g : S,
 				h : YStageHeight,
 				Y : ClassStageScroll,
 				F : ClassListSelected,
@@ -876,7 +875,8 @@
 
 				S : IDStatusBar,
 				s : YStatusBarHeight,
-				L : IDStatusBarLeft,
+				L : IDStatusBarWrap,
+				u : W - 128,
 				H : IDStatusBarRight,
 				U : IDStatus,
 				C : IDStatusIcon,
@@ -1101,17 +1101,15 @@
 							DOM.legend
 						),
 						Hover(D,V[KeySite.Unique],Cold.New(GoTarget,V)),
-						Hover
+						V[KeySite.Img] && Hover
 						(
 							D,V[KeySite.Unique],
 							ShowByClassX(DOM.NoSelect,DOM.img)
 								.attr(DOM.src,V[KeySite.Img])
 								.attr(DOM.title,V[KeySite.Title])
 						),
-						V[KeySite.Title],
-						DOM.br,
-						V[KeySite.Author],
-						DOM.br,
+						V[KeySite.Title] + DOM.br,
+						V[KeySite.Author] && V[KeySite.Author] + DOM.br,
 						ZED.DateToString(DateToStringFormatFile,V[KeySite.Date])
 					)
 					RList.append(D)
@@ -1128,6 +1126,10 @@
 						GoLast = Util.F
 						MakeStatus(X)
 						GoInfo = GoInfo || ZED.EazyLog(InfoLog,$(DOM.div).appendTo(RInfo),Util.T)
+						ZED.each(function(V)
+						{
+							V[KeySite.Unique] = Util.MakeUnique(V[KeySite.Name] = GoTarget[KeySite.Name],V[KeySite.ID])
+						},Q[KeySite.Item])
 						Render(Q,S)
 					},function(E)
 					{
@@ -1830,13 +1832,14 @@
 		RStatusBar.append
 		(
 			ShowByClass(ClassShadowBar),
-			ShowByRock(IDStatusBarLeft).append
+			ShowByClass(DOM.VerticalMiddle),
+			ShowByRock(IDStatusBarWrap).append
 			(
-				RStatus.append(RStatusIcon,RStatusText)
-			),
-			ShowByRock(IDStatusBarRight).append
-			(
-				RSpeed
+				RStatus.append(RStatusIcon,RStatusText),
+				ShowByRock(IDStatusBarRight).append
+				(
+					RSpeed
+				)
 			)
 		)
 	)

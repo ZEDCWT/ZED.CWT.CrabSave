@@ -1,20 +1,58 @@
+'use strict'
 var
 ZED = require('@zed.cwt/zedquery'),
-Observable = ZED.Observable,
 
-Key = require('./Key').Site;
+Util = require('./Util'),
+Key = require('./Key'),
+KeySite = Key.Site,
+KeyQueue = Key.Queue,
+Lang = require('./Lang'),
+L = Lang.L,
 
-module.exports = ZED.ReduceToObject
+PageSize = 30,
+
+R = ZED.ReduceToObject
 (
-	Key.Name,
-	Key.Judge,
-	Key.Login,
-	Key.Check,
-	Key.Map,[ZED.ReduceToObject
+	KeySite.Name,'Youtube',
+	KeySite.Judge,/\.you\.?tu\.?be\./i,
+	KeySite.Login,function()
+	{
+
+	},
+	KeySite.Check,function()
+	{
+
+	},
+	KeySite.Map,[ZED.ReduceToObject
 	(
-		Key.Name,
-		Key.Judge,
-		Key.Page
+		KeySite.Name,L(Lang.User),
+		KeySite.Judge,[Util.MakeLabelID('user')],
+		KeySite.Page,function(ID,X)
+		{
+		}
+	),ZED.ReduceToObject
+	(
+		KeySite.Name,L(Lang.Channel),
+		KeySite.Judge,[Util.MakeLabelID('Channel')],
+		KeySite.Page,function(ID,X)
+		{
+		}
+	),ZED.ReduceToObject
+	(
+		KeySite.Name,L(Lang.Video),
+		KeySite.Judge,[/^/],
+		KeySite.Page,function(ID)
+		{
+		}
 	)],
-	Key.URL
-)
+	KeySite.URL,function(ID,R)
+	{
+	},
+	KeySite.IDView,ZED.identity,
+	KeySite.Pack,function(S,Q)
+	{
+		return S
+	}
+);
+
+module.exports = R
