@@ -62,6 +62,19 @@ module.exports =
 		URL : KeyKey(),
 		Suffix : KeyKey(),
 
-		File : KeyKey()
+		File : KeyKey(),
+
+		Format : KeyKey(),
+		Root : KeyKey(),
+		Dir : KeyKey()
+	},
+	Setting :
+	{
+		Dir : KeyKey(),
+		Name : KeyKey(),
+		Max : KeyKey(),
+		Font : KeyKey(),
+		Size : KeyKey(),
+		Weight : KeyKey()
 	}
 }

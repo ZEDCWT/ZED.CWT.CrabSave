@@ -41,5 +41,10 @@ module.exports =
 
 	CalcSize : ZED.pipe(ZED.sum,ZED.FormatSize),
 
-	StopProp : function(E){E.stopPropagation()}
+	StopProp : function(E){E.stopPropagation()},
+
+	PadTo : function(S,Q)
+	{
+		return ZED.FillLeft(Q,(S - 1 + '').length)
+	}
 }

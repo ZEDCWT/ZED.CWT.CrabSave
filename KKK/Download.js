@@ -6,46 +6,88 @@ Downloader = require('@zed.cwt/downloader'),
 Config = require('../Config'),
 Util = require('./Util'),
 Bus = Util.Bus,
-Key = require('./Key').Queue,
+Key = require('./Key'),
+KeySite = Key.Site,
+KeyQueue = Key.Queue,
+KeySetting = Key.Setting,
 Event = require('./Event'),
 EventQueue = Event.Queue,
 EventDownload = Event.Download,
 Site = require('./Site'),
+Setting = require('./Setting'),
+
+Path = require('path'),
 
 Active = {},
 
 Download = function(Q)
 {
 	var
-	Target = Site.Map[Q[Key.Name]],
-	Part = Q[Key.Part],
-	URL,
-	Size = Q[Key.Sizes],
-	Done = Q[Key.Done],
+	Target = Site.Map[Q[KeyQueue.Name]],
+	Part = Q[KeyQueue.Part],
+	PL = Part.length,
+	URL,UL,
+	Size = Q[KeyQueue.Sizes],
+	Done = Q[KeyQueue.Done],
 
-	I = 0,
+	I = -1,
 
-	T = Util.T,F = 0,Fa;
+	D,T = Util.T,F = -1,Fa;
 
-	for (;T && F < Part.length;++F)
+	for (;T && ++F < PL;)
 	{
-		URL = Part[F][Key.URL]
-		for (Fa = 0;T && Fa < URL.length;++I,++Fa)
-			T = Size[I] && Size[I] <= Done[I]
+		URL = Part[F][KeyQueue.URL]
+		UL = URL.length
+		for (Fa = -1;T && ++Fa < UL;)
+			T = Size[++I] && Size[I] <= Done[I]
 	}
 
 	if (T)
 	{
-		ZED.delete_(Q[Key.Unique],Active)
+		ZED.delete_(Q[KeyQueue.Unique],Active)
 		Bus.emit(EventDownload.Finish,Q)
 	}
 	else
 	{
-		--I
+		Part = Part[F]
+		URL = Target[KeySite.Pack](URL[Fa],Q)
 
-		Part = Target
-		URL = URL[Fa]
 
+		D = new Date(Q[KeyQueue.Date])
+		T =
+		{
+			Author : ZED.SafeFileName(Q[KeyQueue.Author]),
+			Date : ZED.DateToString('%YYYY%.%MM%.%DD%.%HH%.%NN%.%SS%',D),
+			Title : ZED.SafeFileName(Q[KeyQueue.Title])
+		}
+		ZED.each(function(V)
+		{
+			T[V] = ZED.DateToString('%' + V + '%',D)
+		},['YYYY','MM','DD','HH','NN','SS'])
+		if (1 < PL) T.PartIndex = Util.PadTo(PL,F)
+		if (Part[KeyQueue.Title]) T.PartTitle = Part[KeyQueue.Title]
+		if (1 < UL) T.FileIndex = Util.PadTo(UL,Fa)
+		if (!Q[KeyQueue.Format]) Q[KeyQueue.Format] = Setting.Data(KeySetting.Name)
+		T = ZED.Replace
+		(
+			Q[KeyQueue.Format].replace(/\?([^?]+)\?/g,function(Q,S)
+			{
+				return ZED.all(function(Q)
+				{
+					return ZED.has(Q.substr(1,Q.length - 2),T)
+				},Q.match(/\|[^|]+\|/)) ? S : ''
+			}),
+			'|',
+			T
+		) + Part[KeyQueue.Suffix]
+		if (!Q[KeyQueue.Root]) Q[KeyQueue.Root] = Setting.Data(KeySetting.Dir)
+		T = Path.join(Q[KeyQueue.Root],T)
+		if (!Q[KeyQueue.Dir])
+		{
+			Q[KeyQueue.Dir] = Path.dirname(T)
+			Bus.emit(EventDownload.Dir,Q)
+		}
+console.log(T)
 		F = ZED.Timer(
 		{
 			Time : T = 10000 || 120000,
@@ -60,7 +102,7 @@ Download = function(Q)
 				Download(Q)
 			}
 		})
-		Active[Q[Key.Unique]] =
+		Active[Q[KeyQueue.Unique]] =
 		{
 			Stop : function()
 			{
@@ -73,11 +115,11 @@ Download = function(Q)
 
 Play = function(Q)
 {
-	Active[Q[Key.Unique]] || Download(Q)
+	Active[Q[KeyQueue.Unique]] || Download(Q)
 },
 Pause = function(Q)
 {
-	Q = Q[Key.Unique]
+	Q = Q[KeyQueue.Unique]
 	if (Active[Q])
 	{
 		Active[Q].Stop()
@@ -109,7 +151,7 @@ module.exports =
 		{
 
 			var
-			URL = ZED.reduce(function(D,V){return D.concat(V[Key.URL])},[],Q[Key.Part]),
+			URL = ZED.reduce(function(D,V){return D.concat(V[KeyQueue.URL])},[],Q[KeyQueue.Part]),
 			Size = 0,
 			Sizes = Array(URL.length);
 
@@ -122,9 +164,9 @@ module.exports =
 					Sizes[F] = T
 					Bus.emit(EventDownload.Size,Q,T,F)
 				}
-				Q[Key.Size] = Size
-				Q[Key.Sizes] = Sizes
-				Q[Key.Done] = ZED.repeat(0,Sizes.length)
+				Q[KeyQueue.Size] = Size
+				Q[KeyQueue.Sizes] = Sizes
+				Q[KeyQueue.Done] = ZED.repeat(0,Sizes.length)
 				O.data().finish()
 			},1000)
 		})

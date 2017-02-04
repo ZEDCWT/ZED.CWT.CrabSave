@@ -25,6 +25,10 @@ module.exports = function(Name)
 
 	return {
 		Data : Data,
+		Default : function(Q)
+		{
+			ZED.Merge(Latest,Q)
+		},
 		Save : ZED.throttle(Config.Throttle,function(Q)
 		{
 			ZED.Merge(true,Latest,Q)

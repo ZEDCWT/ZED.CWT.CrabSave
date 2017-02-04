@@ -27,6 +27,7 @@ module.exports =
 	Download :
 	{
 		Size : EventKey(),
+		Dir : EventKey(),
 		Played : EventKey(),
 		Paused : EventKey(),
 		Finish : EventKey(),

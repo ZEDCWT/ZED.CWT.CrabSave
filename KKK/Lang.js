@@ -72,6 +72,7 @@ module.exports =
 	Parts : Lang('Parts'),
 	Files : Lang('Files'),
 	Directory : Lang('Directory'),
+	NoDir : Lang('Not determined'),
 	Downloaded : Lang('Downloaded'),
 	TTS : Lang('Total size'),
 	Calculating : Lang('Calculating'),
@@ -81,5 +82,12 @@ module.exports =
 	Completed : Lang('Completed'),
 
 	//History
-	HiInfo : Lang('/0/, /1/ file/2/')
+	HiInfo : Lang('/0/, /1/ file/2/'),
+
+	//Setting
+	MaxDown : Lang('Maximum number of active downloads'),
+	FName : Lang('File name format'),
+	Font : Lang('Font'),
+	Size : Lang('Font size'),
+	Weight : Lang('Font weight')
 }

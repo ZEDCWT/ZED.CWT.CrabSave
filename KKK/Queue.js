@@ -194,11 +194,9 @@ module.exports =
 		},Q)
 		Dispatch()
 	},
-	Max : function(Q)
-	{
-		Max = Q
-		Dispatch()
-	},
+	Max : function(Q){Max = Q},
+
+	Dispatch : Dispatch,
 
 	HasOnline : function(ID)
 	{

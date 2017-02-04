@@ -3,7 +3,7 @@ ZED = require('@zed.cwt/zedquery'),
 splitSpace = ZED.split(' '),
 
 Config = require('./Config'),
-Setting = require('./Setting'),
+Position = require('./Window'),
 
 Path = require('path'),
 
@@ -47,9 +47,9 @@ Created,
 Create = function()
 {
 	var
-	Window = new Electron.BrowserWindow(ZED.pick(splitSpace('width height x y'),Setting.Data()));
+	Window = new Electron.BrowserWindow(ZED.pick(splitSpace('width height x y'),Position.Data()));
 
-	Setting.Data('Max') && Window.maximize()
+	Position.Data('Max') && Window.maximize()
 	Created = true
 Window.webContents.toggleDevTools()
 	ONS(Window.webContents,'new-window will-navigate',ZED.invokeProp('preventDefault'))
@@ -57,7 +57,7 @@ Window.webContents.toggleDevTools()
 	{
 		R = {Max : M = Window.isMaximized()}
 		M || ZED.Merge(R,Window.getBounds())
-		Setting.Save(R)
+		Position.Save(R)
 	})
 	Window.on('closed',function()
 	{
@@ -83,8 +83,7 @@ Roll = function(Q)
 if (App.makeSingleInstance(Roll)) App.quit()
 else
 {
-	App
-		.on('ready',Create)
+	App.on('ready',Create)
 		.on('activate',function()
 		{
 			Created || Create()

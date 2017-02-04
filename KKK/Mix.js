@@ -4,11 +4,13 @@
 	var
 	ZED = require('@zed.cwt/zedquery'),
 
+	Config = require('../Config'),
 	Util = require('./Util'),
 	Bus = Util.Bus,
 	Key = require('./Key'),
 	KeySite = Key.Site,
 	KeyQueue = Key.Queue,
+	KeySetting = Key.Setting,
 	Event = require('./Event'),
 	EventQueue = Event.Queue,
 	EventDownload = Event.Download,
@@ -24,6 +26,8 @@
 	Cold = require('./Cold'),
 	Queue = require('./Queue'),
 	Download = require('./Download'),
+	Setting = require('./Setting'),
+	SignIn = require('./SignIn'),
 
 	$ = ZED.jQuery,
 	FnClick = $.fn.click,
@@ -606,7 +610,7 @@
 			MakeDetailSetupSingle(Lang.UpDate,ZED.DateToString(DateToStringFormatFile,MakeDetailActive[KeyQueue.Date])),
 			MakeDetailSetupSingle(Lang.Parts,Part.length),
 			MakeDetailSetupSingle(Lang.Files,MakeDetailActive[KeyQueue.File]),
-			MakeDetailSetupSingle(Lang.Directory,MakeDetailInfoDir = ShowByText('TODO',DOM.span)),
+			MakeDetailSetupSingle(Lang.Directory,MakeDetailInfoDir = ShowByText(MakeDetailActive[KeyQueue.Dir] || L(Lang.NoDir),DOM.span)),
 			MakeDetailSetupSingle(Lang.TTS,MakeDetailInfoTTS = ShowByText(MakeDetailSize(),DOM.span)),
 			MakeDetailSetupSingle
 			(
@@ -724,7 +728,7 @@
 
 		return ZED.Replace
 		(
-			'html,body{margin:0;padding:0;background:#F7F7F7;color:#6C6C6C;font-size:14px;overflow:hidden}' +
+			'html,body{margin:0;padding:0;background:#F7F7F7;color:#6C6C6C;overflow:hidden}' +
 			'input,textarea{background:transparent;color:#6C6C6C;outline:0}' +
 
 			//Rainbow
@@ -1683,7 +1687,7 @@
 		},
 		Show : MakeSelectableListShow,
 		BeforeHide : MakeSelectableListHide,
-		Content : function(M,X)
+		Content : function(M)
 		{
 			return MakeScroll()
 		}
@@ -1693,17 +1697,80 @@
 		{
 			return ZED.Replace
 			(
-				'',
+				'#/R/{padding:/p/px}' +
+				'#/R/ ./I/{width:100%}',
 				'/',
 				{
-					R : ID
+					I : DOM.Input,
+
+					R : ID,
+
+					p : YPadding
 				}
 			)
 		},
 		Show : MakeSelectableListShow,
 		BeforeHide : MakeSelectableListHide,
-		Content : function(M,X)
+		Content : function(M)
 		{
+			var
+			Data,
+
+			KeyFont = ZED.KeyGen(),
+
+			RefreshFont = function()
+			{
+				ZED.CSS(KeyFont,function()
+				{
+					return ZED.Replace
+					(
+						'html,./I/{font-family:"/F/";font-size:/S/;font-weight:/W/}',
+						'/',
+						{
+							I : DOM.Input,
+
+							F : Data[KeySetting.Font],
+							S : /\D/.test(Data[KeySetting.Size]) ?
+								Data[KeySetting.Size] :
+								Data[KeySetting.Size] + 'px',
+							W : Data[KeySetting.Weight]
+						}
+					)
+				})
+			};
+
+			Data = ZED.Merge(Setting.Data(),ZED.ReduceToObject
+			(
+				KeySetting.Dir,Config.Root,
+				KeySetting.Name,'|Author|/|YYYY|/|Author|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?',
+				KeySetting.Max,5,
+				KeySetting.Font,'Microsoft Yahei',
+				KeySetting.Size,14,
+				KeySetting.Weight,'normal'
+			))
+			Queue.Max(Setting.Data(KeySetting.Max))
+			RefreshFont()
+
+			ZED.Preference(
+			{
+				Parent : M,
+				Data : Data,
+				Set :
+				[
+					[L(Lang.Directory),[{T : 'I'}],KeySetting.Dir],
+					[L(Lang.FName),[{T : 'I'}],KeySetting.Name],
+					[L(Lang.MaxDown),ZED.range(1,11),KeySetting.Max,function()
+					{
+						Queue.Max(Data[KeySetting.Max])
+						Queue.Dispatch()
+					}],
+					[L(Lang.Font),[{T : 'I'}],KeySetting.Font,RefreshFont],
+					[L(Lang.Size),[{T : 'I'}],KeySetting.Size,RefreshFont],
+					[L(Lang.Weight),['normal','lighter','bold','bolder',{T : 'I'}],KeySetting.Weight,RefreshFont],
+				],
+				Change : function(){Setting.Save(Data)}
+			})
+
 			return MakeScroll()
 		}
 	})
@@ -1730,6 +1797,10 @@
 		{
 			MakeDetailActive === Q && MakeDetailURL[F].text(MakeSizePercentage(S,0))
 		})
+		.on(EventDownload.Dir,MakeDetailMake(function()
+		{
+			MakeDetailInfoDir.text(MakeDetailActive[KeyQueue.Dir])
+		}))
 		.on(EventDownload.SpeedTotal,function()
 		{
 			MakeDetailActive && MakeDetailActive[KeyQueue.Running] && MakeDetailRefresh()
@@ -1773,5 +1844,6 @@ ZED.onError=function(E){console.error('CATCHED',E)}
 	$(function()
 	{
 		Rainbow.appendTo('body')
+		Queue.Dispatch()
 	})
 }()
