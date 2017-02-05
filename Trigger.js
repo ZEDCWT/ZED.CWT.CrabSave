@@ -1,3 +1,4 @@
+'use strict'
 var
 ZED = require('@zed.cwt/zedquery'),
 splitSpace = ZED.split(' '),
@@ -47,16 +48,22 @@ Created,
 Create = function()
 {
 	var
-	Window = new Electron.BrowserWindow(ZED.pick(splitSpace('width height x y'),Position.Data()));
+	Data = Position.Data(),
+	Window = new Electron.BrowserWindow(
+	{
+		width : Data.width,
+		height : Data.height,
+		x : Data.x,
+		y : Data.y
+	});
 
-	Position.Data('Max') && Window.maximize()
+	Data.Max && Window.maximize()
 	Created = true
 	ONS(Window.webContents,'new-window will-navigate',ZED.invokeProp('preventDefault'))
-	ONS(Window,'resize move maximize minimize',function(M,R)
+	ONS(Window,'resize move maximize minimize',function()
 	{
-		R = {Max : M = Window.isMaximized()}
-		M || ZED.Merge(R,Window.getBounds())
-		Position.Save(R)
+		(Data.Max = Window.isMaximized()) || ZED.Merge(true,Data,Window.getBounds())
+		Position.Save()
 	})
 	Window.on('closed',function()
 	{

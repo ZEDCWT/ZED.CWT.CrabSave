@@ -7,15 +7,19 @@ module.exports =
 {
 	id : 'id',
 	cls : 'class',
+	type : 'type',
+	password : 'password',
 	src : 'src',
 	title : 'title',
 	width : 'width',
 	placeholder : 'placeholder',
+	rows : 'rows',
 
 	br : '<br>',
 	div : '<div>',
 	span : '<span>',
 	input : '<input>',
+	textarea : '<textarea>',
 	img : '<img>',
 	fieldset : '<fieldset>',
 	legend : '<legend>',
@@ -32,6 +36,7 @@ module.exports =
 	nbsp : '\xa0',
 
 	Input : Prefix + 'Input',
+	Button : Prefix + 'Button',
 	NoSelect : Prefix + 'NoSelect',
 	Tab : Prefix + 'TabTab',
 	TabOn : Prefix + 'TabOn',

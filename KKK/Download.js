@@ -14,7 +14,7 @@ KeySetting = Key.Setting,
 Event = require('./Event'),
 EventQueue = Event.Queue,
 EventDownload = Event.Download,
-SiteMap = require('./Site').Map,
+Site = require('./Site'),
 Setting = require('./Setting'),
 
 Path = require('path'),
@@ -24,7 +24,7 @@ Active = {},
 Download = function(Q)
 {
 	var
-	Target = SiteMap[Q[KeyQueue.Name]],
+	Target = Site.Map[Q[KeyQueue.Name]],
 	Part = Q[KeyQueue.Part],
 	PL = Part.length,
 	URL,UL,
@@ -149,7 +149,7 @@ module.exports =
 	Size : function(Q)
 	{
 		var
-		Pack = SiteMap[Q[KeyQueue.Name]][KeySite.Pack],
+		Pack = Site.Map[Q[KeyQueue.Name]][KeySite.Pack],
 		URL = ZED.flatten(ZED.pluck(KeyQueue.URL,Q[KeyQueue.Part])),
 		Size = 0,
 		Sizes = Array(URL.length);

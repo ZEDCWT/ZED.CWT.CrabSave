@@ -34,6 +34,7 @@ module.exports =
 
 
 	//Browser
+	URL : Lang('URL'),
 	ProcURL : Lang('Processing `/0/`'),
 	PageInfo : Lang('/0/,~,/1/,. ,/2/,//,/3/, item,/4/,. ,/5/,//,/6/, page,/7/,.'),
 	Video : Lang('Video'),
@@ -83,6 +84,21 @@ module.exports =
 
 	//History
 	HiInfo : Lang('/0/, /1/ file/2/'),
+
+	//Sign in
+	ID : Lang('Sign in ID'),
+	Password : Lang('Password'),
+	VCode : Lang('Verify code'),
+	VCFail : Lang('Failed to load'),
+	Cookie : Lang('Cookie'),
+	Check : Lang('Check'),
+	Signing : Lang('Signing in...'),
+	Signed : Lang('Signed in'),
+	SIError : Lang('Error occured while signing in'),
+	Checking : Lang('Checking if signed in'),
+	CheckFail : Lang('Not signed in'),
+	Checked : Lang('Signed in as /0/'),
+	CheckError : Lang('Error occured while checking'),
 
 	//Setting
 	MaxDown : Lang('Maximum number of active downloads'),

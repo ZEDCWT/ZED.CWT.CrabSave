@@ -9,7 +9,9 @@ KeySite = Key.Site,
 KeyQueue = Key.Queue,
 Lang = require('./Lang'),
 L = Lang.L,
+Cookie = require('./Cookie'),
 
+Name = 'Bilibili',
 PageSize = 30,
 
 Appkey = '20bee1f7a18a425c',
@@ -43,18 +45,61 @@ URLVInfoURL = function(Q)
 		otype : 'json'
 	})
 },
+URLCaptcha = 'https://passport.bilibili.com/captcha',
+URLLoginKey = 'https://passport.bilibili.com/login?act=getkey',
+URLLogin = 'https://passport.bilibili.com/login/dologin',
+URLLoginCheck = 'http://space.bilibili.com/ajax/member/MyInfo',
 
 R = ZED.ReduceToObject
 (
-	KeySite.Name,'Bilibili',
+	KeySite.Name,Name,
 	KeySite.Judge,/\.bilibili\.|^av\d+$/i,
-	KeySite.Login,function()
+	KeySite.VCode,function()
 	{
-
+		return Util.RequestFull(
+		{
+			url : URLCaptcha,
+			headers : Cookie.Head(Name),
+			encoding : Util.N
+		}).map(function(H)
+		{
+			Cookie.Save(Name,H[0])
+			return H[1]
+		})
+	},
+	KeySite.Login,function(ID,PW,Code)
+	{
+		return Util.RequestFull(Cookie.URL(Name,URLLoginKey)).flatMap(function(H,Q)
+		{
+			Cookie.Save(Name,H[0])
+			Q = ZED.JTO(H[1])
+			return Util.RequestFull(
+			{
+				url : URLLogin,
+				method : 'post',
+				headers : Cookie.Head(Name),
+				form :
+				{
+					act : 'login',
+					keeptime : 3E8,
+					userid : ID,
+					pwd : ZED.Code.RSAEncode(Q.key || '',Q.hash + PW),
+					vdcode : Code
+				},
+				followRedirect : Util.F
+			})
+		}).map(function(H)
+		{
+			Cookie.Save(Name,H[0])
+			return H[1] ? Util.MF(/<div[^>]+>\s*([^<]+)/,H[1]).trim() : L(Lang.Signed)
+		})
 	},
 	KeySite.Check,function()
 	{
-
+		return Util.RequestBody(Cookie.URL(Name,URLLoginCheck)).map(function(Q)
+		{
+			return ZED.path(['data','uname'],ZED.JTO(Q))
+		})
 	},
 	KeySite.Map,[ZED.ReduceToObject
 	(
@@ -156,7 +201,9 @@ R = ZED.ReduceToObject
 		return Util.RequestBody(URLVInfo(ID))
 			.flatMap(function(Q)
 			{
-				var Part = [];
+				var
+				Part = [],
+				Sizes = [];
 
 				Q = ZED.JTO(Q)
 				Q.list || ZED.throw(Util.ReplaceLang
@@ -179,10 +226,12 @@ R = ZED.ReduceToObject
 								B = ZED.JTO(B)
 								D = B.durl
 								D || ZED.throw(L(Lang.Bad))
+								ZED.isArray(D) || (D = [D])
+								Sizes.push(ZED.pluck('size',D))
 								Part.push(ZED.ReduceToObject
 								(
 									KeyQueue.Title,V.part,
-									KeyQueue.URL,D.url ? [D.url] : ZED.pluck('url',D),
+									KeyQueue.URL,ZED.pluck('url',D),
 									KeyQueue.Suffix,'.' + B.format
 								))
 							})
@@ -190,6 +239,7 @@ R = ZED.ReduceToObject
 					.tap(ZED.noop,ZED.noop,function()
 					{
 						R[KeyQueue.Part] = Part
+						Util.SetSize(R,ZED.flatten(Sizes))
 					})
 			})
 	},

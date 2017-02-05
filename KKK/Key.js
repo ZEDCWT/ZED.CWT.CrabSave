@@ -11,6 +11,7 @@ module.exports =
 		Name : KeyKey(),
 		Judge : KeyKey(),
 		//Login
+		VCode : KeyKey(),
 		Login : KeyKey(),
 		Check : KeyKey(),
 		Require : KeyKey(),
@@ -49,7 +50,6 @@ module.exports =
 		Title : KeyKey(),
 
 		Active : KeyKey(),
-		Running : KeyKey(),
 
 		Author : KeyKey(),
 		Date : KeyKey(),

@@ -27,8 +27,8 @@
 	Cold = require('./Cold'),
 	Queue = require('./Queue'),
 	Download = require('./Download'),
+	Cookie = require('./Cookie'),
 	Setting = require('./Setting'),
-	SignIn = require('./SignIn'),
 
 	$ = ZED.jQuery,
 	FnClick = $.fn.click,
@@ -45,6 +45,14 @@
 			ReKeyGenStore.push(Q = ZED.KeyGen()),
 			Q
 		)
+	},
+	MakeEnter = function(Q,S)
+	{
+		ZED.ShortCut(
+		{
+			Target : Q,
+			IgnoreInput : Util.F
+		}).on('enter',S)
 	},
 	MakeShape = function(S,Q,C)
 	{
@@ -71,6 +79,10 @@
 	ShowByTextS = function(Q,S)
 	{
 		S.append($(DOM.div).text(Q))
+	},
+	ShowByInput = function(Q,S)
+	{
+		return ShowByClassX(ClassUnderlineInput,S || DOM.input).attr(DOM.placeholder,L(Q))
 	},
 	MakeAt = function(Q,S)
 	{
@@ -110,6 +122,7 @@
 	//		Stage
 	YStageHeight,
 	YStageWidth,
+	YStageWidthWithoutScroll,
 	YListSVG = 20,
 	YCardWidthMin = 160,
 	YCardWidthMax = 200,
@@ -127,6 +140,8 @@
 	YHistoryControlPadding = YHotControlPadding,
 	YHistoryControlMoreWidth = YHotControlMoreWidth,
 	YHistoryControlWidth = YHotControlWidth,
+	//			Sign in
+	YSignInSiteWidth = 100,
 
 	//ID & Class
 	//	Global
@@ -139,7 +154,6 @@
 	IDNavi = ZED.KeyGen(),
 	ClassCount = ZED.KeyGen(),
 	IDStage = ZED.KeyGen(),
-	ClassStageScroll = ZED.KeyGen(),
 	ClassListSelected = ZED.KeyGen(),
 	IDDetail = ZED.KeyGen(),
 	IDDetailHead = ZED.KeyGen(),
@@ -158,6 +172,8 @@
 	ClassShadowBar = ZED.KeyGen(),
 	ClassError = ZED.KeyGen(),
 	//	Util
+	ClassScrollable = ZED.KeyGen(),
+	ClassUnderlineInput = ZED.KeyGen(),
 	ClassShape = ZED.KeyGen(),
 	ClassSingleLine = ZED.KeyGen(),
 	//	Browser
@@ -187,6 +203,11 @@
 	ClassHistoryDate = ZED.KeyGen(),
 	ClassHistoryControlRemove = ClassHotControlRemove,
 	ClassHistoryControlMore = ClassHotControlMore,
+	//	Sign index
+	IDSignInSite = ZED.KeyGen(),
+	ClassSignInSiteActive = ZED.KeyGen(),
+	IDSignInInput = ZED.KeyGen(),
+	IDSignInInputVCode = ZED.KeyGen(),
 
 	//Element
 	Rainbow = ShowByRock(IDRainbow),
@@ -194,7 +215,7 @@
 	RToolBarIcon = ShowByRock(IDToolBarIcon),
 	RToolBarItem = ShowByRock(IDToolBarItem),
 	RNavi = ShowByRock(IDNavi),
-	RStage = ShowByRock(IDStage).attr(DOM.cls,ClassStageScroll),
+	RStage = ShowByRock(IDStage).attr(DOM.cls,ClassScrollable),
 	RDetail = ShowByRock(IDDetail),
 	RDetailHead = ShowByRock(IDDetailHead),
 	RDetailInfo = ShowByRock(IDDetailInfo),
@@ -331,11 +352,20 @@
 	RColdCount = MakeCount(Lang.Cold),
 	RHotCount = MakeCount(Lang.Hot),
 
-	MakeScroll = function(S)
+	MakeScroll = function(W,H,S)
 	{
+		S = 0
 		return {
-			Show : function(){RStage.scrollTop(S)},
-			Hide : function(){S = RStage.scrollTop()}
+			Show : function()
+			{
+				RStage.scrollTop(S)
+				W && W()
+			},
+			Hide : function()
+			{
+				S = RStage.scrollTop()
+				H && H()
+			}
 		}
 	},
 	MakeSelectableList = function
@@ -527,7 +557,7 @@
 			},
 			Hide : function()
 			{
-				RStage.attr(DOM.cls,ClassStageScroll)
+				RStage.attr(DOM.cls,ClassScrollable)
 				LastScroll = List.scroll()
 			},
 			Redraw : function()
@@ -717,10 +747,10 @@
 		}
 	});
 
-	ZED.CSS(ZED.KeyGen(),function(W,H,S)
+	ZED.CSS(ZED.KeyGen(),function(W,H)
 	{
-		S = ZED.max(YNaviWidth,W - YNaviWidth)
-		YStageWidth = S - YScrollWidth
+		YStageWidth = ZED.max(YNaviWidth,W - YNaviWidth)
+		YStageWidthWithoutScroll = YStageWidth - YScrollWidth
 		YStageHeight = ZED.max(YToolBarHeight + YStatusBarHeight,H - YToolBarHeight - YStatusBarHeight)
 
 		return ZED.Replace
@@ -835,8 +865,13 @@
 			'./E/{color:red;font-size:1.1em;font-weight:bold}' +
 
 			//Util
+			//	Input
+			'./UI/{width:100%;border:0;border-bottom:solid 2px #DCDCDC}' +
+			'./UI/:hover{border-bottom-color:#CCCEDB}' +
+			'./UI/:focus{border-bottom-color:#3399FF}' +
+			//	Shape
 			'./HP/{display:inline-block;line-height:0}' +
-			//Single line
+			//	Single line
 			'./SL/{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}',
 			'/',
 			{
@@ -858,14 +893,14 @@
 				v : ShapeConfigColorHover,
 
 				NG : IDNaviStage,
-				ng : YNaviWidth + S,
+				ng : YNaviWidth + YStageWidth,
 				N : IDNavi,
 				n : YNaviWidth,
 				V : ClassCount,
 				G : IDStage,
-				g : S,
+				g : YStageWidth,
 				h : YStageHeight,
-				Y : ClassStageScroll,
+				Y : ClassScrollable,
 				F : ClassListSelected,
 				DT : IDDetail,
 				DH : IDDetailHead,
@@ -895,6 +930,7 @@
 
 				E : ClassError,
 
+				UI : ClassUnderlineInput,
 				HP : ClassShape,
 				SL : ClassSingleLine,
 
@@ -908,7 +944,7 @@
 		Tab : L(Lang.Browser),
 		CSS : function(ID,W)
 		{
-			W = ZED.FlexibleFit(YStageWidth - YPadding - YPadding,YCardWidthMin,YCardWidthMax,YPadding)
+			W = ZED.FlexibleFit(YStageWidthWithoutScroll - YPadding - YPadding,YCardWidthMin,YCardWidthMax,YPadding)
 			return ZED.Replace
 			(
 				'#/R/{text-align:center}' +
@@ -917,9 +953,7 @@
 				//URL input
 				'#/I/{position:relative;display:inline-block;padding:0 10px;width:100%}' +
 				//	input
-				'#/I/ input{padding:12px 60px 4px 20px;width:100%;font-size:1.6rem;border:0;border-bottom:solid 2px #DCDCDC}' +
-				'#/I/ input:hover{border-bottom-color:#CCCEDB}' +
-				'#/I/ input:focus{border-bottom-color:#3399FF}' +
+				'#/I/ input{padding:12px 60px 4px 20px;font-size:1.2rem}' +
 				//	Enter button
 				'#/I/>div' +
 				'{' +
@@ -985,7 +1019,7 @@
 		{
 			var
 			RInput = ShowByRock(IDBrowserInput),
-			RURL = $(DOM.input).attr(DOM.placeholder,'URL').val('bili space159'),//DEBUG
+			RURL = ShowByInput(Lang.URL).val('bili space 287301'),//DEBUG
 			RGo = ShowByClass(DOM.NoSelect).text('\u2192'),
 			RInfo = ShowByRock(IDBrowserInfo),
 			RList = ShowByRock(IDBrowserList),
@@ -1139,11 +1173,7 @@
 			},
 			T;
 
-			ZED.ShortCut(
-			{
-				Target : RURL,
-				IgnoreInput : Util.F
-			}).on('enter',Go)
+			MakeEnter(RURL,Go)
 			RGo.on(DOM.click,Go)
 			M.append
 			(
@@ -1275,7 +1305,7 @@
 		Tab : RHotCount(),
 		CSS : function(ID,W,T)
 		{
-			W = YStageWidth - YHotControlWidth
+			W = YStageWidthWithoutScroll - YHotControlWidth
 			T = YHotTitlePercentage * W
 			return ZED.Replace
 			(
@@ -1373,7 +1403,7 @@
 				)
 				A[ActiveKeySpeed].text
 				(
-					Q[KeyQueue.Running] ?
+					Queue.IsRunning(Q) ?
 						(0 <= S || (Download.Active[ID] && (S = Download.Active[ID].Speed()))) ?
 							ZED.FormatSize(S) + '/s' :
 							L(Lang.Processing) :
@@ -1500,7 +1530,7 @@
 				},
 				function(Q)
 				{
-					Q[KeyQueue.Active] || !ZED.has(KeyQueue.Running,Q) ? --CountActive : --CountPaused
+					Q[KeyQueue.Active] || !Queue.IsRunning(Q) ? --CountActive : --CountPaused
 				},
 				function()
 				{
@@ -1568,7 +1598,7 @@
 		Tab : L(Lang.History),
 		CSS : function(ID,W,T)
 		{
-			W = YStageWidth - YHistoryControlWidth
+			W = YStageWidthWithoutScroll - YHistoryControlWidth
 			T = YHistoryTitlePercentage * W
 			return ZED.Replace
 			(
@@ -1677,22 +1707,154 @@
 		}
 	},{
 		Tab : L(Lang.SignIn),
-		CSS : function(ID)
+		CSS : function()
 		{
 			return ZED.Replace
 			(
-				'',
+				'#/S/,#/I/{display:inline-block;vertical-align:top}' +
+				//Site
+				'#/S/{width:/s/px}' +
+				'#/S/>div{cursor:pointer}' +
+				//Input
+				'#/I/{padding:/p/px;width:/i/px}' +
+				'#/I/ ./U/{margin:/p/px 0;padding:4px 10px;font-size:1.2rem}' +
+				//	Button
+				'#/I/ ./B/{text-align:center}' +
+				//	VCode
+				'#/V/>*{vertical-align:bottom}' +
+				'#/V/ ./U/{width:50%}' +
+				'#/V/ img{padding:/p/px;max-width:50%;max-height:100%;cursor:pointer}' +
+				//	Cookie
+				'#/I/ textarea{max-width:100%;font-size:.9rem!important}',
 				'/',
 				{
-					R : ID
+					B : DOM.Button,
+
+					U : ClassUnderlineInput,
+
+					S : IDSignInSite,
+					s : YSignInSiteWidth,
+					A : ClassSignInSiteActive,
+					I : IDSignInInput,
+					i : YStageWidthWithoutScroll - YSignInSiteWidth,
+					V : IDSignInInputVCode,
+
+					p : YPadding
 				}
 			)
 		},
 		Show : MakeSelectableListShow,
 		BeforeHide : MakeSelectableListHide,
-		Content : function(M)
+		Content : function(M,X)
 		{
-			return MakeScroll()
+			var
+			RSite = ShowByRock(IDSignInSite),
+			RInput = ShowByRock(IDSignInInput),
+			RID = ShowByInput(Lang.ID),
+			RPassword = ShowByInput(Lang.Password).attr(DOM.type,DOM.password),
+			RVCode = ShowByInput(Lang.VCode),
+			RVCodeImg = $(DOM.img),
+			RExe = ShowByClass(DOM.Button).text(L(Lang.SignIn)),
+			RCookie = ShowByInput(Lang.Cookie,DOM.textarea).attr(DOM.rows,6),
+			RCheck = ShowByClass(DOM.Button).text(L(Lang.Check)),
+
+			Target,
+			Active,
+			VCodeTarget,
+			VCodeEnd,
+
+			RefreshCookie = function()
+			{
+				RCookie.val(Cookie.Read(Target[KeySite.Name]))
+			},
+			RefreshVCode = function(J)
+			{
+				if (J || VCodeTarget !== Target)
+				{
+					VCodeTarget = Target
+					VCodeEnd && VCodeEnd.end()
+					VCodeEnd = Target[KeySite.VCode]().start(function(Q)
+					{
+						Q = ZED.Code.Base64Encode(ZED.Code.UTF8ToBinB(ZED.map(ZED.chr,Q).join('')))
+						RVCodeImg.attr(DOM.src,'data:image/jpg;base64,' + Q)
+					},function()
+					{
+						RVCodeImg.removeAttr(DOM.src).attr(DOM.title,L(Lang.VCFail))
+					})
+				}
+			},
+
+			SignInEnd,
+			SignIn = function()
+			{
+				MakeStatus(X,L(Lang.Signing),ClassStatusLoading)
+				SignInEnd && SignInEnd.end()
+				SignInEnd = Target[KeySite.Login](RID.val(),RPassword.val(),RVCode.val()).start(function(Q)
+				{
+					MakeStatus(X,Q)
+				},function()
+				{
+					MakeStatus(X,L(Lang.SIError),ClassStatusError)
+				})
+			},
+
+			CheckEnd,
+			Check = function()
+			{
+				Cookie.Set(Target[KeySite.Name],RCookie.val())
+				MakeStatus(X,L(Lang.Checking),ClassStatusLoading)
+				CheckEnd && CheckEnd.end()
+				CheckEnd = Target[KeySite.Check]().start(function(Q)
+				{
+					MakeStatus(X,Q ? ReplaceLang(Lang.Checked,Q) : L(Lang.CheckFail))
+				},function()
+				{
+					MakeStatus(X,L(Lang.CheckError),ClassStatusError)
+				})
+			};
+
+			ZED.each(function(V,R)
+			{
+				R = $(DOM.div).text(V[KeySite.Name]).on(DOM.click,function()
+				{
+					Active && Active.removeAttr(DOM.cls)
+					Active = R
+					R.attr(DOM.cls,ClassSignInSiteActive)
+					Target = V
+					RefreshCookie()
+					RefreshVCode()
+					RVCode.val('')
+				})
+				Target ||
+				(
+					Target = V,
+					Active = R,
+					R.attr(DOM.cls,ClassSignInSiteActive),
+					RefreshCookie()
+				)
+				RSite.append(R)
+			},SiteAll)
+			RVCodeImg.on(DOM.click,RefreshVCode)
+			ZED.each(ZED.flip(MakeEnter)(SignIn),[RID,RPassword,RVCode])
+			RExe.on(DOM.click,SignIn)
+			RCheck.on(DOM.click,Check)
+			M.append
+			(
+				RSite,
+				RInput.append
+				(
+					RID,
+					RPassword,
+					ShowByRock(IDSignInInputVCode).append(RVCode,RVCodeImg),
+					RExe,
+					RCookie,
+					RCheck
+				)
+			)
+
+			Bus.on(Event.Cookie.Change,RefreshCookie)
+
+			return MakeScroll(RefreshVCode)
 		}
 	},{
 		Tab : L(Lang.Setting),
@@ -1727,11 +1889,9 @@
 				{
 					return ZED.Replace
 					(
-						'html,./I/{font-family:"/F/";font-size:/S/;font-weight:/W/}',
+						'html,input,textarea{font-family:"/F/";font-size:/S/;font-weight:/W/}',
 						'/',
 						{
-							I : DOM.Input,
-
 							F : Data[KeySetting.Font],
 							S : /\D/.test(Data[KeySetting.Size]) ?
 								Data[KeySetting.Size] :
@@ -1742,15 +1902,20 @@
 				})
 			};
 
-			Data = ZED.Merge(Setting.Data(),ZED.ReduceToObject
+			Data = ZED.Merge
 			(
-				KeySetting.Dir,Config.Root,
-				KeySetting.Name,'|Author|/|YYYY|/|Author|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?',
-				KeySetting.Max,5,
-				KeySetting.Font,'Microsoft Yahei',
-				KeySetting.Size,14,
-				KeySetting.Weight,'normal'
-			))
+				ZED.Reduce(Setting.Data(),function(D,F,V){V && (D[F] = V)},{}),
+				ZED.ReduceToObject
+				(
+					KeySetting.Dir,Config.Root,
+					KeySetting.Name,'|Author|/|YYYY|/|Author|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?',
+					KeySetting.Max,5,
+					KeySetting.Font,'Microsoft Yahei',
+					KeySetting.Size,14,
+					KeySetting.Weight,'normal'
+				)
+			)
+			Setting.Replace(Data)
 			Queue.Max(Setting.Data(KeySetting.Max))
 			RefreshFont()
 
@@ -1806,7 +1971,7 @@
 		}))
 		.on(EventDownload.SpeedTotal,function()
 		{
-			MakeDetailActive && MakeDetailActive[KeyQueue.Running] && MakeDetailRefresh()
+			MakeDetailActive && Queue.IsRunning(MakeDetailActive) && MakeDetailRefresh()
 		})
 	//StatusBar Icon
 	ZED.each(function(V){RStatusIcon.append(ShowByRock(IDStatusIcon + ZED.chr(65 + V)))},ZED.range(0,5))

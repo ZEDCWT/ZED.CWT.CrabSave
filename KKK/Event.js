@@ -33,5 +33,9 @@ module.exports =
 		Finish : EventKey(),
 		Speed : EventKey(),
 		SpeedTotal : EventKey()
+	},
+	Cookie :
+	{
+		Change : EventKey()
 	}
 }
