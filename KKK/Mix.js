@@ -166,6 +166,7 @@
 	IDStatus = ZED.KeyGen(),
 	IDStatusIcon = ZED.KeyGen(),
 	ClassStatusIconAnimation = ZED.KeyGen(),
+	ClassStatusInfo = ZED.KeyGen(),
 	ClassStatusLoading = ZED.KeyGen(),
 	ClassStatusError = ZED.KeyGen(),
 	IDSpeed = ZED.KeyGen(),
@@ -724,7 +725,7 @@
 	MakeStatus = function(X,Q,S)
 	{
 		MakeStatusText[X] = Q
-		MakeStatusClass[X] = S
+		MakeStatusClass[X] = Q && (S || ClassStatusInfo)
 		X === UTab.Index() && MakeStatusChange()
 	},
 
@@ -839,13 +840,18 @@
 			'#/C/{position:relative;width:20px;height:20px}' +
 			'#/C/[class]{margin-right:8px}' +
 			'#/C/>div{position:absolute}' +
-			//	Loading
+			//		Animation keyframe
 			'/e/' +
+			//		Info
+			'./CI/>div{left:8px;width:4px;background:#2672EC}' +
+			'./CI/ #/C/A{top:0;height:12px}' +
+			'./CI/ #/C/B{top:16px;height:4px}' +
+			//		Loading
 			'./J/>div{border:solid 2px transparent;border-radius:50%}' +
 			'./J/ #/C/A,./J/ #/C/B{border-color:transparent blue blue}' +
 			'./J/ #/C/A{left:0;top:0;width:100%;height:100%;animation:/j/ 2s linear infinite}' +
 			'./J/ #/C/B{left:25%;top:25%;width:50%;height:50%;animation:/j/ 1s infinite}' +
-			//	Error
+			//		Error
 			'./K/>div{background:red;transform:rotate(45deg)}' +
 			'./K/./Q/>div{animation:/k/ .7s}' +
 			'./K/ #/C/A{left:0;top:8px;width:100%;height:4px}' +
@@ -916,6 +922,7 @@
 				U : IDStatus,
 				C : IDStatusIcon,
 				Q : ClassStatusIconAnimation,
+				CI : ClassStatusInfo,
 				J : ClassStatusLoading,
 				j : ReKeyGen(),
 				K : ClassStatusError,
@@ -1714,7 +1721,10 @@
 				'#/S/,#/I/{display:inline-block;vertical-align:top}' +
 				//Site
 				'#/S/{width:/s/px}' +
-				'#/S/>div{cursor:pointer}' +
+				'#/S/>div{margin:/p/px 0;padding:/p/px;cursor:pointer}' +
+				'#/S/>div:hover,./A/{color:#2672EC}' +
+				'#/S/>div:hover{opacity:.5}' +
+				'#/S/>div./A/{opacity:1}' +
 				//Input
 				'#/I/{padding:/p/px;width:/i/px}' +
 				'#/I/ ./U/{margin:/p/px 0;padding:4px 10px;font-size:1.2rem}' +
@@ -1750,22 +1760,41 @@
 			var
 			RSite = ShowByRock(IDSignInSite),
 			RInput = ShowByRock(IDSignInInput),
-			RID = ShowByInput(Lang.ID),
-			RPassword = ShowByInput(Lang.Password).attr(DOM.type,DOM.password),
-			RVCode = ShowByInput(Lang.VCode),
+			RInfo = $(DOM.div),
+			RVCode = ShowByRock(IDSignInInputVCode),
+			RVCodeInput = ShowByInput(Lang.VCode),
 			RVCodeImg = $(DOM.img),
 			RExe = ShowByClass(DOM.Button).text(L(Lang.SignIn)),
 			RCookie = ShowByInput(Lang.Cookie,DOM.textarea).attr(DOM.rows,6),
 			RCheck = ShowByClass(DOM.Button).text(L(Lang.Check)),
+
+			DefaultRequire = [Lang.ID,[Lang.Password]],
 
 			Target,
 			Active,
 			VCodeTarget,
 			VCodeEnd,
 
-			RefreshCookie = function()
+			SwitchOn,
+			Switch = function(R,V)
 			{
-				RCookie.val(Cookie.Read(Target[KeySite.Name]))
+				Active && Active.removeAttr(DOM.cls)
+				Active = R
+				R.attr(DOM.cls,ClassSignInSiteActive)
+				Target = V
+				RefreshCookie()
+				RInfo.empty()
+				SwitchOn = []
+				ZED.each(function(V,P)
+				{
+					ZED.isArray(V) && (V = V[0],P = Util.T)
+					V = ShowByInput(V)
+					P && V.attr(DOM.type,DOM.password)
+					MakeEnter(V,SignIn)
+					SwitchOn.push(V)
+					RInfo.append(V)
+				},Target[KeySite.Require] || DefaultRequire)
+				RVCodeInput.val('')
 			},
 			RefreshVCode = function(J)
 			{
@@ -1773,15 +1802,32 @@
 				{
 					VCodeTarget = Target
 					VCodeEnd && VCodeEnd.end()
-					VCodeEnd = Target[KeySite.VCode]().start(function(Q)
+					RVCodeImg.removeAttr(DOM.src).attr(DOM.title,L(Lang.Loading))
+					if (Target[KeySite.VCode])
 					{
-						Q = ZED.Code.Base64Encode(ZED.Code.UTF8ToBinB(ZED.map(ZED.chr,Q).join('')))
-						RVCodeImg.attr(DOM.src,'data:image/jpg;base64,' + Q)
-					},function()
+						RVCode.show()
+						VCodeEnd = Target[KeySite.VCode]().start(function(Q)
+						{
+							if (ZED.isArrayLike(Q))
+							{
+								Q = ZED.Code.Base64Encode(ZED.Code.UTF8ToBinB(ZED.map(ZED.chr,Q).join('')))
+								RVCodeImg.attr(DOM.src,'data:image/jpg;base64,' + Q)
+							}
+						},function()
+						{
+							RVCodeImg.attr(DOM.title,L(Lang.VCFail))
+						})
+					}
+					else
 					{
-						RVCodeImg.removeAttr(DOM.src).attr(DOM.title,L(Lang.VCFail))
-					})
+						VCodeEnd = Util.F
+						RVCode.hide()
+					}
 				}
+			},
+			RefreshCookie = function()
+			{
+				RCookie.val(Cookie.Read(Target[KeySite.Name]))
 			},
 
 			SignInEnd,
@@ -1789,7 +1835,11 @@
 			{
 				MakeStatus(X,L(Lang.Signing),ClassStatusLoading)
 				SignInEnd && SignInEnd.end()
-				SignInEnd = Target[KeySite.Login](RID.val(),RPassword.val(),RVCode.val()).start(function(Q)
+				SignInEnd = Target[KeySite.Login].apply
+				(
+					Target,
+					ZED.map(ZED.invokeProp('val'),SwitchOn).concat(RVCodeInput.val())
+				).start(function(Q)
 				{
 					MakeStatus(X,Q)
 				},function()
@@ -1817,25 +1867,14 @@
 			{
 				R = $(DOM.div).text(V[KeySite.Name]).on(DOM.click,function()
 				{
-					Active && Active.removeAttr(DOM.cls)
-					Active = R
-					R.attr(DOM.cls,ClassSignInSiteActive)
-					Target = V
-					RefreshCookie()
+					Switch(R,V)
 					RefreshVCode()
-					RVCode.val('')
 				})
-				Target ||
-				(
-					Target = V,
-					Active = R,
-					R.attr(DOM.cls,ClassSignInSiteActive),
-					RefreshCookie()
-				)
+				Target || Switch(R,V)
 				RSite.append(R)
 			},SiteAll)
 			RVCodeImg.on(DOM.click,RefreshVCode)
-			ZED.each(ZED.flip(MakeEnter)(SignIn),[RID,RPassword,RVCode])
+			MakeEnter(RVCodeInput,SignIn)
 			RExe.on(DOM.click,SignIn)
 			RCheck.on(DOM.click,Check)
 			M.append
@@ -1843,9 +1882,8 @@
 				RSite,
 				RInput.append
 				(
-					RID,
-					RPassword,
-					ShowByRock(IDSignInInputVCode).append(RVCode,RVCodeImg),
+					RInfo,
+					RVCode.append(RVCodeInput,RVCodeImg),
 					RExe,
 					RCookie,
 					RCheck
@@ -1879,44 +1917,49 @@
 		Content : function(M)
 		{
 			var
+			Default = ZED.ReduceToObject
+			(
+				KeySetting.Dir,Config.Root,
+				KeySetting.Name,'|Author|/|YYYY|/|Author|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?',
+				KeySetting.Max,5,
+				KeySetting.Font,'Microsoft Yahei',
+				KeySetting.Size,'14',
+				KeySetting.Weight,'normal'
+			),
 			Data,
 
 			KeyFont = ZED.KeyGen(),
 
+			MakeInput = function(Q)
+			{
+				return {T : 'I',E : {placeholder : Default[Q]}}
+			},
+
 			RefreshFont = function()
 			{
-				ZED.CSS(KeyFont,function()
+				ZED.CSS(KeyFont,function(S)
 				{
+					S = Setting.Data(KeySetting.Size)
 					return ZED.Replace
 					(
 						'html,input,textarea{font-family:"/F/";font-size:/S/;font-weight:/W/}',
 						'/',
 						{
-							F : Data[KeySetting.Font],
-							S : /\D/.test(Data[KeySetting.Size]) ?
-								Data[KeySetting.Size] :
-								Data[KeySetting.Size] + 'px',
-							W : Data[KeySetting.Weight]
+							F : Setting.Data(KeySetting.Font),
+							S : /\D/.test(S) ? S : S + 'px',
+							W : Setting.Data(KeySetting.Weight)
 						}
 					)
 				})
-			};
+			},
 
-			Data = ZED.Merge
-			(
-				ZED.Reduce(Setting.Data(),function(D,F,V){V && (D[F] = V)},{}),
-				ZED.ReduceToObject
-				(
-					KeySetting.Dir,Config.Root,
-					KeySetting.Name,'|Author|/|YYYY|/|Author|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?',
-					KeySetting.Max,5,
-					KeySetting.Font,'Microsoft Yahei',
-					KeySetting.Size,14,
-					KeySetting.Weight,'normal'
-				)
-			)
-			Setting.Replace(Data)
-			Queue.Max(Setting.Data(KeySetting.Max))
+			T;
+
+			Data = Setting.Data()
+			Setting.Default(Default)
+			T = Number(Data[KeySetting.Max])
+			;(0 < T && T < 11) || (T = Default[KeySetting.Max])
+			Queue.Max(Data[KeySetting.Max] = T)
 			RefreshFont()
 
 			ZED.Preference(
@@ -1925,16 +1968,21 @@
 				Data : Data,
 				Set :
 				[
-					[L(Lang.Directory),[{T : 'I'}],KeySetting.Dir],
-					[L(Lang.FName),[{T : 'I'}],KeySetting.Name],
+					[L(Lang.Directory),[MakeInput(KeySetting.Dir)],KeySetting.Dir],
+					[L(Lang.FName),[MakeInput(KeySetting.Name)],KeySetting.Name],
 					[L(Lang.MaxDown),ZED.range(1,11),KeySetting.Max,function()
 					{
 						Queue.Max(Data[KeySetting.Max])
 						Queue.Dispatch()
 					}],
-					[L(Lang.Font),[{T : 'I'}],KeySetting.Font,RefreshFont],
-					[L(Lang.Size),[{T : 'I'}],KeySetting.Size,RefreshFont],
-					[L(Lang.Weight),['normal','lighter','bold','bolder',{T : 'I'}],KeySetting.Weight,RefreshFont],
+					[L(Lang.Font),[MakeInput(KeySetting.Font)],KeySetting.Font,RefreshFont],
+					[L(Lang.Size),[MakeInput(KeySetting.Size)],KeySetting.Size,RefreshFont],
+					[
+						L(Lang.Weight),
+						['normal','lighter','bold','bolder',MakeInput(KeySetting.Weight)],
+						KeySetting.Weight,
+						RefreshFont
+					],
 				],
 				Change : function(){Setting.Save(Data)}
 			})

@@ -217,7 +217,7 @@ module.exports =
 	Offline : Offline,
 	OfflineMap : OfflineHistoryMap,
 
-	Max : function(Q){Max = Q},
+	Max : function(Q){Max = Number(Q)},
 
 	Dispatch : Dispatch,
 

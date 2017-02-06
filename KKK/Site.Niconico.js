@@ -8,22 +8,42 @@ KeySite = Key.Site,
 KeyQueue = Key.Queue,
 Lang = require('./Lang'),
 L = Lang.L,
+Cookie = require('./Cookie'),
 
+Name = '\u30CB\u30B3\u30CB\u30B3',
 PageSize = 30,
 
+URLLogin = 'https://secure.nicovideo.jp/secure/login',
+URLLoginCheck = 'http://seiga.nicovideo.jp/',
 URLUser = ZED.URLBuild('http://www.nicovideo.jp/user/',Util.U,'/video?page=',Util.U),
 
 R = ZED.ReduceToObject
 (
-	KeySite.Name,'\u30CB\u30B3\u30CB\u30B3',
+	KeySite.Name,Name,
 	KeySite.Judge,/\.nico(?:nico|video)\.|^sm\d+$/i,
-	KeySite.Login,function()
+	KeySite.Login,function(ID,PW)
 	{
-
+		return Util.RequestHead(
+		{
+			url : URLLogin,
+			method : 'post',
+			form :
+			{
+				mail : ID,
+				password : PW
+			},
+			followRedirect : Util.F
+		}).map(function(H)
+		{
+			Cookie.Set(Name,Util.MU(/user_session=user_[^;]+/,H.rawHeaders.join('\n')))
+		})
 	},
 	KeySite.Check,function()
 	{
-
+		return Util.RequestBody(Cookie.URL(Name,URLLoginCheck)).map(function(Q)
+		{
+			return Util.MF(/data-nickname="([^"]+)/,Q)
+		})
 	},
 	KeySite.Map,[ZED.ReduceToObject
 	(
@@ -74,9 +94,9 @@ R = ZED.ReduceToObject
 	{
 	},
 	KeySite.IDView,ZED.add('sm'),
-	KeySite.Pack,function(S,Q)
+	KeySite.Pack,function(S)
 	{
-		return S
+		return Cookie.URL(Name,S)
 	}
 );
 

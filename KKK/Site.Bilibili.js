@@ -33,6 +33,11 @@ URLParam = function(Q,R)
 	R = R.join('&')
 	return R + '&sign=' + ZED.Code.MD5(R + APPSecretKey).toLowerCase()
 },
+
+URLCaptcha = 'https://passport.bilibili.com/captcha',
+URLLoginKey = 'https://passport.bilibili.com/login?act=getkey',
+URLLogin = 'https://passport.bilibili.com/login/dologin',
+URLLoginCheck = 'http://space.bilibili.com/ajax/member/MyInfo',
 URLSpace = ZED.URLBuild('http://space.bilibili.com/ajax/member/getSubmitVideos?mid=',Util.U,'&pagesize=',PageSize,'&page=',Util.U),
 URLMylist = ZED.URLBuild('http://www.bilibili.com/mylist/mylist-',Util.U,'.js'),
 URLVInfo = ZED.URLBuild('http://api.bilibili.com/view?id=',Util.U,'&batch=1&appkey=',Appkey,'&type=json'),
@@ -45,10 +50,6 @@ URLVInfoURL = function(Q)
 		otype : 'json'
 	})
 },
-URLCaptcha = 'https://passport.bilibili.com/captcha',
-URLLoginKey = 'https://passport.bilibili.com/login?act=getkey',
-URLLogin = 'https://passport.bilibili.com/login/dologin',
-URLLoginCheck = 'http://space.bilibili.com/ajax/member/MyInfo',
 
 R = ZED.ReduceToObject
 (
@@ -244,9 +245,9 @@ R = ZED.ReduceToObject
 			})
 	},
 	KeySite.IDView,ZED.add('av'),
-	KeySite.Pack,function(S,Q)
+	KeySite.Pack,function(S)
 	{
-		return S
+		return Cookie.URL(Name,S)
 	}
 );
 

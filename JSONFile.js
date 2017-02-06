@@ -18,14 +18,20 @@ module.exports = function(Name)
 {
 	var
 	File = Path.join(Config.Root,Name + '.json'),
+	Default = {},
 	Latest = Read(File),
 	Data = function(Q)
 	{
-		return ZED.isNull(Q) ? Latest : Latest[Q]
+		return ZED.isNull(Q) ?
+			Latest :
+			'' === Latest[Q] || ZED.isNull(Latest[Q]) ?
+				Default[Q] :
+				Latest[Q]
 	};
 
 	return {
 		Data : Data,
+		Default : function(Q){Default = Q},
 		Replace : function(Q){Latest = Q},
 		Save : ZED.throttle(Config.Throttle,function(Q)
 		{

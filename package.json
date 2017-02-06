@@ -14,6 +14,7 @@
     "@zed.cwt/jquery": "0.0.3",
     "@zed.cwt/zedquery": "^0.4.5",
     "cli": "^1.0.1",
+    "googleapis": "^16.1.0",
     "graceful-fs": "^4.1.11",
     "request": "^2.79.0"
   }

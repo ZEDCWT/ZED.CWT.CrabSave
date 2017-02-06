@@ -1,6 +1,7 @@
 'use strict'
 var
 ZED = require('@zed.cwt/zedquery'),
+Observable = ZED.Observable,
 
 Util = require('./Util'),
 Key = require('./Key'),
@@ -8,20 +9,33 @@ KeySite = Key.Site,
 KeyQueue = Key.Queue,
 Lang = require('./Lang'),
 L = Lang.L,
+Cookie = require('./Cookie'),
 
+Name = 'YouTube',
 PageSize = 30,
+
+URLLoginCheck = 'https://www.youtube.com/account',
 
 R = ZED.ReduceToObject
 (
-	KeySite.Name,'Youtube',
+	KeySite.Name,Name,
 	KeySite.Judge,/\.you\.?tu\.?be\./i,
-	KeySite.Login,function()
+	KeySite.Require,['Cookie SID','Cookie SSID'],
+	KeySite.Login,function(SID,SSID)
 	{
-
+		Cookie.Set(Name,Util.CookieMake(
+		{
+			SID : SID,
+			SSID : SSID
+		}))
+		return Observable.just(L(Lang.CookieSaved))
 	},
 	KeySite.Check,function()
 	{
-
+		return Util.RequestBody(Cookie.URL(Name,URLLoginCheck)).map(function(Q)
+		{
+			return Util.MF(/display-name">[^>]+>([^<]+)/,Q)
+		})
 	},
 	KeySite.Map,[ZED.ReduceToObject
 	(

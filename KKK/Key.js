@@ -11,10 +11,10 @@ module.exports =
 		Name : KeyKey(),
 		Judge : KeyKey(),
 		//Login
+		Require : KeyKey(),
 		VCode : KeyKey(),
 		Login : KeyKey(),
 		Check : KeyKey(),
-		Require : KeyKey(),
 		//Map
 		Map : KeyKey(),
 		//[Name] reuse

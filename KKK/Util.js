@@ -10,7 +10,7 @@ Observable = ZED.Observable,
 KeyQueue = require('./Key').Queue,
 L = require('./Lang').L,
 
-Request = require('request').defaults({timeout : 20E3}),
+Request = require('request').defaults({timeout : 15E3}),
 RequestHead = function(Q)
 {
 	return Observable.create(function(O,X)
@@ -61,7 +61,8 @@ module.exports =
 	StopProp : function(E){E.stopPropagation()},
 
 	//Global dependencies
-	MF : function(Q,S){return ZED.match(Q,S)[1] || ''},
+	MU : function(Q,S){return ZED.match(Q,S)[0] || ''},
+	MF : function(Q,S,X){return ZED.match(Q,S)[X || 1] || ''},
 	PadTo : function(S,Q)
 	{
 		return ZED.FillLeft(Q,(S - 1 + '').length)
@@ -77,7 +78,7 @@ module.exports =
 		{
 			V = V.split('; ')[0].split('=')
 			D[V[0]] = V[1]
-		},{},Q.headers['set-cookie'])
+		},{},ZED.isObject(Q) ? Q.headers['set-cookie'] : Q)
 	},
 	CookieMake : function(Q)
 	{

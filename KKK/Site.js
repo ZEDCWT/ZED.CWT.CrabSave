@@ -5,21 +5,21 @@ ZED = require('@zed.cwt/zedquery'),
 KeySiteName = require('./Key').Site.Name,
 
 Bilibili = require('./Site.Bilibili'),
-Youtube = require('./Site.Youtube'),
+YouTube = require('./Site.YouTube'),
 Niconico = require('./Site.Niconico'),
 
 All =
 [
-	Bilibili
-	//Youtube,
-	//Niconico
+	Bilibili,
+	YouTube,
+	Niconico
 ],
 Map =
 {
 	bilibili : Bilibili,
 	bili : Bilibili,
-	youtube : Youtube,
-	ytb : Youtube,
+	youtube : YouTube,
+	ytb : YouTube,
 	niconico : Niconico,
 	nico : Niconico
 };
