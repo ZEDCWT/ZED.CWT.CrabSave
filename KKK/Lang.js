@@ -44,7 +44,9 @@ module.exports =
 	UknSite : Lang('Unknown site id `/0/`'),
 	UknURL : Lang('Unknown URL format `/0/`'),
 	Bad : Lang('Bad response'),
+	BadE : Lang('Bad response, message : /0/'),
 	BadCE : Lang('Bad response, code : /0/, message : /1/'),
+	EmptyList : Lang('No content'),
 
 	//Cold
 	Select : Lang('Select'),

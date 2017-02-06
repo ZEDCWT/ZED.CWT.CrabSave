@@ -16,6 +16,20 @@ PageSize = 30,
 URLLogin = 'https://secure.nicovideo.jp/secure/login',
 URLLoginCheck = 'http://seiga.nicovideo.jp/',
 URLUser = ZED.URLBuild('http://www.nicovideo.jp/user/',Util.U,'/video?page=',Util.U),
+URLMylist = ZED.URLBuild('http://www.nicovideo.jp/mylist/',Util.U),
+URLVInfo = ZED.URLBuild('http://ext.nicovideo.jp/api/getthumbinfo/sm',Util.U),
+URLVInfoURL = ZED.URLBuild('http://flapi.nicovideo.jp/api/getflv?v=sm',Util.U),
+
+MaybeError = function(Q)
+{
+	/<error>/.test(Q) && ZED.Throw(Util.ReplaceLang
+	(
+		Lang.BadCE,
+		Util.MF(/code>([^<]+)/,Q),
+		Util.MF(/tion>([^<]+)/,Q)
+	))
+
+},
 
 R = ZED.ReduceToObject
 (
@@ -51,6 +65,25 @@ R = ZED.ReduceToObject
 		KeySite.Judge,[/^(\d+)$/,Util.MakeLabelID('sm')],
 		KeySite.Page,function(ID)
 		{
+			return Util.RequestBody(Cookie.URL(Name,URLVInfo(ID))).map(function(Q)
+			{
+				MaybeError(Q)
+
+				return ZED.ReduceToObject
+				(
+					KeySite.Pages,1,
+					KeySite.Total,1,
+					KeySite.Item,[ZED.ReduceToObject
+					(
+						KeySite.Index,1,
+						KeySite.ID,ID,
+						KeySite.Img,Util.MF(/l_url>([^<]+)/,Q),
+						KeySite.Title,Util.MF(/itle>([^<]+)/,Q),
+						KeySite.Author,Util.MF(/name>([^<]+)/,Q),
+						KeySite.Date,Util.MF(/ieve>([^<]+)/,Q)
+					)]
+				)
+			})
 		}
 	),ZED.ReduceToObject
 	(
@@ -58,7 +91,7 @@ R = ZED.ReduceToObject
 		KeySite.Judge,[Util.MakeLabelID('user')],
 		KeySite.Page,function(ID,X)
 		{
-			return Util.RequestBody(URLUser(ID,X)).map(function(Q,T,A)
+			return Util.RequestBody(Cookie.URL(Name,URLUser(ID,X))).map(function(Q,T,A)
 			{
 				T = Number(Util.MF(/id="video[^]+?(\d+)/,Q))
 				A = Util.MF(/profile[^]+?<h2>([^<]+)/,Q)
@@ -76,7 +109,7 @@ R = ZED.ReduceToObject
 							KeySite.Img,Util.MF(/src="([^"]+)/,V),
 							KeySite.Title,Util.MF(/h5>[^>]+>([^<]+)/,V),
 							KeySite.Author,A,
-							KeySite.Date,ZED.trim(Util.MF(/posttime">([^<]+)/,V) || '')
+							KeySite.Date,Util.DateDirect(ZED.match(/\d+/g,Util.MF(/posttime">([^<]+)/,V) || ''))
 						)
 					})
 				)
@@ -88,10 +121,72 @@ R = ZED.ReduceToObject
 		KeySite.Judge,[Util.MakeLabelID('Mylist')],
 		KeySite.Page,function(ID,X)
 		{
+			return Util.RequestBody(URLMylist(ID)).map(function(Q)
+			{
+				var
+				Len,
+				Page,
+				Item = [],
+				F,Fa,
+				T;
+
+				Q = Util.MF(/preload\([^\[]+(\[[^\]]+\])/,Q)
+				Q || ZED.Throw(L(Lang.Bad))
+				Q = ZED.filter(function(V){return 0 === V.item_type},ZED.JTO(Q))
+					.sort(function(Q,S){return S.item_data.first_retrieve - Q.item_data.first_retrieve})
+				Len = Q.length
+				Len || ZED.Throw(L(Lang.EmptyList))
+
+				Page = Math.ceil(Q.length / PageSize) || 0
+				F = (ZED.max(1,ZED.min(X,Page)) - 1) * PageSize
+				Fa = ZED.min(F + PageSize,Len)
+				for (;F < Fa;++F)
+				{
+					T = Q[F].item_data
+					Item.push(ZED.ReduceToObject
+					(
+						KeySite.Index,F,
+						KeySite.ID,T.video_id.replace(/sm/,''),
+						KeySite.Img,T.thumbnail_url,
+						KeySite.Title,T.title,
+						KeySite.Date,1000 * T.first_retrieve
+					))
+				}
+
+				return ZED.ReduceToObject
+				(
+					KeySite.Pages,Page,
+					KeySite.Total,Len,
+					KeySite.Item,Item
+				)
+			})
 		}
 	)],
 	KeySite.URL,function(ID,R)
 	{
+		return Util.RequestBody(Cookie.URL(Name,URLVInfo(ID))).flatMap(function(Q)
+		{
+			MaybeError(Q)
+
+			return Util.RequestBody(Cookie.URL(Name,URLVInfoURL(ID))).map(function(U)
+			{
+				U = ZED.QueryString(U).url
+				U || ZED.Throw(Util.ReplaceLang(ZED.BadE,Q.error))
+
+				ZED.Merge(Util.T,R,ZED.ReduceToObject
+				(
+					KeyQueue.Author,Util.MF(/name>([^<]+)/,Q),
+					KeyQueue.Date,Util.MF(/ieve>([^<]+)/,Q),
+					KeyQueue.Part,[ZED.ReduceToObject
+					(
+						KeyQueue.Title,Util.MF(/itle>([^<]+)/,Q),
+						KeyQueue.URL,[U],
+						KeyQueue.Suffix,'.' + Util.MF(/e_type>([^<]+)/,Q)
+					)]
+				))
+				Util.SetSize(R,[Number(Util.MF(/high>([^<]+)/,Q))])
+			})
+		})
 	},
 	KeySite.IDView,ZED.add('sm'),
 	KeySite.Pack,function(S)

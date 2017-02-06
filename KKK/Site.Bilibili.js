@@ -108,9 +108,14 @@ R = ZED.ReduceToObject
 		KeySite.Judge,[/^(\d+)$/,Util.MakeLabelID('av')],
 		KeySite.Page,function(ID)
 		{
-			return Util.RequestBody(URLVInfo(ID)).map(function(Q)
+			return Util.RequestBody(Cookie.URL(Name,URLVInfo(ID))).map(function(Q)
 			{
 				Q = ZED.JTO(Q)
+				Q.error && ZED.Throw(Util.ReplaceLang
+				(
+					Lang.BadCE,
+					Q.code || '-',Q.error || '-'
+				))
 
 				return ZED.ReduceToObject
 				(
@@ -134,11 +139,12 @@ R = ZED.ReduceToObject
 		KeySite.Judge,[Util.MakeLabelID('space')],
 		KeySite.Page,function(ID,X)
 		{
-			return Util.RequestBody(URLSpace(ID,X)).map(function(Q)
+			return Util.RequestBody(Cookie.URL(Name,URLSpace(ID,X))).map(function(Q)
 			{
 				Q = ZED.JTO(Q)
-				Q.status || ZED.throw(L(Lang.Bad))
+				Q.status || ZED.Throw(L(Lang.Bad))
 				Q = Q.data
+				;(Q.vlist && Q.vlist.length) || ZED.Throw(L(Lang.EmptyList))
 
 				return ZED.ReduceToObject
 				(
@@ -167,7 +173,7 @@ R = ZED.ReduceToObject
 		{
 			return Util.RequestBody(URLMylist(ID)).map(function(Q,With)
 			{
-				Q || ZED.throw(L(Lang.Bad))
+				Q || ZED.Throw(L(Lang.Bad))
 				With =
 				{
 					author : '',
@@ -199,50 +205,49 @@ R = ZED.ReduceToObject
 	)],
 	KeySite.URL,function(ID,R)
 	{
-		return Util.RequestBody(URLVInfo(ID))
-			.flatMap(function(Q)
-			{
-				var
-				Part = [],
-				Sizes = [];
+		return Util.RequestBody(Cookie.URL(Name,URLVInfo(ID))).flatMap(function(Q)
+		{
+			var
+			Part = [],
+			Sizes = [];
 
-				Q = ZED.JTO(Q)
-				Q.list || ZED.throw(Util.ReplaceLang
-				(
-					Lang.BadCE,
-					Q.code,Q.error || Q.message
-				))
-				ZED.Merge(Util.T,R,ZED.ReduceToObject
-				(
-					KeyQueue.Author,Q.author,
-					KeyQueue.Date,1000 * Q.created
-				))
+			Q = ZED.JTO(Q)
+			Q.list || ZED.Throw(Util.ReplaceLang
+			(
+				Lang.BadCE,
+				Q.code,Q.error || Q.message
+			))
+			ZED.Merge(Util.T,R,ZED.ReduceToObject
+			(
+				KeyQueue.Author,Q.author,
+				KeyQueue.Date,1000 * Q.created
+			))
 
-				return Observable.from(Q.list)
-					.flatMapOnline(1,function(V)
-					{
-						return Util.RequestBody(URLVInfoURL(V.cid))
-							.map(function(B,D)
-							{
-								B = ZED.JTO(B)
-								D = B.durl
-								D || ZED.throw(L(Lang.Bad))
-								ZED.isArray(D) || (D = [D])
-								Sizes.push(ZED.pluck('size',D))
-								Part.push(ZED.ReduceToObject
-								(
-									KeyQueue.Title,V.part,
-									KeyQueue.URL,ZED.pluck('url',D),
-									KeyQueue.Suffix,'.' + B.format
-								))
-							})
-					})
-					.tap(ZED.noop,ZED.noop,function()
-					{
-						R[KeyQueue.Part] = Part
-						Util.SetSize(R,ZED.flatten(Sizes))
-					})
-			})
+			return Observable.from(Q.list)
+				.flatMapOnline(1,function(V)
+				{
+					return Util.RequestBody(URLVInfoURL(V.cid))
+						.map(function(B,D)
+						{
+							B = ZED.JTO(B)
+							D = B.durl
+							D || ZED.Throw(L(Lang.Bad))
+							ZED.isArray(D) || (D = [D])
+							Sizes.push(ZED.pluck('size',D))
+							Part.push(ZED.ReduceToObject
+							(
+								KeyQueue.Title,V.part,
+								KeyQueue.URL,ZED.pluck('url',D),
+								KeyQueue.Suffix,'.' + B.format
+							))
+						})
+				})
+				.tap(ZED.noop,ZED.noop,function()
+				{
+					R[KeyQueue.Part] = Part
+					Util.SetSize(R,ZED.flatten(Sizes))
+				})
+		})
 	},
 	KeySite.IDView,ZED.add('av'),
 	KeySite.Pack,function(S)

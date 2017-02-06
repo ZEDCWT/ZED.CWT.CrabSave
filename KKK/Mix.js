@@ -33,6 +33,8 @@
 	$ = ZED.jQuery,
 	FnClick = $.fn.click,
 
+	Path = require('path'),
+
 
 
 	DateToStringFormatFile = '%YYYY%.%MM%.%DD%.%HH%.%NN%.%SS%',
@@ -677,6 +679,8 @@
 		MakeDetailActive = Q
 		MakeDetailAt = UTab.Index()
 		MakeToolBarLast && MakeToolBarLast.detach()
+		RStatusText.text('')
+		RStatusIcon.removeAttr(DOM.cls)
 
 		RDetailHead.append
 		(
@@ -693,6 +697,7 @@
 			RDetailChildren.empty()
 			RDetail.detach()
 			MakeDetailAt === UTab.Index() && MakeToolBarChange()
+			MakeStatusChange()
 			MakeDetailActive =
 			MakeDetailInfoDir =
 			MakeDetailInfoTTS =
@@ -716,7 +721,7 @@
 		S = MakeStatusClass[X]
 		if (Q)
 		{
-			RStatusText.text(Q)
+			RStatusText.text(Q).attr(DOM.title,Q)
 			S && RStatusIcon.attr(DOM.cls,S + ' ' + ClassStatusIconAnimation)
 		}
 		else RStatusText.text('')
@@ -1067,7 +1072,7 @@
 				GoLast && GoLast.end()
 
 				ShowByTextS(ReplaceLang(Lang.ProcURL,URL),RInfo.empty())
-				if (T = URL.match(/^([0-9A-Z]+)[^0-9A-Z]\s*([^]+?)\s*$/i))
+				if (T = URL.match(/^([0-9A-Z]+)\s+([^]+?)\s*$/i))
 				{
 					GoTarget = ZED.toLower(T[1])
 					GoDetail = T[2]
@@ -1731,9 +1736,19 @@
 				//	Button
 				'#/I/ ./B/{text-align:center}' +
 				//	VCode
-				'#/V/>*{vertical-align:bottom}' +
+				'#/V/{position:relative}' +
 				'#/V/ ./U/{width:50%}' +
-				'#/V/ img{padding:/p/px;max-width:50%;max-height:100%;cursor:pointer}' +
+				'#/V/ img' +
+				'{' +
+					'position:absolute;' +
+					'left:50%;' +
+					'bottom:0;' +
+					'padding:/p/px;' +
+					'max-width:50%;' +
+					'max-height:100%;' +
+					'overflow:hidden;' +
+					'cursor:pointer' +
+				'}' +
 				//	Cookie
 				'#/I/ textarea{max-width:100%;font-size:.9rem!important}',
 				'/',
@@ -1811,7 +1826,7 @@
 							if (ZED.isArrayLike(Q))
 							{
 								Q = ZED.Code.Base64Encode(ZED.Code.UTF8ToBinB(ZED.map(ZED.chr,Q).join('')))
-								RVCodeImg.attr(DOM.src,'data:image/jpg;base64,' + Q)
+								RVCodeImg.removeAttr(DOM.title).attr(DOM.src,'data:image/jpg;base64,' + Q)
 							}
 						},function()
 						{
@@ -1865,13 +1880,16 @@
 
 			ZED.each(function(V,R)
 			{
-				R = $(DOM.div).text(V[KeySite.Name]).on(DOM.click,function()
+				if (V[KeySite.Login])
 				{
-					Switch(R,V)
-					RefreshVCode()
-				})
-				Target || Switch(R,V)
-				RSite.append(R)
+					R = $(DOM.div).text(V[KeySite.Name]).on(DOM.click,function()
+					{
+						Switch(R,V)
+						RefreshVCode()
+					})
+					Target || Switch(R,V)
+					RSite.append(R)
+				}
 			},SiteAll)
 			RVCodeImg.on(DOM.click,RefreshVCode)
 			MakeEnter(RVCodeInput,SignIn)
@@ -1919,7 +1937,7 @@
 			var
 			Default = ZED.ReduceToObject
 			(
-				KeySetting.Dir,Config.Root,
+				KeySetting.Dir,Path.join(Config.Root,'Download'),
 				KeySetting.Name,'|Author|/|YYYY|/|Author|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?',
 				KeySetting.Max,5,
 				KeySetting.Font,'Microsoft Yahei',

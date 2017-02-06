@@ -63,6 +63,16 @@ module.exports =
 	//Global dependencies
 	MU : function(Q,S){return ZED.match(Q,S)[0] || ''},
 	MF : function(Q,S,X){return ZED.match(Q,S)[X || 1] || ''},
+	DateDirect : function(Q)
+	{
+		return new Date
+		(
+			Q[0].length < 3 ? '20' + Q[0] : Q[0],
+			Q[1] - 1,
+			Q[2],
+			Q[3],Q[4],Q[5] || 0
+		)
+	},
 	PadTo : function(S,Q)
 	{
 		return ZED.FillLeft(Q,(S - 1 + '').length)
