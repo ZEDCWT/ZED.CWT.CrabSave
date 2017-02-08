@@ -28,8 +28,8 @@ module.exports =
 	{
 		Size : EventKey(),
 		Dir : EventKey(),
-		Played : EventKey(),
-		Paused : EventKey(),
+		Reinfo : EventKey(),
+		Error : EventKey(),
 		Finish : EventKey(),
 		Speed : EventKey(),
 		SpeedTotal : EventKey()

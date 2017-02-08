@@ -15,6 +15,7 @@ RequestHead = function(Q)
 {
 	return Observable.create(function(O,X)
 	{
+		console.log(Q)
 		X = Request(Q).on('error',function(E){O.error(E)})
 			.on('response',function(H)
 			{
@@ -48,11 +49,17 @@ module.exports =
 
 	Bus : ZED.Emitter(),
 
+	//Observable
 	RequestHead : RequestHead,
 	RequestBody : RequestBase(False),
 	RequestFull : RequestBase(True),
+	mkdirp : Observable.wrapNode(ZED.mkdirp),
 
 	//No dependencies
+	Debug : function()
+	{
+		console.error.apply(console,ZED.prepend('DEBUG',arguments))
+	},
 	MakeUnique : function(Q,S){return Q + '.' + S},
 	MakeLabelID : function(Q)
 	{

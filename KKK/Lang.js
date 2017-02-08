@@ -63,6 +63,10 @@ module.exports =
 	SizeUn : Lang('Unknow size'),
 	Queuing : Lang('Queuing'),
 	Processing : Lang('Processing'),
+	Error : Lang('Error'),
+	EInfo : Lang('Failed to load infomation'),
+	EURL : Lang('URL expired'),
+	EConn : Lang('Connection error'),
 	Paused : Lang('Paused'),
 
 	//Detail
@@ -102,12 +106,14 @@ module.exports =
 	Checking : Lang('Checking if signed in'),
 	CheckFail : Lang('Not signed in'),
 	Checked : Lang('Signed in as /0/'),
-	CheckError : Lang('Error occured while checking'),
+	CheckError : Lang('Error occured while checking if signed in'),
 
 	//Setting
 	MaxDown : Lang('Maximum number of active downloads'),
 	FName : Lang('File name format'),
 	Font : Lang('Font'),
 	Size : Lang('Font size'),
-	Weight : Lang('Font weight')
+	Weight : Lang('Font weight'),
+	RetryT : Lang('Times to retry before moving a task with no response to the end of the queue'),
+	RestartT : Lang('Time to wait before restarting a task after error')
 }

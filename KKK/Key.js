@@ -75,6 +75,8 @@ module.exports =
 		Max : KeyKey(),
 		Font : KeyKey(),
 		Size : KeyKey(),
-		Weight : KeyKey()
+		Weight : KeyKey(),
+		Retry : KeyKey(),
+		Restart : KeyKey()
 	}
 }

@@ -8,6 +8,7 @@
 	Util = require('./Util'),
 	ReplaceLang = Util.ReplaceLang,
 	Bus = Util.Bus,
+	Debug = Util.Debug,
 	Key = require('./Key'),
 	KeySite = Key.Site,
 	KeyQueue = Key.Queue,
@@ -639,7 +640,7 @@
 			MakeDetailSetupSingle(Lang.Author,MakeDetailActive[KeyQueue.Author]),
 			MakeDetailSetupSingle(Lang.UpDate,ZED.DateToString(DateToStringFormatFile,MakeDetailActive[KeyQueue.Date])),
 			MakeDetailSetupSingle(Lang.Parts,Part.length),
-			MakeDetailSetupSingle(Lang.Files,MakeDetailActive[KeyQueue.File]),
+			MakeDetailSetupSingle(Lang.Files,MakeDetailActive[KeyQueue.File].length),
 			MakeDetailSetupSingle(Lang.Directory,MakeDetailInfoDir = ShowByText(MakeDetailActive[KeyQueue.Dir] || L(Lang.NoDir),DOM.span)),
 			MakeDetailSetupSingle(Lang.TTS,MakeDetailInfoTTS = ShowByText(MakeDetailSize(),DOM.span)),
 			MakeDetailSetupSingle
@@ -685,7 +686,7 @@
 		RDetailHead.append
 		(
 			ShowByText(Q[KeyQueue.Title]),
-			ShowByText(Q[KeyQueue.Name] + ' ' + SiteMap[Q[KeyQueue.Name]][KeySite.IDView](Q[KeyQueue.ID]))
+			ShowByText(Q[KeyQueue.Name] + ' ' + SiteMap[Q[KeyQueue.Name]][KeySite.IDView](Q[KeyQueue.ID]),DOM.span)
 		)
 		if (Q[KeyQueue.Part]) MakeDetailSetup()
 		else RDetailInfo.text(L(Queue.IsInfo(Q[KeyQueue.Unique]) ? Lang.GetInfo : Lang.ReadyInfo))
@@ -822,6 +823,7 @@
 			'#/DI/{display:inline-block;padding:/p/px}' +
 			//			Head
 			'#/DH/{padding:/p/px;background:#F3EBFA}' +
+			'#/DH/ div{font-size:1.1rem}' +
 			//			Label
 			'./DL/{font-weight:bold;opacity:.7}' +
 			//			Part
@@ -835,10 +837,9 @@
 			//StatusBar
 			'#/S/{padding:0 /p/px;height:/s/px}' +
 			//	Wrapper
-			'#/L/,#/H/{display:inline-block}' +
-			'#/L/ div,#/H/ div{display:inline-block;vertical-align:middle}' +
-			'#/L/{width:100%}' +
-			'#/H/{float:right}' +
+			'#/L/{display:inline-block;position:relative;width:100%}' +
+			'#/L/ div{display:inline-block;vertical-align:middle}' +
+			'#/H/{position:absolute;right:0;top:0}' +
 			//	Text
 			'#/L/ ./SL/{width:/u/px}' +
 			//	Icon
@@ -1179,6 +1180,7 @@
 						Render(Q,S)
 					},function(E)
 					{
+						Debug(E)
 						E && MakeStatus(X,ZED.isString(E) ? E : E + (E.stack || ''),ClassStatusError)
 					})
 				}
@@ -1424,7 +1426,7 @@
 				A[ActiveKeyRemain].text
 				(
 					0 <= S && Q[KeyQueue.Size] ?
-						'-' + ZED.SecondsToString(Q[KeyQueue.Size] / S) :
+						'-' + ZED.SecondsToString(ZED.min(Q[KeyQueue.Size] / S,359999)) :
 						''
 				)
 				Download.Active[ID] ?
@@ -1542,7 +1544,7 @@
 				},
 				function(Q)
 				{
-					Q[KeyQueue.Active] || !Queue.IsRunning(Q) ? --CountActive : --CountPaused
+					Q[KeyQueue.Active] ? --CountActive : --CountPaused
 				},
 				function()
 				{
@@ -1683,7 +1685,7 @@
 							ShowByClass(ClassSingleLine + ' ' + ClassHistoryInfo).text(ReplaceLang
 							(
 								Lang.HiInfo,
-								ZED.FormatSize(Q[KeyQueue.Size]),Q[KeyQueue.File],MakeS(Q[KeyQueue.File])
+								ZED.FormatSize(Q[KeyQueue.Size]),Q[KeyQueue.File].length,MakeS(Q[KeyQueue.File].length)
 							))
 						),
 						ShowByClassX(ClassHistoryDate,DOM.span).text(ZED.DateToString(DateToStringFormatDisplay,Q[KeyQueue.Finished])),
@@ -1828,8 +1830,9 @@
 								Q = ZED.Code.Base64Encode(ZED.Code.UTF8ToBinB(ZED.map(ZED.chr,Q).join('')))
 								RVCodeImg.removeAttr(DOM.title).attr(DOM.src,'data:image/jpg;base64,' + Q)
 							}
-						},function()
+						},function(E)
 						{
+							Debug(E)
 							RVCodeImg.attr(DOM.title,L(Lang.VCFail))
 						})
 					}
@@ -1857,8 +1860,9 @@
 				).start(function(Q)
 				{
 					MakeStatus(X,Q)
-				},function()
+				},function(E)
 				{
+					Debug(E)
 					MakeStatus(X,L(Lang.SIError),ClassStatusError)
 				})
 			},
@@ -1872,8 +1876,9 @@
 				CheckEnd = Target[KeySite.Check]().start(function(Q)
 				{
 					MakeStatus(X,Q ? ReplaceLang(Lang.Checked,Q) : L(Lang.CheckFail))
-				},function()
+				},function(E)
 				{
+					Debug(E)
 					MakeStatus(X,L(Lang.CheckError),ClassStatusError)
 				})
 			};

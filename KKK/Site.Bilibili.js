@@ -51,6 +51,15 @@ URLVInfoURL = function(Q)
 	})
 },
 
+Overspeed = ZED.Mark(),
+MaybeOverspeed = function(Q)
+{
+	-503 === Q.code && 'overspeed' === Q.message &&
+	(
+		Util.Debug('Site.Bilibili','Overspeed'),
+		ZED.Throw(Overspeed)
+	)
+},
 R = ZED.ReduceToObject
 (
 	KeySite.Name,Name,
@@ -212,6 +221,7 @@ R = ZED.ReduceToObject
 			Sizes = [];
 
 			Q = ZED.JTO(Q)
+			MaybeOverspeed(Q)
 			Q.list || ZED.Throw(Util.ReplaceLang
 			(
 				Lang.BadCE,
@@ -223,37 +233,35 @@ R = ZED.ReduceToObject
 				KeyQueue.Date,1000 * Q.created
 			))
 
-			return Observable.from(Q.list)
-				.flatMapOnline(1,function(V)
+			return Observable.from(Q.list).flatMapOnline(1,function(V)
+			{
+				return Util.RequestBody(URLVInfoURL(V.cid)).map(function(B,D)
 				{
-					return Util.RequestBody(URLVInfoURL(V.cid))
-						.map(function(B,D)
-						{
-							B = ZED.JTO(B)
-							D = B.durl
-							D || ZED.Throw(L(Lang.Bad))
-							ZED.isArray(D) || (D = [D])
-							Sizes.push(ZED.pluck('size',D))
-							Part.push(ZED.ReduceToObject
-							(
-								KeyQueue.Title,V.part,
-								KeyQueue.URL,ZED.pluck('url',D),
-								KeyQueue.Suffix,'.' + B.format
-							))
-						})
+					B = ZED.JTO(B)
+					MaybeOverspeed(Q)
+					D = B.durl
+					D || ZED.Throw(L(Lang.Bad))
+					ZED.isArray(D) || (D = [D])
+					Sizes.push(ZED.pluck('size',D))
+					Part.push(ZED.ReduceToObject
+					(
+						KeyQueue.Title,V.part,
+						KeyQueue.URL,ZED.pluck('url',D),
+						KeyQueue.Suffix,'.' + B.format
+					))
 				})
-				.tap(ZED.noop,ZED.noop,function()
-				{
-					R[KeyQueue.Part] = Part
-					Util.SetSize(R,ZED.flatten(Sizes))
-				})
+				.retryWhen(function(Q){return Q.delay(2000)})
+			})
+			.tap(ZED.noop,ZED.noop,function()
+			{
+				R[KeyQueue.Part] = Part
+				Util.SetSize(R,ZED.flatten(Sizes))
+			})
 		})
+		.retryWhen(function(Q){return Q.delay(2000)})
 	},
 	KeySite.IDView,ZED.add('av'),
-	KeySite.Pack,function(S)
-	{
-		return Cookie.URL(Name,S)
-	}
+	KeySite.Pack,ZED.identity
 );
 
 module.exports = R

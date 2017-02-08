@@ -78,10 +78,10 @@ Dispatch = function(T,F)
 },
 DispatchInfoGot = function()
 {
-	InfoNow[KeyQueue.File] = ZED.reduce(function(D,V)
+	InfoNow[KeyQueue.File] = ZED.repeat('',ZED.reduce(function(D,V)
 	{
 		return D + V[KeyQueue.URL].length
-	},0,InfoNow[KeyQueue.Part])
+	},0,InfoNow[KeyQueue.Part]))
 	SaveOnlineSave()
 	Bus.emit(EventQueue.InfoGot,InfoNow)
 	return InfoNow[KeyQueue.Size] < 0 ?
@@ -208,6 +208,14 @@ Bus.on(EventDownload.SpeedTotal,function(Q)
 				Dispatch()
 			}
 		}
+	})
+	.on(EventDownload.Reinfo,function(Q)
+	{
+console.log('REINFO',Q)
+	})
+	.on(EventDownload.Error,function(Q)
+	{
+console.log('ERROR',Q)
 	})
 
 module.exports =
