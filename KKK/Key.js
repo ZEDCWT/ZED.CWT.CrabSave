@@ -22,7 +22,9 @@ module.exports =
 		Name : KeyKey(),
 		Judge : KeyKey(),
 		//Component
+		Init : KeyKey(),
 		Component : KeyKey(),
+		ComCheck : KeyKey(),
 		//Login
 		Require : KeyKey(),
 		VCode : KeyKey(),

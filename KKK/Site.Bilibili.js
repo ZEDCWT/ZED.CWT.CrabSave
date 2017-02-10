@@ -12,6 +12,7 @@ KeyQueue = Key.Queue,
 Lang = require('./Lang'),
 L = Lang.L,
 Cookie = require('./Cookie'),
+Component = require('./Component'),
 DOM = require('./DOM'),
 
 Path = require('path'),
@@ -57,6 +58,34 @@ URLVInfoURL = function(Q)
 },
 URLPlayer = 'http://static.hdslb.com/player/js/bilibiliPlayer.min.js',
 
+Frame = $(DOM.iframe),
+FrameElement = Frame[0],
+FrameJS = Path.join(Config.Root,'Site.Bilibili.js'),
+FrameURL = 'file:///' + __filename.replace(/\.js$/,'.htm') + '?' + FrameJS,
+FrameRepeater = ZED.Repeater(),
+BishiID,
+BishiMethod,
+BishiSign,
+BishiURL,
+BishiCall = function(Q){BishiURL = Q},
+Bishi,
+TryBishi = function(Q)
+{
+	if (BishiSign) try
+	{
+		BishiURL = Util.F
+		Bishi.U = BishiCall
+		BishiSign(0,1,Q,4,'',null,0)
+		BishiSign
+	}
+	catch(e){}
+	return BishiURL
+},
+BishiURL = function(Q)
+{
+	return TryBishi(Q) || URLVInfoURL(Q)
+},
+
 Overspeed = ZED.Mark(),
 MaybeOverspeed = function(Q)
 {
@@ -70,14 +99,14 @@ R = ZED.ReduceToObject
 (
 	KeySite.Name,Name,
 	KeySite.Judge,/\.bilibili\.|^av\d+$/i,
-	KeySite.Component,function(B)
+	KeySite.Init,function(B)
+	{
+		B.append(Frame)
+	},
+	KeySite.Component,function()
 	{
 		return Util.ajax(URLPlayer).flatMap(function(Q)
 		{
-			var
-			ID,
-			Method;
-
 			Q = ZED.ReplaceList
 			(
 				Q,
@@ -90,27 +119,23 @@ R = ZED.ReduceToObject
 			)
 
 			//Module ID
-			ID = Util.MF(/}],(\d+):\[func[^{]+{[^{]+{ try {/,Q)
+			BishiID = Number(Util.MF(/}],(\d+):\[func[^{]+{[^{]+{ try {/,Q))
 			//Method
-			Method = Util.MF(/([^.])\("r",null,"(?:number )+/,Q)
-console.log(ID,Method)
-			return Util.writeFile(Path.join(Config.Root,'Site.Bilibili.js'),Q).flatMap(function()
-			{
-				var
-				Frame = $(DOM.iframe);
-top.FF=Frame
-				Frame.attr(DOM.src,'file:///' + __filename.replace(/\.js$/,'.htm'))
-				Frame.on(DOM.load,function()
-				{
-					console.log('Load')
-				}).on(DOM.error,function()
-				{
-					console.log('Error')
-				})
+			BishiMethod = Util.MF(/([^.])\("r",null,"(?:number )+/,Q)
+			Component.Save(ZED.objOf(Name,[BishiID,BishiMethod]))
 
-				B.append(Frame)
+			return Util.writeFile(FrameJS,Q).flatMap(function()
+			{
+				FrameRepeater = ZED.Repeater()
+				Frame.attr(DOM.src,FrameURL)
+
+				return FrameRepeater
 			})
 		})
+	},
+	KeySite.ComCheck,function()
+	{
+		return TryBishi(0) ? Observable.empty() : Observable.throw(L(Lang.ComNot))
 	},
 	KeySite.VCode,function()
 	{
@@ -283,7 +308,7 @@ top.FF=Frame
 
 			return Observable.from(Q.list).flatMapOnline(1,function(V)
 			{
-				return Util.RequestBody(URLVInfoURL(V.cid)).map(function(B,D)
+				return Util.ajax(BishiURL(V.cid)).map(function(B,D)
 				{
 					B = ZED.JTO(B)
 					MaybeOverspeed(Q)
@@ -319,5 +344,27 @@ top.FF=Frame
 	KeySite.IDView,ZED.add('av'),
 	KeySite.Pack,ZED.identity
 );
+
+BishiMethod = Component.Data(Name) || []
+BishiID = BishiMethod[0]
+BishiMethod = BishiMethod[1]
+if (BishiID && BishiMethod) Frame.attr(DOM.src,FrameURL)
+Frame.on(DOM.load,function(W)
+{
+	W = FrameElement.contentWindow
+	if (W.BISHI)
+	{
+		Bishi = W.BISHI
+		try
+		{
+			//Sign
+			BishiSign = Bishi.R(BishiID)[BishiMethod]
+				('r',Util.N,'number number number number string string number'.split(' '))
+			FrameRepeater.finish()
+		}
+		catch(e){FrameRepeater.error(e)}
+	}
+	else FrameRepeater.error(L(Lang.Bad))
+})
 
 module.exports = R

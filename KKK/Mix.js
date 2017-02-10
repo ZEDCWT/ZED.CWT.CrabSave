@@ -235,6 +235,7 @@
 		.on(DOM.aniend,function(){RStatusIcon.removeClass(ClassStatusIconAnimation)}),
 	RStatusText = ShowByClass(ClassSingleLine),
 	RSpeed = ShowByRock(IDSpeed),
+	RHidden = ShowByRock().hide(),
 
 
 
@@ -1733,18 +1734,16 @@
 		}
 	},{
 		Tab : L(Lang.Component),
-		CSS : function()
+		CSS : function(ID)
 		{
 			return ZED.Replace
 			(
-				'',
+				'#/R/ ./B/{margin:/p/px 0}',
 				'/',
 				{
 					B : DOM.Button,
 
-					U : ClassUnderlineInput,
-
-					I : ClassComponentView,
+					R : ID,
 
 					p : YPadding
 				}
@@ -1752,14 +1751,14 @@
 		},
 		Show : MakeSelectableListShow,
 		BeforeHide : MakeSelectableListHide,
-		Content : function(M)
+		Content : function(M,X)
 		{
 			var
 			RSite = ShowByClass(ClassComponentSite),
 			RView = ShowByClass(ClassComponentView),
 			RInfo = ShowByRock(),
 			RExe = ShowByClass(DOM.Button).text(L(Lang.ComLoad)),
-			RHidden = ShowByRock().hide(),
+			RCheck = ShowByClass(DOM.Button).text(L(Lang.ComCheck)),
 
 			Target,
 			Active,
@@ -1776,13 +1775,30 @@
 			LoadLast,
 			Load = function()
 			{
+				MakeStatus(X,L(Lang.Loading),ClassStatusLoading)
 				LoadLast && LoadLast.end()
-				LoadLast = Target[KeySite.Component](RHidden).start(ZED.noop,function(E)
+				LoadLast = Target[KeySite.Component]().start(ZED.noop,function(E)
 				{
-console.log('CERROR',E)
+					Util.Debug(E)
+					MakeStatus(X,E,ClassStatusError)
 				},function()
 				{
-console.log('CFINISH')
+					MakeStatus(X,L(Lang.ComLoaded))
+				})
+			},
+
+			CheckLast,
+			Check = function()
+			{
+				MakeStatus(X,L(Lang.Loading),ClassStatusLoading)
+				CheckLast && CheckLast.end()
+				CheckLast = Target[KeySite.ComCheck]().start(ZED.noop,function(E)
+				{
+					Util.Debug(E)
+					MakeStatus(X,E,ClassStatusError)
+				},function()
+				{
+					MakeStatus(X,L(Lang.ComLoaded))
 				})
 			};
 
@@ -1790,6 +1806,7 @@ console.log('CFINISH')
 			{
 				if (V[KeySite.Component])
 				{
+					V[KeySite.Init] && V[KeySite.Init](RHidden)
 					R = $(DOM.div).text(V[KeySite.Name]).on(DOM.click,function()
 					{
 						Switch(R,V)
@@ -1799,6 +1816,7 @@ console.log('CFINISH')
 				}
 			},SiteAll)
 			RExe.on(DOM.click,Load)
+			RCheck.on(DOM.click,Check)
 			M.append
 			(
 				RSite,
@@ -1806,7 +1824,7 @@ console.log('CFINISH')
 				(
 					RExe,
 					RInfo,
-					RHidden
+					RCheck
 				)
 			)
 
@@ -2173,7 +2191,8 @@ console.log('CFINISH')
 					RSpeed
 				)
 			)
-		)
+		),
+		RHidden
 	)
 ZED.Each(ShortCut.DefaultMap,function(F,V){UShortCut.on(V,F)})
 	ZED.onError = function(E){Util.Debug('Mix',E)}

@@ -4,13 +4,22 @@
 <meta charset="utf-8">
 <title>Bilibili</title>
 <script>
-$ = require('@zed.cwt/jquery')
-BISHI = {}
-BISHI.U = function(Q)
+try
 {
-	console.log(Q)
+	$ = top.require('@zed.cwt/jquery')
+	BISHI = {}
+	BISHI.U = function(){}
+	_setTimeout = setTimeout
+	setTimeout = function(Q,S){return S ? _setTimeout(Q,S) : Q()}
+	onerror = function(){}
+	document.write
+	(
+		'\x3Cscript src="file:///' +
+		location.search.substr(1) +
+		'"\x3E\x3C/script\x3E'
+	)
 }
-require(require('path').join(require('../Config').Root,'Site.Bilibili'))
+catch(e){}
 </script>
 </head>
 <body>

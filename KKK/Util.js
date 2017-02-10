@@ -60,13 +60,12 @@ module.exports =
 
 		return Observable.create(function(O,X)
 		{
-			X = $.ajax(
+			X = $.ajax(ZED.Merge(
 			{
-				url : Q.url,
 				dataType : 'text',
 				success : function(Q){O.data(Q).finish()},
 				error : function(E){O.error(E)}
-			})
+			},Q))
 			return function(){X.abort()}
 		})
 	},

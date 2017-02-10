@@ -94,6 +94,10 @@ module.exports =
 
 	//Component
 	ComLoad : Lang('Load component'),
+	ComLoaded : Lang('Component is loaded'),
+	ComCheck : Lang('Check if loaded'),
+	ComNot : Lang('Component is not loaded'),
+
 	//Sign in
 	ID : Lang('Sign in ID'),
 	Password : Lang('Password'),
