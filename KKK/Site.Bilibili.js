@@ -2,7 +2,9 @@
 var
 ZED = require('@zed.cwt/zedquery'),
 Observable = ZED.Observable,
+$ = require('@zed.cwt/jquery'),
 
+Config = require('../Config'),
 Util = require('./Util'),
 Key = require('./Key'),
 KeySite = Key.Site,
@@ -10,6 +12,9 @@ KeyQueue = Key.Queue,
 Lang = require('./Lang'),
 L = Lang.L,
 Cookie = require('./Cookie'),
+DOM = require('./DOM'),
+
+Path = require('path'),
 
 Name = 'Bilibili',
 PageSize = 30,
@@ -50,6 +55,7 @@ URLVInfoURL = function(Q)
 		otype : 'json'
 	})
 },
+URLPlayer = 'http://static.hdslb.com/player/js/bilibiliPlayer.min.js',
 
 Overspeed = ZED.Mark(),
 MaybeOverspeed = function(Q)
@@ -64,6 +70,48 @@ R = ZED.ReduceToObject
 (
 	KeySite.Name,Name,
 	KeySite.Judge,/\.bilibili\.|^av\d+$/i,
+	KeySite.Component,function(B)
+	{
+		return Util.ajax(URLPlayer).flatMap(function(Q)
+		{
+			var
+			ID,
+			Method;
+
+			Q = ZED.ReplaceList
+			(
+				Q,
+				//Remove initial loading
+				/(\(global\)\s*{)(?:[a-z.=]*__webpack_require__\(\d+\);)+/,'$1',
+				//Exports loader,
+				/function ([a-z]+)[^}]*?MODULE_NOT_FOUND/,'BISHI.R=$1;$&',
+				//Export url
+				/\$\.ajax\({url:([a-z.]+\([a-z]\))/,'return BISHI.U($1);$&'
+			)
+
+			//Module ID
+			ID = Util.MF(/}],(\d+):\[func[^{]+{[^{]+{ try {/,Q)
+			//Method
+			Method = Util.MF(/([^.])\("r",null,"(?:number )+/,Q)
+console.log(ID,Method)
+			return Util.writeFile(Path.join(Config.Root,'Site.Bilibili.js'),Q).flatMap(function()
+			{
+				var
+				Frame = $(DOM.iframe);
+top.FF=Frame
+				Frame.attr(DOM.src,'file:///' + __filename.replace(/\.js$/,'.htm'))
+				Frame.on(DOM.load,function()
+				{
+					console.log('Load')
+				}).on(DOM.error,function()
+				{
+					console.log('Error')
+				})
+
+				B.append(Frame)
+			})
+		})
+	},
 	KeySite.VCode,function()
 	{
 		return Util.RequestFull(
@@ -250,7 +298,11 @@ R = ZED.ReduceToObject
 						KeyQueue.Suffix,'.' + B.format
 					))
 				})
-				.retryWhen(function(Q){return Q.delay(2000)})
+				.retryWhen(function(Q)
+				{
+					return Q.tap(function(E){Overspeed === E || ZED.Throw(E)})
+						.delay(2000)
+				})
 			})
 			.tap(ZED.noop,ZED.noop,function()
 			{
@@ -258,7 +310,11 @@ R = ZED.ReduceToObject
 				Util.SetSize(R,ZED.flatten(Sizes))
 			})
 		})
-		.retryWhen(function(Q){return Q.delay(2000)})
+		.retryWhen(function(Q)
+		{
+			return Q.tap(function(E){Overspeed === E || ZED.Throw(E)})
+				.delay(2000)
+		})
 	},
 	KeySite.IDView,ZED.add('av'),
 	KeySite.Pack,ZED.identity

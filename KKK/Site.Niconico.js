@@ -19,6 +19,7 @@ URLUser = ZED.URLBuild('http://www.nicovideo.jp/user/',Util.U,'/video?page=',Uti
 URLMylist = ZED.URLBuild('http://www.nicovideo.jp/mylist/',Util.U),
 URLVInfo = ZED.URLBuild('http://ext.nicovideo.jp/api/getthumbinfo/sm',Util.U),
 URLVInfoURL = ZED.URLBuild('http://flapi.nicovideo.jp/api/getflv?v=sm',Util.U),
+UrlVideo = ZED.URLBuild('http://www.nicovideo.jp/watch/sm',Util.U),
 
 MaybeError = function(Q)
 {
@@ -93,25 +94,34 @@ R = ZED.ReduceToObject
 		{
 			return Util.RequestBody(Cookie.URL(Name,URLUser(ID,X))).map(function(Q,T,A)
 			{
-				T = Number(Util.MF(/id="video[^]+?(\d+)/,Q))
+				/noListMsg/.test(Q) &&
+				(
+					Q = Util.MF(/noListMsg[^]+?<p[^>]+>([^<]+)/,Q),
+					ZED.Throw(Q ? Util.ReplaceLang(Lang.BadE,Q) : L(Lang.Bad))
+				)
+				T = Number(Util.MF(/id="video[^]+?(\d+(?!>))/,Q))
 				A = Util.MF(/profile[^]+?<h2>([^<]+)/,Q)
 
 				return ZED.ReduceToObject
 				(
 					KeySite.Pages,Math.ceil(T / PageSize) || 0,
 					KeySite.Total,T,
-					KeySite.Item,ZED.Map(ZED.match(/outer"(?![^<]+<form)[^]+?<\/p/g,Q),function(F,V)
-					{
-						return ZED.ReduceToObject
-						(
-							KeySite.Index,PageSize * (X - 1) + F,
-							KeySite.ID,Util.MF(/sm(\d+)/,V),
-							KeySite.Img,Util.MF(/src="([^"]+)/,V),
-							KeySite.Title,Util.MF(/h5>[^>]+>([^<]+)/,V),
-							KeySite.Author,A,
-							KeySite.Date,Util.DateDirect(ZED.match(/\d+/g,Util.MF(/posttime">([^<]+)/,V) || ''))
-						)
-					})
+					KeySite.Item,ZED.Map
+					(
+						ZED.match(/outer"(?![^<]+<form)[^]+?<\/p/g,Util.MU(/Body"[^]+?="side/,Q)),
+						function(F,V)
+						{
+							return ZED.ReduceToObject
+							(
+								KeySite.Index,PageSize * (X - 1) + F,
+								KeySite.ID,Util.MF(/sm(\d+)/,V),
+								KeySite.Img,Util.MF(/src="([^"]+)/,V),
+								KeySite.Title,Util.MF(/h5>[^>]+>([^<]+)/,V),
+								KeySite.Author,A,
+								KeySite.Date,Util.DateDirect(ZED.match(/\d+/g,Util.MF(/posttime">([^<]+)/,V)))
+							)
+						}
+					)
 				)
 			})
 		}
@@ -189,9 +199,13 @@ R = ZED.ReduceToObject
 		})
 	},
 	KeySite.IDView,ZED.add('sm'),
-	KeySite.Pack,function(S)
+	KeySite.Pack,function(S,Q)
 	{
-		return Cookie.URL(Name,S)
+		return Util.RequestHead(Cookie.URL(Name,UrlVideo(Q[KeyQueue.ID]))).map(function(H)
+		{
+			Cookie.Save(Name,H)
+			return Cookie.URL(Name,S)
+		})
 	}
 );
 

@@ -30,7 +30,6 @@ Start = function(Q,I,At,URL,Done,Size,J,D)
 	ZED.isObject(URL) || (URL = {url : URL})
 	ZED.Merge(Util.F,Util.T,
 	{
-		headers : {'User-Agent' : Config.UA},
 		timeout : 3E3,
 		forever : Util.T
 	},URL)

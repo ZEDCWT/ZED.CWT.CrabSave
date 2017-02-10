@@ -6,16 +6,17 @@ False = !True,
 
 ZED = require('@zed.cwt/zedquery'),
 Observable = ZED.Observable,
+$ = require('@zed.cwt/jquery'),
 
 KeyQueue = require('./Key').Queue,
 L = require('./Lang').L,
 
+FS = require('graceful-fs'),
 Request = require('request').defaults({timeout : 15E3}),
 RequestHead = function(Q)
 {
 	return Observable.create(function(O,X)
 	{
-		console.log(Q)
 		X = Request(Q).on('error',function(E){O.error(E)})
 			.on('response',function(H)
 			{
@@ -53,7 +54,24 @@ module.exports =
 	RequestHead : RequestHead,
 	RequestBody : RequestBase(False),
 	RequestFull : RequestBase(True),
+	ajax : function(Q)
+	{
+		ZED.isObject(Q) || (Q = {url : Q})
+
+		return Observable.create(function(O,X)
+		{
+			X = $.ajax(
+			{
+				url : Q.url,
+				dataType : 'text',
+				success : function(Q){O.data(Q).finish()},
+				error : function(E){O.error(E)}
+			})
+			return function(){X.abort()}
+		})
+	},
 	mkdirp : Observable.wrapNode(ZED.mkdirp),
+	writeFile : Observable.wrapNode(FS.writeFile),
 
 	//No dependencies
 	Debug : function()
@@ -74,7 +92,7 @@ module.exports =
 	{
 		return new Date
 		(
-			Q[0].length < 3 ? '20' + Q[0] : Q[0],
+			Q[0] && Q[0].length < 3 ? '20' + Q[0] : Q[0],
 			Q[1] - 1,
 			Q[2],
 			Q[3],Q[4],Q[5] || 0

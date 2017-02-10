@@ -6,10 +6,23 @@ KeyKey = ZED.StableKeyGen(20170122);
 
 module.exports =
 {
+	Setting :
+	{
+		Dir : KeyKey(),
+		Name : KeyKey(),
+		Max : KeyKey(),
+		Font : KeyKey(),
+		Size : KeyKey(),
+		Weight : KeyKey(),
+		Retry : KeyKey(),
+		Restart : KeyKey()
+	},
 	Site :
 	{
 		Name : KeyKey(),
 		Judge : KeyKey(),
+		//Component
+		Component : KeyKey(),
 		//Login
 		Require : KeyKey(),
 		VCode : KeyKey(),
@@ -67,16 +80,5 @@ module.exports =
 		Format : KeyKey(),
 		Root : KeyKey(),
 		Dir : KeyKey()
-	},
-	Setting :
-	{
-		Dir : KeyKey(),
-		Name : KeyKey(),
-		Max : KeyKey(),
-		Font : KeyKey(),
-		Size : KeyKey(),
-		Weight : KeyKey(),
-		Retry : KeyKey(),
-		Restart : KeyKey()
 	}
 }

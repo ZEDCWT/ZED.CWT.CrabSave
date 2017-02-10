@@ -111,7 +111,7 @@
 
 	//Config
 	//	Misc
-	YTabCount = 6,
+	YTabCount = 7,
 	//	Global
 	YPadding = 10,
 	YPaddingHalf = 5,
@@ -207,10 +207,14 @@
 	ClassHistoryDate = ZED.KeyGen(),
 	ClassHistoryControlRemove = ClassHotControlRemove,
 	ClassHistoryControlMore = ClassHotControlMore,
+	//	Component
+	ClassComponentSite = ZED.KeyGen(),
+	ClassComponentSiteActive = ZED.KeyGen(),
+	ClassComponentView = ZED.KeyGen(),
 	//	Sign index
-	IDSignInSite = ZED.KeyGen(),
-	ClassSignInSiteActive = ZED.KeyGen(),
-	IDSignInInput = ZED.KeyGen(),
+	ClassSignInSite = ClassComponentSite,
+	ClassSignInSiteActive = ClassComponentSiteActive,
+	ClassSignInView = ClassComponentView,
 	IDSignInInputVCode = ZED.KeyGen(),
 
 	//Element
@@ -218,7 +222,7 @@
 	RToolBar = ShowByRock(IDToolBar),
 	RToolBarIcon = ShowByRock(IDToolBarIcon),
 	RToolBarItem = ShowByRock(IDToolBarItem),
-	RNavi = ShowByRock(IDNavi),
+	RNavi = $(DOM.div),
 	RStage = ShowByRock(IDStage).attr(DOM.cls,ClassScrollable),
 	RDetail = ShowByRock(IDDetail),
 	RDetailHead = ShowByRock(IDDetailHead),
@@ -790,9 +794,11 @@
 			//	Navi
 			'#/NG/{background:inherit;width:/ng/px}' +
 			'#/N/,#/G/{display:inline-block;height:/h/px;vertical-align:top}' +
-			'#/N/{width:/n/px;background:#F3F3F3!important;font-size:1.15rem;font-weight:bold;overflow:hidden;z-index:200200}' +
+			'#/N/{width:/n/px;background:#F3F3F3!important;font-size:1.15rem;font-weight:bold;overflow:auto}' +
+			'#/N/::-webkit-scrollbar{width:0;height:0}' +
+			'#/N/>div{position:relative;min-height:100%;overflow:hidden}' +
 			//		Tab
-			'#/N/ ./I/{position:relative;margin:/b/px 0;padding:18px 0 18px 18px;}' +
+			'#/N/ ./I/{position:relative;margin:/b/px 0;padding:18px 0 18px 18px}' +
 			'#/N/ ./I/,#/N/ ./I/ ./B/{transition:all .2s linear}' +
 			'#/N/ ./I/:hover,#/N/ ./O/{box-shadow:0 0 /b/px /a/}' +
 			//			TabOn
@@ -865,11 +871,11 @@
 
 			//ShadowBar
 			'#/T/,#/N/,#/S/{position:relative}' +
-			'./B/{position:absolute;z-index:200400;pointer-events:none}' +
+			'./B/{position:absolute;pointer-events:none}' +
 			//	ToolBar
-			'#/T/ ./B/{left:0;bottom:-/b/px;width:100%;height:/b/px;box-shadow:inset 0 /b/px /b/px -/b/px /a/}' +
+			'#/T/ ./B/{left:0;bottom:-/b/px;width:100%;height:/b/px;box-shadow:inset 0 /b/px /b/px -/b/px /a/;z-index:8000}' +
 			//	Navi
-			'#/N/ ./B/{right:0;top:0;width:/b/px;height:100%;box-shadow:inset -/b/px 0 /b/px -/b/px /a/;z-index:200000}' +
+			'#/N/ ./B/{right:0;top:0;width:/b/px;height:100%;box-shadow:inset -/b/px 0 /b/px -/b/px /a/}' +
 			//	StatusBar
 			'#/S/ ./B/{left:0;top:-/b/px;width:100%;height:/b/px;box-shadow:inset 0 -/b/px /b/px -/b/px /a/}' +
 
@@ -884,7 +890,13 @@
 			//	Shape
 			'./HP/{display:inline-block;line-height:0}' +
 			//	Single line
-			'./SL/{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}',
+			'./SL/{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}' +
+
+			//Index
+			//	Toolbar shadow should be higher than NaviStage
+			'#/T/ ./B/,#/S/ ./B/{z-index:8000}' +
+			//	Navi .TabTab should be lower than Toolbar shadow but higher than Navi shadow
+			'#/N/ ./I/{z-index:6000}',
 			'/',
 			{
 				I : DOM.Tab,
@@ -1720,23 +1732,104 @@
 			return R
 		}
 	},{
+		Tab : L(Lang.Component),
+		CSS : function()
+		{
+			return ZED.Replace
+			(
+				'',
+				'/',
+				{
+					B : DOM.Button,
+
+					U : ClassUnderlineInput,
+
+					I : ClassComponentView,
+
+					p : YPadding
+				}
+			)
+		},
+		Show : MakeSelectableListShow,
+		BeforeHide : MakeSelectableListHide,
+		Content : function(M)
+		{
+			var
+			RSite = ShowByClass(ClassComponentSite),
+			RView = ShowByClass(ClassComponentView),
+			RInfo = ShowByRock(),
+			RExe = ShowByClass(DOM.Button).text(L(Lang.ComLoad)),
+			RHidden = ShowByRock().hide(),
+
+			Target,
+			Active,
+
+			Switch = function(R,V)
+			{
+				Active && Active.removeAttr(DOM.cls)
+				Active = R
+				R.attr(DOM.cls,ClassSignInSiteActive)
+				Target = V
+				RInfo.empty()
+			},
+
+			LoadLast,
+			Load = function()
+			{
+				LoadLast && LoadLast.end()
+				LoadLast = Target[KeySite.Component](RHidden).start(ZED.noop,function(E)
+				{
+console.log('CERROR',E)
+				},function()
+				{
+console.log('CFINISH')
+				})
+			};
+
+			ZED.each(function(V,R)
+			{
+				if (V[KeySite.Component])
+				{
+					R = $(DOM.div).text(V[KeySite.Name]).on(DOM.click,function()
+					{
+						Switch(R,V)
+					})
+					Target || Switch(R,V)
+					RSite.append(R)
+				}
+			},SiteAll)
+			RExe.on(DOM.click,Load)
+			M.append
+			(
+				RSite,
+				RView.append
+				(
+					RExe,
+					RInfo,
+					RHidden
+				)
+			)
+
+			return MakeScroll()
+		}
+	},{
 		Tab : L(Lang.SignIn),
 		CSS : function()
 		{
 			return ZED.Replace
 			(
-				'#/S/,#/I/{display:inline-block;vertical-align:top}' +
+				'./S/,./I/{display:inline-block;vertical-align:top}' +
 				//Site
-				'#/S/{width:/s/px}' +
-				'#/S/>div{margin:/p/px 0;padding:/p/px;cursor:pointer}' +
-				'#/S/>div:hover,./A/{color:#2672EC}' +
-				'#/S/>div:hover{opacity:.5}' +
-				'#/S/>div./A/{opacity:1}' +
-				//Input
-				'#/I/{padding:/p/px;width:/i/px}' +
-				'#/I/ ./U/{margin:/p/px 0;padding:4px 10px;font-size:1.2rem}' +
+				'./S/{width:/s/px}' +
+				'./S/>div{margin:/p/px 0;padding:/p/px;cursor:pointer}' +
+				'./S/>div:hover,./A/{color:#2672EC}' +
+				'./S/>div:hover{opacity:.5}' +
+				'./S/>div./A/{opacity:1}' +
+				//View
+				'./I/{padding:/p/px;width:/i/px}' +
+				'./I/ ./U/{margin:/p/px 0;padding:4px 10px;font-size:1.2rem}' +
 				//	Button
-				'#/I/ ./B/{text-align:center}' +
+				'./I/ ./B/{text-align:center}' +
 				//	VCode
 				'#/V/{position:relative}' +
 				'#/V/ ./U/{width:50%}' +
@@ -1752,17 +1845,17 @@
 					'cursor:pointer' +
 				'}' +
 				//	Cookie
-				'#/I/ textarea{max-width:100%;font-size:.9rem!important}',
+				'./I/ textarea{max-width:100%;font-size:.9rem!important}',
 				'/',
 				{
 					B : DOM.Button,
 
 					U : ClassUnderlineInput,
 
-					S : IDSignInSite,
+					S : ClassSignInSite,
 					s : YSignInSiteWidth,
 					A : ClassSignInSiteActive,
-					I : IDSignInInput,
+					I : ClassSignInView,
 					i : YStageWidthWithoutScroll - YSignInSiteWidth,
 					V : IDSignInInputVCode,
 
@@ -1775,8 +1868,8 @@
 		Content : function(M,X)
 		{
 			var
-			RSite = ShowByRock(IDSignInSite),
-			RInput = ShowByRock(IDSignInInput),
+			RSite = ShowByClass(ClassSignInSite),
+			RView = ShowByClass(ClassSignInView),
 			RInfo = $(DOM.div),
 			RVCode = ShowByRock(IDSignInInputVCode),
 			RVCodeInput = ShowByInput(Lang.VCode),
@@ -1903,7 +1996,7 @@
 			M.append
 			(
 				RSite,
-				RInput.append
+				RView.append
 				(
 					RInfo,
 					RVCode.append(RVCodeInput,RVCodeImg),
@@ -2062,7 +2155,10 @@
 		),
 		ShowByRock(IDNaviStage).append
 		(
-			RNavi.prepend(ShowByClass(ClassShadowBar)),
+			ShowByRock(IDNavi).append
+			(
+				RNavi.append(ShowByClass(ClassShadowBar))
+			),
 			RStage
 		),
 		RStatusBar.append
@@ -2080,7 +2176,7 @@
 		)
 	)
 ZED.Each(ShortCut.DefaultMap,function(F,V){UShortCut.on(V,F)})
-ZED.onError=function(E){console.error('CATCHED',E)}
+	ZED.onError = function(E){Util.Debug('Mix',E)}
 	$(function()
 	{
 		Rainbow.appendTo('body')

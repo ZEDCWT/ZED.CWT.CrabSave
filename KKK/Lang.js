@@ -13,6 +13,7 @@ module.exports =
 	Cold : Lang('Cold'),
 	Hot : Lang('Hot'),
 	History : Lang('History'),
+	Component : Lang('Component'),
 	SignIn : Lang('Sign in'),
 	Setting : Lang('Setting'),
 
@@ -91,6 +92,8 @@ module.exports =
 	//History
 	HiInfo : Lang('/0/, /1/ file/2/'),
 
+	//Component
+	ComLoad : Lang('Load component'),
 	//Sign in
 	ID : Lang('Sign in ID'),
 	Password : Lang('Password'),

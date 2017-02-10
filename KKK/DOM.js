@@ -23,10 +23,13 @@ module.exports =
 	img : '<img>',
 	fieldset : '<fieldset>',
 	legend : '<legend>',
+	iframe : '<iframe>',
 
 	Div : 'div',
 	Img : 'img',
 
+	load : 'load',
+	error : 'error',
 	mouseover : 'mouseover',
 	mouseout : 'mouseout',
 	mouseup : 'mouseup',
