@@ -199,11 +199,11 @@ Bus.on(EventDownload.SpeedTotal,function(Q)
 
 				ZED.each(ZED.delete_(ZED.__,Q),NoMoreUseful)
 				Offline.unshift(Q)
-				SaveOfflineSave()
 				OfflineCardMapUp(T)
 				Q[KeyQueue.IDHis] = T += '.' + ZED.now() + '.' + ZED.Code.MD5(Math.random()).substr(0,6)
 				OfflineHistoryMap[T] = Q
 				Q[KeyQueue.Finished] = ZED.now()
+				SaveOfflineSave()
 				Bus.emit(EventQueue.Finish,Q)
 				Dispatch()
 			}

@@ -1738,7 +1738,7 @@
 		{
 			return ZED.Replace
 			(
-				'#/R/ ./B/{margin:/p/px 0}',
+				'#/R/ ./B/{margin-bottom:/p/px}',
 				'/',
 				{
 					B : DOM.Button,
