@@ -8,6 +8,10 @@ module.exports =
 {
 	L : _Lang,
 
+	//Fatal
+	Fatal : Lang('Fatal : /0/'),
+	FData : Lang('Database failed to open'),
+
 	//Tab
 	Browser : Lang('Browser'),
 	Cold : Lang('Cold'),
@@ -20,9 +24,13 @@ module.exports =
 	//StatucBar
 	Loading : Lang('Loading...'),
 	SelectingN : Lang('Selecting /0/ item/1/'),
+	CommittingN : Lang('Committing /0/ item/1/'),
 	CommittedN : Lang('Committed /0/ item/1/'),
+	RemovingN : Lang('Removing /0/ item/1/'),
 	RemovedN : Lang('Removed /0/ item/1/'),
+	RestartingN : Lang('Restarting /0/ item/1/'),
 	RestartedN : Lang('Restarted /0/ item/1/'),
+	PausingN : Lang('Pausing /0/ item/1/'),
 	PausedN : Lang('Paused /0/ item/1/'),
 
 	//Shape

@@ -13,302 +13,267 @@ EventQueue = Event.Queue,
 EventDownload = Event.Download,
 Site = require('./Site'),
 Download = require('./Download'),
-SaveOnline = require('../JSONFile')('Online'),
-SaveOnlineSave = SaveOnline.Save,
-SaveOffline = require('../JSONFile')('Offline'),
-SaveOfflineSave = SaveOffline.Save,
-
-NoMoreUseful =
-[
-	KeyQueue.Active,
-	KeyQueue.Root,
-	KeyQueue.Format
-],
+DB = require('./DB'),
 
 Max = 5,
 Current = 0,
 Running = {},
-Error = {},
-Fatal = {},
+
 Online = [],
 OnlineMap = {},
+ActiveMap = {},
 Offline = [],
-OfflineHistoryMap = {},
-OfflineCardMap = {},
-InfoEnd,
-InfoNow,
-
-OfflineCardMapUp = function(Q)
+OfflineMap = {},
+CardMap = {},
+CardMapUp = function(Q)
 {
-	OfflineCardMap[Q] ? ++OfflineCardMap[Q] : OfflineCardMap[Q] = 1
+	CardMap[Q] ? ++CardMap[Q] : CardMap[Q] = 1
 },
-
-
-
-MaybePause = function(Q)
+DBCount,
+DBOnline = DB('Online',function(Q)
 {
-	if (Running[Q[KeyQueue.Unique]])
+	DBOnline.Each(function(V,U)
 	{
-		ZED.delete_(Q[KeyQueue.Unique],Running)
-		--Current
-		Bus.emit(EventQueue.Pause,Q)
+		DBCount = V._id
+		U = V[KeyQueue.Unique]
+		Online.push(U)
+		OnlineMap[U] = Util.T
+		V[KeyQueue.Active] && (ActiveMap[U] = Util.T)
+	},Q)
+	DBCount ? ++DBCount : DBCount = 80000000
+},KeyQueue.Unique),
+DBOffline = DB('Offline',function(Q)
+{
+	DBOnline.EachRight(function(V)
+	{
+		Offline.push(V[KeyQueue.Unique])
+		OfflineMap[V[KeyQueue.IDHis]] = Util.T
+		CardMapUp(V[KeyQueue.Unique])
+	},Q)
+},KeyQueue.IDHis),
+
+
+
+NewMap = {},
+New = function(Q)
+{
+	var R = [],C,T,F;
+	for (F in Q)
+	{
+		T = Q[F]
+		C = T && T[KeySite.Unique]
+		if (C && !NewMap[C] && !OnlineMap[C])
+		{
+			NewMap[C] = Util.T
+			R.push(ZED.ReduceToObject
+			(
+				{_id : DBCount++},
+				KeyQueue.Unique,C,
+				KeyQueue.Name,T[KeySite.Name],
+				KeyQueue.ID,T[KeySite.ID],
+				KeyQueue.Title,T[KeySite.Title],
+				KeyQueue.Created,ZED.now(),
+				KeyQueue.Active,Util.T
+			))
+		}
 	}
+	if (R.length) DBOnline.insert(R).start(function()
+	{
+		F = R.length
+		for (;F;)
+		{
+			T = R[--F][KeyQueue.Unique]
+			Online.push(T)
+			ZED.delete_(T,NewMap)
+			ActiveMap[T] =
+			OnlineMap[T] = Util.T
+		}
+		Bus.emit(EventQueue.Newed,R)
+		Dispatch()
+	},function(e)
+	{
+console.log(e)
+	})
+	return R.length
 },
+Convert = function(Q,M,O,S,J)
+{
+	var R = [],T,F;
+	O = O || OnlineMap
+	for (F in Q)
+	{
+		T = Q[F]
+		if (T && O[T] && !M[T] && (!S || (J ^ S[T])))
+		{
+			M[T] = Util.T
+			R.push(T)
+		}
+	}
+	return R
+},
+MakeIn = function(Q,K,R)
+{
+	R = {}
+	R[K || KeyQueue.Unique] = {$in : Q}
+	return R
+},
+AllowMulti = {multi : Util.T},
+PlayMap = {},
+PlayUpdate = {$set : ZED.objOf(KeyQueue.Active,Util.T)},
+Play = function(Q)
+{
+	var R = Convert(Q,PlayMap,OnlineMap,ActiveMap,1),F;
+	R.length && DBOnline.update(MakeIn(R),PlayUpdate,AllowMulti).start(function()
+	{
+		for (F = R.length;F;)
+		{
+			ZED.delete_(R[--F],PlayMap)
+			ActiveMap[R[F]] = Util.T
+		}
+		Bus.emit(EventQueue.Played,R)
+		Dispatch()
+	},function(e)
+	{
+console.log(e)
+	})
+	return R.length
+},
+PauseMap = {},
+PauseUpdate = {$set : ZED.objOf(KeyQueue.Active,Util.F)},
+Pause = function(Q)
+{
+	var R = Convert(Q,PauseMap,OnlineMap,ActiveMap,0),F;
+	R.length && DBOnline.update(MakeIn(R),PauseUpdate,AllowMulti).start(function()
+	{
+		for (F = R.length;F;)
+		{
+			ZED.delete_(R[--F],PauseMap)
+			ZED.delete_(R[F],ActiveMap)
+		}
+		Bus.emit(EventQueue.Paused,R)
+		Dispatch()
+	},function(e)
+	{
+console.log(e)
+	})
+	return R.length
+},
+RemoveMap = {},
+Remove = function(Q)
+{
+	var R = Convert(Q,RemoveMap),T,F;
+	R.length && DBOnline.remove(MakeIn(R),AllowMulti).start(function()
+	{
+		for (F = R.length;F;)
+		{
+			T = R[--F]
+			ZED.delete_(T,RemoveMap)
+			ZED.delete_(T,OnlineMap)
+		}
+		Online.length = 0
+		DBOnline.Each(function(V){Online.push(V[KeyQueue.Unique])})
+		Bus.emit(EventQueue.Change,Online.length)
+		Bus.emit(EventQueue.Removed,R)
+		Dispatch()
+	},function(e)
+	{
+console.log(e)
+	})
+	return R.length
+},
+HRemoveMap = {},
+HRemove = function(Q)
+{
+	var R = Convert(Q,HRemoveMap,OfflineMap),T,F;
+	R.length && DBOffline.remove(MakeIn(R,KeyQueue.IDHis),AllowMulti).start(function()
+	{
+		for (F = R.length;F;)
+		{
+			T = R[--F]
+			ZED.delete_(T,HRemoveMap)
+			ZED.delete_(T,OfflineMap)
+		}
+		Offline.length = 0
+		DBOffline.Each(function(V){Offline.push(V[KeyQueue.IDHis])})
+		Bus.emit(EventQueue.HRemoved,R)
+	},function(e)
+	{
+console.log(e)
+	})
+	return R.length
+},
+
+
+
 Dispatch = function(T,F)
 {
 	if (Current < Max)
 	{
-		for (F = 0;Current < Max && F < Online.length;++F)
-		{
-			T = Online[F]
-			if (T[KeyQueue.Active] && !Running[T[KeyQueue.Unique]])
-			{
-				Running[T[KeyQueue.Unique]] = Util.T
-				++Current
-				Bus.emit(T[KeyQueue.Size] < 0 ? EventQueue.FakeRun : EventQueue.Play,T)
-			}
-		}
 	}
 	else if (Max < Current)
 	{
-		for (F = Online.length;Max < Current && F;)
-			MaybePause(Online[--F])
 	}
 	DispatchInfo()
 },
 DispatchInfoGot = function()
 {
-	InfoNow[KeyQueue.File] = ZED.repeat('',ZED.reduce(function(D,V)
-	{
-		return D + V[KeyQueue.URL].length
-	},0,InfoNow[KeyQueue.Part]))
-	SaveOnlineSave()
-	Bus.emit(EventQueue.InfoGot,InfoNow)
-	return InfoNow[KeyQueue.Size] < 0 ?
-		Download.Size(InfoNow) :
-		Observable.empty()
 },
 DispatchInfoEnd = function()
 {
-	InfoEnd = InfoNow = Util.F
 	DispatchInfo()
 },
 DispatchInfoError = function(E)
 {
-console.log(E)
+	Util.Debug('Queue',E)
 	DispatchInfoEnd()
 },
 DispatchInfoFinish = function()
 {
-	SaveOnlineSave()
-	Bus.emit(EventQueue.SizeGot,InfoNow)
-	Running[InfoNow[KeyQueue.Unique]] && Bus.emit(EventQueue.Play,InfoNow)
 	DispatchInfoEnd()
 },
 DispatchInfo = function(T,P)
 {
-	if (InfoEnd && !ZED.has(InfoNow[KeyQueue.Unique],OnlineMap))
-	{
-		InfoEnd.end()
-		InfoEnd = InfoNow = Util.F
-	}
-	if (!InfoEnd && Online.length)
-	{
-		//Pick a task, processing one is prior
-		T = ZED.find(function(V)
-		{
-			return (!V[KeyQueue.Part] || V[KeyQueue.Size] < 0) &&
-			(
-				P = P || V,
-				Running[V[KeyQueue.Unique]]
-			)
-		},Online) || P
-		if (T)
-		{
-			Bus.emit(EventQueue.Info,T)
-			InfoNow = T
-			T = T[KeyQueue.Part] ?
-				Download.Size(T) :
-				Site.Map[T[KeyQueue.Name]][KeySite.URL](T[KeyQueue.ID],T)
-					.reduce(ZED.noop)
-					.flatMap(DispatchInfoGot)
-			InfoEnd = T.start(ZED.noop,DispatchInfoError,DispatchInfoFinish)
-		}
-	}
-},
-
-
-
-MakeAction = function(O,H,C,K)
-{
-	K = K || KeyQueue.Unique
-	return function(Q)
-	{
-		var R = 0,T,F;
-
-		for (F = O.length;F;)
-		{
-			T = O[--F]
-			Q[T[K]] && H(T,F) && ++R
-		}
-		C && C()
-		return R
-	}
-},
-
-
-
-EventOnlineChange = function()
-{
-	Bus.emit(EventQueue.Change,Online.length)
 };
-
-Online = SaveOnline.Data()
-ZED.isArray(Online) || (Online = [])
-SaveOnline.Replace(Online)
-Offline = SaveOffline.Data()
-ZED.isArray(Offline) || (Offline = [])
-SaveOffline.Replace(Offline)
-ZED.each(function(V)
-{
-	OnlineMap[V[KeyQueue.Unique]] = V
-},Online)
-ZED.each(function(V)
-{
-	OfflineHistoryMap[V[KeyQueue.IDHis]] = V
-	OfflineCardMapUp(V[KeyQueue.Unique])
-},Offline)
 
 Bus.on(EventDownload.SpeedTotal,function(Q)
 {
-	Q && SaveOnlineSave()
-})
-	.on(EventDownload.Finish,function(Q,T)
-	{
-		if (Running[Q[KeyQueue.Unique]])
-		{
-			T = ZED.indexOf(Q,Online)
-			if (0 <= T)
-			{
-				Online.splice(T,1)
-				SaveOnlineSave()
-				T = Q[KeyQueue.Unique]
-				ZED.delete_(T,OnlineMap)
-				--Current
-				EventOnlineChange()
-
-				ZED.each(ZED.delete_(ZED.__,Q),NoMoreUseful)
-				Offline.unshift(Q)
-				OfflineCardMapUp(T)
-				Q[KeyQueue.IDHis] = T += '.' + ZED.now() + '.' + ZED.Code.MD5(Math.random()).substr(0,6)
-				OfflineHistoryMap[T] = Q
-				Q[KeyQueue.Finished] = ZED.now()
-				SaveOfflineSave()
-				Bus.emit(EventQueue.Finish,Q)
-				Dispatch()
-			}
-		}
-	})
-	.on(EventDownload.Reinfo,function(Q)
-	{
+}).on(EventDownload.Finish,function(Q,T)
+{
+}).on(EventDownload.Reinfo,function(Q)
+{
 console.log('REINFO',Q)
-	})
-	.on(EventDownload.Error,function(Q)
-	{
+}).on(EventDownload.Error,function(Q)
+{
 console.log('ERROR',Q)
-	})
+})
 
 module.exports =
 {
 	Online : Online,
 	OnlineMap : OnlineMap,
+	ActiveMap : ActiveMap,
 	Offline : Offline,
-	OfflineMap : OfflineHistoryMap,
+	OfflineMap : OfflineMap,
+	CardMap : CardMap,
 
 	Max : function(Q){Max = Number(Q)},
 
 	Dispatch : Dispatch,
 
-	HasOnline : function(ID)
-	{
-		return ZED.has(ID,OnlineMap)
-	},
-	HasOffline : function(ID)
-	{
-		return ZED.has(ID,OfflineCardMap)
-	},
-
 	//Hot
-	IsInfo : function(Q){return InfoNow === Q},
-	IsRunning : function(Q){return Running[Q[KeyQueue.Unique]]},
+	IsInfo : function(Q){return 0 === Q},
+	IsRunning : function(Q){return Running[Q]},
 
-	New : function(Q)
+	Info : function(Q)
 	{
-		var Unique = Q[KeySite.Unique];
-
-		if (!ZED.has(Unique,OnlineMap))
-		{
-			Online.push(OnlineMap[Unique] = ZED.ReduceToObject
-			(
-				KeyQueue.Created,ZED.now(),
-				KeyQueue.Name,Q[KeySite.Name],
-				KeyQueue.Unique,Unique,
-				KeyQueue.ID,Q[KeySite.ID],
-				KeyQueue.Title,Q[KeySite.Title],
-				KeyQueue.Active,Util.T,
-				KeyQueue.Size,-1
-			))
-			SaveOnlineSave()
-			EventOnlineChange()
-			Dispatch()
-		}
+		return DBOnline.get(ZED.objOf(KeyQueue.Unique,Q))
 	},
-	Play : MakeAction(Online,function(Q)
-	{
-		return Q[KeyQueue.Active] ?
-			Util.F :
-			Q[KeyQueue.Active] = Util.T
-	},function()
-	{
-		SaveOnlineSave()
-		Dispatch()
-	}),
-	Pause : MakeAction(Online,function(Q)
-	{
-		return Q[KeyQueue.Active] &&
-		(
-			Q[KeyQueue.Active] = Util.F,
-			MaybePause(Q),
-			Util.T
-		)
-	},function()
-	{
-		SaveOnlineSave()
-		Dispatch()
-	}),
-	Remove : MakeAction(Online,function(Q,F)
-	{
-		InfoNow === Q && (InfoEnd.end(),InfoNow = InfoEnd = Util.F)
-		MaybePause(Q)
-		Online.splice(F,1)
-		ZED.delete_(Q[KeyQueue.Unique],OnlineMap)
-		Bus.emit(EventQueue.Remove,Q)
-		return Util.T
-	},function()
-	{
-		SaveOnlineSave()
-		Dispatch()
-		EventOnlineChange()
-	}),
+
+	New : New,
+	Play : Play,
+	Pause : Pause,
+	Remove : Remove,
 
 	//History
-	Bye : MakeAction(Offline,function(Q,F)
-	{
-		Offline.splice(F,1)
-		ZED.delete_(Q[KeyQueue.IDHis],OfflineHistoryMap)
-		F = Q[KeyQueue.Unique]
-		1 === OfflineCardMap[F] ? ZED.delete_(F,OfflineCardMap) : --OfflineCardMap[F]
-		Bus.emit(EventQueue.Bye,Q)
-		return Util.T
-	},SaveOfflineSave,KeyQueue.IDHis)
+	HRemove : HRemove
 }

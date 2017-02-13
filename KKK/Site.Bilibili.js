@@ -66,20 +66,19 @@ FrameRepeater = ZED.Repeater(),
 BishiID,
 BishiMethod,
 BishiSign,
-BishiURL,
-BishiCall = function(Q){BishiURL = Q},
+BishiReturned,
+BishiCall = function(Q){BishiReturned = Q},
 Bishi,
 TryBishi = function(Q)
 {
 	if (BishiSign) try
 	{
-		BishiURL = Util.F
+		BishiReturned = Util.F
 		Bishi.U = BishiCall
 		BishiSign(0,1,Q,4,'',null,0)
-		BishiSign
 	}
 	catch(e){}
-	return BishiURL
+	return BishiReturned
 },
 BishiURL = function(Q)
 {

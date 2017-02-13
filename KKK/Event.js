@@ -12,6 +12,12 @@ module.exports =
 	},
 	Queue :
 	{
+		Newed : EventKey(),
+		Played : EventKey(),
+		Paused : EventKey(),
+		Removed : EventKey(),
+		HRemoved : EventKey(),
+
 		Change : EventKey(),
 		FakeRun : EventKey(),
 		Play : EventKey(),
@@ -22,7 +28,7 @@ module.exports =
 		SizeGot : EventKey(),
 		Finish : EventKey(),
 
-		Bye : EventKey()
+		HRemove : EventKey()
 	},
 	Download :
 	{

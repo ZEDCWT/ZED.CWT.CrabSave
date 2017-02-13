@@ -26,7 +26,25 @@ LangMap = ZED.ReduceToObject
 	Card.History,Lang.History
 ),
 
-Cold = [],
+Cold = [{
+	"C": 1,
+	"=": 7964909,
+	"S": "http://i0.hdslb.com/bfs/archive/8c596e4c078d3a8adf7484d6858e54451f93ca7f.jpg",
+	"O/": "舌尖下的屌丝特别版：模仿印度乡村料理咖喱鸡",
+	"Z/": "老虎与马",
+	"y/": "2017-01-11T21:12:21.000Z",
+	"q": "Bilibili",
+	"A": "Bilibili.7964909"
+},{
+	"C": 1,
+	"=": 9,
+	"S": "http://i0.hdslb.com/bfs/archive/8c596e4c078d3a8adf7484d6858e54451f93ca7f.jpg",
+	"O/": "\u2468",
+	"Z/": "BISHI",
+	"y/": "2017-01-11T21:12:21.000Z",
+	"q": "Bilibili",
+	"A": "Bilibili.9"
+}],
 ColdMap = {},
 StatusMap = {},
 Active = {},
@@ -42,7 +60,7 @@ Select = function(ID,J,R)
 },
 ReleseState = function(R,ID,T)
 {
-	T = Queue.HasOffline(ID)
+	T = Queue.CardMap[ID]
 	R[0].attr(DOM.cls,Prefix + (StatusMap[ID] = T ? Card.History : Card.Init))
 		.text(L(T ? Lang.History : Lang.Select))
 },
@@ -65,39 +83,6 @@ Unselect = function(ID,R,T)
 	}
 },
 
-Commit = function(Q,ID,R)
-{
-	ID = Q[KeySite.Unique]
-	R = Active[ID]
-	R && R[0].attr(DOM.cls,Prefix + (StatusMap[ID] = Card.Hot)).text(L(Lang.Hot))
-	Queue.New(Q)
-},
-Remove = function(Q,ID)
-{
-	ID = Q[KeySite.Unique]
-	Q = Active[ID]
-	Q && ReleseState(Q,ID)
-},
-
-MakeAction = ZED.curry(function(H,Q)
-{
-	var R = 0,T,F;
-
-	for (F = Cold.length;F;)
-	{
-		T = Cold[--F]
-		if (Q[T[KeySite.Unique]])
-		{
-			++R
-			H(T)
-			Cold.splice(F,1)
-			ZED.delete_(T[KeySite.Unique],ColdMap)
-		}
-	}
-	ChangeCount()
-	return R
-}),
-
 ChangeCount = function()
 {
 	Bus.emit(EventCold.Change,Cold.length)
@@ -109,12 +94,24 @@ RefreshState = function(ID,R)
 	R = Active[ID]
 	R ?
 		ReleseState(R,ID) :
-		StatusMap[ID] = Queue.HasOffline(ID) ? Card.History : Card.Init
+		StatusMap[ID] = Queue.CardMap[ID] ? Card.History : Card.Init
 };
 
-Bus.on(EventQueue.Remove,RefreshState)
-	.on(EventQueue.Finish,RefreshState)
-	.on(EventQueue.Bye,RefreshState)
+Bus.on(EventQueue.Newed,function(R)
+{
+	var M = {},F;
+
+	for (F = R.length;F;) M[R[--F][KeyQueue.Unique]] = Util.T
+	for (F = Cold.length;F;)
+	{
+		R = Cold[--F][KeySite.Unique]
+		if (M[R])
+		{
+			Cold.splice(F,1)
+			ZED.delete_(R,ColdMap)
+		}
+	}
+})
 
 module.exports =
 {
@@ -128,21 +125,19 @@ module.exports =
 		S = StatusMap[ID]
 		if (!S)
 		{
-			StatusMap[ID] = S = Queue.HasOnline(ID) ?
+			StatusMap[ID] = S = Queue.OnlineMap[ID] ?
 				Card.Hot :
-				Queue.HasOffline(ID) ?
+				Queue.CardMap[ID] ?
 					Card.History :
 					Card.Init
 		}
 		R = ZED.jQuery(DOM.div).attr(DOM.cls,Prefix + S).text(L(LangMap[S]))
 		Active[ID] = [R,O]
-
 		return R
 	},
 	Click : function(ID)
 	{
 		var State = StatusMap[ID];
-
 		ZED.ClearSelection()
 		Card.Cold === State ?
 			Unselect(ID) :
@@ -159,20 +154,37 @@ module.exports =
 		ZED.EachKey(Active,Unselect)
 		ChangeCount()
 	},
-	Commit : MakeAction(Commit),
-	Remove : MakeAction(Remove),
-	CommitAll : function(R)
+	Commit : Queue.New,
+	Remove : function(Q,R,C,T,F)
 	{
-		if (R = Cold.length)
+		R = 0
+		for (F = Cold.length;F;)
 		{
-			ZED.each(function(V)
+			T = Cold[--F]
+			C = T[KeySite.Unique]
+			if (Q[C])
 			{
-				Commit(V)
-				ZED.delete_(V[KeySite.Unique],ColdMap)
-			},Cold)
-			Cold.length = 0
-			ChangeCount()
+				++R
+				T = Active[C]
+				T && ReleseState(T,C)
+				Cold.splice(F,1)
+				ZED.delete_(C,ColdMap)
+			}
 		}
 		return R
+	},
+	CommitAll : function(R,T,F)
+	{
+		if (F = Cold.length)
+		{
+			R = {}
+			for (;F;)
+			{
+				T = Cold[--F]
+				R[T[KeySite.Unique]] = T
+			}
+			return Queue.New(R)
+		}
+		return 0
 	}
 }

@@ -9,7 +9,8 @@ Observable = ZED.Observable,
 $ = require('@zed.cwt/jquery'),
 
 KeyQueue = require('./Key').Queue,
-L = require('./Lang').L,
+Lang = require('./Lang'),
+L = Lang.L,
 
 FS = require('graceful-fs'),
 Request = require('request').defaults({timeout : 15E3}),
@@ -70,12 +71,18 @@ module.exports =
 		})
 	},
 	mkdirp : Observable.wrapNode(ZED.mkdirp),
+	readFile : Observable.wrapNode(FS.readFile),
 	writeFile : Observable.wrapNode(FS.writeFile),
 
 	//No dependencies
 	Debug : function()
 	{
 		console.error.apply(console,ZED.prepend('DEBUG',arguments))
+	},
+	Fatal : function(Q)
+	{
+		alert(ZED.Replace(L(Lang.Fatal),'/',[Q]))
+		process.exit(1)
 	},
 	MakeUnique : function(Q,S){return Q + '.' + S},
 	MakeLabelID : function(Q)

@@ -56,31 +56,63 @@ module.exports =
 	},
 	Queue :
 	{
-		Created : KeyKey(),
-		Finished : KeyKey(),
-		Name : KeyKey(),
 		Unique : KeyKey(),
+		Name : KeyKey(),
 		ID : KeyKey(),
 		IDHis : KeyKey(),
+
 		Title : KeyKey(),
+
+		Created : KeyKey(),
+		Finished : KeyKey(),
 
 		Active : KeyKey(),
 
 		Author : KeyKey(),
 		Date : KeyKey(),
-		Size : KeyKey(),
-		Sizes : KeyKey(),
-		Done : KeyKey(),
 
 		Part : KeyKey(),
 		//[Title] reuse, optional part title
 		URL : KeyKey(),
 		Suffix : KeyKey(),
 
-		File : KeyKey(),
+		Size : KeyKey(),
+		Sizes : KeyKey(),
 
+		Done : KeyKey(),
+		DoneSum : KeyKey(),
 		Format : KeyKey(),
 		Root : KeyKey(),
-		Dir : KeyKey()
+		Dir : KeyKey(),
+		File : KeyKey()
+	},
+	QueueN :
+	{
+		Name : 'Name',
+		ID : 'ID',
+		Mark : 'Mark',
+
+		Title : 'Title',
+
+		Created : 'Created',
+		Finished : 'Finished',
+
+		Active : 'Active',
+
+		Author : 'Author',
+		Date : 'Date',
+
+		Part : 'Part',
+		//[Title] reuse, optional part title
+		URL : 'U',
+		Suffix : 'S',
+		Size : 'Size',
+		Sizes : 'Sizes',
+
+		Done : 'Done',
+		Format : 'Format',
+		Root : 'Root',
+		Dir : 'Dir',
+		File : 'File',
 	}
 }
