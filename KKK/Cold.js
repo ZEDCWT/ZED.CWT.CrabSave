@@ -20,31 +20,13 @@ Prefix = DOM.NoSelect + ' ' + Card.R + ' ',
 
 LangMap = ZED.ReduceToObject
 (
-	Card.Init,Lang.Select,
-	Card.Cold,Lang.Cold,
-	Card.Hot,Lang.Hot,
-	Card.History,Lang.History
+	Card.Init,L(Lang.Select),
+	Card.Cold,L(Lang.Cold),
+	Card.Hot,L(Lang.Hot),
+	Card.History,L(Lang.History)
 ),
 
-Cold = [{
-	"C": 1,
-	"=": 7964909,
-	"S": "http://i0.hdslb.com/bfs/archive/8c596e4c078d3a8adf7484d6858e54451f93ca7f.jpg",
-	"O/": "舌尖下的屌丝特别版：模仿印度乡村料理咖喱鸡",
-	"Z/": "老虎与马",
-	"y/": "2017-01-11T21:12:21.000Z",
-	"q": "Bilibili",
-	"A": "Bilibili.7964909"
-},{
-	"C": 1,
-	"=": 9,
-	"S": "http://i0.hdslb.com/bfs/archive/8c596e4c078d3a8adf7484d6858e54451f93ca7f.jpg",
-	"O/": "\u2468",
-	"Z/": "BISHI",
-	"y/": "2017-01-11T21:12:21.000Z",
-	"q": "Bilibili",
-	"A": "Bilibili.9"
-}],
+Cold = [],
 ColdMap = {},
 StatusMap = {},
 Active = {},
@@ -88,28 +70,44 @@ ChangeCount = function()
 	Bus.emit(EventCold.Change,Cold.length)
 },
 
-RefreshState = function(ID,R)
+StateTo = function(ID,S,R)
 {
-	ID = ID[KeyQueue.Unique]
-	R = Active[ID]
-	R ?
-		ReleseState(R,ID) :
-		StatusMap[ID] = Queue.CardMap[ID] ? Card.History : Card.Init
+	R = R || Active[ID]
+	R && R[0].attr(DOM.cls,Prefix + S).text(LangMap[S])
+	StatusMap[ID] = S
 };
 
-Bus.on(EventQueue.Newed,function(R)
+Bus.on(EventQueue.Newed,function(R,M,F)
 {
-	var M = {},F;
-
+	M = {}
 	for (F = R.length;F;) M[R[--F][KeyQueue.Unique]] = Util.T
 	for (F = Cold.length;F;)
 	{
 		R = Cold[--F][KeySite.Unique]
 		if (M[R])
 		{
+			StateTo(R,Card.Hot)
 			Cold.splice(F,1)
 			ZED.delete_(R,ColdMap)
 		}
+	}
+	ChangeCount()
+}).on(EventQueue.Removed,function(R,T,F)
+{
+	for (F = R.length;F;)
+	{
+		T = R[--F]
+		StatusMap[T] && StateTo(T,Queue.CardMap[T] ? Card.History : Card.Init)
+	}
+}).on(EventQueue.Finish,function(Q)
+{
+	StateTo(Q[KeyQueue.Unique],Card.History)
+}).on(EventQueue.HRemoved,function(R,T,F)
+{
+	for (F = R.length;F;)
+	{
+		T = R[--F]
+		StatusMap[T] && StateTo(T,Queue.CardMap[T] ? Card.History : Card.Init)
 	}
 })
 
@@ -155,6 +153,14 @@ module.exports =
 		ChangeCount()
 	},
 	Commit : Queue.New,
+	CommitMany : function(Q,R,F)
+	{
+		R = []
+		for (F = 0;F < Cold.length;++F)
+			Q[Cold[F][KeySite.Unique]] && R.push(Cold[F])
+		return Queue.New(R)
+	},
+	CommitAll : function(){return Cold.length ? Queue.New(Cold) : 0},
 	Remove : function(Q,R,C,T,F)
 	{
 		R = 0
@@ -171,20 +177,7 @@ module.exports =
 				ZED.delete_(C,ColdMap)
 			}
 		}
+		ChangeCount()
 		return R
-	},
-	CommitAll : function(R,T,F)
-	{
-		if (F = Cold.length)
-		{
-			R = {}
-			for (;F;)
-			{
-				T = Cold[--F]
-				R[T[KeySite.Unique]] = T
-			}
-			return Queue.New(R)
-		}
-		return 0
 	}
 }

@@ -1,8 +1,5 @@
 'use strict'
 var
-ZED = require('@zed.cwt/zedquery'),
-Observable = ZED.Observable,
-
 Config = require('../Config'),
 Util = require('./Util'),
 Lang = require('./Lang'),
@@ -33,20 +30,17 @@ module.exports = function(Q,C,K)
 {
 	var
 	File = Path.join(Config.Root,Q),
-	Data = new NeDB(),
-	Load = function()
+	Data = new NeDB(File);
+
+	Data.loadDatabase(function(E)
 	{
-		1||Data.loadDatabase(function(E)
+		if (E) Util.Fatal(L(Lang.FData) + '\n' + E)
+		else K && !Data.indexes[K] ? Data.ensureIndex({fieldName : K,unique : Util.T},function(E)
 		{
 			E ? Util.Fatal(L(Lang.FData) + '\n' + E) : C()
-		})
-	};
+		}) : C()
+	})
 
-	K ? Data.ensureIndex({fieldName : K,unique : Util.T},function(E)
-	{
-		E ? Util.Fatal(L(Lang.FData) + '\n' + E) : Load()
-	}) : Load()
-	setImmediate(C)
 	return {
 		Data : Data,
 		Each : function(C)
@@ -56,12 +50,6 @@ module.exports = function(Q,C,K)
 		EachRight : function(C)
 		{
 			TreeWalkRight(Data.indexes._id.tree.tree,C)
-		},
-		count : Observable.wrapNode(Data.count,Data),
-		insert : Observable.wrapNode(Data.insert,Data),
-		get : Observable.wrapNode(Data.findOne,Data),
-		find : Observable.wrapNode(Data.find,Data),
-		update : Observable.wrapNode(Data.update,Data),
-		remove : Observable.wrapNode(Data.remove,Data)
+		}
 	}
 }

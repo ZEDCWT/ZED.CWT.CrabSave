@@ -32,6 +32,7 @@ module.exports =
 	RestartedN : Lang('Restarted /0/ item/1/'),
 	PausingN : Lang('Pausing /0/ item/1/'),
 	PausedN : Lang('Paused /0/ item/1/'),
+	ErrWhile : Lang('Failed to /0/ because of a databse error'),
 
 	//Shape
 	SelAll : Lang('Select all'),
@@ -77,6 +78,7 @@ module.exports =
 	EURL : Lang('URL expired'),
 	EConn : Lang('Connection error'),
 	Paused : Lang('Paused'),
+	Finish : Lang('Finish'),
 
 	//Detail
 	Created : Lang('Created'),

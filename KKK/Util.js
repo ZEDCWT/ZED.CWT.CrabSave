@@ -8,7 +8,6 @@ ZED = require('@zed.cwt/zedquery'),
 Observable = ZED.Observable,
 $ = require('@zed.cwt/jquery'),
 
-KeyQueue = require('./Key').Queue,
 Lang = require('./Lang'),
 L = Lang.L,
 
@@ -112,7 +111,6 @@ module.exports =
 	{
 		return ZED.Replace(L(Q),'/',ZED.isArray(S) ? S : ZED.tail(arguments))
 	},
-	CalcSize : ZED.pipe(ZED.sum,ZED.FormatSize),
 	CookieSolve : function(Q)
 	{
 		return ZED.reduce(function(D,V)
@@ -135,13 +133,5 @@ module.exports =
 			V = V.split('=')
 			V[0] && V[1] && (D[V[0]] = V[1])
 		},{},Q.split('; '))
-	},
-
-	//Local dependencies
-	SetSize : function(Q,S)
-	{
-		Q[KeyQueue.Size] = ZED.sum(S)
-		Q[KeyQueue.Sizes] = S
-		Q[KeyQueue.Done] = ZED.repeat(0,S.length)
 	}
 }

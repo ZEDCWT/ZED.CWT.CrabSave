@@ -284,11 +284,12 @@ R = ZED.ReduceToObject
 			})
 		}
 	)],
-	KeySite.URL,function(ID,R)
+	KeySite.URL,function(ID)
 	{
 		return Util.RequestBody(Cookie.URL(Name,URLVInfo(ID))).flatMap(function(Q)
 		{
 			var
+			R = {},
 			Part = [],
 			Sizes = [];
 
@@ -299,11 +300,12 @@ R = ZED.ReduceToObject
 				Lang.BadCE,
 				Q.code,Q.error || Q.message
 			))
-			ZED.Merge(Util.T,R,ZED.ReduceToObject
+			ZED.ReduceToObject
 			(
+				R,
 				KeyQueue.Author,Q.author,
 				KeyQueue.Date,1000 * Q.created
-			))
+			)
 
 			return Observable.from(Q.list).flatMapOnline(1,function(V)
 			{
@@ -328,16 +330,13 @@ R = ZED.ReduceToObject
 						.delay(2000)
 				})
 			})
-			.tap(ZED.noop,ZED.noop,function()
+			.finish()
+			.map(function()
 			{
 				R[KeyQueue.Part] = Part
-				Util.SetSize(R,ZED.flatten(Sizes))
+				R[KeyQueue.Sizes] = ZED.flatten(Sizes)
+				return R
 			})
-		})
-		.retryWhen(function(Q)
-		{
-			return Q.tap(function(E){Overspeed === E || ZED.Throw(E)})
-				.delay(2000)
 		})
 	},
 	KeySite.IDView,ZED.add('av'),

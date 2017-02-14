@@ -92,10 +92,6 @@
 		return ShowByClass(ClassSingleLine).attr(DOM.title,Q + '@' + S)
 			.append(Q,ShowByText('@',DOM.span),S)
 	},
-	MakeSizeJust = function(Q)
-	{
-		return Q ? ZED.FormatSize(Q) : L(Lang.SizeUn)
-	},
 	MakeSizePercentage = function(S,D)
 	{
 		return ZED.isNull(S) ?
@@ -582,60 +578,63 @@
 			ZED.isObject(Q) ? Q : ShowByText(Q,DOM.span)
 		)
 	},
-	MakeDetailProgress = function()
+	MakeDetailProgress = function(Q)
 	{
-		return MakeDetailActive[KeyQueue.Finished] ?
-			ReplaceLang(Lang.FinishedAt,ZED.DateToString(DateToStringFormatDisplay,MakeDetailActive[KeyQueue.Finished])) :
-			MakeDetailActive[KeyQueue.Done] ?
-				0 < MakeDetailActive[KeyQueue.Size] ?
-					ZED.Format(100 * ZED.sum(MakeDetailActive[KeyQueue.Done]) / MakeDetailActive[KeyQueue.Size]) + '%' :
+		return Q[KeyQueue.Finished] ?
+			ReplaceLang(Lang.FinishedAt,ZED.DateToString(DateToStringFormatDisplay,Q[KeyQueue.Finished])) :
+			Q[KeyQueue.Done] ?
+				0 < Q[KeyQueue.Size] ?
+					ZED.Format(100 * Q[KeyQueue.DoneSum] / Q[KeyQueue.Size]) + '%' :
 					L(Lang.Unfinished) :
 				'0%'
 	},
-	MakeDetailSize = function()
+	MakeDetailSize = function(Q)
 	{
-		return MakeDetailActive[KeyQueue.Size] < 0 ?
+		return Q[KeyQueue.Size] < 0 ?
 			L(Lang.Calculating) :
-			MakeDetailActive[KeyQueue.Size] ?
-				ZED.FormatSize(MakeDetailActive[KeyQueue.Size]) :
+			Q[KeyQueue.Size] ?
+				ZED.FormatSize(Q[KeyQueue.Size]) :
 				L(Lang.SizeUn)
 	},
-	MakeDetailSetupURL = ZED.each(function(Q)
+	MakeDetailSetupURL = function(V,Q)
 	{
-		var I = MakeDetailURL.length,R;
+		ZED.each(function(V)
+		{
+			var I = MakeDetailURL.length,R;
 
-		RDetailPart.append($(DOM.div).append
-		(
-			ShowByClass(ClassSingleLine).attr(DOM.title,Q).text(Q),
-			R = ShowByText
+			RDetailPart.append($(DOM.div).append
 			(
-				MakeDetailActive[KeyQueue.Sizes] ?
-					MakeSizePercentage(MakeDetailActive[KeyQueue.Sizes][I],MakeDetailActive[KeyQueue.Done][I]) :
-					L(Lang.GetSize),
-				DOM.span
-			)
-		))
-		MakeDetailURL.push(R)
-	}),
-	MakeDetailSetup = function()
+				ShowByClass(ClassSingleLine).attr(DOM.title,V).text(V),
+				R = ShowByText
+				(
+					Q[KeyQueue.Sizes] ?
+						MakeSizePercentage(Q[KeyQueue.Sizes][I],Q[KeyQueue.Done][I]) :
+						L(Lang.GetSize),
+					DOM.span
+				)
+			))
+			MakeDetailURL.push(R)
+		},V)
+	},
+	MakeDetailSetupInfo = function(Q)
 	{
 		var
-		Part = MakeDetailActive[KeyQueue.Part];
+		Part = Q[KeyQueue.Part];
 
 		RDetailInfo.empty().append
 		(
-			MakeDetailSetupSingle(Lang.Created,ZED.DateToString(DateToStringFormatDisplay,MakeDetailActive[KeyQueue.Created])),
-			MakeDetailSetupSingle(Lang.Progress,MakeDetailInfoProgress = ShowByText(MakeDetailProgress(),DOM.span)),
-			MakeDetailSetupSingle(Lang.Author,MakeDetailActive[KeyQueue.Author]),
-			MakeDetailSetupSingle(Lang.UpDate,ZED.DateToString(DateToStringFormatFile,MakeDetailActive[KeyQueue.Date])),
+			MakeDetailSetupSingle(Lang.Created,ZED.DateToString(DateToStringFormatDisplay,Q[KeyQueue.Created])),
+			MakeDetailSetupSingle(Lang.Progress,MakeDetailInfoProgress = ShowByText(MakeDetailProgress(Q),DOM.span)),
+			MakeDetailSetupSingle(Lang.Author,Q[KeyQueue.Author]),
+			MakeDetailSetupSingle(Lang.UpDate,ZED.DateToString(DateToStringFormatFile,Q[KeyQueue.Date])),
 			MakeDetailSetupSingle(Lang.Parts,Part.length),
-			MakeDetailSetupSingle(Lang.Files,MakeDetailActive[KeyQueue.File].length),
-			MakeDetailSetupSingle(Lang.Directory,MakeDetailInfoDir = ShowByText(MakeDetailActive[KeyQueue.Dir] || L(Lang.NoDir),DOM.span)),
-			MakeDetailSetupSingle(Lang.TTS,MakeDetailInfoTTS = ShowByText(MakeDetailSize(),DOM.span)),
+			MakeDetailSetupSingle(Lang.Files,Q[KeyQueue.File].length),
+			MakeDetailSetupSingle(Lang.Directory,MakeDetailInfoDir = ShowByText(Q[KeyQueue.Dir] || L(Lang.NoDir),DOM.span)),
+			MakeDetailSetupSingle(Lang.TTS,MakeDetailInfoTTS = ShowByText(MakeDetailSize(Q),DOM.span)),
 			MakeDetailSetupSingle
 			(
 				Lang.Downloaded,
-				MakeDetailInfoDownloaded = ShowByText(Util.CalcSize(MakeDetailActive[KeyQueue.Done]),DOM.span)
+				MakeDetailInfoDownloaded = ShowByText(ZED.FormatSize(Q[KeyQueue.DoneSum]),DOM.span)
 			)
 		)
 
@@ -648,25 +647,25 @@
 					.attr(DOM.cls,ClassDetailLabel),
 				V[KeyQueue.Title] ? ' ' + V[KeyQueue.Title] : ''
 			)
-			MakeDetailSetupURL(V[KeyQueue.URL])
+			MakeDetailSetupURL(V[KeyQueue.URL],Q)
 		})
-		else MakeDetailSetupURL(Part[0][KeyQueue.URL])
+		else MakeDetailSetupURL(Part[0][KeyQueue.URL],Q)
 	},
-	MakeDetailRefresh = function()
+	MakeDetailRefresh = function(Q)
 	{
 		var
-		Size = MakeDetailActive[KeyQueue.Sizes],
-		Done = MakeDetailActive[KeyQueue.Done];
+		Size = Q[KeyQueue.Sizes],
+		Done = Q[KeyQueue.Done];
 
-		MakeDetailInfoProgress && MakeDetailInfoProgress.text(MakeDetailProgress())
-		Done && MakeDetailInfoDownloaded.text(Util.CalcSize(Done))
+		MakeDetailInfoProgress && MakeDetailInfoProgress.text(MakeDetailProgress(Q))
+		Done && MakeDetailInfoDownloaded.text(ZED.FormatSize(Q[KeyQueue.DoneSum]))
 		Size && ZED.Each(MakeDetailURL,function(F,V){V.text(MakeSizePercentage(Size[F],Done[F]))})
 	},
-	MakeDetail = function(Q)
+	MakeDetailSetup = function(ID,Q)
 	{
 		if (MakeDetailActive) RDetailChildren.empty()
 		else RStage.append(RDetail)
-		MakeDetailActive = Q
+		MakeDetailActive = ID
 		MakeDetailAt = UTab.Index()
 		MakeToolBarLast && MakeToolBarLast.detach()
 		RStatusText.text('')
@@ -677,8 +676,26 @@
 			ShowByText(Q[KeyQueue.Title]),
 			ShowByText(Q[KeyQueue.Name] + ' ' + SiteMap[Q[KeyQueue.Name]][KeySite.IDView](Q[KeyQueue.ID]),DOM.span)
 		)
-		if (Q[KeyQueue.Part]) MakeDetailSetup()
+		if (Q[KeyQueue.Part]) MakeDetailSetupInfo(Q)
 		else RDetailInfo.text(L(Queue.IsInfo(Q[KeyQueue.Unique]) ? Lang.GetInfo : Lang.ReadyInfo))
+	},
+	MakeDetailQuerying,
+	MakeDetail = function(Q,J)
+	{
+		J = ZED.isArray(Q)
+		J && (Q = Q[0])
+		if (MakeDetailQuerying !== Q)
+		{
+			MakeDetailQuerying = Q
+			;(J ? Queue.HInfo : Queue.Info)(Q,function(E,R)
+			{
+				if (!E && MakeDetailQuerying === Q)
+				{
+					MakeDetailQuerying = Util.F
+					MakeDetailSetup(Q,R)
+				}
+			})
+		}
 	},
 	MakeDetailClose = function()
 	{
@@ -696,9 +713,9 @@
 	},
 	MakeDetailMake = function(H)
 	{
-		return function(Q)
+		return function(Q,S,R)
 		{
-			MakeDetailActive === Q && H()
+			MakeDetailActive === Q[KeyQueue.Unique] && H(Q,S,R)
 		}
 	},
 
@@ -736,6 +753,11 @@
 			T = N ? H() : (T && H(R.Selecting()))
 			0 < T && MakeStatusX(X,L,T)
 		})
+	},
+	MakeDBError = function(X,G,E)
+	{
+		Util.Debug('Mix',E)
+		MakeStatus(X,ReplaceLang(Lang.ErrWhile,L(G)),ClassStatusError)
 	},
 
 
@@ -1134,8 +1156,8 @@
 				}
 				else
 				{
-					GoInfo[InfoKeyFrom](NaN)
-					GoInfo[InfoKeyTo](NaN)
+					GoInfo[InfoKeyFrom]('-')
+					GoInfo[InfoKeyTo]('-')
 				}
 				GoInfo[InfoKeyCount](Item.length)
 				GoInfo[InfoKeyTotal](Q[KeySite.Total])
@@ -1281,10 +1303,7 @@
 							R,X,
 							MakeShape(Lang.Commit,ShapeConfigColdListCommit),
 							Lang.CommittingN,
-							function()
-							{
-								return Cold.Commit(ZED.objOf(Q[KeySite.Unique],Q))
-							},
+							function(){return Cold.Commit([Q])},
 							Util.T
 						)
 					)
@@ -1300,7 +1319,7 @@
 			MakeToolBarActive(ToolRemove)
 			MakeToolBar(X,$(DOM.div).append
 			(
-				MakeToolBarClick(R,X,ToolCommit,Lang.CommittingN,Cold.Commit),
+				MakeToolBarClick(R,X,ToolCommit,Lang.CommittingN,Cold.CommitMany),
 				MakeToolBarClick(R,X,ToolRemove,Lang.RemovedN,function(S)
 				{
 					S = Cold.Remove(S)
@@ -1326,6 +1345,10 @@
 					MakeStatusX(X,Lang.CommittedN,Q.length)
 					R.Redraw()
 					Cold.Cold.length || UTab.Index(1 + X)
+				})
+				.on(EventQueue.ENew,function(E)
+				{
+					MakeDBError(X,Lang.Commit,E)
 				})
 
 			return R
@@ -1487,26 +1510,27 @@
 					ActiveObj = [ID,Info,Speed,Remain,Percentage,PP,PPS];
 
 					Active[ID] = ActiveObj
-					Queue.Info(ID).start(function(Q)
+					Queue.Info(ID,function(E,Q)
 					{
-						Title.text(Q[KeyQueue.Title])
-						Info.text
-						(
-							Q[KeyQueue.Part] ?
-								Util.U === Q[KeyQueue.Size] ?
-									L(Lang.GetSize) :
-									Util.U === Q[KeyQueue.DoneSum] ?
+						if (!E)
+						{
+							Title.text(Q[KeyQueue.Title])
+							Info.text
+							(
+								Q[KeyQueue.Part] ?
+									Util.U === Q[KeyQueue.Size] ?
+										L(Lang.GetSize) :
 										MakeSizePercentage(Q[KeyQueue.Size],Q[KeyQueue.DoneSum]) :
-										MakeSizeJust(Q[KeyQueue.Size]) :
-								L(Queue.IsInfo(Q[KeyQueue.Unique]) ? Lang.GetInfo : Lang.ReadyInfo)
-						)
-						Queue.IsRunning(ID) ?
-							MakeSpeed(ID,Q,ActiveObj) :
-							Speed.text(L(Queue.ActiveMap[ID] ? Lang.Queuing : Lang.Paused))
-						Download.Active[ID] ?
-							Percentage.addClass(ClassHotPercentageActive) :
-							Percentage.removeClass(ClassHotPercentageActive)
-						MakePercentage(Q,ActiveObj)
+									L(Queue.IsInfo(Q[KeyQueue.Unique]) ? Lang.GetInfo : Lang.ReadyInfo)
+							)
+							Queue.IsRunning(ID) ?
+								MakeSpeed(ID,Q,ActiveObj) :
+								Speed.text(L(Queue.ActiveMap[ID] ? Lang.Queuing : Lang.Paused))
+							Download.Active[ID] ?
+								Percentage.addClass(ClassHotPercentageActive) :
+								Percentage.removeClass(ClassHotPercentageActive)
+							MakePercentage(Q,ActiveObj)
+						}
 					})
 
 					return $(DOM.div).append
@@ -1563,7 +1587,8 @@
 				MakeToolBarClick(R,X,ToolRemove,Lang.RemovingN,Queue.Remove)
 			))
 
-			Bus.on(EventQueue.Played,function(Q,S,T,F)
+			Bus.on(EventQueue.Change,RHotCount)
+			.on(EventQueue.Played,function(Q,S,T,F)
 			{
 				MakeStatusX(X,Lang.RestartedN,F = Q.length)
 				S = R.Selecting()
@@ -1593,6 +1618,7 @@
 						ZED.Shape(ShapeConfigHotListPlay,{Target : T[ActiveKeyPPS]})
 						T[ActiveKeySpeed].text(L(Lang.Paused))
 						T[ActiveKeyRemain].text('')
+						T[ActiveKeyPercentage].removeClass(ClassHotPercentageActive)
 					}
 				}
 				UpdateToolBar()
@@ -1600,6 +1626,49 @@
 			{
 				R.Redraw()
 				MakeStatusX(X,Lang.RemovedN,Q.length)
+			}).on(EventQueue.EAction,function(L,E)
+			{
+				MakeDBError(X,L,E)
+			}).on(EventQueue.Processing,function(Q)
+			{
+				if (Q = Active[Q[KeyQueue.Unique]])
+				{
+					Q[ActiveKeySpeed].text(L(Lang.Processing))
+					Q[ActiveKeyRemain].text('')
+					Q[ActiveKeyPercentage].addClass(ClassHotPercentageActive)
+				}
+			}).on(EventQueue.Queuing,function(Q)
+			{
+				if (Q = Active[Q[KeyQueue.Unique]])
+				{
+					Q[ActiveKeySpeed].text(L(Lang.Queuing))
+					Q[ActiveKeyRemain].text('')
+					Q[ActiveKeyPercentage].removeClass(ClassHotPercentageActive)
+				}
+			}).on(EventQueue.Info,function(Q)
+			{
+				if (Q = Active[Q[KeyQueue.Unique]])
+					Q[ActiveKeyInfo].text(L(Lang.GetInfo))
+			}).on(EventQueue.InfoGot,function(Q)
+			{
+				if (Q = Active[Q[KeyQueue.Unique]])
+					Q[ActiveKeyInfo].text(L(Lang.GetSize))
+			}).on(EventQueue.SizeGot,function(Q,T)
+			{
+				if (T = Active[Q[KeyQueue.Unique]])
+					T[ActiveKeyInfo].text(MakeSizePercentage(Q[KeyQueue.Size],Q[KeyQueue.DoneSum]))
+			}).on(EventQueue.EFinish,function(E)
+			{
+				MakeDBError(X,Lang.Finish,E)
+			}).on(EventQueue.FHot,R.Redraw)
+			.on(EventDownload.Speed,function(S,Q,T)
+			{
+				if (T = Active[Q[KeyQueue.Unique]])
+				{
+					T[ActiveKeyInfo].text(MakeSizePercentage(Q[KeyQueue.Size],Q[KeyQueue.DoneSum]))
+					MakeSpeed(Q[KeyQueue.Unique],Q,T,S)
+					MakePercentage(Q,T)
+				}
 			})
 
 			return R
@@ -1653,47 +1722,65 @@
 			var
 			ToolRemove = MakeShape(Lang.Remove,ShapeConfigHistoryToolRemove),
 
-			ClickRemove = function(Q)
+			ClickRemove = function(ID)
 			{
-				Queue.Bye(Q)
-				R.Redraw()
+				Queue.HRemove(ZED.objOf(ID,ID))
 			},
 			MakeAction = function(R,H,Q)
 			{
 				return R.on(DOM.click,function(E)
 				{
-					H(Q)
 					Util.StopProp(E)
+					H(Q)
 				})
 			},
 
 			R = MakeSelectableList
 			(
 				M,X,
-				Queue.Offline,Queue.OfflineMap,Util.F,Util.F,
-				function(Q)
-				{
-					return $(DOM.div).append
+				Queue.Offline,Queue.OfflineMap,Util.F,
+				$(DOM.div).append
+				(
+					ShowByClass(ClassHistoryTitleInfo).append
 					(
-						ShowByClass(ClassHistoryTitleInfo).append
-						(
-							ShowByClass(ClassSingleLine + ' ' + ClassHistoryTitle).text(Q[KeyQueue.Title]),
-							ShowByClass(ClassSingleLine + ' ' + ClassHistoryInfo).text(ReplaceLang
+						ShowByClass(ClassSingleLine + ' ' + ClassHistoryTitle).text(DOM.nbsp),
+						ShowByClass(ClassSingleLine + ' ' + ClassHistoryTitle).text(DOM.nbsp)
+					)
+				),
+				function(ID)
+				{
+					var
+					Title = ShowByClass(ClassSingleLine + ' ' + ClassHistoryTitle).text(DOM.nbsp),
+					Info = ShowByClass(ClassSingleLine + ' ' + ClassHistoryInfo).text(DOM.nbsp),
+					Date = ShowByClassX(ClassHistoryDate,DOM.span);
+
+					Queue.HInfo(ID,function(E,Q)
+					{
+						if (!E)
+						{
+							Title.text(Q[KeyQueue.Title]),
+							Info.text(ReplaceLang
 							(
 								Lang.HiInfo,
 								ZED.FormatSize(Q[KeyQueue.Size]),Q[KeyQueue.File].length,MakeS(Q[KeyQueue.File].length)
 							))
-						),
-						ShowByClassX(ClassHistoryDate,DOM.span).text(ZED.DateToString(DateToStringFormatDisplay,Q[KeyQueue.Finished])),
+							Date.text(ZED.DateToString(DateToStringFormatDisplay,Q[KeyQueue.Finished]))
+						}
+					})
+
+					return $(DOM.div).append
+					(
+						ShowByClass(ClassHistoryTitleInfo).append(Title,Info),
+						Date,
 						MakeAction
 						(
 							MakeShape(Lang.Remove,ShapeConfigHistoryListRemove,ClassHistoryControlRemove),
-							ClickRemove,ZED.objOf(Q[KeyQueue.IDHis],Q)
+							ClickRemove,ID
 						),
 						MakeAction
 						(
 							MakeShape(Lang.More,ShapeConfigHistoryListMore,ClassHistoryControlMore),
-							MakeDetail,Q
+							MakeDetail,[ID]
 						)
 					)
 				},ZED.noop,function(Q)
@@ -1706,12 +1793,17 @@
 			MakeToolBarActive(ToolRemove)
 			MakeToolBar(X,$(DOM.div).append
 			(
-				MakeToolBarClick(R,X,ToolRemove,Lang.RemovedN,function(Q)
-				{
-					return Q && Queue.Bye(R.Selecting())
-				})
+				MakeToolBarClick(R,X,ToolRemove,Lang.RemovingN,Queue.HRemove)
 			))
-			Bus.on(EventQueue.Finish,R.Redraw)
+			Bus.on(EventQueue.FHis,R.Redraw)
+			.on(EventQueue.HRemoved,function(Q)
+			{
+				R.Redraw()
+				MakeStatusX(X,Lang.RemovedN,Q.length)
+			}).on(EventQueue.EHRemove,function(E)
+			{
+				MakeDBError(X,Lang.Remove,E)
+			})
 
 			return R
 		}
@@ -2119,24 +2211,24 @@
 		{
 			RDetailInfo.text(L(Lang.GetInfo))
 		}))
-		.on(EventQueue.InfoGot,MakeDetailMake(MakeDetailSetup))
-		.on(EventQueue.SizeGot,MakeDetailMake(function()
+		.on(EventQueue.InfoGot,MakeDetailMake(MakeDetailSetupInfo))
+		.on(EventQueue.SizeGot,MakeDetailMake(function(Q)
 		{
-			MakeDetailInfoTTS.text(ZED.FormatSize(MakeDetailActive[KeyQueue.Size]))
+			MakeDetailInfoTTS.text(ZED.FormatSize(Q[KeyQueue.Size]))
 		}))
 		.on(EventQueue.Finish,MakeDetailMake(MakeDetailRefresh))
 		//Download
-		.on(EventDownload.Size,function(Q,S,F)
+		.on(EventDownload.Size,MakeDetailMake(function(Q,S,F)
 		{
-			MakeDetailActive === Q && MakeDetailURL[F].text(MakeSizePercentage(S,0))
-		})
-		.on(EventDownload.Dir,MakeDetailMake(function()
-		{
-			MakeDetailInfoDir.text(MakeDetailActive[KeyQueue.Dir])
+			MakeDetailURL[F].text(MakeSizePercentage(S,0))
 		}))
-		.on(EventDownload.SpeedTotal,function()
+		.on(EventDownload.Dir,MakeDetailMake(function(Q)
 		{
-			MakeDetailActive && Queue.IsRunning(MakeDetailActive) && MakeDetailRefresh()
+			MakeDetailInfoDir.text(Q[KeyQueue.Dir])
+		}))
+		.on(EventDownload.Speed,function(S,Q)
+		{
+			MakeDetailActive === Q[KeyQueue.Unique] && MakeDetailRefresh(Q)
 		})
 	//StatusBar Icon
 	ZED.each(function(V){RStatusIcon.append(ShowByRock(IDStatusIcon + ZED.chr(65 + V)))},ZED.range(0,5))

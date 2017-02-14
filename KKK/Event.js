@@ -12,23 +12,29 @@ module.exports =
 	},
 	Queue :
 	{
+		Change : EventKey(),
+
 		Newed : EventKey(),
+		ENew : EventKey(),
 		Played : EventKey(),
 		Paused : EventKey(),
 		Removed : EventKey(),
-		HRemoved : EventKey(),
+		EAction : EventKey(),
 
-		Change : EventKey(),
-		FakeRun : EventKey(),
-		Play : EventKey(),
-		Pause : EventKey(),
-		Remove : EventKey(),
+		Processing : EventKey(),
+		Queuing : EventKey(),
+
 		Info : EventKey(),
 		InfoGot : EventKey(),
 		SizeGot : EventKey(),
-		Finish : EventKey(),
 
-		HRemove : EventKey()
+		Finish : EventKey(),
+		EFinish : EventKey(),
+		FHot : EventKey(),
+		FHis : EventKey(),
+
+		HRemoved : EventKey(),
+		EHRemove : EventKey()
 	},
 	Download :
 	{
@@ -36,9 +42,10 @@ module.exports =
 		Dir : EventKey(),
 		Reinfo : EventKey(),
 		Error : EventKey(),
-		Finish : EventKey(),
 		Speed : EventKey(),
-		SpeedTotal : EventKey()
+		SpeedTotal : EventKey(),
+		Save : EventKey(),
+		Finish : EventKey()
 	},
 	Cookie :
 	{

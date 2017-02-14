@@ -85,34 +85,5 @@ module.exports =
 		Root : KeyKey(),
 		Dir : KeyKey(),
 		File : KeyKey()
-	},
-	QueueN :
-	{
-		Name : 'Name',
-		ID : 'ID',
-		Mark : 'Mark',
-
-		Title : 'Title',
-
-		Created : 'Created',
-		Finished : 'Finished',
-
-		Active : 'Active',
-
-		Author : 'Author',
-		Date : 'Date',
-
-		Part : 'Part',
-		//[Title] reuse, optional part title
-		URL : 'U',
-		Suffix : 'S',
-		Size : 'Size',
-		Sizes : 'Sizes',
-
-		Done : 'Done',
-		Format : 'Format',
-		Root : 'Root',
-		Dir : 'Dir',
-		File : 'File',
 	}
 }
