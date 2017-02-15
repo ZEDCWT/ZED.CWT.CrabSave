@@ -24,15 +24,15 @@ WordDate = ZED.map(WordPack,WordDateSingle).join('.'),
 
 Active = {},
 
-Start = function(Q,I,At,URL,Done,Size,J,D)
+Start = function(Q,I,At,URL,Done,Size,Begin,Down,Dirty)
 {
 	ZED.isObject(URL) || (URL = {url : URL})
 	ZED.Merge(Util.F,Util.T,
 	{
-		timeout : 3E3,
+		timeout : 1500,
 		forever : Util.T
 	},URL)
-	D = Downloader(
+	Down = Downloader(
 	{
 		request : URL,
 		path : At,
@@ -43,22 +43,27 @@ Start = function(Q,I,At,URL,Done,Size,J,D)
 		only200 : Util.T
 	}).on('connected',function()
 	{
-		J = D.Info.Saved
+		Dirty = Begin = Down.Info.Saved
 	}).on('size',function(Q)
 	{
 		Size[I] = Q
-		D.Dirty = Util.T
+		Down.Dirty = Util.T
 	}).on('path',function(S)
 	{
-		Q[KeyQueue.File][I] = Path.basename(S)
-		D.Dirty = Util.T
+		S = Path.basename(S)
+		Q[KeyQueue.File][I] === S ||
+		(
+			Q[KeyQueue.File][I] = S,
+			Down.Dirty = Util.T
+		)
 	}).on('data',function(R)
 	{
 		Done[I] = R.Saved
 		Q[KeyQueue.DoneSum] = ZED.Sum(Done)
-		D.Dirty = Util.T
+		Dirty || (Begin < R.Saved && (Down.Dirty = Dirty = Util.T))
 	}).on('done',function()
 	{
+		Down.Dirty = Util.T
 		Download(Q)
 	}).on('die',function(E)
 	{
@@ -67,7 +72,7 @@ Start = function(Q,I,At,URL,Done,Size,J,D)
 			Done[I] = 0
 			Bus.emit(EventDownload.Reinfo,Q)
 		}
-		else if (0 <= J && J < D.Info.Saved)
+		else if (0 <= Begin && Begin < Down.Info.Saved)
 		{
 			Util.Debug('Download','Auto restart')
 			Start(Q,I,At,URL,Done,Size)
@@ -75,10 +80,49 @@ Start = function(Q,I,At,URL,Done,Size,J,D)
 		else
 			Bus.emit(EventDownload.Error,Q)
 	})
-	D.Q = Q
-	Active[Q[KeyQueue.Unique]] = D
+	Down.Q = Q
+	Active[Q[KeyQueue.Unique]] = Down
 },
 
+MakeFileName = function(Q,PL,UL,Part,F,Fa,I,D,T)
+{
+	D = new Date(Q[KeyQueue.Date])
+	T =
+	{
+		Author : ZED.SafeFileName(Q[KeyQueue.Author]),
+		Date : ZED.DateToString(WordDate,D),
+		Title : ZED.SafeFileName(Q[KeyQueue.Title])
+	}
+	ZED.each(function(V)
+	{
+		T[V] = ZED.DateToString(WordPack(V),D)
+	},WordDateSingle)
+	if (1 < PL) T.PartIndex = Util.PadTo(PL,F)
+	if (Part[KeyQueue.Title]) T.PartTitle = Part[KeyQueue.Title]
+	if (1 < UL) T.FileIndex = Util.PadTo(UL,Fa)
+	if (!Q[KeyQueue.Format]) Q[KeyQueue.Format] = Setting.Data(KeySetting.Name)
+	T = ZED.Replace
+	(
+		Q[KeyQueue.Format].replace(/\?([^?]+)\?/g,function(Q,S)
+		{
+			return ZED.all(function(Q)
+			{
+				return ZED.has(Q.substr(1,Q.length - 2),T)
+			},Q.match(/\|[^|]+\|/)) ? S : ''
+		}),
+		'|',
+		T
+	) + Part[KeyQueue.Suffix]
+	if (!Q[KeyQueue.Root]) Q[KeyQueue.Root] = Setting.Data(KeySetting.Dir)
+	T = Path.join(Q[KeyQueue.Root],T)
+	if (!Q[KeyQueue.Dir])
+	{
+		Q[KeyQueue.Dir] = Path.dirname(T)
+		Bus.emit(EventDownload.Dir,Q)
+	}
+	Q[KeyQueue.File][I] = Path.basename(T)
+	return T
+},
 Download = function(Q)
 {
 	var
@@ -88,11 +132,19 @@ Download = function(Q)
 	URL,UL,
 	Size = Q[KeyQueue.Sizes],
 	Done = Q[KeyQueue.Done],
-
 	I = -1,
-
 	D,T = Util.T,F = -1,Fa;
 
+	if (!Q[KeyQueue.File][0])
+	{
+		for (;++F < PL;)
+		{
+			UL = Part[F][KeyQueue.URL].length
+			for (Fa = -1;++Fa < UL;) MakeFileName(Q,PL,UL,Part[F],F,Fa,++I)
+		}
+		D = Util.T
+		F = I = -1
+	}
 	for (;T && ++F < PL;)
 	{
 		URL = Part[F][KeyQueue.URL]
@@ -111,48 +163,12 @@ Download = function(Q)
 		Part = Part[F]
 		URL = Target[KeySite.Pack](URL[Fa],Q)
 
-		D = new Date(Q[KeyQueue.Date])
-		T =
-		{
-			Author : ZED.SafeFileName(Q[KeyQueue.Author]),
-			Date : ZED.DateToString(WordDate,D),
-			Title : ZED.SafeFileName(Q[KeyQueue.Title])
-		}
-		ZED.each(function(V)
-		{
-			T[V] = ZED.DateToString(WordPack(V),D)
-		},WordDateSingle)
-		if (1 < PL) T.PartIndex = Util.PadTo(PL,F)
-		if (Part[KeyQueue.Title]) T.PartTitle = Part[KeyQueue.Title]
-		if (1 < UL) T.FileIndex = Util.PadTo(UL,Fa)
-		if (!Q[KeyQueue.Format]) Q[KeyQueue.Format] = Setting.Data(KeySetting.Name)
-		T = ZED.Replace
-		(
-			Q[KeyQueue.Format].replace(/\?([^?]+)\?/g,function(Q,S)
-			{
-				return ZED.all(function(Q)
-				{
-					return ZED.has(Q.substr(1,Q.length - 2),T)
-				},Q.match(/\|[^|]+\|/)) ? S : ''
-			}),
-			'|',
-			T
-		) + Part[KeyQueue.Suffix]
-		if (!Q[KeyQueue.Root]) Q[KeyQueue.Root] = Setting.Data(KeySetting.Dir)
-		T = Path.join(Q[KeyQueue.Root],T)
-		if (!Q[KeyQueue.Dir])
-		{
-			Q[KeyQueue.Dir] = Path.dirname(T)
-			Bus.emit(EventDownload.Dir,Q)
-		}
-		Q[KeyQueue.File][I] = Path.basename(T)
-
-		F = Util.mkdirp(Path.dirname(T)).flatMap(function()
+		T = Util.mkdirp(Q[KeyQueue.Dir]).flatMap(function()
 		{
 			return URL.start ? URL : Observable.just(URL)
 		}).start(function(URL)
 		{
-			Start(Q,I,T,URL,Done,Size)
+			Start(Q,I,MakeFileName(Q,PL,UL,Part,F,Fa,I),URL,Done,Size)
 		},function()
 		{
 			Bus.emit(EventDownload.Error,Q)
@@ -160,8 +176,8 @@ Download = function(Q)
 		Active[Q[KeyQueue.Unique]] =
 		{
 			Q : Q,
-			Dirty : Util.T,
-			Stop : ZED.bind_(F.end,F),
+			Dirty : D,
+			Stop : ZED.bind_(T.end,T),
 			Speed : ZED.always(0)
 		}
 	}

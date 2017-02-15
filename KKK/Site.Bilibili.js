@@ -69,20 +69,20 @@ BishiSign,
 BishiReturned,
 BishiCall = function(Q){BishiReturned = Q},
 Bishi,
-TryBishi = function(Q)
+TryBishi = function(Q,B)
 {
 	if (BishiSign) try
 	{
 		BishiReturned = Util.F
 		Bishi.U = BishiCall
-		BishiSign(0,1,Q,4,'',null,0)
+		B ? BishiSign(1,1,Q,4,'','module=bangumi',0) : BishiSign(0,1,Q,4,'',null,0)
 	}
 	catch(e){}
 	return BishiReturned
 },
-BishiURL = function(Q)
+BishiURL = function(Q,B)
 {
-	return TryBishi(Q) || URLVInfoURL(Q)
+	return TryBishi(Q,B) || URLVInfoURL(Q)
 },
 
 Overspeed = ZED.Mark(),
@@ -309,20 +309,23 @@ R = ZED.ReduceToObject
 
 			return Observable.from(Q.list).flatMapOnline(1,function(V)
 			{
-				return Util.ajax(BishiURL(V.cid)).map(function(B,D)
+				return Util.RequestBody(Cookie.URL(Name,BishiURL(V.cid,Q.bangumi))).map(function(B,D)
 				{
 					B = ZED.JTO(B)
-					MaybeOverspeed(Q)
+					MaybeOverspeed(B)
 					D = B.durl
 					D || ZED.Throw(L(Lang.Bad))
 					ZED.isArray(D) || (D = [D])
 					Sizes.push(ZED.pluck('size',D))
-					Part.push(ZED.ReduceToObject
+					B = B.format
+					;/hdflv/.test(B) && (B = 'flv')
+					Part.push(D = ZED.ReduceToObject
 					(
 						KeyQueue.Title,V.part,
 						KeyQueue.URL,ZED.pluck('url',D),
-						KeyQueue.Suffix,'.' + B.format
+						KeyQueue.Suffix,'.' + B
 					))
+					V.part || ZED.delete_(KeyQueue.Title,D)
 				})
 				.retryWhen(function(Q)
 				{
