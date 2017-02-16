@@ -46,6 +46,7 @@ URLLogin = 'https://passport.bilibili.com/login/dologin',
 URLLoginCheck = 'http://space.bilibili.com/ajax/member/MyInfo',
 URLSpace = ZED.URLBuild('http://space.bilibili.com/ajax/member/getSubmitVideos?mid=',Util.U,'&pagesize=',PageSize,'&page=',Util.U),
 URLMylist = ZED.URLBuild('http://www.bilibili.com/mylist/mylist-',Util.U,'.js'),
+URLDynamic = ZED.URLBuild('http://api.bilibili.com/x/feed/pull?type=0&ps=',PageSize,'&pn=',Util.U),
 URLVInfo = ZED.URLBuild('http://api.bilibili.com/view?id=',Util.U,'&batch=1&appkey=',Appkey,'&type=json'),
 URLVInfoURL = function(Q)
 {
@@ -75,7 +76,7 @@ TryBishi = function(Q,B)
 	{
 		BishiReturned = Util.F
 		Bishi.U = BishiCall
-		B ? BishiSign(1,1,Q,4,'','module=bangumi',0) : BishiSign(0,1,Q,4,'',null,0)
+		B ? BishiSign(1,1,Q,4,'','module=bangumi',0) : BishiSign(0,1,Q,4,'',Util.N,0)
 	}
 	catch(e){}
 	return BishiReturned
@@ -186,7 +187,7 @@ R = ZED.ReduceToObject
 	KeySite.Map,[ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Video),
-		KeySite.Judge,[/^(\d+)$/,Util.MakeLabelID('av')],
+		KeySite.Judge,[/^(\d+)$/,Util.MakeLabelNumber('av')],
 		KeySite.Page,function(ID)
 		{
 			return Util.RequestBody(Cookie.URL(Name,URLVInfo(ID))).map(function(Q)
@@ -217,7 +218,7 @@ R = ZED.ReduceToObject
 	),ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.User),
-		KeySite.Judge,[Util.MakeLabelID('space')],
+		KeySite.Judge,[Util.MakeLabelNumber('space')],
 		KeySite.Page,function(ID,X)
 		{
 			return Util.RequestBody(Cookie.URL(Name,URLSpace(ID,X))).map(function(Q)
@@ -249,7 +250,7 @@ R = ZED.ReduceToObject
 	),ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Mylist),
-		KeySite.Judge,[Util.MakeLabelID('mylist')],
+		KeySite.Judge,[Util.MakeLabelNumber('mylist')],
 		KeySite.Page,function(ID)
 		{
 			return Util.RequestBody(URLMylist(ID)).map(function(Q,With)
@@ -278,6 +279,38 @@ R = ZED.ReduceToObject
 							KeySite.ID,V.aid,
 							KeySite.Title,V.title,
 							KeySite.Date,new Date(1000 * V.pubdate)
+						)
+					})
+				)
+			})
+		}
+	),ZED.ReduceToObject
+	(
+		KeySite.Name,L(Lang.Dynamic),
+		KeySite.Judge,[/^(?:dynamic)?$/],
+		KeySite.Page,function(_,X)
+		{
+			return Util.RequestBody(Cookie.URL(Name,URLDynamic(X))).map(function(Q)
+			{
+				Q = ZED.JTO(Q)
+				Q.data || ZED.Throw(Util.ReplaceLang(Lang.BadC,Q.code))
+				Q = Q.data
+
+				return ZED.ReduceToObject
+				(
+					KeySite.Pages,Math.ceil(Q.page.count / Q.page.size),
+					KeySite.Total,Q.page.count,
+					KeySite.Item,ZED.Map(Q.feeds || [],function(F,V)
+					{
+						V = V.addition
+						return ZED.ReduceToObject
+						(
+							KeySite.Index,PageSize * (X - 1) + F,
+							KeySite.ID,V.aid,
+							KeySite.Img,V.pic,
+							KeySite.Title,V.title,
+							KeySite.Author,V.author,
+							KeySite.Date,new Date(V.create)
 						)
 					})
 				)

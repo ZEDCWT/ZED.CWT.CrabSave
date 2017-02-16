@@ -1108,10 +1108,10 @@
 				GoLast && GoLast.end()
 
 				ShowByTextS(ReplaceLang(Lang.ProcURL,URL),RInfo.empty())
-				if (T = URL.match(/^([0-9A-Z]+)\s+([^]+?)\s*$/i))
+				if (T = URL.match(/^([A-Z]+)(?:\s+([^]*))?$/i))
 				{
 					GoTarget = ZED.toLower(T[1])
-					GoDetail = T[2]
+					GoDetail = T[2] || ''
 					if (!ZED.has(GoTarget,SiteMap)) return GoError(Lang.UknSite,GoTarget)
 					GoTarget = SiteMap[GoTarget]
 				}
@@ -1132,7 +1132,9 @@
 
 				if (!GoDetail) return GoError(Lang.UknURL,URL)
 				GoID = GoID[1]
-				ShowByTextS([GoTarget[KeySite.Name],GoDetail[KeySite.Name],GoID].join(' '),RInfo)
+				T = [GoTarget[KeySite.Name],GoDetail[KeySite.Name]]
+				GoID && T.push(GoID)
+				ShowByTextS(T.join(' '),RInfo)
 
 				GoInfo = Util.F
 				Jump(1)

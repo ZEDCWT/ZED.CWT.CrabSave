@@ -63,7 +63,7 @@ R = ZED.ReduceToObject
 	KeySite.Map,[ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Video),
-		KeySite.Judge,[/^(\d+)$/,Util.MakeLabelID('sm')],
+		KeySite.Judge,[/^(\d+)$/,Util.MakeLabelNumber('sm')],
 		KeySite.Page,function(ID)
 		{
 			return Util.RequestBody(Cookie.URL(Name,URLVInfo(ID))).map(function(Q)
@@ -89,7 +89,7 @@ R = ZED.ReduceToObject
 	),ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.User),
-		KeySite.Judge,[Util.MakeLabelID('user')],
+		KeySite.Judge,[Util.MakeLabelNumber('user')],
 		KeySite.Page,function(ID,X)
 		{
 			return Util.RequestBody(Cookie.URL(Name,URLUser(ID,X))).map(function(Q,T,A)
@@ -128,7 +128,7 @@ R = ZED.ReduceToObject
 	),ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Mylist),
-		KeySite.Judge,[Util.MakeLabelID('Mylist')],
+		KeySite.Judge,[Util.MakeLabelNumber('Mylist')],
 		KeySite.Page,function(ID,X)
 		{
 			return Util.RequestBody(URLMylist(ID)).map(function(Q)

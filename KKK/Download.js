@@ -78,7 +78,7 @@ Start = function(Q,I,At,URL,Done,Size,Begin,Down,Dirty)
 			Start(Q,I,At,URL,Done,Size)
 		}
 		else
-			Bus.emit(EventDownload.Error,Q)
+			Bus.emit(EventDownload.Error,Q,E)
 	})
 	Down.Q = Q
 	Active[Q[KeyQueue.Unique]] = Down

@@ -12,7 +12,7 @@ Lang = require('./Lang'),
 L = Lang.L,
 
 FS = require('graceful-fs'),
-Request = require('request').defaults({timeout : 15E3}),
+Request = require('request').defaults({timeout : 10E3}),
 RequestHead = function(Q)
 {
 	return Observable.create(function(O,X)
@@ -84,9 +84,13 @@ module.exports =
 		process.exit(1)
 	},
 	MakeUnique : function(Q,S){return Q + '.' + S},
-	MakeLabelID : function(Q)
+	MakeLabelNumber : function(Q)
 	{
 		return RegExp('(?:^|[^a-z])' + Q + '(?:[^a-z]\\D*)??(\\d+)','i')
+	},
+	MakeLabelWord : function(Q,S,R)
+	{
+		return RegExp('(?:^|[^a-z])' + Q + '(?:' + S + ')??(' + R + ')','i')
 	},
 	StopProp : function(E){E.stopPropagation()},
 
@@ -133,5 +137,9 @@ module.exports =
 			V = V.split('=')
 			V[0] && V[1] && (D[V[0]] = V[1])
 		},{},Q.split('; '))
-	}
+	},
+	Best : function(Q)
+	{
+		return ZED.reduce(ZED.maxBy(ZED.prop(Q)),ZED.objOf(Q,-Infinity))
+	},
 }
