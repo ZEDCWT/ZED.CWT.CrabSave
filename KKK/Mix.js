@@ -1532,7 +1532,12 @@
 										MakeSizePercentage(Q[KeyQueue.Size],Q[KeyQueue.DoneSum]) :
 									L(Queue.IsInfo(Q[KeyQueue.Unique]) ? Lang.GetInfo : Lang.ReadyInfo)
 							)
-							Queue.IsRunning(ID) ?
+							if (Queue.ReinfoMap[ID])
+							{
+								Speed.text(L(Lang.EURL))
+								Remain.text('-' + ZED.SecondsToString((Queue.ReinfoMap[ID] + Queue.Wait() - ZED.now()) / 1000))
+							}
+							else Queue.IsRunning(ID) ?
 								MakeSpeed(ID,Q,ActiveObj) :
 								Speed.text(L(Queue.ActiveMap[ID] ? Lang.Queuing : Lang.Paused))
 							Download.Active[ID] ?
@@ -1602,7 +1607,7 @@
 				Q &&
 				(
 					RHotCount(Q),
-					X === UTab.Index() && R.Redraw()
+					R.Redraw()
 				)
 			}).on(EventQueue.Played,function(Q,S,T,F)
 			{
@@ -1648,45 +1653,64 @@
 			}).on(EventQueue.EAction,function(L,E)
 			{
 				MakeDBError(X,L,E)
-			}).on(EventQueue.Processing,function(Q)
+			}).on(EventQueue.Processing,function(A)
 			{
-				if (Q = Active[Q[KeyQueue.Unique]])
+				if (A = Active[A[KeyQueue.Unique]])
 				{
-					Q[ActiveKeySpeed].text(L(Lang.Processing))
-					Q[ActiveKeyRemain].text('')
-					Q[ActiveKeyPercentage].addClass(ClassHotPercentageActive)
+					A[ActiveKeySpeed].text(L(Lang.Processing))
+					A[ActiveKeyRemain].text('')
+					A[ActiveKeyPercentage].addClass(ClassHotPercentageActive)
 				}
-			}).on(EventQueue.Queuing,function(Q)
+			}).on(EventQueue.Queuing,function(A)
 			{
-				if (Q = Active[Q[KeyQueue.Unique]])
+				if (A = Active[A[KeyQueue.Unique]])
 				{
-					Q[ActiveKeySpeed].text(L(Lang.Queuing))
-					Q[ActiveKeyRemain].text('')
-					Q[ActiveKeyPercentage].removeClass(ClassHotPercentageActive)
+					A[ActiveKeySpeed].text(L(Lang.Queuing))
+					A[ActiveKeyRemain].text('')
+					A[ActiveKeyPercentage].removeClass(ClassHotPercentageActive)
 				}
-			}).on(EventQueue.Info,function(Q)
+			}).on(EventQueue.Info,function(A)
 			{
-				if (Q = Active[Q[KeyQueue.Unique]])
-					Q[ActiveKeyInfo].text(L(Lang.GetInfo))
-			}).on(EventQueue.InfoGot,function(Q)
+				if (A = Active[A[KeyQueue.Unique]])
+					A[ActiveKeyInfo].text(L(Lang.GetInfo))
+			}).on(EventQueue.InfoGot,function(A)
 			{
-				if (Q = Active[Q[KeyQueue.Unique]])
-					Q[ActiveKeyInfo].text(L(Lang.GetSize))
-			}).on(EventQueue.SizeGot,function(Q,T)
+				if (A = Active[A[KeyQueue.Unique]])
+					A[ActiveKeyInfo].text(L(Lang.GetSize))
+			}).on(EventQueue.SizeGot,function(Q,A)
 			{
-				if (T = Active[Q[KeyQueue.Unique]])
-					T[ActiveKeyInfo].text(MakeSizePercentage(Q[KeyQueue.Size],Q[KeyQueue.DoneSum]))
+				if (A = Active[Q[KeyQueue.Unique]])
+					A[ActiveKeyInfo].text(MakeSizePercentage(Q[KeyQueue.Size],Q[KeyQueue.DoneSum]))
+			}).on(EventQueue.Reinfo,function(A,S)
+			{
+				if (A = Active[A])
+				{
+					A[ActiveKeySpeed].text(L(Lang.EURL))
+					A[ActiveKeyRemain].text('-' + ZED.SecondsToString(S))
+					A[ActiveKeyPercentage].removeClass(ClassHotPercentageActive)
+				}
+			}).on(EventQueue.ReinfoLook,function(A,S)
+			{
+				if (A = Active[A])
+					A[ActiveKeyRemain].text('-' + ZED.SecondsToString(S))
+			}).on(EventQueue.Refresh,function(A)
+			{
+				if (A = Active[A[KeyQueue.Unique]])
+				{
+					A[ActiveKeySpeed].text(L(Lang.Refreshing))
+					A[ActiveKeyRemain].text('')
+				}
 			}).on(EventQueue.EFinish,function(E)
 			{
 				MakeDBError(X,Lang.Finish,E)
 			}).on(EventQueue.FHot,R.Redraw)
-			.on(EventDownload.Speed,function(S,Q,T)
+			.on(EventDownload.Speed,function(S,Q,A)
 			{
-				if (T = Active[Q[KeyQueue.Unique]])
+				if (A = Active[Q[KeyQueue.Unique]])
 				{
-					T[ActiveKeyInfo].text(MakeSizePercentage(Q[KeyQueue.Size],Q[KeyQueue.DoneSum]))
-					MakeSpeed(Q[KeyQueue.Unique],Q,T,S)
-					MakePercentage(Q,T)
+					A[ActiveKeyInfo].text(MakeSizePercentage(Q[KeyQueue.Size],Q[KeyQueue.DoneSum]))
+					MakeSpeed(Q[KeyQueue.Unique],Q,A,S)
+					MakePercentage(Q,A)
 				}
 			})
 
@@ -1816,7 +1840,7 @@
 			))
 			Bus.on(EventQueue.First,function(Q)
 			{
-				Util.U === Q && X === UTab.Index() && R.Redraw()
+				Util.U === Q && R.Redraw()
 			}).on(EventQueue.FHis,R.Redraw)
 			.on(EventQueue.HRemoved,function(Q)
 			{
@@ -2155,15 +2179,16 @@
 				KeySetting.Max,5,
 				KeySetting.Font,'Microsoft Yahei',
 				KeySetting.Size,'14',
-				KeySetting.Weight,'normal'
+				KeySetting.Weight,'normal',
+				KeySetting.Restart,180
 			),
 			Data,
 
 			KeyFont = ZED.KeyGen(),
 
-			MakeInput = function(Q)
+			MakeInput = function(Q,S)
 			{
-				return {T : 'I',E : {placeholder : Default[Q]}}
+				return ZED.Merge({T : 'I',E : {placeholder : Default[Q]}},S)
 			},
 
 			RefreshFont = function()
@@ -2191,6 +2216,9 @@
 			T = Number(Data[KeySetting.Max])
 			;(0 < T && T < 11) || (T = Default[KeySetting.Max])
 			Queue.Max(Data[KeySetting.Max] = T)
+			T = Number(Data[KeySetting.Restart])
+			0 < T || (T = Default[KeySetting.Restart])
+			Queue.Wait(Data[KeySetting.Restart] = T)
 			RefreshFont()
 
 			ZED.Preference(
@@ -2214,6 +2242,10 @@
 						KeySetting.Weight,
 						RefreshFont
 					],
+					[L(Lang.RestartT),[MakeInput(KeySetting.Restart,{N : Util.T})],KeySetting.Restart,function()
+					{
+						Queue.Wait(Data[KeySetting.Restart])
+					}]
 				],
 				Change : function(){Setting.Save(Data)}
 			})

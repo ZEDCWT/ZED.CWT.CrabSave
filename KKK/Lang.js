@@ -74,6 +74,7 @@ module.exports =
 	GetInfo : Lang('Getting infomation...'),
 	GetSize : Lang('Getting size...'),
 	SizeUn : Lang('Unknow size'),
+	Refreshing : Lang('Refreshing URL'),
 	Queuing : Lang('Queuing'),
 	Processing : Lang('Processing'),
 	Error : Lang('Error'),
@@ -135,5 +136,5 @@ module.exports =
 	Size : Lang('Font size'),
 	Weight : Lang('Font weight'),
 	RetryT : Lang('Times to retry before moving a task with no response to the end of the queue'),
-	RestartT : Lang('Time to wait before restarting a task after error')
+	RestartT : Lang('Time(seconds) to wait before restarting a task after error occured or URL expired')
 }

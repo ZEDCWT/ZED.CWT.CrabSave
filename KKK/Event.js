@@ -31,6 +31,10 @@ module.exports =
 		InfoGot : EventKey(),
 		SizeGot : EventKey(),
 
+		Reinfo : EventKey(),
+		ReinfoLook : EventKey(),
+		Refresh : EventKey(),
+
 		Finish : EventKey(),
 		EFinish : EventKey(),
 		FHot : EventKey(),

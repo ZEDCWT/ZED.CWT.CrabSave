@@ -8,6 +8,7 @@ ZED = require('@zed.cwt/zedquery'),
 Observable = ZED.Observable,
 $ = require('@zed.cwt/jquery'),
 
+Config = require('../Config'),
 Lang = require('./Lang'),
 L = Lang.L,
 
@@ -39,7 +40,14 @@ RequestBase = function(H)
 			return function(){X.abort()}
 		})
 	}
-};
+},
+
+Look = [];
+
+setInterval(function(F)
+{
+	for (F = Look.length;F;) Look[--F]()
+},Config.Speed)
 
 module.exports =
 {
@@ -49,6 +57,7 @@ module.exports =
 	F : False,
 
 	Bus : ZED.Emitter(),
+	Look : function(Q){Look.push(Q)},
 
 	//Observable
 	RequestHead : RequestHead,

@@ -70,11 +70,12 @@ Start = function(Q,I,At,URL,Done,Size,Begin,Down,Dirty)
 		if (ZED.isNumber(E))
 		{
 			Done[I] = 0
+			Q[KeyQueue.File][I] = Path.basename(At)
 			Bus.emit(EventDownload.Reinfo,Q)
 		}
 		else if (0 <= Begin && Begin < Down.Info.Saved)
 		{
-			Util.Debug('Download','Auto restart')
+			Util.Debug('Download','Auto restart',Q[KeyQueue.Unique])
 			Start(Q,I,At,URL,Done,Size)
 		}
 		else
@@ -200,7 +201,7 @@ Pause = function(Q)
 	}
 };
 
-setInterval(function(R)
+Util.Look(function(R)
 {
 	R = 0
 	ZED.Each(Active,function(F,V)
@@ -214,7 +215,7 @@ setInterval(function(R)
 		}
 	})
 	Bus.emit(EventDownload.SpeedTotal,R)
-},Config.Speed)
+})
 
 module.exports =
 {
