@@ -12,11 +12,14 @@ module.exports =
 	},
 	Queue :
 	{
+		First : EventKey(),
+
 		Change : EventKey(),
 
 		Newed : EventKey(),
 		ENew : EventKey(),
 		Played : EventKey(),
+		PauseShow : EventKey(),
 		Paused : EventKey(),
 		Removed : EventKey(),
 		EAction : EventKey(),

@@ -47,8 +47,8 @@ OnlineDB = DB('Online',function(S)
 		V[KeyQueue.Active] && (ActiveMap[U] = Util.T)
 	})
 	OnlineCount < S && (OnlineCount = S)
-	Bus.emit(EventQueue.Change,Online.length)
 	++Loaded
+	Bus.emit(EventQueue.First,Online.length)
 },KeyQueue.Unique),
 OnlineData = OnlineDB.Data,
 OnlineUpdate = Observable.wrapNode(OnlineData.update,OnlineData),
@@ -63,6 +63,7 @@ OfflineDB = DB('Offline',function(S)
 	})
 	OnlineCount < S && (OnlineCount = S)
 	++Loaded
+	Bus.emit(EventQueue.First)
 },KeyQueue.IDHis),
 OfflineData = OfflineDB.Data,
 
@@ -171,6 +172,7 @@ InnerPause = function(Q)
 Pause = function(Q)
 {
 	var R = Convert(Q,PauseMap,OnlineMap,ActiveMap,0),T,F;
+
 	R.length && OnlineData.update(MakeIn(R),QuerySetActiveFalse,DBAllowMulti,function(E)
 	{
 		if (E)
@@ -185,6 +187,14 @@ Pause = function(Q)
 				T = R[--F]
 				ZED.delete_(T,PauseMap)
 				ZED.delete_(T,ActiveMap)
+				Q = Download.Active[T]
+				if (Q)
+				{
+					Q = Q.Q
+					Q[KeyQueue.Active] = Util.F
+					OnlineData.update({_id : Q._id},Q)
+					Bus.emit(EventQueue.PauseShow,Q)
+				}
 				Running[T] && InnerPause(T)
 			}
 			Bus.emit(EventQueue.Paused,R)

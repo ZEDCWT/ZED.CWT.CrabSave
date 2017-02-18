@@ -193,6 +193,7 @@
 	ClassHotControlPP = ZED.KeyGen(),
 	ClassHotControlMore = ZED.KeyGen(),
 	ClassHotPercentage = ZED.KeyGen(),
+	ClassHotPercentageTransition = ZED.KeyGen(),
 	ClassHotPercentageActive = ZED.KeyGen(),
 	ClassHotPercentageAlways = ZED.KeyGen(),
 	ClassHotSizeUnknown = ZED.KeyGen(),
@@ -1380,7 +1381,8 @@
 				//	More
 				'./O/ svg{width:/o/px;height:/o/px}' +
 				//Percentage
-				'./G/{position:absolute;left:0;bottom:0;height:3px;width:0;background:#979797;transition:width .2s linear}' +
+				'./G/{position:absolute;left:0;bottom:0;height:3px;width:0;background:#979797}' +
+				'./K/{transition:width .2s linear}' +
 				'./A/{background:#69A0D7}' +
 				'./U/{width:100%}',
 				'/',
@@ -1402,6 +1404,7 @@
 					O : ClassHotControlMore,
 					o : YHotControlMoreWidth,
 					G : ClassHotPercentage,
+					K : ClassHotPercentageTransition,
 					A : ClassHotPercentageActive,
 					W : ClassHotPercentageAlways,
 					U : ClassHotSizeUnknown,
@@ -1424,7 +1427,8 @@
 			ActiveKeySpeed = 1 + ActiveKeyInfo,
 			ActiveKeyRemain = 1 + ActiveKeySpeed,
 			ActiveKeyPercentage = 1 + ActiveKeyRemain,
-			ActiveKeyPP = 1 + ActiveKeyPercentage,
+			ActiveKeyTransition = 1 + ActiveKeyPercentage,
+			ActiveKeyPP = 1 + ActiveKeyTransition,
 			ActiveKeyPPS = 1 + ActiveKeyPP,
 			Active = {},
 			CountActive = 0,
@@ -1458,6 +1462,9 @@
 					Q[KeyQueue.DoneSum] && 0 < Q[KeyQueue.Size] &&
 						A[ActiveKeyPercentage].css(DOM.width,ZED.Format(100 * Q[KeyQueue.DoneSum] / Q[KeyQueue.Size]) + '%') :
 					A[ActiveKeyPercentage].addClass(ClassHotPercentageAlways)
+				A[ActiveKeyTransition] < 2 &&
+					1 < ++A[ActiveKeyTransition] &&
+						A[ActiveKeyPercentage].addClass(ClassHotPercentageTransition)
 			},
 
 			ClickRemove = function(ID)
@@ -1509,7 +1516,7 @@
 						MakeShape(Lang.Pause,ShapeConfigHotListPause,ClassHotControlPP) :
 						MakeShape(Lang.Restart,ShapeConfigHotListPlay,ClassHotControlPP),
 					PPS = PP.children(),
-					ActiveObj = [ID,Info,Speed,Remain,Percentage,PP,PPS];
+					ActiveObj = [ID,Info,Speed,Remain,Percentage,0,PP,PPS];
 
 					Active[ID] = ActiveObj
 					Queue.Info(ID,function(E,Q)
@@ -1590,7 +1597,14 @@
 			))
 
 			Bus.on(EventQueue.Change,RHotCount)
-			.on(EventQueue.Played,function(Q,S,T,F)
+			.on(EventQueue.First,function(Q)
+			{
+				Q &&
+				(
+					RHotCount(Q),
+					X === UTab.Index() && R.Redraw()
+				)
+			}).on(EventQueue.Played,function(Q,S,T,F)
 			{
 				MakeStatusX(X,Lang.RestartedN,F = Q.length)
 				S = R.Selecting()
@@ -1606,6 +1620,9 @@
 					}
 				}
 				UpdateToolBar()
+			}).on(EventQueue.PauseShow,function(Q,T)
+			{
+				if (T = Active[Q[KeyQueue.Unique]]) MakePercentage(Q,T)
 			}).on(EventQueue.Paused,function(Q,S,T,F)
 			{
 				MakeStatusX(X,Lang.PausedN,F = Q.length)
@@ -1746,7 +1763,7 @@
 					ShowByClass(ClassHistoryTitleInfo).append
 					(
 						ShowByClass(ClassSingleLine + ' ' + ClassHistoryTitle).text(DOM.nbsp),
-						ShowByClass(ClassSingleLine + ' ' + ClassHistoryTitle).text(DOM.nbsp)
+						ShowByClass(ClassSingleLine + ' ' + ClassHistoryInfo).text(DOM.nbsp)
 					)
 				),
 				function(ID)
@@ -1797,7 +1814,10 @@
 			(
 				MakeToolBarClick(R,X,ToolRemove,Lang.RemovingN,Queue.HRemove)
 			))
-			Bus.on(EventQueue.FHis,R.Redraw)
+			Bus.on(EventQueue.First,function(Q)
+			{
+				Util.U === Q && X === UTab.Index() && R.Redraw()
+			}).on(EventQueue.FHis,R.Redraw)
 			.on(EventQueue.HRemoved,function(Q)
 			{
 				R.Redraw()

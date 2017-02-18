@@ -342,7 +342,7 @@ R = ZED.ReduceToObject
 
 			return Observable.from(Q.list).flatMapOnline(1,function(V)
 			{
-				return Util.RequestBody(Cookie.URL(Name,BishiURL(V.cid,Q.bangumi))).map(function(B,D)
+				return (Q.bangumi ? Util.RequestBody : Util.ajax)(Cookie.URL(Name,BishiURL(V.cid,Q.bangumi))).map(function(B,D)
 				{
 					B = ZED.JTO(B)
 					MaybeOverspeed(B)

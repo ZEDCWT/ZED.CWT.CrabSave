@@ -81,6 +81,10 @@ Start = function(Q,I,At,URL,Done,Size,Begin,Down,Dirty)
 			Bus.emit(EventDownload.Error,Q,E)
 	})
 	Down.Q = Q
+	Down.D = function()
+	{
+		return 0 <= Begin && Begin < Down.Info.Saved
+	}
 	Active[Q[KeyQueue.Unique]] = Down
 },
 
@@ -120,7 +124,7 @@ MakeFileName = function(Q,PL,UL,Part,F,Fa,I,D,T)
 		Q[KeyQueue.Dir] = Path.dirname(T)
 		Bus.emit(EventDownload.Dir,Q)
 	}
-	Q[KeyQueue.File][I] = Path.basename(T)
+	Q[KeyQueue.File][I] || (Q[KeyQueue.File][I] = Path.basename(T))
 	return T
 },
 Download = function(Q)
