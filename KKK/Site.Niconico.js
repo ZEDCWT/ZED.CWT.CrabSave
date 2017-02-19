@@ -76,7 +76,7 @@ R = ZED.ReduceToObject
 					KeySite.Total,1,
 					KeySite.Item,[ZED.ReduceToObject
 					(
-						KeySite.Index,1,
+						KeySite.Index,0,
 						KeySite.ID,ID,
 						KeySite.Img,Util.MF(/l_url>([^<]+)/,Q),
 						KeySite.Title,Util.MF(/itle>([^<]+)/,Q),
@@ -172,7 +172,7 @@ R = ZED.ReduceToObject
 			})
 		}
 	)],
-	KeySite.URL,function(ID,R)
+	KeySite.URL,function(ID)
 	{
 		return Util.RequestBody(Cookie.URL(Name,URLVInfo(ID))).flatMap(function(Q)
 		{
@@ -183,7 +183,7 @@ R = ZED.ReduceToObject
 				U = ZED.QueryString(U).url
 				U || ZED.Throw(Util.ReplaceLang(ZED.BadE,Q.error))
 
-				ZED.Merge(Util.T,R,ZED.ReduceToObject
+				return ZED.ReduceToObject
 				(
 					KeyQueue.Author,Util.MF(/name>([^<]+)/,Q),
 					KeyQueue.Date,Util.MF(/ieve>([^<]+)/,Q),
@@ -192,9 +192,9 @@ R = ZED.ReduceToObject
 						KeyQueue.Title,Util.MF(/itle>([^<]+)/,Q),
 						KeyQueue.URL,[U],
 						KeyQueue.Suffix,'.' + Util.MF(/e_type>([^<]+)/,Q)
-					)]
-				))
-				Util.SetSize(R,[Number(Util.MF(/high>([^<]+)/,Q))])
+					)],
+					KeyQueue.Sizes,[Number(Util.MF(/high>([^<]+)/,Q))]
+				)
 			})
 		})
 	},

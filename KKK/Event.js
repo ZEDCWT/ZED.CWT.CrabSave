@@ -33,7 +33,11 @@ module.exports =
 
 		Reinfo : EventKey(),
 		ReinfoLook : EventKey(),
+		RRefresh : EventKey(),
 		Refresh : EventKey(),
+
+		Error : EventKey(),
+		ErrorLook : EventKey(),
 
 		Finish : EventKey(),
 		EFinish : EventKey(),

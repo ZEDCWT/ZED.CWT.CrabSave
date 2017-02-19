@@ -174,9 +174,9 @@ Download = function(Q)
 		}).start(function(URL)
 		{
 			Start(Q,I,MakeFileName(Q,PL,UL,Part,F,Fa,I),URL,Done,Size)
-		},function()
+		},function(E)
 		{
-			Bus.emit(EventDownload.Error,Q)
+			Bus.emit(EventDownload.Error,Q,E)
 		})
 		Active[Q[KeyQueue.Unique]] =
 		{

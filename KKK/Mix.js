@@ -822,7 +822,7 @@
 			'#/N/::-webkit-scrollbar{width:0;height:0}' +
 			'#/N/>div{position:relative;min-height:100%;overflow:hidden}' +
 			//		Tab
-			'#/N/ ./I/{position:relative;margin:/b/px 0;padding:18px 0 18px 18px}' +
+			'#/N/ ./I/{position:relative;margin:/b/px 0;padding:12px 0 12px 16px}' +
 			'#/N/ ./I/,#/N/ ./I/ ./B/{transition:all .2s linear}' +
 			'#/N/ ./I/:hover,#/N/ ./O/{box-shadow:0 0 /b/px /a/}' +
 			//			TabOn
@@ -1537,6 +1537,13 @@
 								Speed.text(L(Lang.EURL))
 								Remain.text('-' + ZED.SecondsToString((Queue.ReinfoMap[ID] + Queue.Wait() - ZED.now()) / 1000))
 							}
+							else if (Queue.IsReadyRefresh(ID))
+								Speed.text(L(Lang.RRefresh))
+							else if (Queue.ErrorMap[ID])
+							{
+								Speed.text(L(Lang.EConn))
+								Remain.text('-' + ZED.SecondsToString((Queue.ErrorMap[ID] + Queue.Wait() - ZED.now()) / 1000))
+							}
 							else Queue.IsRunning(ID) ?
 								MakeSpeed(ID,Q,ActiveObj) :
 								Speed.text(L(Queue.ActiveMap[ID] ? Lang.Queuing : Lang.Paused))
@@ -1663,7 +1670,7 @@
 				}
 			}).on(EventQueue.Queuing,function(A)
 			{
-				if (A = Active[A[KeyQueue.Unique]])
+				if (A = Active[A[KeyQueue.Unique] || A])
 				{
 					A[ActiveKeySpeed].text(L(Lang.Queuing))
 					A[ActiveKeyRemain].text('')
@@ -1693,6 +1700,13 @@
 			{
 				if (A = Active[A])
 					A[ActiveKeyRemain].text('-' + ZED.SecondsToString(S))
+			}).on(EventQueue.RRefresh,function(A)
+			{
+				if (A = Active[A])
+				{
+					A[ActiveKeySpeed].text(L(Lang.RRefresh))
+					A[ActiveKeyRemain].text('')
+				}
 			}).on(EventQueue.Refresh,function(A)
 			{
 				if (A = Active[A[KeyQueue.Unique]])
@@ -1700,6 +1714,18 @@
 					A[ActiveKeySpeed].text(L(Lang.Refreshing))
 					A[ActiveKeyRemain].text('')
 				}
+			}).on(EventQueue.Error,function(A,S)
+			{
+				if (A = Active[A])
+				{
+					A[ActiveKeySpeed].text(L(Lang.EConn))
+					A[ActiveKeyRemain].text('-' + ZED.SecondsToString(S))
+					A[ActiveKeyPercentage].removeClass(ClassHotPercentageActive)
+				}
+			}).on(EventQueue.ErrorLook,function(A,S)
+			{
+				if (A = Active[A])
+					A[ActiveKeyRemain].text('-' + ZED.SecondsToString(S))
 			}).on(EventQueue.EFinish,function(E)
 			{
 				MakeDBError(X,Lang.Finish,E)
@@ -2150,6 +2176,26 @@
 			return MakeScroll(RefreshVCode)
 		}
 	},{
+		Tab : L(Lang.Shortcut),
+		CSS : function(ID)
+		{
+			return ZED.Replace
+			(
+				'',
+				'/',
+				{
+					R : ID
+				}
+			)
+		},
+		Show : MakeSelectableListShow,
+		BeforeHide : MakeSelectableListHide,
+		Content : function(M)
+		{
+			ZED.Each(ShortCut.DefaultMap,function(F,V){UShortCut.on(V,F)})
+			return MakeScroll()
+		}
+	},{
 		Tab : L(Lang.Setting),
 		CSS : function(ID)
 		{
@@ -2191,22 +2237,23 @@
 				return ZED.Merge({T : 'I',E : {placeholder : Default[Q]}},S)
 			},
 
+			RefreshStyle = function(S)
+			{
+				S = Setting.Data(KeySetting.Size)
+				return ZED.Replace
+				(
+					'html,input,textarea{font-family:"/F/";font-size:/S/;font-weight:/W/}',
+					'/',
+					{
+						F : Setting.Data(KeySetting.Font),
+						S : /\D/.test(S) ? S : ZED.min(ZED.max(8,Number(S) || 0),30) + 'px',
+						W : Setting.Data(KeySetting.Weight)
+					}
+				)
+			},
 			RefreshFont = function()
 			{
-				ZED.CSS(KeyFont,function(S)
-				{
-					S = Setting.Data(KeySetting.Size)
-					return ZED.Replace
-					(
-						'html,input,textarea{font-family:"/F/";font-size:/S/;font-weight:/W/}',
-						'/',
-						{
-							F : Setting.Data(KeySetting.Font),
-							S : /\D/.test(S) ? S : S + 'px',
-							W : Setting.Data(KeySetting.Weight)
-						}
-					)
-				})
+				ZED.CSS(KeyFont,RefreshStyle)
 			},
 
 			T;
@@ -2244,7 +2291,7 @@
 					],
 					[L(Lang.RestartT),[MakeInput(KeySetting.Restart,{N : Util.T})],KeySetting.Restart,function()
 					{
-						Queue.Wait(Data[KeySetting.Restart])
+						Queue.Wait(Data[KeySetting.Restart] || Default[KeySetting.Restart])
 					}]
 				],
 				Change : function(){Setting.Save(Data)}
@@ -2323,7 +2370,7 @@
 		),
 		RHidden
 	)
-ZED.Each(ShortCut.DefaultMap,function(F,V){UShortCut.on(V,F)})
+
 	$(function()
 	{
 		Rainbow.appendTo('body')

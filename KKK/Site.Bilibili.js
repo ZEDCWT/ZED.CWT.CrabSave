@@ -89,11 +89,16 @@ BishiURL = function(Q,B)
 Overspeed = ZED.Mark(),
 MaybeOverspeed = function(Q)
 {
-	-503 === Q.code && 'overspeed' === Q.message &&
+	-503 === Q.code &&
 	(
 		Util.Debug('Site.Bilibili','Overspeed'),
 		ZED.Throw(Overspeed)
 	)
+},
+OverspeedRetry = function(Q)
+{
+	return Q.tap(function(E){Overspeed === E || ZED.Throw(E)})
+		.delay(2000)
 },
 R = ZED.ReduceToObject
 (
@@ -342,7 +347,11 @@ R = ZED.ReduceToObject
 
 			return Observable.from(Q.list).flatMapOnline(1,function(V)
 			{
-				return (Q.bangumi ? Util.RequestBody : Util.ajax)(Cookie.URL(Name,BishiURL(V.cid,Q.bangumi))).map(function(B,D)
+				return Util.RequestBody(Cookie.URL(Name,BishiURL(V.cid,Q.bangumi),
+				{
+					Referer : 'http://static.hdslb.com/play.swf',
+					'User-Agent' : Config.UA
+				})).map(function(B,D)
 				{
 					B = ZED.JTO(B)
 					MaybeOverspeed(B)
@@ -360,11 +369,7 @@ R = ZED.ReduceToObject
 					))
 					V.part || ZED.delete_(KeyQueue.Title,D)
 				})
-				.retryWhen(function(Q)
-				{
-					return Q.tap(function(E){Overspeed === E || ZED.Throw(E)})
-						.delay(2000)
-				})
+				.retryWhen(OverspeedRetry)
 			})
 			.finish()
 			.map(function()
@@ -374,6 +379,7 @@ R = ZED.ReduceToObject
 				return R
 			})
 		})
+		.retryWhen(OverspeedRetry)
 	},
 	KeySite.IDView,ZED.add('av'),
 	KeySite.Pack,ZED.identity

@@ -16,7 +16,7 @@ module.exports =
 {
 	Read : Read,
 	Head : function(Q){return {Cookie : Read(Q)}},
-	URL : function(Q,S){return {url : S,headers : {Cookie : Read(Q)}}},
+	URL : function(Q,S,H){return {url : S,headers : ZED.Merge({Cookie : Read(Q)},H)}},
 	Set : function(Q,S)
 	{
 		Save.Save(ZED.objOf(Q,S))

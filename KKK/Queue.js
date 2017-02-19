@@ -17,7 +17,8 @@ Download = require('./Download'),
 DB = require('./DB'),
 
 Max = 5,
-Wait = 180000,
+WaitDisplay = 180,
+Wait = 1000 * WaitDisplay,
 
 DBAllowMulti = {multi : Util.T},
 DBExistFalse = {$exists : Util.F},
@@ -166,8 +167,11 @@ Play = function(Q)
 PauseMap = {},
 InnerPause = function(Q)
 {
-	--Current
-	ZED.delete_(Q,Running)
+	if (Running[Q])
+	{
+		--Current
+		ZED.delete_(Q,Running)
+	}
 	Download.Pause(Q)
 },
 ClearDebuff = function(M,T,F)
@@ -176,6 +180,11 @@ ClearDebuff = function(M,T,F)
 	{
 		ReinfoQueue.splice(F,1)
 		ZED.delete_(T,ReinfoMap)
+	}
+	for (F = ErrorQueue.length;F;) if (M[T = ErrorQueue[--F]])
+	{
+		ErrorQueue.splice(F,1)
+		ZED.delete_(T,ErrorMap)
 	}
 	for (F = DispatchInfoPreemptive.length;F;)
 		if (M[T = DispatchInfoPreemptive[--F]])
@@ -263,7 +272,7 @@ ReinfoLook = function(R,C,T,F)
 		if (0 < C) Bus.emit(EventQueue.ReinfoLook,T,C / 1000)
 		else
 		{
-			Bus.emit(EventQueue.ReinfoLook,0)
+			Bus.emit(EventQueue.RRefresh,T)
 			ZED.delete_(T,ReinfoMap)
 			ReinfoQueue.splice(F,1)
 			R.push(T)
@@ -272,26 +281,55 @@ ReinfoLook = function(R,C,T,F)
 	for (F = 0;F < R.length;++F) DispatchInfoPreemptive.push(R[F])
 	F && (InfoNow || DispatchInfo())
 },
-Reinfo = function(Q)
+Reinfo = function(Q,ID)
 {
-	var
-	ID = Q[KeyQueue.Unique];
-
+	ID = Q[KeyQueue.Unique]
 	ReinfoMap[ID] || OnlineData.update({_id : Q._id},Q,function(E)
 	{
-		if (E) DownError(Q,E)
+		if (E) Error(Q,E)
 		else
 		{
 			ReinfoMap[ID] = ZED.now()
 			ReinfoQueue.push(ID)
 			InnerPause(ID)
-			Bus.emit(EventQueue.Reinfo,ID,Wait / 1000)
+			Bus.emit(EventQueue.Reinfo,ID,WaitDisplay)
 		}
 	})
 },
-DownError = function()
+ErrorMap = {},
+ErrorQueue = [],
+ErrorLook = function(R,C,T,F)
 {
-	console.log('DERROR',arguments)
+	for (F = R = ErrorQueue.length;F;)
+	{
+		T = ErrorQueue[--F]
+		C = ErrorMap[T] + Wait - ZED.now()
+		if (0 < C) Bus.emit(EventQueue.ErrorLook,T,C / 1000)
+		else
+		{
+			Bus.emit(EventQueue.Queuing,T)
+			ZED.delete_(T,ErrorMap)
+			ErrorQueue.splice(F,1)
+		}
+	}
+	R === ErrorQueue.length || Dispatch()
+},
+ErrorOn = function(ID,E)
+{
+	Util.Debug('Queue',E)
+	ErrorMap[ID] = ZED.now()
+	ErrorQueue.push(ID)
+	InnerPause(ID)
+	Bus.emit(EventQueue.Error,ID,WaitDisplay)
+},
+Error = function(Q,E,ID)
+{
+	ID = Q[KeyQueue.Unique]
+	ErrorMap[ID] || OnlineData.update({_id : Q._id},Q,function(EE)
+	{
+		ErrorOn(ID,E)
+		EE && Util.Debug('Queue',EE)
+	})
 },
 
 FinishQueue = [],
@@ -404,7 +442,7 @@ Dispatch = function(T,F)
 			T = {}
 			T[KeyQueue.Active] = Util.T
 			F = Current ? ZED.keys(Running) : []
-			F = F.concat(ZED.keys(ReinfoMap),DispatchInfoPreemptive)
+			F = F.concat(ReinfoQueue,ErrorQueue,DispatchInfoPreemptive)
 			F.length && (T[KeyQueue.Unique] = {$nin : F})
 			OnlineData.find(T).sort(DispatchSort).limit(Max - Current).exec(function(E,Q)
 			{
@@ -482,7 +520,7 @@ DispatchInfoEnd = function()
 },
 DispatchInfoError = function(E)
 {
-	Util.Debug('Queue',E)
+	ErrorOn(InfoNow,E)
 	DispatchInfoEnd()
 },
 DispatchInfoFinish = function()
@@ -545,7 +583,15 @@ DispatchInfo = function(T)
 				}
 			})
 		else
-			OnlineData.find(QueryNoSize).sort(DispatchSort).limit(1).exec(function(E,Q)
+		{
+			if (ErrorQueue.length)
+			{
+				T = {}
+				T[KeyQueue.Size] = DBExistFalse
+				T[KeyQueue.Unique] = {$nin : ErrorQueue}
+			}
+			else T = QueryNoSize
+			OnlineData.find(T).sort(DispatchSort).limit(1).exec(function(E,Q)
 			{
 				Infoing = Util.F
 				if (E) Util.Debug('Queue',E)
@@ -563,6 +609,7 @@ DispatchInfo = function(T)
 					InfoEnd = T.start(ZED.noop,DispatchInfoError,DispatchInfoFinish)
 				}
 			})
+		}
 	}
 };
 
@@ -570,11 +617,12 @@ Bus.on(EventDownload.Save,function(Q)
 {
 	OnlineData.update({_id : Q._id},Q)
 })
-	.on(EventDownload.Error,DownError)
-	.on(EventDownload.Finish,Finish)
+	.on(EventDownload.Error,Error)
 	.on(EventDownload.Reinfo,Reinfo)
+	.on(EventDownload.Finish,Finish)
 
 Util.Look(ReinfoLook)
+Util.Look(ErrorLook)
 
 module.exports =
 {
@@ -586,14 +634,16 @@ module.exports =
 	CardMap : CardMap,
 
 	ReinfoMap : ReinfoMap,
+	ErrorMap : ErrorMap,
 
 	Max : function(Q){return Util.U === Q ? Max : Max = Number(Q)},
-	Wait : function(Q){return Util.U === Q ? Wait : Wait = 1000 * Q},
+	Wait : function(Q){return Util.U === Q ? Wait : Wait = 1000 * (WaitDisplay = Number(Q))},
 
 	Dispatch : Dispatch,
 
 	//Hot
-	IsInfo : function(Q){return InfoNow === Q},
+	IsInfo : function(Q,J){return InfoNow === Q && (J ^ !DispatchInfoRefreshLast)},
+	IsReadyRefresh : function(Q){return 0 <= DispatchInfoPreemptive.indexOf(Q)},
 	IsRunning : function(Q){return Running[Q]},
 
 	Info : function(Q,C)

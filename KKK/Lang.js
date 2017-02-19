@@ -19,6 +19,7 @@ module.exports =
 	History : Lang('History'),
 	Component : Lang('Component'),
 	SignIn : Lang('Sign in'),
+	Shortcut : Lang('Shortcut'),
 	Setting : Lang('Setting'),
 
 	//StatucBar
@@ -74,6 +75,7 @@ module.exports =
 	GetInfo : Lang('Getting infomation...'),
 	GetSize : Lang('Getting size...'),
 	SizeUn : Lang('Unknow size'),
+	RRefresh : Lang('Ready to refresh URL'),
 	Refreshing : Lang('Refreshing URL'),
 	Queuing : Lang('Queuing'),
 	Processing : Lang('Processing'),
