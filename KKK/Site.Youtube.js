@@ -10,11 +10,13 @@ KeyQueue = Key.Queue,
 Lang = require('./Lang'),
 L = Lang.L,
 Cookie = require('./Cookie'),
+Component = require('./Component'),
 
 Name = 'YouTube',
 PageSize = 30,
 
 GoogleAPIKey = 'AIzaSyA_ltEFFYL4E_rOBYkQtA8aKHnL5QR_uMA',
+URLMain = 'https://www.youtube.com/',
 URLLoginCheck = 'https://www.youtube.com/account',
 URLChannel = ZED.URLBuild('https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=',Util.U,'&key=',GoogleAPIKey),
 URLChannelByUser = ZED.URLBuild('https://www.googleapis.com/youtube/v3/channels?part=contentDetails&forUsername=',Util.U,'&key=',GoogleAPIKey),
@@ -22,6 +24,17 @@ URLPlaylist = ZED.URLBuild('https://www.googleapis.com/youtube/v3/playlistItems?
 URLVideo = ZED.URLBuild('https://www.googleapis.com/youtube/v3/videos?id=',Util.U,'&part=snippet,statistics,recordingDetails&key=',GoogleAPIKey),
 
 FitQulity = ZED.prop('medium'),
+
+FrameTool,
+FrameRepeater = ZED.Repeater(),
+STS,
+Sign,
+TrySign = function(Q,R)
+{
+	try{R = Sign(Q)}
+	catch(e){}
+	return R
+},
 
 MakeListByPlaylist = function(ID,X)
 {
@@ -67,6 +80,44 @@ R = ZED.ReduceToObject
 (
 	KeySite.Name,Name,
 	KeySite.Judge,/\.you\.?tu\.?be\./i,
+	KeySite.Frame,function(Reg)
+	{
+		STS = Component.Data(Name)
+		;/\D/.test(STS) && (STS = Util.F)
+		FrameTool = Reg(function(W)
+		{
+			W.SIGN = ZED.noop
+		},function(W)
+		{
+			Sign = W.SIGN
+			TrySign(Name) ? FrameRepeater.finish() : FrameRepeater.error(L(Lang.Bad))
+		},STS)
+	},
+	KeySite.Component,function()
+	{
+		return Util.ajax(URLMain).flatMap(function(Q)
+		{
+			Q = ZED.JTO(Util.MF(/assets"[^}]+js":("[^"]+")/,Q))
+			return ZED.isString(Q) ?
+				Util.ajax('/' === Q.charAt() ? URLMain + Q.substr(1) : Q).flatMap(function(Q)
+				{
+					Q = Q.replace(/=[^=]+...split\(""\S+ ..join\(""/,'=SIGN$&')
+					STS = Util.MF(/sts:(\d+)/,Q)
+					return Util.writeFile(FrameTool[0],Q)
+				}).flatMap(function()
+				{
+					Component.Save(ZED.objOf(Name,STS))
+					FrameRepeater = ZED.Repeater()
+					FrameTool[1]()
+					return FrameRepeater
+				}) :
+				Observable.throw(L(Lang.Bad))
+		})
+	},
+	KeySite.ComCheck,function()
+	{
+		return TrySign(Name) ? Observable.empty() : Observable.throw(L(Lang.ComNot))
+	},
 	KeySite.Require,['Cookie SID','Cookie SSID'],
 	KeySite.Login,function(SID,SSID)
 	{

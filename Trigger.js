@@ -54,7 +54,11 @@ Create = function()
 		width : Data.width,
 		height : Data.height,
 		x : Data.x,
-		y : Data.y
+		y : Data.y,
+		webPreferences :
+		{
+			webSecurity : false
+		}
 	});
 
 	Data.Max && Window.maximize()

@@ -2,7 +2,6 @@
 var
 ZED = require('@zed.cwt/zedquery'),
 Observable = ZED.Observable,
-$ = require('@zed.cwt/jquery'),
 
 Config = require('../Config'),
 Util = require('./Util'),
@@ -13,9 +12,6 @@ Lang = require('./Lang'),
 L = Lang.L,
 Cookie = require('./Cookie'),
 Component = require('./Component'),
-DOM = require('./DOM'),
-
-Path = require('path'),
 
 Name = 'Bilibili',
 PageSize = 30,
@@ -59,10 +55,7 @@ URLVInfoURL = function(Q)
 },
 URLPlayer = 'http://static.hdslb.com/player/js/bilibiliPlayer.min.js',
 
-Frame = $(DOM.iframe),
-FrameElement = Frame[0],
-FrameJS = Path.join(Config.Root,'Site.Bilibili.js'),
-FrameURL = 'file:///' + __filename.replace(/\.js$/,'.htm') + '?' + FrameJS,
+FrameTool,
 FrameRepeater = ZED.Repeater(),
 BishiID,
 BishiMethod,
@@ -104,9 +97,32 @@ R = ZED.ReduceToObject
 (
 	KeySite.Name,Name,
 	KeySite.Judge,/\.bilibili\.|^av\d+$/i,
-	KeySite.Init,function(B)
+	KeySite.Frame,function(Reg)
 	{
-		B.append(Frame)
+		BishiMethod = Component.Data(Name) || []
+		BishiID = BishiMethod[0]
+		BishiMethod = BishiMethod[1]
+		FrameTool = Reg(function(W)
+		{
+			W.$ = top.require('@zed.cwt/jquery')
+			W.BISHI = {U : ZED.noop}
+			W.setTimeout = function(Q){Q()}
+
+			ZED.delete_('localStorage',W)
+			W.JSON.parse = ZED.JTO
+			Object.defineProperty(W.document,'cookie',{value : ''})
+		},function(W)
+		{
+			Bishi = W.BISHI
+			try
+			{
+				//Sign
+				BishiSign = Bishi.R(BishiID)[BishiMethod]
+					('r',Util.N,'number number number number string string number'.split(' '))
+				FrameRepeater.finish()
+			}
+			catch(e){FrameRepeater.error(e)}
+		},BishiID && BishiMethod)
 	},
 	KeySite.Component,function()
 	{
@@ -127,15 +143,14 @@ R = ZED.ReduceToObject
 			BishiID = Number(Util.MF(/}],(\d+):\[func[^{]+{[^{]+{ try {/,Q))
 			//Method
 			BishiMethod = Util.MF(/([^.])\("r",null,"(?:number )+/,Q)
+
+			return Util.writeFile(FrameTool[0],Q)
+		}).flatMap(function()
+		{
 			Component.Save(ZED.objOf(Name,[BishiID,BishiMethod]))
-
-			return Util.writeFile(FrameJS,Q).flatMap(function()
-			{
-				FrameRepeater = ZED.Repeater()
-				Frame.attr(DOM.src,FrameURL)
-
-				return FrameRepeater
-			})
+			FrameRepeater = ZED.Repeater()
+			FrameTool[1]()
+			return FrameRepeater
 		})
 	},
 	KeySite.ComCheck,function()
@@ -384,27 +399,5 @@ R = ZED.ReduceToObject
 	KeySite.IDView,ZED.add('av'),
 	KeySite.Pack,ZED.identity
 );
-
-BishiMethod = Component.Data(Name) || []
-BishiID = BishiMethod[0]
-BishiMethod = BishiMethod[1]
-if (BishiID && BishiMethod) Frame.attr(DOM.src,FrameURL)
-Frame.on(DOM.load,function(W)
-{
-	W = FrameElement.contentWindow
-	if (W.BISHI)
-	{
-		Bishi = W.BISHI
-		try
-		{
-			//Sign
-			BishiSign = Bishi.R(BishiID)[BishiMethod]
-				('r',Util.N,'number number number number string string number'.split(' '))
-			FrameRepeater.finish()
-		}
-		catch(e){FrameRepeater.error(e)}
-	}
-	else FrameRepeater.error(L(Lang.Bad))
-})
 
 module.exports = R

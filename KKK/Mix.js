@@ -34,6 +34,8 @@
 	$ = ZED.jQuery,
 	FnClick = $.fn.click,
 
+	global = ZED.global,
+
 	Path = require('path'),
 
 
@@ -1947,13 +1949,57 @@
 				{
 					MakeStatus(X,L(Lang.ComLoaded))
 				})
-			};
+			},
+
+			SafeMap = {},
+			SafeScript = ZED.KeyGen();
+
+			global[SafeScript] = function(Q,W)
+			{
+				try{SafeMap[Q](W)}catch(e){}
+			}
 
 			ZED.each(function(V,R)
 			{
 				if (V[KeySite.Component])
 				{
-					V[KeySite.Init] && V[KeySite.Init](RHidden)
+					V[KeySite.Frame] && V[KeySite.Frame](function(Safe,Load,J)
+					{
+						var
+						Frame = $(DOM.iframe),
+						Element = Frame[0],
+						JSPath = Path.join(Config.Root,'Site.' + V[KeySite.Name] + '.js'),
+						URL = 'data:text/html;base64,' + ZED.Code.btoa(ZED.Replace
+						(
+							'<!DOCTYPE html>' +
+							'<html>' +
+							'<head>' +
+							'<meta charset="utf-8">' +
+							'<title>$0$</title>' +
+							'<script>' +
+							"top.$1$('$0$',window)" +
+							'</script>' +
+							'<script src="file:///$2$"></script>' +
+							'</head>' +
+							'<body>',
+							[V[KeySite.Name],SafeScript,JSPath]
+						)),
+						Refresh = function()
+						{
+							Frame.attr(DOM.src,URL)
+						};
+
+						SafeMap[V[KeySite.Name]] = Safe
+						Frame.on(DOM.load,function()
+						{
+							Load(Element.contentWindow)
+						})
+						J && Refresh()
+
+						RHidden.append(Frame)
+
+						return [JSPath,Refresh]
+					})
 					R = $(DOM.div).text(V[KeySite.Name]).on(DOM.click,function()
 					{
 						Switch(R,V)
