@@ -1132,14 +1132,17 @@
 					},V[KeySite.Judge])
 				},GoTarget[KeySite.Map])
 
-				if (!GoDetail) return GoError(Lang.UknURL,URL)
-				GoID = GoID[1]
-				T = [GoTarget[KeySite.Name],GoDetail[KeySite.Name]]
-				GoID && T.push(GoID)
-				ShowByTextS(T.join(' '),RInfo)
+				if (GoDetail)
+				{
+					GoID = GoID[1]
+					T = [GoTarget[KeySite.Name],GoDetail[KeySite.Name]]
+					GoID && T.push(GoID)
+					ShowByTextS(T.join(' '),RInfo)
 
-				GoInfo = Util.F
-				Jump(1)
+					GoInfo = Util.F
+					Jump(1)
+				}
+				else GoError(Lang.UknURL,URL)
 			},
 			Hover = function(C,I,Q)
 			{

@@ -1,13 +1,17 @@
 {
-  "name": "ZED.CWT.CrabSave",
+  "name": "zedcwt_crabsave",
+  "productName": "ZED.CWT.CrabSave",
   "version": "0.0.0",
   "private": true,
   "main": "Trigger.js",
   "scripts": {
-    "start": "electron Trigger"
+    "start": "electron Trigger",
+    "build": "node Build"
   },
   "devDependencies": {
-    "electron": "^1.5.0"
+    "electron": "^1.5.0",
+    "electron-packager": "^8.5.2",
+    "uglify-js": "^2.7.5"
   },
   "dependencies": {
     "@zed.cwt/downloader": "0.0.1",
@@ -16,7 +20,6 @@
     "cli": "^1.0.1",
     "graceful-fs": "^4.1.11",
     "nedb": "^1.8.0",
-    "request": "^2.79.0",
-    "sql.js": "^0.4.0"
+    "request": "^2.79.0"
   }
 }
