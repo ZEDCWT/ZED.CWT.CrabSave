@@ -316,7 +316,7 @@ ErrorLook = function(R,C,T,F)
 },
 ErrorOn = function(ID,E)
 {
-	Util.Debug('Queue',E)
+	Util.Debug(__filename,E)
 	ErrorMap[ID] = ZED.now()
 	ErrorQueue.push(ID)
 	InnerPause(ID)
@@ -328,7 +328,7 @@ Error = function(Q,E,ID)
 	ErrorMap[ID] || OnlineData.update({_id : Q._id},Q,function(EE)
 	{
 		ErrorOn(ID,E)
-		EE && Util.Debug('Queue',EE)
+		EE && Util.Debug(__filename,EE)
 	})
 },
 
@@ -528,7 +528,7 @@ DispatchInfoFinish = function()
 	if (Running[InfoNow] && !Download.Active[InfoNow])
 		OnlineData.findOne(ZED.objOf(KeyQueue.Unique,InfoNow),function(E,Q)
 		{
-			if (E) Util.Debug('Queue',E)
+			if (E) Util.Debug(__filename,E)
 			else Download.Play(Q)
 		})
 	DispatchInfoEnd()
@@ -539,6 +539,7 @@ DispatchInfoRefresh = function(Q)
 	var
 	Part = DispatchInfoRefreshLast[KeyQueue.Part],
 	Done = DispatchInfoRefreshLast[KeyQueue.Done],
+	Sizes = DispatchInfoRefreshLast[KeyQueue.Sizes],
 	URL,
 	New = Q[KeyQueue.Part],
 	I = -1,F,Fa;
@@ -547,7 +548,7 @@ DispatchInfoRefresh = function(Q)
 	{
 		URL = Part[F][KeyQueue.URL]
 		for (Fa = -1;++Fa < URL.length;)
-			Done[++I] || (URL[Fa] = New[F][KeyQueue.URL][Fa])
+			Sizes[++I] <= Done[I] || (URL[Fa] = New[F][KeyQueue.URL][Fa])
 	}
 
 	return OnlineUpdate(ZED.objOf(KeyQueue.Unique,InfoNow),{$set : ZED.objOf(KeyQueue.Part,Part)}).tap(function()
@@ -571,7 +572,7 @@ DispatchInfo = function(T)
 			OnlineData.findOne(ZED.objOf(KeyQueue.Unique,DispatchInfoPreemptive.shift()),function(E,Q)
 			{
 				Infoing = Util.F
-				if (E) Util.Debug('Queue',E)
+				if (E) Util.Debug(__filename,E)
 				else
 				{
 					InfoNow = Q[KeyQueue.Unique]
@@ -594,7 +595,7 @@ DispatchInfo = function(T)
 			OnlineData.find(T).sort(DispatchSort).limit(1).exec(function(E,Q)
 			{
 				Infoing = Util.F
-				if (E) Util.Debug('Queue',E)
+				if (E) Util.Debug(__filename,E)
 				else if (Q.length)
 				{
 					Q = Q[0]

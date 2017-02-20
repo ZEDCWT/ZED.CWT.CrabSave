@@ -84,7 +84,7 @@ MaybeOverspeed = function(Q)
 {
 	-503 === Q.code &&
 	(
-		Util.Debug('Site.Bilibili','Overspeed'),
+		Util.Debug(__filename,'Overspeed'),
 		ZED.Throw(Overspeed)
 	)
 },
@@ -104,7 +104,7 @@ R = ZED.ReduceToObject
 		BishiMethod = BishiMethod[1]
 		FrameTool = Reg(function(W)
 		{
-			W.$ = top.require('@zed.cwt/jquery')
+			W.$ = ZED.jQuery
 			W.BISHI = {U : ZED.noop}
 			W.setTimeout = function(Q){Q()}
 
@@ -364,8 +364,7 @@ R = ZED.ReduceToObject
 			{
 				return Util.RequestBody(Cookie.URL(Name,BishiURL(V.cid,Q.bangumi),
 				{
-					Referer : 'http://static.hdslb.com/play.swf',
-					'User-Agent' : Config.UA
+					Referer : 'http://static.hdslb.com/play.swf'
 				})).map(function(B,D)
 				{
 					B = ZED.JTO(B)

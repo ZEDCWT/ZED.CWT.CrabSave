@@ -21,7 +21,10 @@ URLLoginCheck = 'https://www.youtube.com/account',
 URLChannel = ZED.URLBuild('https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=',Util.U,'&key=',GoogleAPIKey),
 URLChannelByUser = ZED.URLBuild('https://www.googleapis.com/youtube/v3/channels?part=contentDetails&forUsername=',Util.U,'&key=',GoogleAPIKey),
 URLPlaylist = ZED.URLBuild('https://www.googleapis.com/youtube/v3/playlistItems?part=snippet%2CcontentDetails&playlistId=',Util.U,'&pageToken=',Util.U,'&maxResults=',PageSize,'&key=',GoogleAPIKey),
-URLVideo = ZED.URLBuild('https://www.googleapis.com/youtube/v3/videos?id=',Util.U,'&part=snippet,statistics,recordingDetails&key=',GoogleAPIKey),
+URLSubscription = 'https://www.youtube.com/feed/subscriptions?spf=navigate',
+URLVInfo = ZED.URLBuild('https://www.googleapis.com/youtube/v3/videos?id=',Util.U,'&part=snippet,statistics,recordingDetails&key=',GoogleAPIKey),
+URLWatch = ZED.URLBuild('https://www.youtube.com/watch?v=',Util.U),
+URLVInfoURL = ZED.URLBuild('https://www.youtube.com/get_video_info?video_id=',Util.U,'&eurl=',Util.U,'&el=info&sts=',Util.U),
 
 FitQulity = ZED.prop('medium'),
 
@@ -34,6 +37,11 @@ TrySign = function(Q,R)
 	try{R = Sign(Q)}
 	catch(e){}
 	return R
+},
+
+TypeMap =
+{
+	'3gpp' : '3gp'
 },
 
 MakeListByPlaylist = function(ID,X)
@@ -83,7 +91,7 @@ R = ZED.ReduceToObject
 	KeySite.Frame,function(Reg)
 	{
 		STS = Component.Data(Name)
-		;/\D/.test(STS) && (STS = Util.F)
+		;/\D/.test(STS) && (STS = '')
 		FrameTool = Reg(function(W)
 		{
 			W.SIGN = ZED.noop
@@ -162,7 +170,7 @@ R = ZED.ReduceToObject
 		KeySite.Judge,[/v=([^&]+)/,/^([_0-9A-Za-z-]+)$/],
 		KeySite.Page,function(ID)
 		{
-			return Util.RequestBody(URLVideo(ID)).map(function(Q)
+			return Util.RequestBody(Cookie.URL(Name,URLVInfo(ID))).map(function(Q)
 			{
 				Q = ZED.path(['items',0,'snippet'],ZED.JTO(Q))
 				Q || ZED.Throw(L(Lang.Bad))
@@ -184,14 +192,43 @@ R = ZED.ReduceToObject
 			})
 		}
 	)],
-	KeySite.URL,function(ID,R)
+	KeySite.URL,function(ID)
 	{
+		return Util.RequestBody(Cookie.URL(Name,URLVInfo(ID))).flatMap(function(Info)
+		{
+			Info = ZED.path(['items',0,'snippet'],ZED.JTO(Info))
+			Info || ZED.Throw(L(Lang.Bad))
+
+			return Util.RequestBody(Cookie.URL(Name,URLVInfoURL(ID,URLWatch(ID),STS))).map(function(URL,S)
+			{
+				URL = ZED.QueryString(URL).url_encoded_fmt_stream_map
+				URL || ZED.Throw(L(Lang.Bad))
+				URL = ZED.map(ZED.QueryString,URL.split(','))[0]
+				URL || ZED.Throw(L(Lang.Bad))
+				S = URL.s || URL.sig
+				if (S)
+				{
+					S = TrySign(S)
+					URL.url += '&signature=' + S
+				}
+				S = Util.MF(/video\/([^;]+)/,URL.type) || 'mp4'
+				TypeMap[S] && (S = TypeMap[S])
+
+				return ZED.ReduceToObject
+				(
+					KeyQueue.Author,Info.channelTitle,
+					KeyQueue.Date,ZED.now(new Date(Info.publishedAt)),
+					KeyQueue.Part,[ZED.ReduceToObject
+					(
+						KeyQueue.URL,[URL.url],
+						KeyQueue.Suffix,'.' + S
+					)]
+				)
+			})
+		})
 	},
 	KeySite.IDView,ZED.identity,
-	KeySite.Pack,function(S,Q)
-	{
-		return S
-	}
+	KeySite.Pack,ZED.identity
 );
 
 module.exports = R

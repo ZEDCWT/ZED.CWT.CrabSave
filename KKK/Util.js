@@ -12,6 +12,8 @@ Config = require('../Config'),
 Lang = require('./Lang'),
 L = Lang.L,
 
+Path = require('path'),
+
 FS = require('graceful-fs'),
 Request = require('request').defaults({timeout : 10E3}),
 RequestHead = function(Q)
@@ -83,9 +85,12 @@ module.exports =
 	writeFile : Observable.wrapNode(FS.writeFile),
 
 	//No dependencies
-	Debug : function()
+	Debug : function(A)
 	{
-		console.error.apply(console,ZED.prepend('DEBUG',arguments))
+		A = ZED.Arrayify(arguments)
+		A[0] = Path.basename(A[0]).replace(/\.js$/,'')
+		A.unshift('DEBUG')
+		console.error.apply(console,A)
 	},
 	Fatal : function(Q)
 	{

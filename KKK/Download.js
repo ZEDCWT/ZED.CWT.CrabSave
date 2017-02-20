@@ -30,11 +30,16 @@ Start = function(Q,I,At,URL,Done,Size,Begin,Down,Dirty)
 	ZED.Merge(Util.F,Util.T,
 	{
 		timeout : 1500,
-		forever : Util.T
+		forever : Util.T,
+		headers :
+		{
+			'User-Agent' : Config.UA
+		}
 	},URL)
 	Down = Downloader(
 	{
 		request : URL,
+		newreq : Util.T,
 		path : At,
 		last : Q[KeyQueue.File][I] && Path.join(Q[KeyQueue.Dir],Q[KeyQueue.File][I]),
 		thread : 1,
@@ -69,13 +74,13 @@ Start = function(Q,I,At,URL,Done,Size,Begin,Down,Dirty)
 	{
 		if (ZED.isNumber(E))
 		{
-			Done[I] = 0
-			Q[KeyQueue.File][I] = Path.basename(At)
+			//Done[I] = 0
+			//Q[KeyQueue.File][I] = Path.basename(At)
 			Bus.emit(EventDownload.Reinfo,Q)
 		}
 		else if (0 <= Begin && Begin < Down.Info.Saved)
 		{
-			Util.Debug('Download','Auto restart',Q[KeyQueue.Unique])
+			Util.Debug(__filename,'Auto restart',Q[KeyQueue.Unique])
 			Start(Q,I,At,URL,Done,Size)
 		}
 		else

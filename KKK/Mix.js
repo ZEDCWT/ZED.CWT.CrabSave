@@ -8,7 +8,6 @@
 	Util = require('./Util'),
 	ReplaceLang = Util.ReplaceLang,
 	Bus = Util.Bus,
-	Debug = Util.Debug,
 	Key = require('./Key'),
 	KeySite = Key.Site,
 	KeyQueue = Key.Queue,
@@ -759,7 +758,7 @@
 	},
 	MakeDBError = function(X,G,E)
 	{
-		Util.Debug('Mix',E)
+		Util.Debug(__filename,E)
 		MakeStatus(X,ReplaceLang(Lang.ErrWhile,L(G)),ClassStatusError)
 	},
 
@@ -782,7 +781,7 @@
 		}
 	});
 
-	ZED.onError = function(E){Util.Debug('Mix',E)}
+	ZED.onError = function(E){Util.Debug(__filename,E)}
 
 	ZED.CSS(ZED.KeyGen(),function(W,H)
 	{
@@ -1070,7 +1069,7 @@
 		{
 			var
 			RInput = ShowByRock(IDBrowserInput),
-			RURL = ShowByInput(Lang.URL).val('bili space 287301'),//DEBUG
+			RURL = ShowByInput(Lang.URL),
 			RGo = ShowByClass(DOM.NoSelect).text('\u2192'),
 			RInfo = ShowByRock(IDBrowserInfo),
 			RList = ShowByRock(IDBrowserList),
@@ -1220,7 +1219,7 @@
 						Render(Q,S)
 					},function(E)
 					{
-						Debug(E)
+						Util.Debug(__filename,E)
 						E && MakeStatus(X,ZED.isString(E) ? E : E + (E.stack || ''),ClassStatusError)
 					})
 				}
@@ -1928,7 +1927,7 @@
 				LoadLast && LoadLast.end()
 				LoadLast = Target[KeySite.Component]().start(ZED.noop,function(E)
 				{
-					Util.Debug(E)
+					Util.Debug(__filename,E)
 					MakeStatus(X,E,ClassStatusError)
 				},function()
 				{
@@ -1943,7 +1942,7 @@
 				CheckLast && CheckLast.end()
 				CheckLast = Target[KeySite.ComCheck]().start(ZED.noop,function(E)
 				{
-					Util.Debug(E)
+					Util.Debug(__filename,E)
 					MakeStatus(X,E,ClassStatusError)
 				},function()
 				{
@@ -1982,7 +1981,7 @@
 							'<script src="file:///$2$"></script>' +
 							'</head>' +
 							'<body>',
-							[V[KeySite.Name],SafeScript,JSPath]
+							[V[KeySite.Name],SafeScript,JSPath.replace(/\\/g,'/')]
 						)),
 						Refresh = function()
 						{
@@ -2136,7 +2135,7 @@
 							}
 						},function(E)
 						{
-							Debug(E)
+							Util.Debug(__filename,E)
 							RVCodeImg.attr(DOM.title,L(Lang.VCFail))
 						})
 					}
@@ -2166,7 +2165,7 @@
 					MakeStatus(X,Q)
 				},function(E)
 				{
-					Debug(E)
+					Util.Debug(__filename,E)
 					MakeStatus(X,L(Lang.SIError),ClassStatusError)
 				})
 			},
@@ -2182,7 +2181,7 @@
 					MakeStatus(X,Q ? ReplaceLang(Lang.Checked,Q) : L(Lang.CheckFail))
 				},function(E)
 				{
-					Debug(E)
+					Util.Debug(__filename,E)
 					MakeStatus(X,L(Lang.CheckError),ClassStatusError)
 				})
 			};
