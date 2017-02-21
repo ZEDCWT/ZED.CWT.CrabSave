@@ -1205,8 +1205,8 @@
 								.attr(DOM.src,V[KeySite.Img])
 								.attr(DOM.title,V[KeySite.Title])
 						),
-						ZED.HTML(V[KeySite.Title]) + DOM.br,
-						V[KeySite.Author] && ZED.HTML(V[KeySite.Author]) + DOM.br,
+						ShowByText(V[KeySite.Title]),
+						V[KeySite.Author] && ShowByText(V[KeySite.Author]),
 						MakeSiteDate(V)
 					)
 					RList.append(D)

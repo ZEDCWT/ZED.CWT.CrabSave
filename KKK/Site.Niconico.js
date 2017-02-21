@@ -17,6 +17,7 @@ URLLogin = 'https://secure.nicovideo.jp/secure/login',
 URLLoginCheck = 'http://seiga.nicovideo.jp/',
 URLUser = ZED.URLBuild('http://www.nicovideo.jp/user/',Util.U,'/video?page=',Util.U),
 URLMylist = ZED.URLBuild('http://www.nicovideo.jp/mylist/',Util.U),
+URLRepo = ZED.URLBuild('http://www.nicovideo.jp/my/top/user?innerPage=1&mode=next_page&last_timeline=',Util.U),
 URLVInfo = ZED.URLBuild('http://ext.nicovideo.jp/api/getthumbinfo/sm',Util.U),
 URLVInfoURL = ZED.URLBuild('http://flapi.nicovideo.jp/api/getflv?v=sm',Util.U),
 UrlVideo = ZED.URLBuild('http://www.nicovideo.jp/watch/sm',Util.U),
@@ -29,8 +30,9 @@ MaybeError = function(Q)
 		Util.MF(/code>([^<]+)/,Q),
 		Util.MF(/tion>([^<]+)/,Q)
 	))
-
 },
+
+RepoActive,
 
 R = ZED.ReduceToObject
 (
@@ -168,6 +170,49 @@ R = ZED.ReduceToObject
 					KeySite.Pages,Page,
 					KeySite.Total,Len,
 					KeySite.Item,Item
+				)
+			})
+		}
+	),ZED.ReduceToObject
+	(
+		KeySite.Name,'ニコレポ',
+		KeySite.Judge,[/^(?:repo|my|top)?$/],
+		KeySite.Page,function(_,X)
+		{
+			return Util.RequestBody(Cookie.URL(Name,URLRepo(RepoActive && RepoActive[X - 2] || ''))).map(function(Q)
+			{
+				var
+				R = [],
+				M = {},
+				T;
+
+				Util.ML(/content"[^]+?content --/g,Q,function(Q)
+				{
+					T = Util.MF(/sm(\d+)/,Q)
+					if (T && !M[T])
+					{
+						M[T] = Util.T
+						R.push(ZED.ReduceToObject
+						(
+							KeySite.Index,R.length,
+							KeySite.ID,T,
+							KeySite.Img,Util.MF(/original="([^"]+)/,Q),
+							KeySite.Title,Util.DecodeHTML(Util.MF(/info[^]+sm\d+[^>]+>([^<]+)/,Q)).trim(),
+							KeySite.Author,Util.DecodeHTML(Util.MF(/user">([^<]+)/,Q)).trim(),
+							KeySite.Date,new Date(Util.MF(/datetime="([^"]+)/,Q))
+						))
+					}
+				})
+
+				T = Util.MF(/last_timeline=(\d+)/,Q)
+				if (1 < X) T && (RepoActive[X - 2] = T)
+				else RepoActive = T ? [T] : []
+
+				return ZED.ReduceToObject
+				(
+					KeySite.Pages,1 + RepoActive.length,
+					KeySite.Total,R.length,
+					KeySite.Item,R
 				)
 			})
 		}

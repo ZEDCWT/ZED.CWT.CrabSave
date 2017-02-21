@@ -199,8 +199,9 @@ R = ZED.ReduceToObject
 				{
 					Q = ZED.JTO(Q)
 					;(Q && Q.content_html) || ZED.Throw(L(Lang.EmptyList))
+					R = Util.DecodeHTML(Util.MF(SubsMore,Q.load_more_widget_html))
+					R && (SubsActive[X - 1] = R)
 					R = SubsContent(Q.content_html)
-					SubsActive[X - 1] = Util.DecodeHTML(Util.MF(SubsMore,Q.load_more_widget_html))
 
 					return ZED.ReduceToObject
 					(
