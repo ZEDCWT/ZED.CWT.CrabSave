@@ -50,6 +50,13 @@
 			Q
 		)
 	},
+	MakeSiteDate = function(Q)
+	{
+		Q = Q[KeySite.Date]
+		return ZED.isDate(Q) || ZED.now(new Date(Q)) ?
+			ZED.DateToString(DateToStringFormatFile,Q) :
+			Q
+	},
 	MakeEnter = function(Q,S)
 	{
 		ZED.ShortCut(
@@ -1103,6 +1110,7 @@
 			GoTarget,
 			GoDetail,
 			GoID,
+			GoPages,
 			Go = function()
 			{
 				var URL = RURL.val().trim(),T;
@@ -1140,6 +1148,7 @@
 					ShowByTextS(T.join(' '),RInfo)
 
 					GoInfo = Util.F
+					GoPages = 1
 					Jump(1)
 				}
 				else GoError(Lang.UknURL,URL)
@@ -1152,10 +1161,9 @@
 			},
 			Render = function(Q,S)
 			{
-				var
-				Pages = Q[KeySite.Pages],
-				Item = Q[KeySite.Item];
+				var Item = Q[KeySite.Item];
 
+				GoPages = Q[KeySite.Pages]
 				if (Item.length)
 				{
 					GoInfo[InfoKeyFrom](Item[0][KeySite.Index])
@@ -1170,11 +1178,11 @@
 				GoInfo[InfoKeyTotal](Q[KeySite.Total])
 				GoInfo[InfoKeyTotalS](MakeS(Q[KeySite.Total]))
 				GoInfo[InfoKeyAt](S)
-				GoInfo[InfoKeyPages](Pages)
-				GoInfo[InfoKeyPagesS](MakeS(Pages))
+				GoInfo[InfoKeyPages](GoPages)
+				GoInfo[InfoKeyPagesS](MakeS(GoPages))
 
-				PagerUp(S,Pages)
-				PagerBotton(S,Pages)
+				PagerUp(S,GoPages)
+				PagerBotton(S,GoPages)
 				RList.empty()
 				Cold.Reset()
 				ZED.each(function(V,D)
@@ -1197,9 +1205,9 @@
 								.attr(DOM.src,V[KeySite.Img])
 								.attr(DOM.title,V[KeySite.Title])
 						),
-						V[KeySite.Title] + DOM.br,
-						V[KeySite.Author] && V[KeySite.Author] + DOM.br,
-						ZED.DateToString(DateToStringFormatFile,V[KeySite.Date])
+						ZED.HTML(V[KeySite.Title]) + DOM.br,
+						V[KeySite.Author] && ZED.HTML(V[KeySite.Author]) + DOM.br,
+						MakeSiteDate(V)
 					)
 					RList.append(D)
 				},Item)
@@ -1208,7 +1216,7 @@
 			{
 				if (GoDetail)
 				{
-					S = ZED.max(1,S)
+					S = ZED.min(ZED.max(1,S || 0),GoPages)
 					MakeStatus(X,L(Lang.Loading),ClassStatusLoading)
 					GoLast = GoDetail[KeySite.Page](GoID,S).start(function(Q)
 					{
@@ -1303,7 +1311,7 @@
 						(
 							MakeAt(SiteMap[Q[KeySite.Name]][KeySite.IDView](Q[KeySite.ID]),Q[KeySite.Name]),
 							MakeAt(Q[KeySite.Title],Q[KeySite.Author]),
-							$(DOM.div).text(ZED.DateToString(DateToStringFormatFile,Q[KeySite.Date]))
+							$(DOM.div).text(MakeSiteDate(Q))
 						),
 						MakeToolBarClick
 						(
@@ -2181,7 +2189,7 @@
 				CheckEnd && CheckEnd.end()
 				CheckEnd = Target[KeySite.Check]().start(function(Q)
 				{
-					MakeStatus(X,Q ? ReplaceLang(Lang.Checked,Q) : L(Lang.CheckFail))
+					MakeStatus(X,Q ? ReplaceLang(Lang.Checked,Q) : L(Lang.NotSigned))
 				},function(E)
 				{
 					Util.Debug(__filename,E)

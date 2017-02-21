@@ -54,6 +54,7 @@ module.exports =
 	Playlist : Lang('Playlist'),
 	Mylist : Lang('Mylist'),
 	Dynamic : Lang('Dynamic'),
+	Subs : Lang('Subscription'),
 	UknSite : Lang('Unknown site id `/0/`'),
 	UknURL : Lang('Unknown URL format `/0/`'),
 	Bad : Lang('Bad response'),
@@ -127,7 +128,7 @@ module.exports =
 	Signed : Lang('Signed in'),
 	SIError : Lang('Error occured while signing in'),
 	Checking : Lang('Checking if signed in'),
-	CheckFail : Lang('Not signed in'),
+	NotSigned : Lang('Not signed in'),
 	Checked : Lang('Signed in as /0/'),
 	CheckError : Lang('Error occured while checking if signed in'),
 

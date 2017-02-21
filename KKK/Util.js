@@ -6,7 +6,7 @@ False = !True,
 
 ZED = require('@zed.cwt/zedquery'),
 Observable = ZED.Observable,
-$ = require('@zed.cwt/jquery'),
+$ = ZED.jQuery,
 
 Config = require('../Config'),
 Lang = require('./Lang'),
@@ -15,12 +15,21 @@ L = Lang.L,
 Path = require('path'),
 
 FS = require('graceful-fs'),
-Request = require('request').defaults({timeout : 10E3}),
+Request = require('request').defaults({timeout : 10E3,forever : True}),
+RequestWrap = function(Q,H)
+{
+	ZED.isObject(Q) || (Q = {url : Q})
+	Q.gzip = True
+	H = Q.headers || (Q.headers = {})
+	H.Accept = '*/*'
+	H['User-Agent'] = Config.UA
+	return Q
+},
 RequestHead = function(Q)
 {
 	return Observable.create(function(O,X)
 	{
-		X = Request(Q).on('error',function(E){O.error(E)})
+		X = Request(RequestWrap(Q)).on('error',function(E){O.error(E)})
 			.on('response',function(H)
 			{
 				X.abort()
@@ -35,7 +44,7 @@ RequestBase = function(H)
 	{
 		return Observable.create(function(O,X)
 		{
-			X = Request(Q,function(E,I,R)
+			X = Request(RequestWrap(Q),function(E,I,R)
 			{
 				E ? O.error(E) : O.data(H ? [I,R] : R).finish()
 			})
@@ -44,7 +53,9 @@ RequestBase = function(H)
 	}
 },
 
-Look = [];
+Look = [],
+
+DecodeHTML = $('<div>');
 
 setInterval(function(F)
 {
@@ -111,6 +122,17 @@ module.exports =
 	//Global dependencies
 	MU : function(Q,S){return ZED.match(Q,S)[0] || ''},
 	MF : function(Q,S,X){return ZED.match(Q,S)[X || 1] || ''},
+	ML : function(Q,S,C,T)
+	{
+		Q.lastIndex = 0
+		T = Q.exec(S)
+		T && C(T[0])
+		for (;Q.lastIndex;)
+		{
+			T = Q.exec(S)
+			T && C(T[0])
+		}
+	},
 	DateDirect : function(Q)
 	{
 		return new Date
@@ -133,8 +155,8 @@ module.exports =
 	{
 		return ZED.reduce(function(D,V)
 		{
-			V = V.split('; ')[0].split('=')
-			D[V[0]] = V[1]
+			V = V.split('; ')[0].match(/^([^=]+)=([^]*)/)
+			D[V[1]] = V[2]
 		},{},ZED.isObject(Q) ? Q.headers['set-cookie'] : Q)
 	},
 	CookieMake : function(Q)
@@ -148,12 +170,21 @@ module.exports =
 	{
 		return ZED.reduce(function(D,V)
 		{
-			V = V.split('=')
-			V[0] && V[1] && (D[V[0]] = V[1])
+			V = V.match(/^([^=]+)=([^]*)/)
+			V && (D[V[1]] = V[2])
 		},{},Q.split('; '))
 	},
 	Best : function(Q)
 	{
 		return ZED.reduce(ZED.maxBy(ZED.prop(Q)),ZED.objOf(Q,-Infinity))
 	},
+
+	//Misc
+	DecodeHTML : function(Q)
+	{
+		DecodeHTML.html(Q)
+		Q = DecodeHTML.text()
+		DecodeHTML.text('')
+		return Q
+	}
 }

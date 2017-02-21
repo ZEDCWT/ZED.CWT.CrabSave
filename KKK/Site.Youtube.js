@@ -21,12 +21,16 @@ URLLoginCheck = 'https://www.youtube.com/account',
 URLChannel = ZED.URLBuild('https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=',Util.U,'&key=',GoogleAPIKey),
 URLChannelByUser = ZED.URLBuild('https://www.googleapis.com/youtube/v3/channels?part=contentDetails&forUsername=',Util.U,'&key=',GoogleAPIKey),
 URLPlaylist = ZED.URLBuild('https://www.googleapis.com/youtube/v3/playlistItems?part=snippet%2CcontentDetails&playlistId=',Util.U,'&pageToken=',Util.U,'&maxResults=',PageSize,'&key=',GoogleAPIKey),
-URLSubscription = 'https://www.youtube.com/feed/subscriptions?spf=navigate',
+URLSubscription = 'https://www.youtube.com/feed/subscriptions',
 URLVInfo = ZED.URLBuild('https://www.googleapis.com/youtube/v3/videos?id=',Util.U,'&part=snippet,statistics,recordingDetails&key=',GoogleAPIKey),
 URLWatch = ZED.URLBuild('https://www.youtube.com/watch?v=',Util.U),
 URLVInfoURL = ZED.URLBuild('https://www.youtube.com/get_video_info?video_id=',Util.U,'&eurl=',Util.U,'&el=info&sts=',Util.U),
 
 FitQulity = ZED.prop('medium'),
+URLJoin = function(Q,S)
+{
+	return Q + ('/' === S.charAt() ? S.substr(1) : S)
+},
 
 FrameTool,
 FrameRepeater = ZED.Repeater(),
@@ -84,6 +88,26 @@ MakeList = function(ID,X,U,C)
 		})
 },
 
+SubsActive,
+SubsContent = function(Q,R)
+{
+	R = []
+	Util.ML(/shelf-grid[^]+?menu-container/g,Q,function(Q)
+	{
+		R.push(ZED.ReduceToObject
+		(
+			KeySite.Index,R.length,
+			KeySite.ID,Util.MF(/v=([^"]+)/,Q),
+			KeySite.Img,Util.DecodeHTML(Util.MF(/src="([^"]+)/,Q).replace(/^\/\//,'http://')),
+			KeySite.Title,Util.DecodeHTML(Util.MF(/-title[^]+?title="([^"]+)/,Q)),
+			KeySite.Author,Util.DecodeHTML(Util.MF(/ytid[^>]+>([^<]+)/,Q)),
+			KeySite.Date,Util.MF(/meta-info.*?<\/li.*?<li.*?>([^<]+)/,Q)
+		))
+	})
+	return R
+},
+SubsMore = /more-href="([^"]+)/,
+
 R = ZED.ReduceToObject
 (
 	KeySite.Name,Name,
@@ -107,7 +131,7 @@ R = ZED.ReduceToObject
 		{
 			Q = ZED.JTO(Util.MF(/assets"[^}]+js":("[^"]+")/,Q))
 			return ZED.isString(Q) ?
-				Util.ajax('/' === Q.charAt() ? URLMain + Q.substr(1) : Q).flatMap(function(Q)
+				Util.ajax(URLJoin(URLMain,Q)).flatMap(function(Q)
 				{
 					Q = Q.replace(/=[^=]+...split\(""\S+ ..join\(""/,'=SIGN$&')
 					STS = Util.MF(/sts:(\d+)/,Q)
@@ -164,6 +188,42 @@ R = ZED.ReduceToObject
 		KeySite.Name,L(Lang.Playlist),
 		KeySite.Judge,[Util.MakeLabelWord('playlist','[\\s/]+','[_0-9A-Za-z-]+')],
 		KeySite.Page,MakeListByPlaylist
+	),ZED.ReduceToObject
+	(
+		KeySite.Name,L(Lang.Subs),
+		KeySite.Judge,[/^(?:sub(?:scri(?:be|ptions?))?)?$/],
+		KeySite.Page,function(_,X)
+		{
+			return 1 < X && SubsActive && SubsActive[X - 2] ?
+				Util.RequestBody(Cookie.URL(Name,URLJoin(URLMain,SubsActive[X - 2]))).map(function(Q,R)
+				{
+					Q = ZED.JTO(Q)
+					;(Q && Q.content_html) || ZED.Throw(L(Lang.EmptyList))
+					R = SubsContent(Q.content_html)
+					SubsActive[X - 1] = Util.DecodeHTML(Util.MF(SubsMore,Q.load_more_widget_html))
+
+					return ZED.ReduceToObject
+					(
+						KeySite.Pages,1 + SubsActive.length,
+						KeySite.Total,R.length,
+						KeySite.Item,R
+					)
+				}) :
+				Util.RequestFull(Cookie.URL(Name,URLSubscription)).map(function(Q)
+				{
+					Cookie.Save(Name,Q[0])
+					Q = Q[1]
+					R = SubsContent(Q)
+					SubsActive = [Util.DecodeHTML(Util.MF(SubsMore,Q))]
+
+					return ZED.ReduceToObject
+					(
+						KeySite.Pages,2,
+						KeySite.Total,R.length,
+						KeySite.Item,R
+					)
+				})
+		}
 	),ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Video),
