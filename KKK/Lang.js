@@ -118,6 +118,7 @@ module.exports =
 	//Sign in
 	ID : Lang('Sign in ID'),
 	Password : Lang('Password'),
+	ClkLoad : Lang('Click to load'),
 	VCode : Lang('Verify code'),
 	VCNone : Lang('Not required'),
 	VCFail : Lang('Failed to load'),
@@ -133,6 +134,7 @@ module.exports =
 	CheckError : Lang('Error occured while checking if signed in'),
 
 	//Setting
+	DirSel : Lang('Select a directory'),
 	MaxDown : Lang('Maximum number of active downloads'),
 	FName : Lang('File name format'),
 	Font : Lang('Font'),

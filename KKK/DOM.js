@@ -7,6 +7,7 @@ module.exports =
 {
 	id : 'id',
 	cls : 'class',
+	style : 'style',
 	type : 'type',
 	password : 'password',
 	src : 'src',
@@ -34,6 +35,7 @@ module.exports =
 	mouseout : 'mouseout',
 	mouseup : 'mouseup',
 	click : 'click',
+	inp : 'input',
 	aniend : 'animationend',
 
 	nbsp : '\xa0',

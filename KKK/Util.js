@@ -117,6 +117,7 @@ module.exports =
 	{
 		return RegExp('(?:^|[^a-z])' + Q + '(?:' + S + ')??(' + R + ')','i')
 	},
+	PrevDef : function(E){E.preventDefault()},
 	StopProp : function(E){E.stopPropagation()},
 
 	//Global dependencies

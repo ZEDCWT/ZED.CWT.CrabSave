@@ -307,7 +307,7 @@ R = ZED.ReduceToObject
 	),ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Dynamic),
-		KeySite.Judge,[/^(?:dynamic)?$/],
+		KeySite.Judge,[/^(?:dynamic)?$/i],
 		KeySite.Page,function(_,X)
 		{
 			return Util.RequestBody(Cookie.URL(Name,URLDynamic(X))).map(function(Q)

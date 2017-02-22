@@ -37,6 +37,14 @@
 
 	Path = require('path'),
 
+	Electron = require('electron'),
+	Remote = Electron.remote,
+	Dialog = Remote.dialog,
+	ToggleDev = function()
+	{
+		Remote.getCurrentWebContents().toggleDevTools()
+	},
+
 
 
 	DateToStringFormatFile = '%YYYY%.%MM%.%DD%.%HH%.%NN%.%SS%',
@@ -59,15 +67,11 @@
 	},
 	MakeEnter = function(Q,S)
 	{
-		ZED.ShortCut(
-		{
-			Target : Q,
-			IgnoreInput : Util.F
-		}).on('enter',S)
+		ZED.ShortCut({Target : Q}).on('enter',S)
 	},
-	MakeShape = function(S,Q,C)
+	MakeShape = function(S,Q,C,T)
 	{
-		return ShowByClassX(ClassShape + (C ? ' ' + C : ''),DOM.span).attr(DOM.title,L(S)).append(ZED.Shape(Q))
+		return ShowByClassX(ClassShape + (C ? ' ' + C : ''),T || DOM.span).attr(DOM.title,L(S)).append(ZED.Shape(Q))
 	},
 
 	MakeS = function(Q){return 1 === Q ? '' : 's'},
@@ -119,7 +123,7 @@
 	//	Global
 	YPadding = 10,
 	YPaddingHalf = 5,
-	YScrollWidth = 20,
+	YScrollWidth = 16,
 	YShadowSize = 10,
 	YShadowColor = 'rgba(0,0,0,.4)',
 	//		ToolBar
@@ -149,6 +153,8 @@
 	YHistoryControlWidth = YHotControlWidth,
 	//			Sign in
 	YSignInSiteWidth = 100,
+	//			Setting
+	YSettingOpenSize = 30,
 
 	//ID & Class
 	//	Global
@@ -216,11 +222,14 @@
 	ClassComponentSite = ZED.KeyGen(),
 	ClassComponentSiteActive = ZED.KeyGen(),
 	ClassComponentView = ZED.KeyGen(),
-	//	Sign index
+	//	Sign in
 	ClassSignInSite = ClassComponentSite,
 	ClassSignInSiteActive = ClassComponentSiteActive,
 	ClassSignInView = ClassComponentView,
 	IDSignInInputVCode = ZED.KeyGen(),
+	//	Setting
+	ClassSettingDir = ZED.KeyGen(),
+	ClassSettingDirOpen = ZED.KeyGen(),
 
 	//Element
 	Rainbow = ShowByRock(IDRainbow),
@@ -316,6 +325,13 @@
 	ShapeConfigHistoryToolRemove = ShapeConfigHotToolRemove,
 	ShapeConfigHistoryListRemove = ShapeConfigHotListRemove,
 	ShapeConfigHistoryListMore = ShapeConfigHotListMore,
+	ShapeConfigSettingDir =
+	{
+		Type : 'More',
+		Fill : Util.F,
+		Stroke : ShapeConfigColorBackground,
+		Rotate : 90
+	},
 
 	MakeToolBarStorage = Array(YTabCount),
 	MakeToolBarLast,
@@ -525,8 +541,8 @@
 		};
 
 		Scroll.addClass(DOM.NoSelect).on(DOM.click,ClearChange)
-		UShortCut.on('esc',MakeIndex(Index,ClearChange))
-			.on('ctrl+a',MakeIndex(Index,function()
+		UShortCut.cmd(ShortCutCommand.ListClear,MakeIndex(Index,ClearChange))
+			.cmd(ShortCutCommand.ListAll,MakeIndex(Index,function()
 			{
 				ZED.each(function(V,ID)
 				{
@@ -831,7 +847,7 @@
 			'#/N/>div{position:relative;min-height:100%;overflow:hidden}' +
 			//		Tab
 			'#/N/ ./I/{position:relative;margin:/b/px 0;padding:12px 0 12px 16px}' +
-			'#/N/ ./I/,#/N/ ./I/ ./B/{transition:all .2s linear}' +
+			'#/N/ ./I/,#/N/ ./I/ ./B/{transition:box-shadow .2s linear}' +
 			'#/N/ ./I/:hover,#/N/ ./O/{box-shadow:0 0 /b/px /a/}' +
 			//			TabOn
 			'#/N/ ./O/{background:#F7F7F7}' +
@@ -2113,8 +2129,9 @@
 				Active = R
 				R.attr(DOM.cls,ClassSignInSiteActive)
 				Target = V
-				RefreshCookie()
+				RefreshVCode(Util.F)
 				RInfo.empty()
+				RefreshCookie()
 				SwitchOn = []
 				ZED.each(function(V,P)
 				{
@@ -2133,22 +2150,25 @@
 				{
 					VCodeTarget = Target
 					VCodeEnd && VCodeEnd.end()
-					RVCodeImg.removeAttr(DOM.src).attr(DOM.title,L(Lang.Loading))
+					RVCodeImg.removeAttr(DOM.src).attr(DOM.title,L(Util.F === J ? Lang.ClkLoad : Lang.Loading))
 					if (Target[KeySite.VCode])
 					{
-						RVCode.show()
-						VCodeEnd = Target[KeySite.VCode]().start(function(Q)
+						RVCode.removeAttr(DOM.style)
+						if (Util.F !== J)
 						{
-							if (ZED.isArrayLike(Q))
+							VCodeEnd = Target[KeySite.VCode]().start(function(Q)
 							{
-								Q = ZED.Code.Base64Encode(ZED.Code.UTF8ToBinB(ZED.map(ZED.chr,Q).join('')))
-								RVCodeImg.removeAttr(DOM.title).attr(DOM.src,'data:image/jpg;base64,' + Q)
-							}
-						},function(E)
-						{
-							Util.Debug(__filename,E)
-							RVCodeImg.attr(DOM.title,L(Lang.VCFail))
-						})
+								if (ZED.isArrayLike(Q))
+								{
+									Q = ZED.Code.Base64Encode(ZED.Code.UTF8ToBinB(ZED.map(ZED.chr,Q).join('')))
+									RVCodeImg.removeAttr(DOM.title).attr(DOM.src,'data:image/jpg;base64,' + Q)
+								}
+							},function(E)
+							{
+								Util.Debug(__filename,E)
+								RVCodeImg.attr(DOM.title,L(Lang.VCFail))
+							})
+						}
 					}
 					else
 					{
@@ -2201,11 +2221,8 @@
 			{
 				if (V[KeySite.Login])
 				{
-					R = $(DOM.div).text(V[KeySite.Name]).on(DOM.click,function()
-					{
-						Switch(R,V)
-						RefreshVCode()
-					})
+					R = $(DOM.div).text(V[KeySite.Name])
+						.on(DOM.click,function(){Switch(R,V)})
 					Target || Switch(R,V)
 					RSite.append(R)
 				}
@@ -2229,7 +2246,7 @@
 
 			Bus.on(Event.Cookie.Change,RefreshCookie)
 
-			return MakeScroll(RefreshVCode)
+			return MakeScroll()
 		}
 	},{
 		Tab : L(Lang.Shortcut),
@@ -2248,7 +2265,13 @@
 		BeforeHide : MakeSelectableListHide,
 		Content : function(M)
 		{
-			ZED.Each(ShortCut.DefaultMap,function(F,V){UShortCut.on(V,F)})
+			ZED.Each(ShortCut.DefaultMap,function(Command,Default)
+			{
+				Default = ZED.isArray(Default) ? Default : [Default]
+				ZED.each(function(V){UShortCut.on(V,Command)},Default)
+			})
+			UShortCut.cmd(ShortCutCommand.ToggleDev,ToggleDev)
+				.on('ctrl+a',Util.N,Util.PrevDef,Util.T)
 			return MakeScroll()
 		}
 	},{
@@ -2258,12 +2281,19 @@
 			return ZED.Replace
 			(
 				'#/R/{padding:/p/px}' +
-				'#/R/ ./I/{width:100%}',
+				'#/R/ ./I/{width:100%}' +
+				'./O/,./D/{vertical-align:top}' +
+				'./O/{width:/o/px;height:/o/px}' +
+				'#/R/ ./D/{margin-left:4px;width:/d/px}',
 				'/',
 				{
 					I : DOM.Input,
 
 					R : ID,
+					O : ClassSettingDirOpen,
+					o : YSettingOpenSize,
+					D : ClassSettingDir,
+					d : YStageWidthWithoutScroll - 2 * YPadding - YSettingOpenSize - 4,
 
 					p : YPadding
 				}
@@ -2295,14 +2325,14 @@
 
 			RefreshStyle = function(S)
 			{
-				S = Setting.Data(KeySetting.Size)
+				S = ('' + Setting.Data(KeySetting.Size)).trim()
 				return ZED.Replace
 				(
 					'html,input,textarea{font-family:"/F/";font-size:/S/;font-weight:/W/}',
 					'/',
 					{
 						F : Setting.Data(KeySetting.Font),
-						S : /\D/.test(S) ? S : ZED.min(ZED.max(8,Number(S) || 0),30) + 'px',
+						S : /^\d+(?:\.\d*)?$/.test(S) ? ZED.min(ZED.max(8,Number(S) || 0),30) + 'px' : S,
 						W : Setting.Data(KeySetting.Weight)
 					}
 				)
@@ -2310,6 +2340,21 @@
 			RefreshFont = function()
 			{
 				ZED.CSS(KeyFont,RefreshStyle)
+			},
+
+			DirInput,
+			Opening,
+			OpenDir = function()
+			{
+				if (!Opening)
+				{
+					Opening = Util.T
+					Dialog.showOpenDialog({properties : ['openDirectory']},function(Q)
+					{
+						Opening = Util.F
+						Q && Q[0] && DirInput.val(Q[0]).trigger(DOM.inp)
+					})
+				}
 			},
 
 			T;
@@ -2352,6 +2397,8 @@
 				],
 				Change : function(){Setting.Save(Data)}
 			})
+			DirInput = M.find('.' + DOM.Input).eq(0).addClass(ClassSettingDir)
+			DirInput.before(MakeShape(Lang.DirSel,ShapeConfigSettingDir,ClassSettingDirOpen,DOM.div).on(DOM.click,OpenDir))
 
 			return MakeScroll()
 		}

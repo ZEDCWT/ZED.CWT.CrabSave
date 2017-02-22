@@ -191,7 +191,7 @@ R = ZED.ReduceToObject
 	),ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Subs),
-		KeySite.Judge,[/^(?:sub(?:scri(?:be|ptions?))?)?$/],
+		KeySite.Judge,[/^(?:sub(?:scri(?:be|ptions?))?)?$/i],
 		KeySite.Page,function(_,X)
 		{
 			return 1 < X && SubsActive && SubsActive[X - 2] ?

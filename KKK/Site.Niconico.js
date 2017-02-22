@@ -176,7 +176,7 @@ R = ZED.ReduceToObject
 	),ZED.ReduceToObject
 	(
 		KeySite.Name,'ニコレポ',
-		KeySite.Judge,[/^(?:repo|my|top)?$/],
+		KeySite.Judge,[/^(?:repo|my|top)?$/i],
 		KeySite.Page,function(_,X)
 		{
 			return Util.RequestBody(Cookie.URL(Name,URLRepo(RepoActive && RepoActive[X - 2] || ''))).map(function(Q)
