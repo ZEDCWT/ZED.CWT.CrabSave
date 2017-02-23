@@ -91,10 +91,6 @@
 	{
 		return $(S || DOM.div).text(Q)
 	},
-	ShowByTextS = function(Q,S)
-	{
-		S.append($(DOM.div).text(Q))
-	},
 	ShowByInput = function(Q,S)
 	{
 		return ShowByClassX(ClassUnderlineInput,S || DOM.input).attr(DOM.placeholder,L(Q))
@@ -227,6 +223,9 @@
 	ClassSignInSiteActive = ClassComponentSiteActive,
 	ClassSignInView = ClassComponentView,
 	IDSignInInputVCode = ZED.KeyGen(),
+	//	ShortCut
+	ClassShortCutTitle = ZED.KeyGen(),
+	ClassShortCutButton = ZED.KeyGen(),
 	//	Setting
 	ClassSettingDir = ZED.KeyGen(),
 	ClassSettingDirOpen = ZED.KeyGen(),
@@ -325,6 +324,20 @@
 	ShapeConfigHistoryToolRemove = ShapeConfigHotToolRemove,
 	ShapeConfigHistoryListRemove = ShapeConfigHotListRemove,
 	ShapeConfigHistoryListMore = ShapeConfigHotListMore,
+	ShapeConfigShortCutAdd =
+	{
+		Type : 'Plus',
+		Fill : Util.F,
+		Stroke : ShapeConfigColorBackground,
+		Line : '20%'
+	},
+	ShapeConfigShortCutRemove =
+	{
+		Type : 'Minus',
+		Fill : Util.F,
+		Stroke : ShapeConfigColorBackground,
+		Line : '20%'
+	},
 	ShapeConfigSettingDir =
 	{
 		Type : 'More',
@@ -414,10 +427,9 @@
 			Count = 0
 			OnClear()
 		},
-		ChangeLast = 0,
 		Change = function()
 		{
-			ChangeLast === Count || SelectChange(ChangeLast = Count)
+			SelectChange(Count)
 		},
 		ClearChange = ZED.pipe(Clear,Change),
 		List = ZED.ListView(
@@ -583,6 +595,22 @@
 				}
 			}
 		}
+	},
+	MakeSelecting = function(X,R)
+	{
+		R = R.Count()
+		MakeStatus(X,R ? ReplaceLang(Lang.SelectingN,R,MakeS(R)) : '')
+	},
+	MakeSelSize = function(X,R,S,P)
+	{
+		R = R.Count()
+		MakeStatus(X,R ? ReplaceLang
+		(
+			Lang.SelSizeN,
+			R,MakeS(R),
+			ZED.FormatSize(S),
+			P ? '+' : ''
+		) : '')
 	},
 	MakeSelectableListShow = ZED.flip(ZED.invokeProp('Show')),
 	MakeSelectableListHide = ZED.flip(ZED.invokeProp('Hide')),
@@ -905,6 +933,7 @@
 			//		Info
 			'./CI/>div{left:8px;width:4px;background:#2672EC}' +
 			'./CI/ #/C/A{top:0;height:12px}' +
+			'./CI/./Q/ #/C/A{animation:/ci/ .25s linear}' +
 			'./CI/ #/C/B{top:16px;height:4px}' +
 			//		Loading
 			'./J/>div{border:solid 2px transparent;border-radius:50%}' +
@@ -989,11 +1018,13 @@
 				C : IDStatusIcon,
 				Q : ClassStatusIconAnimation,
 				CI : ClassStatusInfo,
+				ci : ReKeyGen(),
 				J : ClassStatusLoading,
 				j : ReKeyGen(),
 				K : ClassStatusError,
 				k : ReKeyGen(),
-				e : ZED.CSSKeyframe(ReKeyGen(Util.T),{to : {transform : 'rotate(360deg)'}}) +
+				e : ZED.CSSKeyframe(ReKeyGen(Util.T),{'50%' : {transform : 'translateY(-4px)'}}) +
+					ZED.CSSKeyframe(ReKeyGen(Util.T),{to : {transform : 'rotate(360deg)'}}) +
 					ZED.CSSKeyframe(ReKeyGen(Util.T),{to : {transform : 'rotate(405deg)'}}),
 				D : IDSpeed,
 
@@ -1133,7 +1164,7 @@
 
 				GoLast && GoLast.end()
 
-				ShowByTextS(ReplaceLang(Lang.ProcURL,URL),RInfo.empty())
+				RInfo.empty().append(ShowByText(ReplaceLang(Lang.ProcURL,URL)))
 				if (T = URL.match(/^([A-Z]+)(?:\s+([^]*))?$/i))
 				{
 					GoTarget = ZED.toLower(T[1])
@@ -1161,7 +1192,7 @@
 					GoID = GoID[1]
 					T = [GoTarget[KeySite.Name],GoDetail[KeySite.Name]]
 					GoID && T.push(GoID)
-					ShowByTextS(T.join(' '),RInfo)
+					RInfo.append(ShowByText(T.join(' ')))
 
 					GoInfo = Util.F
 					GoPages = 1
@@ -1342,6 +1373,7 @@
 				{
 					MakeToolBarActive(ToolCommit,Q)
 					MakeToolBarActive(ToolRemove,Q)
+					MakeSelecting(X,R)
 				},
 				ZED.noop,ZED.noop,ZED.noop
 			);
@@ -1461,12 +1493,15 @@
 			Active = {},
 			CountActive = 0,
 			CountPaused = 0,
+			CountSize = 0,
+			CountSizePlus = 0,
 
 			UpdateToolBar = function()
 			{
 				MakeToolBarActive(ToolPlay,CountPaused)
 				MakeToolBarActive(ToolPause,CountActive)
 				MakeToolBarActive(ToolRemove,R.Count())
+				MakeSelSize(X,R,CountSize,CountSizePlus)
 			},
 
 			MakeSpeed = function(ID,Q,A,S)
@@ -1614,14 +1649,23 @@
 				function(Q)
 				{
 					Queue.ActiveMap[Q] ? ++CountActive : ++CountPaused
+					Q = Queue.OnSizeMap[Q]
+					ZED.isNull(Q) ?
+						++CountSizePlus :
+						(CountSize += Q)
 				},
 				function(Q)
 				{
 					Queue.ActiveMap[Q] ? --CountActive : --CountPaused
+					Q = Queue.OnSizeMap[Q]
+					ZED.isNull(Q) ?
+						--CountSizePlus :
+						(CountSize -= Q)
 				},
 				function()
 				{
-					CountActive = CountPaused = 0
+					CountActive = CountPaused =
+					CountSize = CountSizePlus = 0
 				}
 			);
 
@@ -1715,7 +1759,15 @@
 			}).on(EventQueue.SizeGot,function(Q,A)
 			{
 				if (A = Active[Q[KeyQueue.Unique]])
+				{
 					A[ActiveKeyInfo].text(MakeSizePercentage(Q[KeyQueue.Size],Q[KeyQueue.DoneSum]))
+					if (R.Selecting()[Q[KeyQueue.Unique]])
+					{
+						--CountSizePlus
+						CountSize += Q[KeyQueue.Size]
+						MakeSelSize(X,R,CountSize,CountSizePlus)
+					}
+				}
 			}).on(EventQueue.Reinfo,function(A,S)
 			{
 				if (A = Active[A])
@@ -1819,6 +1871,8 @@
 			var
 			ToolRemove = MakeShape(Lang.Remove,ShapeConfigHistoryToolRemove),
 
+			CountSize = 0,
+
 			ClickRemove = function(ID)
 			{
 				Queue.HRemove(ZED.objOf(ID,ID))
@@ -1883,8 +1937,20 @@
 				},ZED.noop,function(Q)
 				{
 					MakeToolBarActive(ToolRemove,Q)
+					MakeSelSize(X,R,CountSize)
 				},
-				ZED.noop,ZED.noop,ZED.noop
+				function(Q)
+				{
+					CountSize += Queue.OffSizeMap[Q]
+				},
+				function(Q)
+				{
+					CountSize -= Queue.OffSizeMap[Q]
+				},
+				function()
+				{
+					CountSize = 0
+				}
 			);
 
 			MakeToolBarActive(ToolRemove)
@@ -2254,10 +2320,27 @@
 		{
 			return ZED.Replace
 			(
-				'',
+				//Control and input
+				'#/R/ span,#/R/ input{vertical-align:middle}' +
+				//Control
+				'#/R/ ./S/{margin-right:/p/px;width:20px;height:20px}' +
+				//Title
+				'./T/{padding:/p/px;background:#EBEBEB}' +
+				//Detail
+				'./T/~div{margin:/p/px}' +
+				//Button
+				'./B/{padding:0 6px;color:#2672EC;border-bottom:1px solid;cursor:pointer}' +
+				//Input
+				'#/R/ input{padding:4px 6px 0;width:60%;cursor:text}',
 				'/',
 				{
-					R : ID
+					S : ClassShape,
+
+					R : ID,
+					T : ClassShortCutTitle,
+					B : ClassShortCutButton,
+
+					p : YPadding
 				}
 			)
 		},
@@ -2265,13 +2348,109 @@
 		BeforeHide : MakeSelectableListHide,
 		Content : function(M)
 		{
+			var
+			Active,
+			SC = ZED.ShortCut(
+			{
+				Target : M,
+				IgnoreInput : Util.F
+			});
+
 			ZED.Each(ShortCut.DefaultMap,function(Command,Default)
 			{
+				var
+				R = $(DOM.div),
+
+				List = [],
+
+				Build = function(Q)
+				{
+					ZED.each(function(V)
+					{
+						Add(V)
+						UShortCut.on(V,Command)
+					},Q || Default)
+				},
+
+				Save = function()
+				{
+					ShortCut.Save(Command,ZED.filter(ZED.identity,ZED.map(function(V){return V[1].val()},List)))
+				},
+
+				Add = function(Q,I,L)
+				{
+					I = ShowByClassX(ClassUnderlineInput + ' ' + DOM.NoSelect,DOM.input)
+						.attr(DOM.readonly,'')
+						.val(L = ZED.isString(Q) ? Q : '')
+						.on(DOM.focus,function(){Active = I})
+						.on(DOM.blur,function(T)
+						{
+							I === Active && (Active = Util.F)
+							T = I.val()
+							if (L !== T)
+							{
+								UShortCut.off(L,Command)
+								T && UShortCut.on(T,Command)
+								L = T
+								Save()
+							}
+						})
+					R.append(Q = $(DOM.div).append
+					(
+						MakeShape(Lang.Remove,ShapeConfigShortCutRemove)
+							.on(DOM.click,function()
+							{
+								Remove(Q)
+								Save()
+							}),
+						I
+					))
+					List.push(Q = [Q,I])
+				},
+				Remove = function(Q,T)
+				{
+					T = Q[1].val()
+					T && UShortCut.off(T,Command)
+					Q[0].detach()
+					for (T = List.length;T;) if (Q === List[--T])
+					{
+						List.splice(T,1)
+						break
+					}
+				};
+
 				Default = ZED.isArray(Default) ? Default : [Default]
-				ZED.each(function(V){UShortCut.on(V,Command)},Default)
+
+				R.append
+				(
+					ShowByText(ZED.map(function(V)
+					{
+						return Lang[V] ? L(Lang[V]) : V
+					},Command.split('.')).join(' | ')).addClass(ClassShortCutTitle),
+					$(DOM.div).append
+					(
+						MakeShape(Lang.AddSC,ShapeConfigShortCutAdd).on(DOM.click,Add),
+						ShowByClassX(ClassShortCutButton + ' ' + DOM.NoSelect,DOM.span).text(L(Lang.DefSC)).on(DOM.click,function(F)
+						{
+							for (F = List.length;F;) Remove(List[--F])
+							Build()
+							ShortCut.Remove(Command)
+						})
+					)
+				)
+				Build(ShortCut.Data(Command))
+
+				M.append(R)
 			})
+
+			SC.on('*',Util.F,function()
+			{
+				Active && Active.val(SC.keyNames()[0])
+			})
+
 			UShortCut.cmd(ShortCutCommand.ToggleDev,ToggleDev)
 				.on('ctrl+a',Util.N,Util.PrevDef,Util.T)
+
 			return MakeScroll()
 		}
 	},{
@@ -2352,7 +2531,7 @@
 					Dialog.showOpenDialog({properties : ['openDirectory']},function(Q)
 					{
 						Opening = Util.F
-						Q && Q[0] && DirInput.val(Q[0]).trigger(DOM.inp)
+						Q && Q[0] && DirInput.val(Q[0]).trigger(DOM.einput)
 					})
 				}
 			},

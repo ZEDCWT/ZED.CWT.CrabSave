@@ -14,6 +14,7 @@ module.exports =
 	title : 'title',
 	width : 'width',
 	placeholder : 'placeholder',
+	readonly : 'readonly',
 	rows : 'rows',
 
 	br : '<br>',
@@ -35,7 +36,9 @@ module.exports =
 	mouseout : 'mouseout',
 	mouseup : 'mouseup',
 	click : 'click',
-	inp : 'input',
+	focus : 'focus',
+	blur : 'blur',
+	einput : 'input',
 	aniend : 'animationend',
 
 	nbsp : '\xa0',

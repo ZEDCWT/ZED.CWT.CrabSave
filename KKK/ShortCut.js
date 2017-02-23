@@ -8,22 +8,22 @@ Command =
 {
 	ToggleDev : 'Global.ToggleDev',
 
-	SelAll : 'Browser.SelectAll',
-	UnAll : 'Browser.Clear',
+	SelAll : 'Browser.SelAll',
+	UnAll : 'Browser.SelClear',
 	PageHead : 'Browser.PageHead',
 	PagePrev : 'Browser.PagePrev',
 	PageNext : 'Browser.PageNext',
 	PageTail : 'Browser.PageTail',
 
-	ListAll : 'List.SelectAll',
-	ListClear : 'List.Clear'
+	ListAll : 'List.SelAll',
+	ListClear : 'List.SelClear'
 },
 DefaultMap = ZED.ReduceToObject
 (
-	Command.ToggleDev,['alt+shift+d','f12'],
+	Command.ToggleDev,['shift+alt+d','f12'],
 
 	Command.SelAll,'ctrl+a',
-	Command.UnAll,'ctrl+shift+a',
+	Command.UnAll,'shift+ctrl+a',
 	Command.PageHead,'h',
 	Command.PagePrev,'j',
 	Command.PageNext,'k',
@@ -35,6 +35,17 @@ DefaultMap = ZED.ReduceToObject
 
 module.exports =
 {
+	Data : Data.Data,
+	Save : function(Q,S)
+	{
+		Data.Data()[Q] = S
+		Data.Save()
+	},
+	Remove : function(Q)
+	{
+		ZED.delete_(Q,Data.Data())
+		Data.Save()
+	},
 	Command : Command,
 	DefaultMap : DefaultMap
 }

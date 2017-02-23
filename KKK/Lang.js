@@ -25,6 +25,7 @@ module.exports =
 	//StatucBar
 	Loading : Lang('Loading...'),
 	SelectingN : Lang('Selecting /0/ item/1/'),
+	SelSizeN : Lang('Selecting /0/ item/1/, totally /2//3/'),
 	CommittingN : Lang('Committing /0/ item/1/'),
 	CommittedN : Lang('Committed /0/ item/1/'),
 	RemovingN : Lang('Removing /0/ item/1/'),
@@ -132,6 +133,18 @@ module.exports =
 	NotSigned : Lang('Not signed in'),
 	Checked : Lang('Signed in as /0/'),
 	CheckError : Lang('Error occured while checking if signed in'),
+
+	//ShortCut
+	AddSC : Lang('Add shortcut'),
+	DefSC : Lang('Restore default'),
+	Global : Lang('Global'),
+	ToggleDev : Lang('Toggle developer tools'),
+	SelClear : Lang('Clear selection'),
+	PageHead : Lang('Navigate to the first page'),
+	PagePrev : Lang('Navigate to the previous page'),
+	PageNext : Lang('Navigate to the next page'),
+	PageTail : Lang('Navigate to the last page'),
+	List : Lang('List'),
 
 	//Setting
 	DirSel : Lang('Select a directory'),

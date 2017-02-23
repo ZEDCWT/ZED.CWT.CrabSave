@@ -36,6 +36,8 @@ CardMapUp = function(Q)
 {
 	CardMap[Q] ? ++CardMap[Q] : CardMap[Q] = 1
 },
+OnSizeMap = {},
+OffSizeMap = {},
 OnlineCount = 80000000 - 1,
 Loaded = 0,
 OnlineDB = DB('Online',function(S)
@@ -47,6 +49,7 @@ OnlineDB = DB('Online',function(S)
 		Online.push(U)
 		OnlineMap[U] = Util.T
 		V[KeyQueue.Active] && (ActiveMap[U] = Util.T)
+		OnSizeMap[U] = V[KeyQueue.Size]
 	})
 	OnlineCount < S && (OnlineCount = S)
 	++Loaded
@@ -56,12 +59,14 @@ OnlineData = OnlineDB.Data,
 OnlineUpdate = Observable.wrapNode(OnlineData.update,OnlineData),
 OfflineDB = DB('Offline',function(S)
 {
-	OfflineDB.EachRight(function(V)
+	OfflineDB.EachRight(function(V,U)
 	{
 		S || (S = V._id)
-		Offline.push(V[KeyQueue.IDHis])
-		OfflineMap[V[KeyQueue.IDHis]] = Util.T
+		U = V[KeyQueue.IDHis]
+		Offline.push(U)
+		OfflineMap[U] = Util.T
 		CardMapUp(V[KeyQueue.Unique])
+		OffSizeMap[U] = V[KeyQueue.Size]
 	})
 	OnlineCount < S && (OnlineCount = S)
 	++Loaded
@@ -247,6 +252,7 @@ Remove = function(Q)
 				M[T] = Util.T
 				ZED.delete_(T,RemoveMap)
 				ZED.delete_(T,OnlineMap)
+				ZED.delete_(T,OnSizeMap)
 				Running[T] && InnerPause(T)
 			}
 			ClearDebuff(M)
@@ -364,6 +370,7 @@ Finish = function(Q,T,F)
 					T = Q[--F]
 					Offline.unshift(T[KeyQueue.IDHis])
 					OfflineMap[T[KeyQueue.IDHis]] = Util.T
+					OffSizeMap[T[KeyQueue.IDHis]] = T[KeyQueue.Size]
 					CardMapUp(T[KeyQueue.Unique])
 				}
 				Bus.emit(EventQueue.FHis)
@@ -379,6 +386,7 @@ Finish = function(Q,T,F)
 							Running[T] && --Current
 							ZED.delete_(T,Running)
 							ZED.delete_(T,OnlineMap)
+							ZED.delete_(T,OnSizeMap)
 							Bus.emit(EventQueue.Finish,Q[F])
 						}
 						Online.length = 0
@@ -411,6 +419,7 @@ HRemove = function(Q)
 				T = R[--F]
 				ZED.delete_(T,HRemoveMap)
 				ZED.delete_(T,OfflineMap)
+				ZED.delete_(T,OffSizeMap)
 				T = T.replace(/\.\d+\.[A-Z0-9]+$/,'')
 				1 === CardMap[T] ? ZED.delete_(T,CardMap) : --CardMap[T]
 				R[F] = T
@@ -503,15 +512,16 @@ DispatchInfoGot = function(Q)
 		(
 			Bus.emit(EventQueue.SizeGot,Q),
 			Observable.empty()
-		) : Download.Size(Q,InfoSite).flatMap(function(S)
+		) : Download.Size(Q,InfoSite).tap(function(S)
 		{
-			ZED.Merge(Q,S)
-			return OnlineUpdate(ZED.objOf(KeyQueue.Unique,InfoNow),{$set : S})
-		}).tap(function()
-		{
-			Bus.emit(EventQueue.SizeGot,Q)
-		})
+			OnSizeMap[InfoNow] = S[KeyQueue.Size]
+			Bus.emit(EventQueue.SizeGot,ZED.Merge(Q,S))
+		}).flatMap(DispatchSizeGot)
 	})
+},
+DispatchSizeGot = function(S)
+{
+	return OnlineUpdate(ZED.objOf(KeyQueue.Unique,InfoNow),{$set : S})
 },
 DispatchInfoEnd = function()
 {
@@ -604,7 +614,12 @@ DispatchInfo = function(T)
 					Bus.emit(T ? EventQueue.InfoGot : EventQueue.Info,Q)
 					InfoSite = Site.Map[Q[KeyQueue.Name]]
 					T = T ?
-						Download.Size(Q,InfoSite) :
+						Download.Size(Q,InfoSite).tap(function(S)
+						{
+							S[KeyQueue.Unique] = InfoNow
+							OnSizeMap[InfoNow] = S[KeyQueue.Size]
+							Bus.emit(EventQueue.SizeGot,S)
+						}).flatMap(DispatchSizeGot) :
 						InfoSite[KeySite.URL](Q[KeyQueue.ID],Q)
 							.flatMap(DispatchInfoGot)
 					InfoEnd = T.start(ZED.noop,DispatchInfoError,DispatchInfoFinish)
@@ -633,6 +648,8 @@ module.exports =
 	Offline : Offline,
 	OfflineMap : OfflineMap,
 	CardMap : CardMap,
+	OnSizeMap : OnSizeMap,
+	OffSizeMap : OffSizeMap,
 
 	ReinfoMap : ReinfoMap,
 	ErrorMap : ErrorMap,
