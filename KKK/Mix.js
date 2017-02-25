@@ -3,6 +3,7 @@
 	'use strict'
 	var
 	ZED = require('@zed.cwt/zedquery'),
+	Observable = ZED.Observable,
 
 	Config = require('../Config'),
 	Util = require('./Util'),
@@ -26,6 +27,7 @@
 	SiteMap = Site.Map,
 	Cold = require('./Cold'),
 	Queue = require('./Queue'),
+	QueueHInfo = ZED.unary(Observable.wrapNode(Queue.HInfo)),
 	Download = require('./Download'),
 	Cookie = require('./Cookie'),
 	Setting = require('./Setting'),
@@ -106,7 +108,7 @@
 			L(Lang.Calculating) :
 			S ?
 				S === D ?
-					L(Lang.Completed) :
+					ReplaceLang(Lang.Completed,ZED.FormatSize(S)) :
 					ReplaceLang(Lang.SizeP,ZED.FormatSize(D),ZED.FormatSize(S),ZED.Format(100 * D / S)) :
 				ReplaceLang(Lang.SizeNP,ZED.FormatSize(D))
 	},
@@ -155,20 +157,26 @@
 	//ID & Class
 	//	Global
 	IDRainbow = ZED.KeyGen(),
+	//		Toolbar
 	IDToolBar = ZED.KeyGen(),
 	IDToolBarIcon = ZED.KeyGen(),
 	IDToolBarItem = ZED.KeyGen(),
 	ClassToolBarDisabled = ZED.KeyGen(),
+	//		Navi Stage
 	IDNaviStage = ZED.KeyGen(),
 	IDNavi = ZED.KeyGen(),
 	ClassCount = ZED.KeyGen(),
 	IDStage = ZED.KeyGen(),
 	ClassListSelected = ZED.KeyGen(),
+	//		Cover
+	ClassCover = ZED.KeyGen(),
 	IDDetail = ZED.KeyGen(),
 	IDDetailHead = ZED.KeyGen(),
 	IDDetailInfo = ZED.KeyGen(),
 	ClassDetailLabel = ZED.KeyGen(),
 	IDDetailPart = ZED.KeyGen(),
+	IDMerge = ZED.KeyGen(),
+	//		StatusBar
 	IDStatusBar = ZED.KeyGen(),
 	IDStatusBarWrap = ZED.KeyGen(),
 	IDStatusBarRight = ZED.KeyGen(),
@@ -238,11 +246,17 @@
 	RToolBarItem = ShowByRock(IDToolBarItem),
 	RNavi = $(DOM.div),
 	RStage = ShowByRock(IDStage).attr(DOM.cls,ClassScrollable),
-	RDetail = ShowByRock(IDDetail),
+	//	Cover
+	RDetail = ShowByRock(IDDetail).attr(DOM.cls,ClassCover),
 	RDetailHead = ShowByRock(IDDetailHead),
 	RDetailInfo = ShowByRock(IDDetailInfo),
 	RDetailPart = ShowByRock(IDDetailPart),
 	RDetailChildren = $(ZED.flatten([RDetailHead,RDetailInfo,RDetailPart])),
+	RMerge = ShowByRock(IDMerge).attr(DOM.cls,ClassCover),
+	RMergeProgress = $(DOM.div),
+	RMergeText = $(DOM.textarea),
+	RMergeChildren = $(ZED.flatten([RMergeProgress])),
+	//	StatusBar
 	RStatusBar = ShowByRock(IDStatusBar),
 	RStatus = ShowByRock(IDStatus),
 	RStatusIcon = ShowByRock(IDStatusIcon)
@@ -410,8 +424,7 @@
 		Measure,Make,Destroy,
 		SelectChange,
 		OnSelect,OnUnselect,OnClear
-	)
-	{
+	){
 		var
 		LastScroll = 0,
 
@@ -622,8 +635,24 @@
 	MakeSelectableListShow = ZED.flip(ZED.invokeProp('Show')),
 	MakeSelectableListHide = ZED.flip(ZED.invokeProp('Hide')),
 
+	MakeCoverActive,
+	MakeCoverAt,
+	MakeCoverOn = function()
+	{
+		MakeCoverActive = Util.T
+		MakeCoverAt = UTab.Index()
+		MakeToolBarLast && MakeToolBarLast.detach()
+		RStatusText.text('')
+		RStatusIcon.removeAttr(DOM.cls)
+	},
+	MakeCoverOff = function()
+	{
+		MakeCoverActive = Util.F
+		MakeCoverAt === UTab.Index() && MakeToolBarChange()
+		MakeStatusChange()
+	},
+
 	MakeDetailActive,
-	MakeDetailAt,
 	MakeDetailInfoProgress,
 	MakeDetailInfoDir,
 	MakeDetailInfoTTS,
@@ -723,13 +752,10 @@
 	},
 	MakeDetailSetup = function(ID,Q)
 	{
+		MakeCoverOn()
 		if (MakeDetailActive) RDetailChildren.empty()
 		else RStage.append(RDetail)
 		MakeDetailActive = ID
-		MakeDetailAt = UTab.Index()
-		MakeToolBarLast && MakeToolBarLast.detach()
-		RStatusText.text('')
-		RStatusIcon.removeAttr(DOM.cls)
 
 		RDetailHead.append
 		(
@@ -763,8 +789,7 @@
 		{
 			RDetailChildren.empty()
 			RDetail.detach()
-			MakeDetailAt === UTab.Index() && MakeToolBarChange()
-			MakeStatusChange()
+			MakeCoverOff()
 			MakeDetailActive =
 			MakeDetailInfoDir =
 			MakeDetailInfoTTS =
@@ -779,9 +804,171 @@
 		}
 	},
 
-	MakeMerge = function(Q)
+	MakeMergeEnd,
+	MakeMergeStore,
+	MakeMergeProcess = function(L,S)
 	{
+		RMergeProgress.text(ReplaceLang(Lang.ProcessingN,S,L))
+	},
+	MakeMergeCompose = function(HP,HA)
+	{
+		var
+		Make = ZED.JTO('[\n' +
+		'  "mkvmerge",\n' +
+		'  "--ui-language",\n' +
+		'  "ja",\n' +
+		'  "--output",\n' +
+		'  "%Output%",\n' +
+		'  "%Head%",\n' +
+		'  [\n' +
+		'    "+",\n' +
+		'    "%Tail%"\n' +
+		'  ]\n' +
+		']'),
+		L = Make.length,
 
+		MakeIsString = Array(L),
+		MakeIsTail = Array(L),
+
+		File,O = {},
+		R = [],S,
+		In = function(Q){S.push(HA(ZED.Replace(Q,'%',O)))},
+		F,Fa,Fb,Fc;
+
+		for (F = 0;++F < L;)
+		{
+			File = Make[F]
+			if (F && ZED.isArray(File))
+			{
+				MakeIsTail[F] = /_/.test(ZED.Replace
+				(
+					('' + File).replace(/_/g,''),
+					'%',
+					{Tail : '_'}
+				))
+			}
+			else
+			{
+				MakeIsString[F] = Util.T
+				if (!ZED.isString(File)) Make[F] = String(File)
+			}
+		}
+
+		for (F = 0;F < MakeMergeStore.length;++F)
+		{
+			File = MakeMergeStore[F]
+			O.Output = File[0]
+			File = File[1]
+			O.Head = File[0]
+			S = [HP(Make[0])]
+			for (Fa = 0;++Fa < L;)
+			{
+				if (MakeIsString[Fa]) In(Make[Fa])
+				else if (MakeIsTail[Fa]) for (Fb = 0;++Fb < File.length;)
+				{
+					O.Tail = File[Fb]
+					for (Fc = 0;Fc < Make[Fa].length;++Fc) In(Make[Fa][Fc])
+				}
+				else for (Fb = 0;Fb < File.length;++Fb)
+				{
+					O.List = File[Fb]
+					for (Fc = 0;Fc < Make[Fa].length;++Fc) In(Make[Fa][Fc])
+				}
+			}
+			R.push(S.join(' '))
+		}
+		RMergeText.val(R.join('\n'))
+	},
+	MakeMerge = function(Q,L)
+	{
+		Q = ZED.keys(Q)
+		if (L = Q.length)
+		{
+			MakeCoverOn()
+			if (MakeMergeEnd)
+			{
+				MakeMergeEnd.end()
+				RMergeChildren.empty()
+				RMergeText.val('')
+			}
+			else RStage.append(RMerge)
+
+			MakeMergeProcess(L,0)
+			MakeMergeStore = []
+			MakeMergeEnd = Observable.from(Q)
+				.flatMapOnline(1,QueueHInfo)
+				.map(function(Q,F)
+				{
+					var
+					Parts,
+					Part,
+					I = 0,T;
+
+					MakeMergeProcess(L,1 + F)
+					if (1 < Q[KeyQueue.File].length)
+					{
+						Parts = Q[KeyQueue.Part]
+						for (F = 0;F < Parts.length;++F)
+						{
+							Part = Parts[F]
+							T = Part[KeyQueue.URL].length
+							Part[KeyQueue.Suffix] = '.mkv'
+							if (1 < T)
+							{
+								MakeMergeStore.push(
+								[
+									Download.FileName(Q,Parts.length,0,Part,F,0,0),
+									ZED.map(function(V)
+									{
+										return Path.join(Q[KeyQueue.Dir],V)
+									},Q[KeyQueue.File].slice(I,I + T))
+								])
+							}
+							I += T
+						}
+					}
+				}).start(Util.N,function(E)
+				{
+					Util.Debug(__filename,E)
+					RMergeProgress.text(L(Lang.Errored))
+				},function()
+				{
+					MakeMergeCompose(function(Q)
+					{
+						return /[&<>[\]{}^=;!'+,`~ ]/.test(Q) ? '"' + Q + '"' : Q
+					},function(Q,R,T,F)
+					{
+						if (!Q) return '^"^"'
+						if (!/[^\w+,\-./:=@]/.test(Q)) return Q
+						R = '"'
+						for (F = 0;F < Q.length;++F)
+						{
+							T = 0
+							for (;F < Q.length && '\\' === Q.charAt(F);++F) ++T
+							R += Q.length <= F ?
+								ZED.Times('\\',2 * T) :
+								'"' === Q.charAt(F) ?
+									ZED.Times('\\',1 + 2 * T) + '"' :
+									Q.substr(F - T,1 + T)
+						}
+						R += '"'
+						return R.replace(/[()%!^"<>&|]/g,'^$&')
+					})
+				})
+		}
+	},
+	MakeMergeClose = function()
+	{
+		if (MakeMergeEnd)
+		{
+			RMergeChildren.empty()
+			RMerge.detach()
+			RMergeText.val('')
+			MakeMergeEnd.end()
+			MakeCoverOff()
+			MakeMergeEnd =
+			MakeMergeStore = Util.F
+		}
 	},
 
 	MakeStatusText = Array(YTabCount),
@@ -830,7 +1017,7 @@
 	UShortCut = ZED.ShortCut(),
 	MakeIndex = ZED.curry(function(X,Q)
 	{
-		!MakeDetailActive && X === UTab.Index() && Q()
+		!MakeCoverActive && X === UTab.Index() && Q()
 	},3),
 	UTab = ZED.Tab(
 	{
@@ -910,22 +1097,23 @@
 			//			Item Control
 			'#/G/ ./HP/{cursor:pointer}' +
 			'#/G/ ./HP/:hover svg>rect,#/G/ ./HP/:hover circle{fill:#0065CB!important}' +
-			//		Detail
-			'#/DT/{position:absolute;left:0;top:0;width:100%;height:100%;background:inherit;text-align:center}' +
+			//		Cover
+			'./CR/{position:absolute;left:0;top:0;width:100%;height:100%;background:inherit;text-align:center}' +
+			//			Detail
 			'#/DT/>div{text-align:left}' +
-			//			Info
+			//				Info
 			'#/DI/{display:inline-block;padding:/p/px}' +
-			//			Head
+			//				Head
 			'#/DH/{padding:/p/px;background:#F3EBFA}' +
 			'#/DH/ div{font-size:1.1rem}' +
-			//			Label
+			//				Label
 			'./DL/{font-weight:bold;opacity:.7}' +
-			//			Part
+			//				Part
 			'#/DP/{padding-left:/p/px}' +
 			'#/DP/>div{padding-bottom:/p/px}' +
-			//			URL
+			//				URL
 			'#/DP/ ./SL/{padding-left:/p/px;color:blue}' +
-			//			URL status
+			//				URL status
 			'#/DP/ div>span{padding-left:/p/px}' +
 
 			//StatusBar
@@ -1015,6 +1203,7 @@
 				h : YStageHeight,
 				Y : ClassScrollable,
 				F : ClassListSelected,
+				CR : ClassCover,
 				DT : IDDetail,
 				DH : IDDetailHead,
 				DI : IDDetailInfo,
@@ -2606,8 +2795,13 @@
 
 	//ShadowBar
 	RNavi.find('.' + DOM.Tab).append(ShowByClass(ClassShadowBar))
+	//Close Cover
+	RNavi.on(DOM.click,'.' + DOM.Tab,function()
+	{
+		MakeDetailClose()
+		MakeMergeClose()
+	})
 	//Detail
-	RNavi.on(DOM.click,'.' + DOM.Tab,MakeDetailClose)
 	RDetail.append(RDetailHead,RDetailInfo,RDetailPart)
 	Bus
 		//Queue
@@ -2634,6 +2828,8 @@
 		{
 			MakeDetailActive === Q[KeyQueue.Unique] && MakeDetailRefresh(Q)
 		})
+	//Merge
+	RMerge.append(RMergeProgress,RMergeText)
 	//StatusBar Icon
 	ZED.each(function(V){RStatusIcon.append(ShowByRock(IDStatusIcon + ZED.chr(65 + V)))},ZED.range(0,5))
 	//Speed

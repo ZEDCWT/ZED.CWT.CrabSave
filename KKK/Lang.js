@@ -56,6 +56,7 @@ module.exports =
 	Playlist : Lang('Playlist'),
 	Mylist : Lang('Mylist'),
 	Dynamic : Lang('Dynamic'),
+	Search : Lang('Search'),
 	Subs : Lang('Subscription'),
 	UknSite : Lang('Unknown site id `/0/`'),
 	UknURL : Lang('Unknown URL format `/0/`'),
@@ -82,7 +83,6 @@ module.exports =
 	Refreshing : Lang('Refreshing URL'),
 	Queuing : Lang('Queuing'),
 	Processing : Lang('Processing'),
-	Error : Lang('Error'),
 	EInfo : Lang('Failed to load infomation'),
 	EURL : Lang('URL expired'),
 	EConn : Lang('Connection error'),
@@ -106,7 +106,11 @@ module.exports =
 	PartN : Lang('Part /0/ // /1/'),
 	SizeP : Lang('/0/ // /1/, /2/%'),
 	SizeNP : Lang('/0/ // Unknown'),
-	Completed : Lang('Completed'),
+	Completed : Lang('/0/, Completed'),
+
+	//Merge
+	ProcessingN : Lang('Processing /0/ // /1/'),
+	Errored : Lang('Error occured'),
 
 	//History
 	HiInfo : Lang('/0/, /1/ file/2/'),

@@ -3,7 +3,6 @@ var
 ZED = require('@zed.cwt/zedquery'),
 Observable = ZED.Observable,
 
-Config = require('../Config'),
 Util = require('./Util'),
 Key = require('./Key'),
 KeySite = Key.Site,
@@ -335,6 +334,14 @@ R = ZED.ReduceToObject
 					})
 				)
 			})
+		}
+	),ZED.ReduceToObject
+	(
+		KeySite.Name,L(Lang.Search),
+		KeySite.Judge,[/^search\s+(.*)$/i],
+		KeySite.Page,function(_,X)
+		{
+
 		}
 	)],
 	KeySite.URL,function(ID)

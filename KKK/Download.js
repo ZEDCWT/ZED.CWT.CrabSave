@@ -244,7 +244,7 @@ module.exports =
 						{
 							H = Number(H.headers['content-length'])
 							Size += H
-							Sizes[F] = H
+							Sizes[F] = H || 0
 							Bus.emit(EventDownload.Size,Q,H,F)
 						}
 						else ZED.Throw()
@@ -255,11 +255,13 @@ module.exports =
 			{
 				return ZED.ReduceToObject
 				(
-					KeyQueue.Size,Size,
+					KeyQueue.Size,Size || 0,
 					KeyQueue.Sizes,Sizes
 				)
 			})
 	},
+
+	FileName : MakeFileName,
 
 	Play : Play,
 	Pause : Pause
