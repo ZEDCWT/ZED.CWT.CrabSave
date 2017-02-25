@@ -1,6 +1,6 @@
 {
   "name": "zedcwt_crabsave",
-  "productName": "ZED.CWT.CrabSave",
+  "productName": "CrabSave",
   "version": "0.0.0",
   "private": true,
   "main": "Trigger.js",

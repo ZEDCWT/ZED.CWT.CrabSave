@@ -42,6 +42,7 @@ module.exports =
 	Commit : Lang('Commit'),
 	CommitAll : Lang('Commit all'),
 	Remove : Lang('Remove'),
+	Merge : Lang('Merge'),
 
 
 

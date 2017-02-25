@@ -230,11 +230,11 @@ R = ZED.ReduceToObject
 
 				return ZED.ReduceToObject
 				(
+					KeyQueue.Title,Util.MF(/itle>([^<]+)/,Q),
 					KeyQueue.Author,Util.MF(/name>([^<]+)/,Q),
 					KeyQueue.Date,Util.MF(/ieve>([^<]+)/,Q),
 					KeyQueue.Part,[ZED.ReduceToObject
 					(
-						KeyQueue.Title,Util.MF(/itle>([^<]+)/,Q),
 						KeyQueue.URL,[U],
 						KeyQueue.Suffix,'.' + Util.MF(/e_type>([^<]+)/,Q)
 					)],

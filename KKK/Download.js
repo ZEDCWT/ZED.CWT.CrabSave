@@ -108,7 +108,7 @@ MakeFileName = function(Q,PL,UL,Part,F,Fa,I,D,T)
 		T[V] = ZED.DateToString(WordPack(V),D)
 	},WordDateSingle)
 	if (1 < PL) T.PartIndex = Util.PadTo(PL,F)
-	if (Part[KeyQueue.Title]) T.PartTitle = Part[KeyQueue.Title]
+	if (Part[KeyQueue.Title]) T.PartTitle = ZED.SafeFileName(Part[KeyQueue.Title])
 	if (1 < UL) T.FileIndex = Util.PadTo(UL,Fa)
 	if (!Q[KeyQueue.Format]) Q[KeyQueue.Format] = Setting.Data(KeySetting.Name)
 	T = ZED.Replace

@@ -54,7 +54,7 @@ OnlineDB = DB('Online',function(S)
 	OnlineCount < S && (OnlineCount = S)
 	++Loaded
 	Bus.emit(EventQueue.First,Online.length)
-},KeyQueue.Unique),
+},[[KeyQueue.Unique,Util.T]]),
 OnlineData = OnlineDB.Data,
 OnlineUpdate = Observable.wrapNode(OnlineData.update,OnlineData),
 OfflineDB = DB('Offline',function(S)
@@ -67,11 +67,11 @@ OfflineDB = DB('Offline',function(S)
 		OfflineMap[U] = Util.T
 		CardMapUp(V[KeyQueue.Unique])
 		OffSizeMap[U] = V[KeyQueue.Size]
-	})
+	},KeyQueue.Finished)
 	OnlineCount < S && (OnlineCount = S)
 	++Loaded
 	Bus.emit(EventQueue.First)
-},KeyQueue.IDHis),
+},[[KeyQueue.IDHis,Util.T],[KeyQueue.Finished,Util.F]]),
 OfflineData = OfflineDB.Data,
 
 
@@ -425,7 +425,7 @@ HRemove = function(Q)
 				R[F] = T
 			}
 			Offline.length = 0
-			OfflineDB.EachRight(function(V){Offline.push(V[KeyQueue.IDHis])})
+			OfflineDB.EachRight(function(V){Offline.push(V[KeyQueue.IDHis])},KeyQueue.Finished)
 			Bus.emit(EventQueue.HRemoved,R)
 		}
 	})
@@ -495,7 +495,11 @@ InfoEnd,
 DispatchInfoGot = function(Q)
 {
 	Q[KeyQueue.Unique] = InfoNow
-	if (Q[KeyQueue.Sizes]) Q[KeyQueue.Size] = ZED.Sum(Q[KeyQueue.Sizes])
+	if (Q[KeyQueue.Sizes])
+	{
+		Q[KeyQueue.Size] = ZED.Sum(Q[KeyQueue.Sizes])
+		OnSizeMap[InfoNow] = Q[KeyQueue.Size]
+	}
 	if (!Q[KeyQueue.Done])
 	{
 		Q[KeyQueue.Done] = ZED.repeat(0,ZED.reduce(function(D,V)

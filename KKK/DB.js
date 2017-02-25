@@ -30,26 +30,30 @@ module.exports = function(Q,C,K)
 {
 	var
 	File = Path.join(Config.Root,Q),
-	Data = new NeDB(File);
+	Data = new NeDB(File),
 
-	Data.loadDatabase(function(E)
+	Y = function(E)
 	{
 		if (E) Util.Fatal(L(Lang.FData) + '\n' + E)
-		else K && !Data.indexes[K] ? Data.ensureIndex({fieldName : K,unique : Util.T},function(E)
+		else if (K.length)
 		{
-			E ? Util.Fatal(L(Lang.FData) + '\n' + E) : C()
-		}) : C()
-	})
+			E = K.pop()
+			Data.ensureIndex({fieldName : E[0],unique : E[1]},Y)
+		}
+		else C()
+	};
+
+	Data.loadDatabase(Y)
 
 	return {
 		Data : Data,
-		Each : function(C)
+		Each : function(C,Q)
 		{
-			TreeWalkLeft(Data.indexes._id.tree.tree,C)
+			TreeWalkLeft(Data.indexes[Q || '_id'].tree.tree,C)
 		},
-		EachRight : function(C)
+		EachRight : function(C,Q)
 		{
-			TreeWalkRight(Data.indexes._id.tree.tree,C)
+			TreeWalkRight(Data.indexes[Q || '_id'].tree.tree,C)
 		}
 	}
 }

@@ -208,6 +208,7 @@
 	ClassHotPercentageAlways = ZED.KeyGen(),
 	ClassHotSizeUnknown = ZED.KeyGen(),
 	//	History
+	ClassHistoryToolMerge = ZED.KeyGen(),
 	ClassHistoryTitleInfo = ZED.KeyGen(),
 	ClassHistoryTitle = ClassHotTitle,
 	ClassHistoryInfo = ClassHotInfo,
@@ -322,6 +323,12 @@
 		Stroke : ShapeConfigColorBackground
 	},
 	ShapeConfigHistoryToolRemove = ShapeConfigHotToolRemove,
+	ShapeConfigHistoryToolMerge =
+	{
+		Type : 'Merge',
+		Fill : Util.F,
+		Stroke : ShapeConfigColorEnabled
+	},
 	ShapeConfigHistoryListRemove = ShapeConfigHotListRemove,
 	ShapeConfigHistoryListMore = ShapeConfigHotListMore,
 	ShapeConfigShortCutAdd =
@@ -770,6 +777,11 @@
 		{
 			MakeDetailActive === Q[KeyQueue.Unique] && H(Q,S,R)
 		}
+	},
+
+	MakeMerge = function(Q)
+	{
+
 	},
 
 	MakeStatusText = Array(YTabCount),
@@ -1760,7 +1772,7 @@
 			{
 				if (A = Active[Q[KeyQueue.Unique]])
 				{
-					A[ActiveKeyInfo].text(MakeSizePercentage(Q[KeyQueue.Size],Q[KeyQueue.DoneSum]))
+					A[ActiveKeyInfo].text(MakeSizePercentage(Q[KeyQueue.Size],Q[KeyQueue.DoneSum] || 0))
 					if (R.Selecting()[Q[KeyQueue.Unique]])
 					{
 						--CountSizePlus
@@ -1830,6 +1842,9 @@
 			T = YHistoryTitlePercentage * W
 			return ZED.Replace
 			(
+				//Merge
+				'./E/ svg{transform:translateY(-3px)}' +
+				//Panel
 				'#/R/ ./I/>*{display:inline-block;vertical-align:middle}' +
 				//Title
 				'./H/{padding:/p/px;width:/t/px}' +
@@ -1849,6 +1864,8 @@
 				'/',
 				{
 					I : DOM.ListViewItem,
+
+					E : ClassHistoryToolMerge,
 
 					R : ID,
 					H : ClassHistoryTitleInfo,
@@ -1870,6 +1887,7 @@
 		{
 			var
 			ToolRemove = MakeShape(Lang.Remove,ShapeConfigHistoryToolRemove),
+			ToolMerge = MakeShape(Lang.Merge,ShapeConfigHistoryToolMerge).addClass(ClassHistoryToolMerge),
 
 			CountSize = 0,
 
@@ -1937,6 +1955,7 @@
 				},ZED.noop,function(Q)
 				{
 					MakeToolBarActive(ToolRemove,Q)
+					MakeToolBarActive(ToolMerge,Q)
 					MakeSelSize(X,R,CountSize)
 				},
 				function(Q)
@@ -1954,9 +1973,11 @@
 			);
 
 			MakeToolBarActive(ToolRemove)
+			MakeToolBarActive(ToolMerge)
 			MakeToolBar(X,$(DOM.div).append
 			(
-				MakeToolBarClick(R,X,ToolRemove,Lang.RemovingN,Queue.HRemove)
+				MakeToolBarClick(R,X,ToolRemove,Lang.RemovingN,Queue.HRemove),
+				MakeToolBarClick(R,X,ToolMerge,Util.U,MakeMerge)
 			))
 			Bus.on(EventQueue.First,function(Q)
 			{

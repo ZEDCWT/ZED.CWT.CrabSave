@@ -15,7 +15,7 @@ L = Lang.L,
 Path = require('path'),
 
 FS = require('graceful-fs'),
-Request = require('request').defaults({timeout : 10E3,forever : True}),
+Request = require('request').defaults({timeout : 10E3}),
 RequestWrap = function(Q,H)
 {
 	ZED.isObject(Q) || (Q = {url : Q})
