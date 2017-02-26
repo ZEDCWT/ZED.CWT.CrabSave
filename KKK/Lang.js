@@ -110,7 +110,9 @@ module.exports =
 
 	//Merge
 	ProcessingN : Lang('Processing /0/ // /1/'),
+	BadCmd : Lang('Bad command setting'),
 	Errored : Lang('Error occured'),
+	NoEscape : Lang('No escape'),
 
 	//History
 	HiInfo : Lang('/0/, /1/ file/2/'),
@@ -159,5 +161,7 @@ module.exports =
 	Size : Lang('Font size'),
 	Weight : Lang('Font weight'),
 	RetryT : Lang('Times to retry before moving a task with no response to the end of the queue'),
-	RestartT : Lang('Time(seconds) to wait before restarting a task after error occured or URL expired')
+	RestartT : Lang('Time(seconds) to wait before restarting a task after error occured or URL expired'),
+	MergeCmd : Lang('Merge command'),
+	MergeSuf : Lang('Merge suffix')
 }

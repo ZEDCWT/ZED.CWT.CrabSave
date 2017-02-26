@@ -38,6 +38,7 @@
 	global = ZED.global,
 
 	Path = require('path'),
+	Windows = /win/.test(process.platform),
 
 	Electron = require('electron'),
 	Remote = Electron.remote,
@@ -254,7 +255,7 @@
 	RDetailChildren = $(ZED.flatten([RDetailHead,RDetailInfo,RDetailPart])),
 	RMerge = ShowByRock(IDMerge).attr(DOM.cls,ClassCover),
 	RMergeProgress = $(DOM.div),
-	RMergeText = $(DOM.textarea),
+	RMergeText = ShowByClassX(DOM.Input,DOM.textarea),
 	RMergeChildren = $(ZED.flatten([RMergeProgress])),
 	//	StatusBar
 	RStatusBar = ShowByRock(IDStatusBar),
@@ -810,32 +811,33 @@
 	{
 		RMergeProgress.text(ReplaceLang(Lang.ProcessingN,S,L))
 	},
-	MakeMergeCompose = function(HP,HA)
+	MakeMergeEscapeWin = [ZED.ShellWinProgram,ZED.ShellWinArgument],
+	MakeMergeEscapeUnix = [ZED.ShellUnix,ZED.ShellUnix],
+	MakeMergeCompose = function(H)
 	{
 		var
-		Make = ZED.JTO('[\n' +
-		'  "mkvmerge",\n' +
-		'  "--ui-language",\n' +
-		'  "ja",\n' +
-		'  "--output",\n' +
-		'  "%Output%",\n' +
-		'  "%Head%",\n' +
-		'  [\n' +
-		'    "+",\n' +
-		'    "%Tail%"\n' +
-		'  ]\n' +
-		']'),
-		L = Make.length,
-
-		MakeIsString = Array(L),
-		MakeIsTail = Array(L),
+		Make = Setting.Data(KeySetting.Merge),
+		Len,
+		MakeIsString,
+		MakeIsTail,
 
 		File,O = {},
 		R = [],S,
-		In = function(Q){S.push(HA(ZED.Replace(Q,'%',O)))},
+		In = function(Q){S.push(H[1](ZED.Replace(Q,'%',O)))},
 		F,Fa,Fb,Fc;
 
-		for (F = 0;++F < L;)
+		/^\[/.test(Make) || (Make = '[' + Make + ']')
+		Make = ZED.JTO(Make)
+
+		if (!ZED.isArray(Make))
+		{
+			return RMergeText.val(L(Lang.BadCmd))
+		}
+		Len = Make.length
+		MakeIsString = Array(Len)
+		MakeIsTail = Array(Len)
+
+		for (F = 0;++F < Len;)
 		{
 			File = Make[F]
 			if (F && ZED.isArray(File))
@@ -860,8 +862,8 @@
 			O.Output = File[0]
 			File = File[1]
 			O.Head = File[0]
-			S = [HP(Make[0])]
-			for (Fa = 0;++Fa < L;)
+			S = [H[0](Make[0])]
+			for (Fa = 0;++Fa < Len;)
 			{
 				if (MakeIsString[Fa]) In(Make[Fa])
 				else if (MakeIsTail[Fa]) for (Fb = 0;++Fb < File.length;)
@@ -912,7 +914,7 @@
 						{
 							Part = Parts[F]
 							T = Part[KeyQueue.URL].length
-							Part[KeyQueue.Suffix] = '.mkv'
+							Part[KeyQueue.Suffix] = '.' + Setting.Data(KeySetting.Suffix)
 							if (1 < T)
 							{
 								MakeMergeStore.push(
@@ -933,27 +935,7 @@
 					RMergeProgress.text(L(Lang.Errored))
 				},function()
 				{
-					MakeMergeCompose(function(Q)
-					{
-						return /[&<>[\]{}^=;!'+,`~ ]/.test(Q) ? '"' + Q + '"' : Q
-					},function(Q,R,T,F)
-					{
-						if (!Q) return '^"^"'
-						if (!/[^\w+,\-./:=@]/.test(Q)) return Q
-						R = '"'
-						for (F = 0;F < Q.length;++F)
-						{
-							T = 0
-							for (;F < Q.length && '\\' === Q.charAt(F);++F) ++T
-							R += Q.length <= F ?
-								ZED.Times('\\',2 * T) :
-								'"' === Q.charAt(F) ?
-									ZED.Times('\\',1 + 2 * T) + '"' :
-									Q.substr(F - T,1 + T)
-						}
-						R += '"'
-						return R.replace(/[()%!^"<>&|]/g,'^$&')
-					})
+					MakeMergeCompose(Windows ? MakeMergeEscapeWin : MakeMergeEscapeUnix)
 				})
 		}
 	},
@@ -1115,6 +1097,10 @@
 			'#/DP/ ./SL/{padding-left:/p/px;color:blue}' +
 			//				URL status
 			'#/DP/ div>span{padding-left:/p/px}' +
+			//			Merge
+			'#/MG/{padding:/p/px}' +
+			'#/MG/>div{margin-bottom:/p/px;font-size:1.2rem}' +
+			'#/MG/ textarea{min-width:100%;max-width:100%;min-height:80%}' +
 
 			//StatusBar
 			'#/S/{padding:0 /p/px;height:/s/px}' +
@@ -1209,6 +1195,7 @@
 				DI : IDDetailInfo,
 				DL : ClassDetailLabel,
 				DP : IDDetailPart,
+				MG : IDMerge,
 
 				S : IDStatusBar,
 				s : YStatusBarHeight,
@@ -2701,7 +2688,13 @@
 				KeySetting.Font,'Microsoft Yahei',
 				KeySetting.Size,'14',
 				KeySetting.Weight,'normal',
-				KeySetting.Restart,180
+				KeySetting.Restart,180,
+				KeySetting.Merge,'"mkvmerge",\n' +
+					'"--output",\n' +
+					'"%Output%",\n' +
+					'"%Head%",\n' +
+					'["+%Tail%"]',
+				KeySetting.Suffix,'mkv'
 			),
 			Data,
 
@@ -2782,7 +2775,9 @@
 					[L(Lang.RestartT),[MakeInput(KeySetting.Restart,{N : Util.T})],KeySetting.Restart,function()
 					{
 						Queue.Wait(Data[KeySetting.Restart] || Default[KeySetting.Restart])
-					}]
+					}],
+					[L(Lang.MergeCmd),[{T : 'T',E : {placeholder : Default[KeySetting.Merge],rows : 8}}],KeySetting.Merge],
+					[L(Lang.MergeSuf),[MakeInput(KeySetting.Suffix)],KeySetting.Suffix]
 				],
 				Change : function(){Setting.Save(Data)}
 			})
@@ -2829,7 +2824,20 @@
 			MakeDetailActive === Q[KeyQueue.Unique] && MakeDetailRefresh(Q)
 		})
 	//Merge
-	RMerge.append(RMergeProgress,RMergeText)
+	RMerge.append
+	(
+		RMergeProgress,
+		ZED.reduce(function(D,V)
+		{
+			D.append()
+		},$(DOM.div),
+		[
+			[MakeMergeEscapeWin,'Windows cmd.exe'],
+			[MakeMergeEscapeUnix,'Unix bash']
+			[[ZED.identity,ZED.identity],Lang.NoEscape]
+		]),
+		RMergeText
+	)
 	//StatusBar Icon
 	ZED.each(function(V){RStatusIcon.append(ShowByRock(IDStatusIcon + ZED.chr(65 + V)))},ZED.range(0,5))
 	//Speed
