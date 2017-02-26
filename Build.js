@@ -4,6 +4,8 @@ Observable = ZED.Observable,
 
 Path = require('path'),
 
+Env = process.env,
+
 Pack = require('electron-packager'),
 FS = require('graceful-fs'),
 Uglify = require('uglify-js'),
@@ -35,6 +37,7 @@ UglifyConfig =
 
 Observable.wrapNode(Pack)(PackConfig).flatMap(function(Q)
 {
+	if (Env.Just) return Observable.empty()
 	console.log('Uglifing')
 	Q = Path.join(Q[0],'resources','app')
 	return Observable.from([Q,Path.join(Q,'KKK')]).flatMap(function(Q)

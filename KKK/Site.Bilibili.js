@@ -386,7 +386,7 @@ R = ZED.ReduceToObject
 					(
 						KeyQueue.Title,V.part,
 						KeyQueue.URL,ZED.pluck('url',D),
-						KeyQueue.Suffix,'.' + B
+						KeyQueue.Suffix,'.' + B.replace(/^hd/,'')
 					))
 					V.part || ZED.delete_(KeyQueue.Title,D)
 				})

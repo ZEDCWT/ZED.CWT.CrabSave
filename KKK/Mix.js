@@ -806,6 +806,7 @@
 	},
 
 	MakeMergeEnd,
+	MakeMergeAble,
 	MakeMergeStore,
 	MakeMergeProcess = function(L,S)
 	{
@@ -897,6 +898,7 @@
 
 			MakeMergeProcess(L,0)
 			MakeMergeStore = []
+			MakeMergeAble = Util.F
 			MakeMergeEnd = Observable.from(Q)
 				.flatMapOnline(1,QueueHInfo)
 				.map(function(Q,F)
@@ -935,6 +937,7 @@
 					RMergeProgress.text(L(Lang.Errored))
 				},function()
 				{
+					MakeMergeAble = Util.T
 					MakeMergeCompose(Windows ? MakeMergeEscapeWin : MakeMergeEscapeUnix)
 				})
 		}
@@ -949,7 +952,8 @@
 			MakeMergeEnd.end()
 			MakeCoverOff()
 			MakeMergeEnd =
-			MakeMergeStore = Util.F
+			MakeMergeStore =
+			MakeMergeAble = Util.F
 		}
 	},
 
@@ -1100,6 +1104,7 @@
 			//			Merge
 			'#/MG/{padding:/p/px}' +
 			'#/MG/>div{margin-bottom:/p/px;font-size:1.2rem}' +
+			'#/MG/ ./BT/{display:inline-block;margin:0 /p/px;padding:1px 3px;font-size:1rem}' +
 			'#/MG/ textarea{min-width:100%;max-width:100%;min-height:80%}' +
 
 			//StatusBar
@@ -1162,6 +1167,7 @@
 			'#/N/ ./I/{z-index:6000}',
 			'/',
 			{
+				BT : DOM.Button,
 				I : DOM.Tab,
 				O : DOM.TabOn,
 				W : DOM.ListView,
@@ -2829,11 +2835,15 @@
 		RMergeProgress,
 		ZED.reduce(function(D,V)
 		{
-			D.append()
+			D.append(ShowByClass(DOM.Button).text(L(V[1])).on(DOM.click,function()
+			{
+				MakeMergeAble && MakeMergeCompose(V)
+			}))
+			V = V[0]
 		},$(DOM.div),
 		[
 			[MakeMergeEscapeWin,'Windows cmd.exe'],
-			[MakeMergeEscapeUnix,'Unix bash']
+			[MakeMergeEscapeUnix,'Unix bash'],
 			[[ZED.identity,ZED.identity],Lang.NoEscape]
 		]),
 		RMergeText

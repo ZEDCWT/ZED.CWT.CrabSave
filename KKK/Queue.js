@@ -40,35 +40,33 @@ OnSizeMap = {},
 OffSizeMap = {},
 OnlineCount = 80000000 - 1,
 Loaded = 0,
-OnlineDB = DB('Online',function(S)
+OnlineDB = DB('Online',function()
 {
 	OnlineDB.Each(function(V,U)
 	{
-		S = V._id
+		OnlineCount < V._id && (OnlineCount = V._id)
 		U = V[KeyQueue.Unique]
 		Online.push(U)
 		OnlineMap[U] = Util.T
 		V[KeyQueue.Active] && (ActiveMap[U] = Util.T)
 		OnSizeMap[U] = V[KeyQueue.Size]
 	})
-	OnlineCount < S && (OnlineCount = S)
 	++Loaded
 	Bus.emit(EventQueue.First,Online.length)
 },[[KeyQueue.Unique,Util.T]]),
 OnlineData = OnlineDB.Data,
 OnlineUpdate = Observable.wrapNode(OnlineData.update,OnlineData),
-OfflineDB = DB('Offline',function(S)
+OfflineDB = DB('Offline',function()
 {
 	OfflineDB.EachRight(function(V,U)
 	{
-		S || (S = V._id)
+		OnlineCount < V._id && (OnlineCount = V._id)
 		U = V[KeyQueue.IDHis]
 		Offline.push(U)
 		OfflineMap[U] = Util.T
 		CardMapUp(V[KeyQueue.Unique])
 		OffSizeMap[U] = V[KeyQueue.Size]
 	},KeyQueue.Finished)
-	OnlineCount < S && (OnlineCount = S)
 	++Loaded
 	Bus.emit(EventQueue.First)
 },[[KeyQueue.IDHis,Util.T],[KeyQueue.Finished,Util.F]]),
