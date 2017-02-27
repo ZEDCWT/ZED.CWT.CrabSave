@@ -15,6 +15,8 @@ Component = require('./Component'),
 Name = 'Bilibili',
 PageSize = 30,
 
+PadURL = ZED.replace(/^\/\//,'http://'),
+
 Appkey = '20bee1f7a18a425c',
 APPAppkey = '1d8b6e7d45233436',
 APPSecretKey = '560c52ccd288fed045859ed18bffd973',
@@ -42,7 +44,8 @@ URLLoginCheck = 'http://space.bilibili.com/ajax/member/MyInfo',
 URLSpace = ZED.URLBuild('http://space.bilibili.com/ajax/member/getSubmitVideos?mid=',Util.U,'&pagesize=',PageSize,'&page=',Util.U),
 URLMylist = ZED.URLBuild('http://www.bilibili.com/mylist/mylist-',Util.U,'.js'),
 URLDynamic = ZED.URLBuild('http://api.bilibili.com/x/feed/pull?type=0&ps=',PageSize,'&pn=',Util.U),
-URLSearch = ZED.URLBuild('http://search.bilibili.com/all?keyword=',Util.U,Util.U),
+URLSearchMain = 'http://search.bilibili.com/all',
+URLSearch = ZED.URLBuild('http://search.bilibili.com/ajax_api/video?keyword=',Util.U,'&page=',Util.U,Util.U),
 URLVInfo = ZED.URLBuild('http://api.bilibili.com/view?id=',Util.U,'&batch=1&appkey=',Appkey,'&type=json'),
 URLVInfoURL = function(Q)
 {
@@ -145,10 +148,10 @@ R = ZED.ReduceToObject
 			//Method
 			BishiMethod = Util.MF(/([^.])\("r",null,"(?:number )+/,ScriptPlayer)
 
-			return Util.ajax(URLSearch('','')).flatMap(function(Q)
+			return Util.ajax(URLSearchMain).flatMap(function(Q)
 			{
 				Q = Util.MF(/"([^"]+search[^"]+\.js)/,Q)
-				return Q ? Util.ajax(Q.replace(/^\/\//,'http://')) : Observable.just('')
+				return Q ? Util.ajax(PadURL(Q)) : Observable.just('')
 			}).flatMap(function(Q)
 			{
 				return Util.writeFile(FrameTool[0],ScriptPlayer + ZED.UTF(Q))
@@ -347,10 +350,57 @@ R = ZED.ReduceToObject
 	),ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Search),
-		KeySite.Judge,[/^search\s+(.*)$/i],
-		KeySite.Page,function(_,X)
+		KeySite.Judge,[/^(?:find|search)\s+(.*)$/i],
+		KeySite.Page,function(Q,X,O)
 		{
+			return Util.RequestBody(Util.MakeSearch(URLSearch,Q,X,O)).map(function(Q,R)
+			{
+				Q = ZED.JTO(Q)
+				Q.code && ZED.Throw(Util.ReplaceLang
+				(
+					Lang.BadCE,
+					Q.code,Q.text
+				))
+				Q.html || ZED.Throw(L(Lang.Bad))
+				R = []
+				Util.ML(/<li[^]+?<\/li/g,Q.html,function(Q)
+				{
+					R.push(ZED.ReduceToObject
+					(
+						KeySite.Index,PageSize * (X - 1) + R.length,
+						KeySite.ID,Util.MF(/av(\d+)/,Q),
+						KeySite.Img,PadURL(Util.MF(/src="([^"]+)/,Q)),
+						KeySite.Title,Util.MF(/title".+?title="([^"]+)/,Q),
+						KeySite.Author,Util.MF(/up-name[^>]+>([^<]+)/,Q),
+						KeySite.Date,Util.MF(/-date.+?i>([^<]+)/,Q).trim()
+					))
+				})
+				R = ZED.ReduceToObject
+				(
+					KeySite.Pages,Q.numPages,
+					KeySite.Total,Q.numResults,
+					KeySite.Item,R
+				)
+				if (FilterMenu)
+				{
+					Q = {}
+					R[KeySite.Pref] = ZED.reduce(function(D,V,R)
+					{
+						D.push(
+						[
+							V.alias,
+							R = ZED.reduce(function(D,V)
+							{
+								D.push([V.name,V.val])
+							},[],V.cell)
+						])
+						Q[V.alias] = R[0][1]
+					},[],FilterMenu)
+					R[KeySite.PrefDef] = Q
+				}
 
+				return R
+			})
 		}
 	)],
 	KeySite.URL,function(ID)

@@ -117,13 +117,20 @@ module.exports =
 	{
 		return RegExp('(?:^|[^a-z])' + Q + '(?:' + S + ')??(' + R + ')','i')
 	},
+	MakeSearch : function(URL,Q,X,O)
+	{
+		return URL(encodeURIComponent(Q),X,ZED.Reduce(O || {},function(D,F,V)
+		{
+			return V ? D + '&' + F + '=' + V : D
+		},''))
+	},
 	PrevDef : function(E){E.preventDefault()},
 	StopProp : function(E){E.stopPropagation()},
 
 	//Global dependencies
 	MU : function(Q,S){return ZED.match(Q,S)[0] || ''},
 	MF : function(Q,S,X){return ZED.match(Q,S)[X || 1] || ''},
-	ML : function(Q,S,C,T)
+	ML : function(Q,S,C,J,T)
 	{
 		Q.lastIndex = 0
 		T = Q.exec(S)
@@ -131,7 +138,7 @@ module.exports =
 		for (;Q.lastIndex;)
 		{
 			T = Q.exec(S)
-			T && C(T[0])
+			T && C(J ? T : T[0])
 		}
 	},
 	DateDirect : function(Q)

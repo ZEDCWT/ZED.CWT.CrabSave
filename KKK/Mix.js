@@ -198,7 +198,7 @@
 	//	Browser
 	IDBrowserInput = ZED.KeyGen(),
 	IDBrowserInfo = ZED.KeyGen(),
-	IDBrowserList = ZED.KeyGen(),
+	IDBrowserPref = ZED.KeyGen(),
 	ClassBrowserHover = ZED.KeyGen(),
 	//	Cold
 	ClassColdCommitAll = ZED.KeyGen(),
@@ -1272,6 +1272,11 @@
 				//Info panel
 				'#/O/{margin:0 10px;padding:10px;border:solid #66AFE0;border-width:2px 0;font-size:1.1rem}' +
 
+				//Preference
+				'#/P/{margin:0 10px}' +
+				'#/P/ table{width:100%}' +
+				'#/P/ th{width:15%}' +
+
 				//List
 				'#/R/ fieldset' +
 				'{' +
@@ -1296,6 +1301,7 @@
 					R : ID,
 					I : IDBrowserInput,
 					O : IDBrowserInfo,
+					P : IDBrowserPref,
 					H : ClassBrowserHover,
 					J : DOMCard.R,
 					K : DOMCard.Init,
@@ -1320,7 +1326,8 @@
 			RURL = ShowByInput(Lang.URL),
 			RGo = ShowByClass(DOM.NoSelect).text('\u2192'),
 			RInfo = ShowByRock(IDBrowserInfo),
-			RList = ShowByRock(IDBrowserList),
+			RPref = ShowByRock(IDBrowserPref),
+			RList = $(DOM.div),
 
 			PagerUp,
 			PagerBotton,
@@ -1352,12 +1359,14 @@
 			GoDetail,
 			GoID,
 			GoPages,
+			GoPref,
 			Go = function()
 			{
-				var URL = RURL.val().trim(),T;
+				var URL = RURL.val().trim(),L,T;
 
 				GoLast && GoLast.end()
 
+				L = GoDetail
 				RInfo.empty().append(ShowByText(ReplaceLang(Lang.ProcURL,URL)))
 				if (T = URL.match(/^([A-Z]+)(?:\s+([^]*))?$/i))
 				{
@@ -1389,6 +1398,7 @@
 					RInfo.append(ShowByText(T.join(' ')))
 
 					GoInfo = Util.F
+					L === GoDetail || (GoPref = {})
 					GoPages = 1
 					Jump(1)
 				}
@@ -1403,6 +1413,16 @@
 			Render = function(Q,S)
 			{
 				var Item = Q[KeySite.Item];
+
+				RPref.empty()
+				Q[KeySite.Pref] && ZED.Preference(
+				{
+					Parent : RPref,
+					Set : Q[KeySite.Pref],
+					Data : ZED.Merge(GoPref,Q[KeySite.PrefDef]),
+					Table : Util.T,
+					Change : function(){Jump(S)}
+				})
 
 				GoPages = Q[KeySite.Pages]
 				if (Item.length)
@@ -1459,7 +1479,7 @@
 				{
 					S = ZED.min(ZED.max(1,S || 0),GoPages)
 					MakeStatus(X,L(Lang.Loading),ClassStatusLoading)
-					GoLast = GoDetail[KeySite.Page](GoID,S).start(function(Q)
+					GoLast = GoDetail[KeySite.Page](GoID,S,GoPref).start(function(Q)
 					{
 						GoLast = Util.F
 						MakeStatus(X)
@@ -1483,7 +1503,8 @@
 			M.append
 			(
 				RInput.append(RURL,RGo),
-				RInfo
+				RInfo,
+				RPref
 			)
 			PagerUp = ZED.Pager({Parent : M,Offset : 1},Jump)
 			T = M.find('.' + DOM.Pager).children()

@@ -42,7 +42,7 @@ module.exports =
 		Pages : KeyKey(),//number | false for
 		Total : KeyKey(),
 		Item : KeyKey(),//array
-		//Item
+		//	Item
 		Unique : KeyKey(),
 		Index : KeyKey(),
 		ID : KeyKey(),
@@ -50,8 +50,11 @@ module.exports =
 		Title : KeyKey(),
 		Author : KeyKey(),
 		Date : KeyKey(),
-		//URL
+		//		URL
 		URL : KeyKey(),
+		//	Preference
+		Pref : KeyKey(),
+		PrefDef : KeyKey(),
 		//IDView
 		IDView : KeyKey(),
 		//Pack

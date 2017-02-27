@@ -20,7 +20,8 @@ URLMylist = ZED.URLBuild('http://www.nicovideo.jp/mylist/',Util.U),
 URLRepo = ZED.URLBuild('http://www.nicovideo.jp/my/top/user?innerPage=1&mode=next_page&last_timeline=',Util.U),
 URLVInfo = ZED.URLBuild('http://ext.nicovideo.jp/api/getthumbinfo/sm',Util.U),
 URLVInfoURL = ZED.URLBuild('http://flapi.nicovideo.jp/api/getflv?v=sm',Util.U),
-UrlVideo = ZED.URLBuild('http://www.nicovideo.jp/watch/sm',Util.U),
+URLVideo = ZED.URLBuild('http://www.nicovideo.jp/watch/sm',Util.U),
+URLSearch = ZED.URLBuild('http://www.nicovideo.jp/search/',Util.U,'?page=',Util.U,Util.U),
 
 MaybeError = function(Q)
 {
@@ -33,6 +34,8 @@ MaybeError = function(Q)
 },
 
 RepoActive,
+FilterMenu,
+FilterMenuDef = {},
 
 R = ZED.ReduceToObject
 (
@@ -218,6 +221,55 @@ R = ZED.ReduceToObject
 				)
 			})
 		}
+	),ZED.ReduceToObject
+	(
+		KeySite.Name,L(Lang.Search),
+		KeySite.Judge,[/^(?:find|search)\s+(.*)$/i],
+		KeySite.Page,function(Q,X,O)
+		{
+			return Util.RequestBody(Util.MakeSearch(URLSearch,Q,X,O)).map(function(Q,T,R)
+			{
+				T = Number(Util.MF(/more">([\d,]+)/,Q).replace(/,/g,'')) || 0
+				R = []
+				Util.ML(/video-item[^]+?<\/li/g,Q,function(Q)
+				{
+					R.push(ZED.ReduceToObject
+					(
+						KeySite.Index,PageSize * (X - 1) + R.length,
+						KeySite.ID,Util.MF(/sm(\d+)/,Q),
+						KeySite.Img,Util.MF(/original="([^"]+)/,Q),
+						KeySite.Title,Util.DecodeHTML(Util.MF(/title="([^"]+)/,Q)),
+						KeySite.Date,Util.MF(/time">([^<]+)/,Q).replace(/^(?=\d\d\/)/,'20')
+					))
+				})
+				if (!FilterMenu)
+				{
+					FilterMenu = []
+					Util.ML(/optionList"(?:[^]+?<\/div){2}/g,Q,function(Q,R)
+					{
+						R = []
+						Util.ML(/<li[^>]*>[^]+?<\/li>/g,Q,function(Q)
+						{
+							R.push(
+							[
+								Q.replace(/<[^>]+>/g,''),
+								Util.MF(/\?[^=]+=([^&]+(?:&order=.)?)/,Q.replace(/&amp;/g,'&'))
+							])
+						})
+						FilterMenu.push([Util.MF(/h3>([^<]+)/,Q),R,Q = Util.MF(/\?([^=]+)/,Q)])
+						FilterMenuDef[Q] = ''
+					})
+				}
+				return ZED.ReduceToObject
+				(
+					KeySite.Pages,ZED.min(Math.ceil(T / 32),50),
+					KeySite.Total,T,
+					KeySite.Item,R,
+					KeySite.Pref,FilterMenu,
+					KeySite.PrefDef,FilterMenuDef
+				)
+			})
+		}
 	)],
 	KeySite.URL,function(ID)
 	{
@@ -248,7 +300,7 @@ R = ZED.ReduceToObject
 	KeySite.IDView,ZED.add('sm'),
 	KeySite.Pack,function(S,Q)
 	{
-		return Util.RequestHead(Cookie.URL(Name,UrlVideo(Q[KeyQueue.ID]))).map(function(H)
+		return Util.RequestHead(Cookie.URL(Name,URLVideo(Q[KeyQueue.ID]))).map(function(H)
 		{
 			Cookie.Save(Name,H)
 			return Cookie.URL(Name,S)
