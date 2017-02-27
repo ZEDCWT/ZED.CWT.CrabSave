@@ -42,6 +42,7 @@ URLLoginCheck = 'http://space.bilibili.com/ajax/member/MyInfo',
 URLSpace = ZED.URLBuild('http://space.bilibili.com/ajax/member/getSubmitVideos?mid=',Util.U,'&pagesize=',PageSize,'&page=',Util.U),
 URLMylist = ZED.URLBuild('http://www.bilibili.com/mylist/mylist-',Util.U,'.js'),
 URLDynamic = ZED.URLBuild('http://api.bilibili.com/x/feed/pull?type=0&ps=',PageSize,'&pn=',Util.U),
+URLSearch = ZED.URLBuild('http://search.bilibili.com/all?keyword=',Util.U,Util.U),
 URLVInfo = ZED.URLBuild('http://api.bilibili.com/view?id=',Util.U,'&batch=1&appkey=',Appkey,'&type=json'),
 URLVInfoURL = function(Q)
 {
@@ -77,6 +78,7 @@ BishiURL = function(Q,B)
 {
 	return TryBishi(Q,B) || URLVInfoURL(Q)
 },
+FilterMenu,
 
 Overspeed = ZED.Mark(),
 MaybeOverspeed = function(Q)
@@ -103,13 +105,12 @@ R = ZED.ReduceToObject
 		BishiMethod = BishiMethod[1]
 		FrameTool = Reg(function(W)
 		{
-			W.$ = ZED.jQuery
-			W.BISHI = {U : ZED.noop}
+			W.$ = W.jQuery = ZED.Merge(function(){},ZED.jQuery)
 			W.setTimeout = function(Q){Q()}
-
 			ZED.delete_('localStorage',W)
 			W.JSON.parse = ZED.JTO
 			Object.defineProperty(W.document,'cookie',{value : ''})
+			W.BISHI = {U : ZED.noop}
 		},function(W)
 		{
 			Bishi = W.BISHI
@@ -118,6 +119,7 @@ R = ZED.ReduceToObject
 				//Sign
 				BishiSign = Bishi.R(BishiID)[BishiMethod]
 					('r',Util.N,'number number number number string string number'.split(' '))
+				FilterMenu = W.filterMenu
 				FrameRepeater.finish()
 			}
 			catch(e){FrameRepeater.error(e)}
@@ -125,11 +127,11 @@ R = ZED.ReduceToObject
 	},
 	KeySite.Component,function()
 	{
-		return Util.ajax(URLPlayer).flatMap(function(Q)
+		return Util.ajax(URLPlayer).flatMap(function(ScriptPlayer)
 		{
-			Q = ZED.ReplaceList
+			ScriptPlayer = ZED.ReplaceList
 			(
-				Q,
+				ScriptPlayer,
 				//Remove initial loading
 				/(\(global\)\s*{)(?:[a-z.=]*__webpack_require__\(\d+\);)+/,'$1',
 				//Exports loader,
@@ -139,11 +141,18 @@ R = ZED.ReduceToObject
 			)
 
 			//Module ID
-			BishiID = Number(Util.MF(/}],(\d+):\[func[^{]+{[^{]+{ try {/,Q))
+			BishiID = Number(Util.MF(/}],(\d+):\[func[^{]+{[^{]+{ try {/,ScriptPlayer))
 			//Method
-			BishiMethod = Util.MF(/([^.])\("r",null,"(?:number )+/,Q)
+			BishiMethod = Util.MF(/([^.])\("r",null,"(?:number )+/,ScriptPlayer)
 
-			return Util.writeFile(FrameTool[0],Q)
+			return Util.ajax(URLSearch('','')).flatMap(function(Q)
+			{
+				Q = Util.MF(/"([^"]+search[^"]+\.js)/,Q)
+				return Q ? Util.ajax(Q.replace(/^\/\//,'http://')) : Observable.just('')
+			}).flatMap(function(Q)
+			{
+				return Util.writeFile(FrameTool[0],ScriptPlayer + ZED.UTF(Q))
+			})
 		}).flatMap(function()
 		{
 			Component.Save(ZED.objOf(Name,[BishiID,BishiMethod]))

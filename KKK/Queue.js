@@ -324,6 +324,7 @@ ErrorOn = function(ID,E)
 	ErrorMap[ID] = ZED.now()
 	ErrorQueue.push(ID)
 	InnerPause(ID)
+	Dispatch()
 	Bus.emit(EventQueue.Error,ID,WaitDisplay)
 },
 Error = function(Q,E,ID)

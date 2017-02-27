@@ -108,21 +108,23 @@ R = ZED.ReduceToObject
 				(
 					KeySite.Pages,Math.ceil(T / PageSize) || 0,
 					KeySite.Total,T,
-					KeySite.Item,ZED.Map
+					KeySite.Item,ZED.Reduce
 					(
 						ZED.match(/outer"(?![^<]+<form)[^]+?<\/p/g,Util.MU(/Body"[^]+?="side/,Q)),
-						function(F,V)
+						function(D,F,V,I)
 						{
-							return ZED.ReduceToObject
+							I = Util.MF(/sm(\d+)/,V)
+							I && D.push(ZED.ReduceToObject
 							(
 								KeySite.Index,PageSize * (X - 1) + F,
-								KeySite.ID,Util.MF(/sm(\d+)/,V),
+								KeySite.ID,I,
 								KeySite.Img,Util.MF(/src="([^"]+)/,V),
 								KeySite.Title,Util.MF(/h5>[^>]+>([^<]+)/,V),
 								KeySite.Author,A,
 								KeySite.Date,Util.DateDirect(ZED.match(/\d+/g,Util.MF(/posttime">([^<]+)/,V)))
-							)
-						}
+							))
+						},
+						[]
 					)
 				)
 			})
