@@ -18,10 +18,10 @@ URLLoginCheck = 'http://seiga.nicovideo.jp/',
 URLUser = ZED.URLBuild('http://www.nicovideo.jp/user/',Util.U,'/video?page=',Util.U),
 URLMylist = ZED.URLBuild('http://www.nicovideo.jp/mylist/',Util.U),
 URLRepo = ZED.URLBuild('http://www.nicovideo.jp/my/top/user?innerPage=1&mode=next_page&last_timeline=',Util.U),
+URLSearch = ZED.URLBuild('http://www.nicovideo.jp/search/',Util.U,'?page=',Util.U,Util.U),
 URLVInfo = ZED.URLBuild('http://ext.nicovideo.jp/api/getthumbinfo/sm',Util.U),
 URLVInfoURL = ZED.URLBuild('http://flapi.nicovideo.jp/api/getflv?v=sm',Util.U),
 URLVideo = ZED.URLBuild('http://www.nicovideo.jp/watch/sm',Util.U),
-URLSearch = ZED.URLBuild('http://www.nicovideo.jp/search/',Util.U,'?page=',Util.U,Util.U),
 
 MaybeError = function(Q)
 {

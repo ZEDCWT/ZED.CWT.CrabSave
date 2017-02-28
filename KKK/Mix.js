@@ -774,7 +774,12 @@
 		if (MakeDetailQuerying !== Q)
 		{
 			MakeDetailQuerying = Q
-			;(J ? Queue.HInfo : Queue.Info)(Q,function(E,R)
+			if (!J && Download.Active[Q])
+			{
+				MakeDetailQuerying = Util.F
+				MakeDetailSetup(Q,Download.Active[Q].Q)
+			}
+			else (J ? Queue.HInfo : Queue.Info)(Q,function(E,R)
 			{
 				if (!E && MakeDetailQuerying === Q)
 				{
@@ -1466,6 +1471,7 @@
 								.attr(DOM.src,V[KeySite.Img])
 								.attr(DOM.title,V[KeySite.Title])
 						),
+						V[KeySite.Length] && ShowByText(V[KeySite.Length]),
 						ShowByText(V[KeySite.Title]),
 						V[KeySite.Author] && ShowByText(V[KeySite.Author]),
 						MakeSiteDate(V)
@@ -1794,10 +1800,9 @@
 						MakeShape(Lang.Pause,ShapeConfigHotListPause,ClassHotControlPP) :
 						MakeShape(Lang.Restart,ShapeConfigHotListPlay,ClassHotControlPP),
 					PPS = PP.children(),
-					ActiveObj = [ID,Info,Speed,Remain,Percentage,0,PP,PPS];
+					ActiveObj = [ID,Info,Speed,Remain,Percentage,0,PP,PPS],
 
-					Active[ID] = ActiveObj
-					Queue.Info(ID,function(E,Q)
+					Make = function(E,Q)
 					{
 						if (!E)
 						{
@@ -1830,7 +1835,12 @@
 								Percentage.removeClass(ClassHotPercentageActive)
 							MakePercentage(Q,ActiveObj)
 						}
-					})
+					};
+
+					Active[ID] = ActiveObj
+					Download.Active[ID] ?
+						Make(Util.N,Download.Active[ID].Q) :
+						Queue.Info(ID,Make)
 
 					return $(DOM.div).append
 					(

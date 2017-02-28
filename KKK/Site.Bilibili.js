@@ -272,7 +272,8 @@ R = ZED.ReduceToObject
 							KeySite.Img,V.pic,
 							KeySite.Title,V.title,
 							KeySite.Author,V.author,
-							KeySite.Date,new Date(1000 * V.created)
+							KeySite.Date,new Date(1000 * V.created),
+							KeySite.Length,V.length
 						)
 					})
 				)
@@ -341,7 +342,8 @@ R = ZED.ReduceToObject
 							KeySite.Img,V.pic,
 							KeySite.Title,V.title,
 							KeySite.Author,V.author,
-							KeySite.Date,new Date(V.create)
+							KeySite.Date,new Date(V.create),
+							KeySite.Length,V.duration
 						)
 					})
 				)
@@ -370,9 +372,10 @@ R = ZED.ReduceToObject
 						KeySite.Index,PageSize * (X - 1) + R.length,
 						KeySite.ID,Util.MF(/av(\d+)/,Q),
 						KeySite.Img,PadURL(Util.MF(/src="([^"]+)/,Q)),
-						KeySite.Title,Util.MF(/title".+?title="([^"]+)/,Q),
-						KeySite.Author,Util.MF(/up-name[^>]+>([^<]+)/,Q),
-						KeySite.Date,Util.MF(/-date.+?i>([^<]+)/,Q).trim()
+						KeySite.Title,Util.DecodeHTML(Util.MF(/title".+?title="([^"]+)/,Q)),
+						KeySite.Author,Util.DecodeHTML(Util.MF(/up-name[^>]+>([^<]+)/,Q)),
+						KeySite.Date,Util.MF(/-date.+?i>([^<]+)/,Q).trim(),
+						KeySite.Length,Util.MF(/_rb">([^<]+)/,Q).trim()
 					))
 				})
 				R = ZED.ReduceToObject

@@ -50,6 +50,7 @@ module.exports =
 		Title : KeyKey(),
 		Author : KeyKey(),
 		Date : KeyKey(),
+		Length : KeyKey(),
 		//		URL
 		URL : KeyKey(),
 		//	Preference
