@@ -10,7 +10,7 @@ Lang = require('./Lang'),
 L = Lang.L,
 Cookie = require('./Cookie'),
 
-Name = '\u30CB\u30B3\u30CB\u30B3',
+Name = 'NicoNico',
 PageSize = 30,
 
 URLLogin = 'https://secure.nicovideo.jp/secure/login',

@@ -53,6 +53,30 @@ RequestBase = function(H)
 	}
 },
 
+PoolSize = 20,
+Pool = function()
+{
+	var
+	Data = Array(PoolSize),
+	P = -1;
+
+	return {
+		Push : function(Q)
+		{
+			++P < PoolSize || (P = 0)
+			Data[P] = Q
+		},
+		Peek : function(N)
+		{
+			N = P - Math.abs(N || 0)
+			N < 0 && (N += PoolSize)
+			N < PoolSize || (N -= PoolSize)
+			return Data[N]
+		}
+	}
+},
+DebugPool = Pool(),
+
 Look = [],
 
 DecodeHTML = $('<div>');
@@ -100,9 +124,11 @@ module.exports =
 	{
 		A = ZED.Arrayify(arguments)
 		A[0] = Path.basename(A[0]).replace(/\.js$/,'')
+		ZED.isObject(A[1]) && DebugPool.Push(A[1])
 		A.unshift('DEBUG')
 		console.error.apply(console,A)
 	},
+	DebugPool : DebugPool,
 	Fatal : function(Q)
 	{
 		alert(ZED.Replace(L(Lang.Fatal),'/',[Q]))

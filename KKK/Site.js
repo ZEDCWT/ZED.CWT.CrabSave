@@ -16,15 +16,14 @@ All =
 ],
 Map =
 {
-	bilibili : Bilibili,
 	bili : Bilibili,
-	youtube : YouTube,
 	ytb : YouTube,
-	niconico : Niconico,
+	ニコニコ : Niconico,
+	ニコ : Niconico,
 	nico : Niconico
 };
 
-ZED.each(function(V){Map[V[KeySiteName]] = V},All)
+ZED.each(function(V){Map[V[KeySiteName]] = Map[V[KeySiteName].toLowerCase()] = V},All)
 
 module.exports =
 {

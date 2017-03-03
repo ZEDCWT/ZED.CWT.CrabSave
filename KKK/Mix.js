@@ -1373,7 +1373,7 @@
 
 				L = GoDetail
 				RInfo.empty().append(ShowByText(ReplaceLang(Lang.ProcURL,URL)))
-				if (T = URL.match(/^([A-Z]+)(?:\s+([^]*))?$/i))
+				if (T = URL.match(/^([A-Z\u2E80-\u33FF\u3400-\u9FFF\uAC00-\uD7FF\uF900-\uFAFF]+)(?:\s+([^]*))?$/i))
 				{
 					GoTarget = ZED.toLower(T[1])
 					GoDetail = T[2] || ''
