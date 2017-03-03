@@ -112,6 +112,7 @@ New = function(Q)
 				T = R[F][KeyQueue.Unique]
 				Online.push(T)
 				ZED.delete_(T,NewMap)
+				ZED.delete_(T,OnSizeMap)
 				ActiveMap[T] =
 				OnlineMap[T] = Util.T
 			}
@@ -250,7 +251,6 @@ Remove = function(Q)
 				M[T] = Util.T
 				ZED.delete_(T,RemoveMap)
 				ZED.delete_(T,OnlineMap)
-				ZED.delete_(T,OnSizeMap)
 				Running[T] && InnerPause(T)
 			}
 			ClearDebuff(M)
@@ -385,7 +385,6 @@ Finish = function(Q,T,F)
 							Running[T] && --Current
 							ZED.delete_(T,Running)
 							ZED.delete_(T,OnlineMap)
-							ZED.delete_(T,OnSizeMap)
 							Bus.emit(EventQueue.Finish,Q[F])
 						}
 						Online.length = 0

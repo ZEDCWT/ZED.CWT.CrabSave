@@ -1729,7 +1729,7 @@
 			{
 				A[ActiveKeySpeed].text
 				(
-					(0 <= S || (Download.Active[ID] && (S = Download.Active[ID].Speed()))) ?
+					(0 <= S || (Download.Active[ID] && (S = 1000 * Download.Active[ID].Speed()))) ?
 						ZED.FormatSize(S) + '/s' :
 						L(Lang.Processing)
 				)

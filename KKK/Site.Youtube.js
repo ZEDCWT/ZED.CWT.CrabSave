@@ -55,7 +55,7 @@ MakeReturnBySnippet = function(Q,X,T)
 	Q.error && ZED.Throw(Util.ReplaceLang
 	(
 		Lang.BadCE,
-		Q.code,ZED.OTJ(Q.error)
+		Q.code || Q.error.code,ZED.OTJ(Q.error)
 	))
 	T = ZED.path(['pageInfo','totalResults'],Q)
 
@@ -261,7 +261,7 @@ R = ZED.ReduceToObject
 		KeySite.Judge,[/^(?:find|search)\s+(.*)$/i],
 		KeySite.Page,function(Q,X,O)
 		{
-			return Util.RequestBody(Util.MakeSearch(URLSearch,Q,'',O)).map(function(Q)
+			return Util.RequestBody(Util.MakeSearch(URLSearch,Q,ZED.Code.PageToken(PageSize * (X - 1)),O)).map(function(Q)
 			{
 				return ZED.ReduceToObject
 				(
