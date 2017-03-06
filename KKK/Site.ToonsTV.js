@@ -62,17 +62,16 @@ R = ZED.ReduceToObject
 		return Util.RequestBody(URLDomain)
 			.map(Extract)
 			.flatMap(ZED.prop('allChannels'))
-			.flatMapOnline(1,function(Q){return Util.RequestBody(URLChannel(Q.id)).retry(3)})
+			.flatMapOnline(1,function(Q){return Util.RequestBody(URLChannel(Q.id)).retry()})
 			.map(Extract)
-			.map(function(Q,I)
+			.map(function(Q)
 			{
 				Q = Q.activeChannel
-				I = Q.id + '/'
 				return ZED.each(function(V)
 				{
 					ZED.delete_('contentType',V)
 					V.c = Q.title
-					V.id = I + V.id
+					V.id = Q.id + '/' + V.id
 					V.thumbnails = FitQulity(V.thumbnails)
 				},Q.videos)
 			})
@@ -200,7 +199,9 @@ R = ZED.ReduceToObject
 		{
 			V = Q.activeVideo
 			Q = Q.activeChannel
-			T = ZED.match(/^(.*\/)([^_]+).*_([^_]+)\..*$/,ZED.find(ZED.T,V.renditions).url)
+			T = ZED.find(ZED.T,V.renditions)
+			T || ZED.Throw(L(Lang.NoURL))
+			T = ZED.match(/^(.*\/)([^_]+).*_([^_]+)\..*$/,T.url)
 
 			return ZED.ReduceToObject
 			(

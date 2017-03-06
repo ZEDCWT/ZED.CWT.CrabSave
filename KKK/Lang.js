@@ -85,6 +85,7 @@ module.exports =
 	Queuing : Lang('Queuing'),
 	Processing : Lang('Processing'),
 	EInfo : Lang('Failed to load infomation'),
+	NoURL : Lang('No provided URL'),
 	EURL : Lang('URL expired'),
 	EConn : Lang('Connection error'),
 	Paused : Lang('Paused'),

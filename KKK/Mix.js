@@ -2732,7 +2732,7 @@
 				KeySetting.Font,'Microsoft Yahei',
 				KeySetting.Size,'14',
 				KeySetting.Weight,'normal',
-				KeySetting.Restart,180,
+				KeySetting.Restart,20,
 				KeySetting.Merge,'"mkvmerge",\n' +
 					'"--output",\n' +
 					'"%Output%",\n' +
