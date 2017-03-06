@@ -654,6 +654,7 @@
 	},
 
 	MakeDetailActive,
+	MakeDetailTitle,
 	MakeDetailInfoProgress,
 	MakeDetailInfoDir,
 	MakeDetailInfoTTS,
@@ -711,6 +712,7 @@
 		var
 		Part = Q[KeyQueue.Part];
 
+		Q[KeyQueue.Title] && MakeDetailTitle.text(Q[KeyQueue.Title])
 		RDetailInfo.empty().append
 		(
 			MakeDetailSetupSingle(Lang.Created,ZED.DateToString(DateToStringFormatDisplay,Q[KeyQueue.Created])),
@@ -760,7 +762,7 @@
 
 		RDetailHead.append
 		(
-			ShowByText(Q[KeyQueue.Title]),
+			MakeDetailTitle = ShowByText(Q[KeyQueue.Title]),
 			ShowByText(Q[KeyQueue.Name] + ' ' + SiteMap[Q[KeyQueue.Name]][KeySite.IDView](Q[KeyQueue.ID]),DOM.span)
 		)
 		if (Q[KeyQueue.Part]) MakeDetailSetupInfo(Q)
@@ -1294,6 +1296,7 @@
 					'vertical-align:top;' +
 					'box-shadow:0 5px 10px /a/;' +
 				'}' +
+				'#/R/ legend{word-break:break-all}' +
 				//	Card
 				'./J/{color:#F7F7F7;font-weight:bold;text-align:center;cursor:pointer}' +
 				//		Select bar
@@ -1704,7 +1707,8 @@
 			ToolRemove = MakeShape(Lang.Remove,ShapeConfigHotToolRemove),
 
 			ActiveKeyID = 0,
-			ActiveKeyInfo = 1 + ActiveKeyID,
+			ActiveKeyTitle = 1 + ActiveKeyID,
+			ActiveKeyInfo = 1 + ActiveKeyTitle,
 			ActiveKeySpeed = 1 + ActiveKeyInfo,
 			ActiveKeyRemain = 1 + ActiveKeySpeed,
 			ActiveKeyPercentage = 1 + ActiveKeyRemain,
@@ -1800,7 +1804,7 @@
 						MakeShape(Lang.Pause,ShapeConfigHotListPause,ClassHotControlPP) :
 						MakeShape(Lang.Restart,ShapeConfigHotListPlay,ClassHotControlPP),
 					PPS = PP.children(),
-					ActiveObj = [ID,Info,Speed,Remain,Percentage,0,PP,PPS],
+					ActiveObj = [ID,Title,Info,Speed,Remain,Percentage,0,PP,PPS],
 
 					Make = function(E,Q)
 					{
@@ -1977,10 +1981,13 @@
 			{
 				if (A = Active[A[KeyQueue.Unique]])
 					A[ActiveKeyInfo].text(L(Lang.GetInfo))
-			}).on(EventQueue.InfoGot,function(A)
+			}).on(EventQueue.InfoGot,function(Q,A)
 			{
-				if (A = Active[A[KeyQueue.Unique]])
+				if (A = Active[Q[KeyQueue.Unique]])
+				{
 					A[ActiveKeyInfo].text(L(Lang.GetSize))
+					Q[KeyQueue.Title] && A[ActiveKeyTitle].text(Q[KeyQueue.Title])
+				}
 			}).on(EventQueue.SizeGot,function(Q,A)
 			{
 				if (A = Active[Q[KeyQueue.Unique]])

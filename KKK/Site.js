@@ -6,21 +6,28 @@ KeySiteName = require('./Key').Site.Name,
 
 Bilibili = require('./Site.Bilibili'),
 YouTube = require('./Site.YouTube'),
-Niconico = require('./Site.Niconico'),
+Niconico = require('./Site.NicoNico'),
+ToonsTV = require('./Site.ToonsTV'),
 
 All =
 [
 	Bilibili,
 	YouTube,
-	Niconico
+	Niconico,
+	ToonsTV
 ],
 Map =
 {
 	bili : Bilibili,
+	b : Bilibili,
 	ytb : YouTube,
+	y : YouTube,
 	ニコニコ : Niconico,
 	ニコ : Niconico,
-	nico : Niconico
+	nico : Niconico,
+	n : Niconico,
+	toons : ToonsTV,
+	t : ToonsTV
 };
 
 ZED.each(function(V){Map[V[KeySiteName]] = Map[V[KeySiteName].toLowerCase()] = V},All)

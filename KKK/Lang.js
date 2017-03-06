@@ -56,6 +56,7 @@ module.exports =
 	Playlist : Lang('Playlist'),
 	Mylist : Lang('Mylist'),
 	Dynamic : Lang('Dynamic'),
+	All : Lang('All'),
 	Search : Lang('Search'),
 	Subs : Lang('Subscription'),
 	UknSite : Lang('Unknown site id `/0/`'),

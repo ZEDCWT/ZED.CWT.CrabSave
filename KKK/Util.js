@@ -16,42 +16,8 @@ Path = require('path'),
 
 FS = require('graceful-fs'),
 Request = require('request').defaults({timeout : 10E3}),
-RequestWrap = function(Q,H)
-{
-	ZED.isObject(Q) || (Q = {url : Q})
-	Q.gzip = True
-	H = Q.headers || (Q.headers = {})
-	H.Accept = '*/*'
-	H['User-Agent'] = Config.UA
-	return Q
-},
-RequestHead = function(Q)
-{
-	return Observable.create(function(O,X)
-	{
-		X = Request(RequestWrap(Q)).on('error',function(E){O.error(E)})
-			.on('response',function(H)
-			{
-				X.abort()
-				O.data(H).finish()
-			})
-		return function(){X.abort()}
-	})
-},
-RequestBase = function(H)
-{
-	return function(Q)
-	{
-		return Observable.create(function(O,X)
-		{
-			X = Request(RequestWrap(Q),function(E,I,R)
-			{
-				E ? O.error(E) : O.data(H ? [I,R] : R).finish()
-			})
-			return function(){X.abort()}
-		})
-	}
-},
+
+
 
 PoolSize = 20,
 Pool = function()
@@ -75,10 +41,51 @@ Pool = function()
 		}
 	}
 },
+
+
+
+RequestPool = Pool(),
+RequestWrap = function(Q,H)
+{
+	ZED.isObject(Q) || (Q = {url : Q})
+	Q.gzip = True
+	H = Q.headers || (Q.headers = {})
+	H.Accept = '*/*'
+	H['User-Agent'] = H['User-Agent'] || Config.UA
+	return Q
+},
+RequestHead = function(Q)
+{
+	RequestPool.Push(Q)
+	return Observable.create(function(O,X)
+	{
+		X = Request(RequestWrap(Q)).on('error',function(E){O.error(E)})
+			.on('response',function(H)
+			{
+				X.abort()
+				O.data(H).finish()
+			})
+		return function(){X.abort()}
+	})
+},
+RequestBase = function(H)
+{
+	return function(Q)
+	{
+		RequestPool.Push(Q)
+		return Observable.create(function(O,X)
+		{
+			X = Request(RequestWrap(Q),function(E,I,R)
+			{
+				E ? O.error(E) : O.data(H ? [I,R] : R).finish()
+			})
+			return function(){X.abort()}
+		})
+	}
+},
+
 DebugPool = Pool(),
-
 Look = [],
-
 DecodeHTML = $('<div>');
 
 setInterval(function(F)
@@ -97,6 +104,7 @@ module.exports =
 	Look : function(Q){Look.push(Q)},
 
 	//Observable
+	RequestPool : RequestPool,
 	RequestHead : RequestHead,
 	RequestBody : RequestBase(False),
 	RequestFull : RequestBase(True),
