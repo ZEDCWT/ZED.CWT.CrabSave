@@ -61,12 +61,14 @@ R = ZED.ReduceToObject
 	{
 		return Util.RequestBody(URLDomain)
 			.map(Extract)
+			.tap(function(Q){Util.Debug(__filename,Q.allChannels.length)})
 			.flatMap(ZED.prop('allChannels'))
 			.flatMapOnline(1,function(Q){return Util.RequestBody(URLChannel(Q.id)).retry()})
 			.map(Extract)
 			.map(function(Q)
 			{
 				Q = Q.activeChannel
+				Util.Debug(__filename,Q.title)
 				return ZED.each(function(V)
 				{
 					ZED.delete_('contentType',V)

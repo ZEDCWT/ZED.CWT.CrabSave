@@ -231,16 +231,19 @@ R = ZED.ReduceToObject
 			{
 				T = Number(Util.MF(/more">([\d,]+)/,Q).replace(/,/g,'')) || 0
 				R = []
-				Util.ML(/video-item[^]+?<\/li/g,Q,function(Q)
+				Util.ML(/video-item[^]+?<\/li/g,Q,function(Q,ID)
 				{
-					R.push(ZED.ReduceToObject
-					(
-						KeySite.Index,PageSize * (X - 1) + R.length,
-						KeySite.ID,Util.MF(/sm(\d+)/,Q),
-						KeySite.Img,Util.MF(/original="([^"]+)/,Q),
-						KeySite.Title,Util.DecodeHTML(Util.MF(/title="([^"]+)/,Q)),
-						KeySite.Date,Util.MF(/time">([^<]+)/,Q).replace(/^(?=\d\d\/)/,'20')
-					))
+					if (ID = Util.MF(/sm(\d+)/,Q))
+					{
+						R.push(ZED.ReduceToObject
+						(
+							KeySite.Index,PageSize * (X - 1) + R.length,
+							KeySite.ID,ID,
+							KeySite.Img,Util.MF(/original="([^"]+)/,Q),
+							KeySite.Title,Util.DecodeHTML(Util.MF(/title="([^"]+)/,Q)),
+							KeySite.Date,Util.MF(/time">([^<]+)/,Q).replace(/^(?=\d\d\/)/,'20')
+						))
+					}
 				})
 				if (!FilterMenu)
 				{

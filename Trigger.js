@@ -1,7 +1,6 @@
 'use strict'
 var
 ZED = require('@zed.cwt/zedquery'),
-splitSpace = ZED.split(' '),
 
 Config = require('./Config'),
 Position = require('./Window'),
@@ -15,34 +14,8 @@ App = Electron.app,
 
 ONS = function(Q,O,E)
 {
-	ZED.each(function(V){Q.on(V,E)},splitSpace(O))
+	ZED.each(function(V){Q.on(V,E)},O.split(' '))
 },
-
-
-
-ActionWindow = ZED.curry(function(Q,W)
-{
-	try
-	{
-		Q(W.sender)
-	}
-	catch(e)
-	{
-		console.log('Unexpected error : ' + e)
-		console.log(e.stack)
-	}
-}),
-Action = ZED.Emitter()
-	.on('dev',ActionWindow(function(Window)
-	{
-		Window.toggleDevTools()
-	}))
-	.on('reload',ActionWindow(function(Window)
-	{
-		Window.reload()
-	})),
-
-
 
 Created,
 Create = function()
@@ -71,10 +44,8 @@ Create = function()
 	})
 	Window.on('closed',function()
 	{
-		Action.off(false)
 		Created = false
-	})
-	.loadURL('file://' + Path.join(__dirname,'KKK/Base.htm'),
+	}).loadURL('file://' + Path.join(__dirname,'KKK/Base.htm'),
 	{
 		userAgent : Config.UA
 	})
@@ -106,9 +77,6 @@ else
 		{
 			W.setMenu(null)
 		})
-
-	Electron.ipcMain
-		.on('CMD',ZED.flip(ZED.bind_(Action.emit,Action)))
 
 	Roll(process.argv)
 }

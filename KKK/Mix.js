@@ -2887,7 +2887,7 @@
 		RMergeText
 	)
 	//StatusBar Icon
-	ZED.each(function(V){RStatusIcon.append(ShowByRock(IDStatusIcon + ZED.chr(65 + V)))},ZED.range(0,5))
+	ZED.each(function(V){RStatusIcon.append(ShowByRock(IDStatusIcon + ZED.chr(65 + V)))},ZED.range(0,2))
 	//Speed
 	Bus.on(EventDownload.SpeedTotal,function(Q)
 	{
@@ -2925,6 +2925,12 @@
 		),
 		RHidden
 	)
+
+	global.Debug =
+	{
+		RequestPool : Util.RequestPool,
+		DebugPool : Util.DebugPool
+	}
 
 	$(function()
 	{
