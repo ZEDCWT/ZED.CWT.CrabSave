@@ -80,7 +80,7 @@ Start = function(Q,I,At,URL,Done,Size,Begin,Down,Dirty)
 		}
 		else if (0 <= Begin && Begin < Down.Info.Saved)
 		{
-			Util.Debug(__filename,'Auto restart',Q[KeyQueue.Unique])
+			//Util.Debug(__filename,'Auto restart',Q[KeyQueue.Unique])
 			Start(Q,I,At,URL,Done,Size)
 		}
 		else

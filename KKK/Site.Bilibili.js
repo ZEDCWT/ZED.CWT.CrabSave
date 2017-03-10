@@ -128,8 +128,9 @@ R = ZED.ReduceToObject
 			catch(e){FrameRepeater.error(e)}
 		},BishiID && BishiMethod)
 	},
-	KeySite.Component,function()
+	KeySite.Component,function(Say)
 	{
+		Say(Util.ReplaceLang(Lang.LoadScr,L(Lang.Player)))
 		return Util.ajax(URLPlayer).flatMap(function(ScriptPlayer)
 		{
 			ScriptPlayer = ZED.ReplaceList
@@ -143,17 +144,18 @@ R = ZED.ReduceToObject
 				/\$\.ajax\({url:([a-z.]+\([a-z]\))/,'return BISHI.U($1);$&'
 			)
 
-			//Module ID
 			BishiID = Number(Util.MF(/}],(\d+):\[func[^{]+{[^{]+{ try {/,ScriptPlayer))
-			//Method
 			BishiMethod = Util.MF(/([^.])\("r",null,"(?:number )+/,ScriptPlayer)
+			Say(BishiID + ' ' + BishiMethod)
 
+			Say(Util.ReplaceLang(Lang.LoadScr,L(Lang.Search)))
 			return Util.ajax(URLSearchMain).flatMap(function(Q)
 			{
 				Q = Util.MF(/"([^"]+search[^"]+\.js)/,Q)
 				return Q ? Util.ajax(PadURL(Q)) : Observable.just('')
 			}).flatMap(function(Q)
 			{
+				Say(L(Lang.FileWrite))
 				return Util.writeFile(FrameTool[0],ScriptPlayer + ZED.UTF(Q))
 			})
 		}).flatMap(function()
@@ -446,11 +448,10 @@ R = ZED.ReduceToObject
 					;/hdflv/.test(B) && (B = 'flv')
 					Part.push(D = ZED.ReduceToObject
 					(
-						KeyQueue.Title,V.part,
 						KeyQueue.URL,ZED.pluck('url',D),
 						KeyQueue.Suffix,'.' + B.replace(/^hd/,'')
 					))
-					V.part || ZED.delete_(KeyQueue.Title,D)
+					V.part && Q.title !== V.part && (D[KeyQueue.Title] = V.part)
 				})
 				.retryWhen(OverspeedRetry)
 			})

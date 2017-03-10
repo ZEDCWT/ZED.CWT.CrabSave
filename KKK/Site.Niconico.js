@@ -84,8 +84,8 @@ R = ZED.ReduceToObject
 						KeySite.Index,0,
 						KeySite.ID,ID,
 						KeySite.Img,Util.MF(/l_url>([^<]+)/,Q),
-						KeySite.Title,Util.MF(/itle>([^<]+)/,Q),
-						KeySite.Author,Util.MF(/name>([^<]+)/,Q),
+						KeySite.Title,Util.DecodeHTML(Util.MF(/itle>([^<]+)/,Q)),
+						KeySite.Author,Util.DecodeHTML(Util.MF(/name>([^<]+)/,Q)),
 						KeySite.Date,Util.MF(/ieve>([^<]+)/,Q)
 					)]
 				)
@@ -105,7 +105,7 @@ R = ZED.ReduceToObject
 					ZED.Throw(Q ? Util.ReplaceLang(Lang.BadE,Q) : L(Lang.Bad))
 				)
 				T = Number(Util.MF(/id="video[^]+?(\d+(?!>))/,Q))
-				A = Util.MF(/profile[^]+?<h2>([^<]+)/,Q)
+				A = Util.DecodeHTML(Util.MF(/profile[^]+?<h2>([^<]+)/,Q))
 
 				return ZED.ReduceToObject
 				(
@@ -122,7 +122,7 @@ R = ZED.ReduceToObject
 								KeySite.Index,PageSize * (X - 1) + F,
 								KeySite.ID,I,
 								KeySite.Img,Util.MF(/src="([^"]+)/,V),
-								KeySite.Title,Util.MF(/h5>[^>]+>([^<]+)/,V),
+								KeySite.Title,Util.DecodeHTML(Util.MF(/h5>[^>]+>([^<]+)/,V)),
 								KeySite.Author,A,
 								KeySite.Date,Util.DateDirect(ZED.match(/\d+/g,Util.MF(/posttime">([^<]+)/,V)))
 							))
@@ -287,8 +287,8 @@ R = ZED.ReduceToObject
 
 				return ZED.ReduceToObject
 				(
-					KeyQueue.Title,Util.MF(/itle>([^<]+)/,Q),
-					KeyQueue.Author,Util.MF(/name>([^<]+)/,Q),
+					KeyQueue.Title,Util.DecodeHTML(Util.MF(/itle>([^<]+)/,Q)),
+					KeyQueue.Author,Util.DecodeHTML(Util.MF(/name>([^<]+)/,Q)),
 					KeyQueue.Date,Util.MF(/ieve>([^<]+)/,Q),
 					KeyQueue.Part,[ZED.ReduceToObject
 					(

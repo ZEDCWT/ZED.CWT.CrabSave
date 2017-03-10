@@ -155,25 +155,27 @@ R = ZED.ReduceToObject
 			TrySign(Name) ? FrameRepeater.finish() : FrameRepeater.error(L(Lang.Bad))
 		},STS)
 	},
-	KeySite.Component,function()
+	KeySite.Component,function(Say)
 	{
+		Say(Util.ReplaceLang(Lang.LoadScr,L(Lang.HP)))
 		return Util.ajax(URLMain).flatMap(function(Q)
 		{
 			Q = ZED.JTO(Util.MF(/assets"[^}]+js":("[^"]+")/,Q))
-			return ZED.isString(Q) ?
-				Util.ajax(URLJoin(URLMain,Q)).flatMap(function(Q)
-				{
-					Q = Q.replace(/=[^=]+...split\(""\S+ ..join\(""/,'=SIGN$&')
-					STS = Util.MF(/sts:(\d+)/,Q)
-					return Util.writeFile(FrameTool[0],Q)
-				}).flatMap(function()
-				{
-					Component.Save(ZED.objOf(Name,STS))
-					FrameRepeater = ZED.Repeater()
-					FrameTool[1]()
-					return FrameRepeater
-				}) :
-				Observable.throw(L(Lang.Bad))
+			ZED.isString(Q) || ZED.Throw(L(Lang.Bad))
+			Say(Util.ReplaceLang(Lang.LoadScr,L(Lang.Assets)))
+			return Util.ajax(URLJoin(URLMain,Q)).flatMap(function(Q)
+			{
+				Q = Q.replace(/=[^=]+...split\(""\S+ ..join\(""/,'=SIGN$&')
+				STS = Util.MF(/sts:(\d+)/,Q)
+				Say(L(Lang.FileWrite))
+				return Util.writeFile(FrameTool[0],Q)
+			}).flatMap(function()
+			{
+				Component.Save(ZED.objOf(Name,STS))
+				FrameRepeater = ZED.Repeater()
+				FrameTool[1]()
+				return FrameRepeater
+			})
 		})
 	},
 	KeySite.ComCheck,function()

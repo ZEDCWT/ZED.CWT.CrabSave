@@ -146,7 +146,7 @@
 	YHotControlMoreWidth = YHotControlSize + YHotControlPadding + YHotControlSize,
 	YHotControlWidth = YHotControlPadding + YHotControlSize + YHotControlPadding + YHotControlMoreWidth,
 	//			History
-	YHistoryTitlePercentage = .75,
+	YHistoryTitlePercentage = YHotTitlePercentage,
 	YHistoryControlPadding = YHotControlPadding,
 	YHistoryControlMoreWidth = YHotControlMoreWidth,
 	YHistoryControlWidth = YHotControlWidth,
@@ -221,13 +221,14 @@
 	ClassHistoryTitleInfo = ZED.KeyGen(),
 	ClassHistoryTitle = ClassHotTitle,
 	ClassHistoryInfo = ClassHotInfo,
-	ClassHistoryDate = ZED.KeyGen(),
+	ClassHistoryStatus = ClassHotStatus,
 	ClassHistoryControlRemove = ClassHotControlRemove,
 	ClassHistoryControlMore = ClassHotControlMore,
 	//	Component
 	ClassComponentSite = ZED.KeyGen(),
 	ClassComponentSiteActive = ZED.KeyGen(),
 	ClassComponentView = ZED.KeyGen(),
+	IDComponentInfo = ZED.KeyGen(),
 	//	Sign in
 	ClassSignInSite = ClassComponentSite,
 	ClassSignInSiteActive = ClassComponentSiteActive,
@@ -1028,7 +1029,7 @@
 
 	ZED.CSS(ZED.KeyGen(),function(W,H)
 	{
-		YStageWidth = ZED.max(YNaviWidth,W - YNaviWidth)
+		YStageWidth = ZED.max(2 * YNaviWidth,W - YNaviWidth)
 		YStageWidthWithoutScroll = YStageWidth - YScrollWidth
 		YStageHeight = ZED.max(YToolBarHeight + YStatusBarHeight,H - YToolBarHeight - YStatusBarHeight)
 
@@ -2069,16 +2070,16 @@
 				//Title
 				'./H/{padding:/p/px;width:/t/px}' +
 				//Date
-				'#/R/ ./D/' +
-				'{' +
-					'display:-webkit-inline-box;' +
-					'-webkit-box-orient:vertical;' +
-					'-webkit-line-clamp:2;' +
-					'margin:/p/px 0;' +
-					'width:/d/px;' +
-					'overflow:hidden;' +
-					'word-break:break-all' +
-				'}' +
+				//'#/R/ ./D/' +
+				//'{' +
+				//'display:-webkit-inline-box;' +
+				//'-webkit-box-orient:vertical;' +
+				//'-webkit-line-clamp:2;' +
+				//'margin:/p/px 0;' +
+				//'width:/d/px;' +
+				//'overflow:hidden;' +
+				//'word-break:break-all' +
+				//'}' +
 				//Remove
 				'#/R/ ./M/{margin:0 /_/px;line-height:0}',
 				'/',
@@ -2090,8 +2091,6 @@
 					R : ID,
 					H : ClassHistoryTitleInfo,
 					t : T,
-					D : ClassHistoryDate,
-					d : W - T,
 					M : ClassHistoryControlRemove,
 					_ : YHistoryControlPadding,
 					O : ClassHistoryControlMore,
@@ -2141,7 +2140,8 @@
 					var
 					Title = ShowByClass(ClassSingleLine + ' ' + ClassHistoryTitle).text(DOM.nbsp),
 					Info = ShowByClass(ClassSingleLine + ' ' + ClassHistoryInfo).text(DOM.nbsp),
-					Date = ShowByClassX(ClassHistoryDate,DOM.span);
+					DateYMD = ShowByClass(ClassSingleLine),
+					DateHNS = ShowByClass(ClassSingleLine);
 
 					Queue.HInfo(ID,function(E,Q)
 					{
@@ -2153,14 +2153,16 @@
 								Lang.HiInfo,
 								ZED.FormatSize(Q[KeyQueue.Size]),Q[KeyQueue.File].length,MakeS(Q[KeyQueue.File].length)
 							))
-							Date.text(ZED.DateToString(DateToStringFormatDisplay,Q[KeyQueue.Finished]))
+							E = ZED.DateToString(DateToStringFormatDisplay,Q[KeyQueue.Finished]).split(' ')
+							DateYMD.text(E[0])
+							DateHNS.text(E[1])
 						}
 					})
 
 					return $(DOM.div).append
 					(
 						ShowByClass(ClassHistoryTitleInfo).append(Title,Info),
-						Date,
+						ShowByClass(ClassHistoryStatus).append(DateYMD,' ',DateHNS),
 						MakeAction
 						(
 							MakeShape(Lang.Remove,ShapeConfigHistoryListRemove,ClassHistoryControlRemove),
@@ -2220,12 +2222,15 @@
 		{
 			return ZED.Replace
 			(
-				'#/R/ ./B/{margin-bottom:/p/px}',
+				'#/R/ ./B/{margin-bottom:/p/px}' +
+				'#/I/{border:solid #66AFE0;border-width:2px 0}' +
+				'#/I/ div{margin:4px 2px}',
 				'/',
 				{
 					B : DOM.Button,
 
 					R : ID,
+					I : IDComponentInfo,
 
 					p : YPadding
 				}
@@ -2238,9 +2243,9 @@
 			var
 			RSite = ShowByClass(ClassComponentSite),
 			RView = ShowByClass(ClassComponentView),
-			RInfo = ShowByRock(),
 			RExe = ShowByClass(DOM.Button).text(L(Lang.ComLoad)),
 			RCheck = ShowByClass(DOM.Button).text(L(Lang.ComCheck)),
+			RInfo = ShowByRock(IDComponentInfo),
 
 			Target,
 			Active,
@@ -2251,7 +2256,18 @@
 				Active = R
 				R.attr(DOM.cls,ClassSignInSiteActive)
 				Target = V
-				RInfo.empty()
+			},
+
+			SayFrom,
+			Say = function(Q)
+			{
+				RInfo.prepend($(DOM.div).append
+				(
+					ShowByText(ZED.MSToString(ZED.now() - SayFrom).replace(/^00:/,''),DOM.span)
+						.attr(DOM.title,ZED.DateToString(DateToStringFormatDisplay)),
+					' | ',
+					ShowByText(Q,DOM.span)
+				))
 			},
 
 			LoadLast,
@@ -2259,7 +2275,9 @@
 			{
 				MakeStatus(X,L(Lang.Loading),ClassStatusLoading)
 				LoadLast && LoadLast.end()
-				LoadLast = Target[KeySite.Component]().start(ZED.noop,function(E)
+				RInfo.empty()
+				SayFrom = ZED.now()
+				LoadLast = Target[KeySite.Component](Say).start(ZED.noop,function(E)
 				{
 					Util.Debug(__filename,E)
 					MakeStatus(X,E,ClassStatusError)
@@ -2349,8 +2367,8 @@
 				RView.append
 				(
 					RExe,
-					RInfo,
-					RCheck
+					RCheck,
+					RInfo
 				)
 			)
 

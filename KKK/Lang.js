@@ -124,6 +124,13 @@ module.exports =
 	ComLoaded : Lang('Component is loaded'),
 	ComCheck : Lang('Check if loaded'),
 	ComNot : Lang('Component is not loaded'),
+	FileWrite : Lang('Writing to file...'),
+	LoadScr : Lang('Loading /0/ script...'),
+	Player : Lang('Player'),
+	Assets : Lang('Assets'),
+	HP : Lang('Home Page'),
+	ToonsSub : Lang('Totally /0/ sub pages'),
+	ToonsNew : Lang('/0/ new videos added'),
 
 	//Sign in
 	ID : Lang('Sign in ID'),

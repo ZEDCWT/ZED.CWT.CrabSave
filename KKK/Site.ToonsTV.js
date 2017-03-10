@@ -57,18 +57,20 @@ R = ZED.ReduceToObject
 			}
 		},Component.Data(Name))
 	},
-	KeySite.Component,function()
+	KeySite.Component,function(Say,Len)
 	{
+		Say(Util.ReplaceLang(Lang.LoadScr,L(Lang.HP)))
 		return Util.RequestBody(URLDomain)
 			.map(Extract)
-			.tap(function(Q){Util.Debug(__filename,Q.allChannels.length)})
-			.flatMap(ZED.prop('allChannels'))
+			.pluck('allChannels')
+			.tap(function(Q){Say(Util.ReplaceLang(Lang.ToonsSub,Len = Q.length))})
+			.flatMap(ZED.identity)
 			.flatMapOnline(1,function(Q){return Util.RequestBody(URLChannel(Q.id)).retry()})
 			.map(Extract)
-			.map(function(Q)
+			.map(function(Q,F)
 			{
 				Q = Q.activeChannel
-				Util.Debug(__filename,Q.title)
+				Say(ZED.Replace('/0/ // /1/, /2/','/',[F,Len,Q.title]))
 				return ZED.each(function(V)
 				{
 					ZED.delete_('contentType',V)
@@ -81,13 +83,15 @@ R = ZED.ReduceToObject
 			.flatMap(function(Q,M)
 			{
 				M = ZED.reduce(function(D,V){D[V.id] = Util.T},{},Q)
-				Video && ZED.each(function(V){M[V.id] || Q.push(M)},Video)
+				Video && ZED.each(function(V){M[V.id] || Q.push(V)},Video)
 				Q = Q.sort(function(Q,S)
 				{
 					return Q.publicationTime === S.publicationTime ?
 						Compare(Q.id,S.id) :
 						S.publicationTime - Q.publicationTime
 				})
+				Say(Util.ReplaceLang(Lang.ToonsNew,Video ? Q.length - Video.length : Q.length))
+				Say(L(Lang.FileWrite))
 				return Util.writeFile(FrameTool[0],'M=' + ZED.OTJ(Q))
 			})
 			.flatMap(function()
