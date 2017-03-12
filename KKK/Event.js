@@ -49,6 +49,7 @@ module.exports =
 	},
 	Download :
 	{
+		File : EventKey(),
 		Size : EventKey(),
 		Dir : EventKey(),
 		Reinfo : EventKey(),

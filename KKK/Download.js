@@ -59,6 +59,7 @@ Start = function(Q,I,At,URL,Done,Size,Begin,Down,Dirty)
 		Q[KeyQueue.File][I] === S ||
 		(
 			Q[KeyQueue.File][I] = S,
+			Bus.emit(EventDownload.File,Q,S,I),
 			Down.Dirty = Util.T
 		)
 	}).on('data',function(R)
@@ -130,7 +131,7 @@ MakeFileName = function(Q,PL,UL,Part,F,Fa,I,D,T)
 		Q[KeyQueue.Dir] = Path.dirname(T)
 		Bus.emit(EventDownload.Dir,Q)
 	}
-	Q[KeyQueue.File][I] || (Q[KeyQueue.File][I] = Path.basename(T))
+	Q[KeyQueue.File][I] || Bus.emit(EventDownload.File,Q,Q[KeyQueue.File][I] = Path.basename(T),I)
 	return T
 },
 Download = function(Q)

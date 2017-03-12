@@ -660,6 +660,7 @@
 	MakeDetailInfoDir,
 	MakeDetailInfoTTS,
 	MakeDetailInfoDownloaded,
+	MakeDetailFile,
 	MakeDetailURL,
 	MakeDetailSetupSingle = function(S,Q)
 	{
@@ -692,12 +693,13 @@
 	{
 		ZED.each(function(V)
 		{
-			var I = MakeDetailURL.length,R;
+			var I = MakeDetailURL.length,File,Size;
 
 			RDetailPart.append($(DOM.div).append
 			(
 				ShowByClass(ClassSingleLine).attr(DOM.title,V).text(V),
-				R = ShowByText
+				File = ShowByText(Q[KeyQueue.File][I] || ''),
+				Size = ShowByText
 				(
 					Q[KeyQueue.Sizes] ?
 						MakeSizePercentage(Q[KeyQueue.Sizes][I],Q[KeyQueue.Done][I]) :
@@ -705,7 +707,8 @@
 					DOM.span
 				)
 			))
-			MakeDetailURL.push(R)
+			MakeDetailFile.push(File)
+			MakeDetailURL.push(Size)
 		},V)
 	},
 	MakeDetailSetupInfo = function(Q)
@@ -731,6 +734,7 @@
 			)
 		)
 
+		MakeDetailFile = []
 		MakeDetailURL = []
 		if (Part.length) ZED.Each(Part,function(F,V)
 		{
@@ -802,7 +806,9 @@
 			MakeDetailActive =
 			MakeDetailInfoDir =
 			MakeDetailInfoTTS =
-			MakeDetailInfoDownloaded = Util.F
+			MakeDetailInfoDownloaded =
+			MakeDetailFile =
+			MakeDetailURL = Util.F
 		}
 	},
 	MakeDetailMake = function(H)
@@ -1106,9 +1112,9 @@
 			'#/DP/{padding-left:/p/px}' +
 			'#/DP/>div{padding-bottom:/p/px}' +
 			//				URL
-			'#/DP/ ./SL/{padding-left:/p/px;color:blue}' +
+			'#/DP/ ./SL/{color:blue}' +
 			//				URL status
-			'#/DP/ div>span{padding-left:/p/px}' +
+			'#/DP/ div *{padding-left:/p/px}' +
 			//			Merge
 			'#/MG/{padding:/p/px}' +
 			'#/MG/>div{margin-bottom:/p/px;font-size:1.2rem}' +
@@ -1992,14 +1998,12 @@
 			}).on(EventQueue.SizeGot,function(Q,A)
 			{
 				if (A = Active[Q[KeyQueue.Unique]])
-				{
 					A[ActiveKeyInfo].text(MakeSizePercentage(Q[KeyQueue.Size],Q[KeyQueue.DoneSum] || 0))
-					if (R.Selecting()[Q[KeyQueue.Unique]])
-					{
-						--CountSizePlus
-						CountSize += Q[KeyQueue.Size]
-						MakeSelSize(X,R,CountSize,CountSizePlus)
-					}
+				if (R.Selecting()[Q[KeyQueue.Unique]])
+				{
+					--CountSizePlus
+					CountSize += Q[KeyQueue.Size]
+					MakeSelSize(X,R,CountSize,CountSizePlus)
 				}
 			}).on(EventQueue.Reinfo,function(A,S)
 			{
@@ -2873,6 +2877,10 @@
 		}))
 		.on(EventQueue.Finish,MakeDetailMake(MakeDetailRefresh))
 		//Download
+		.on(EventDownload.File,MakeDetailMake(function(Q,S,I)
+		{
+			MakeDetailFile[I].text(S)
+		}))
 		.on(EventDownload.Size,MakeDetailMake(function(Q,S,F)
 		{
 			MakeDetailURL[F].text(MakeSizePercentage(S,0))

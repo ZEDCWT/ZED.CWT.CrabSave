@@ -297,6 +297,7 @@ Reinfo = function(Q,ID)
 			ReinfoQueue.push(ID)
 			InnerPause(ID)
 			Bus.emit(EventQueue.Reinfo,ID,WaitDisplay)
+			Dispatch()
 		}
 	})
 },
@@ -450,6 +451,7 @@ Dispatch = function(T,F)
 			T[KeyQueue.Active] = Util.T
 			F = Current ? ZED.keys(Running) : []
 			F = F.concat(ReinfoQueue,ErrorQueue,DispatchInfoPreemptive)
+			InfoNow && F.push(InfoNow)
 			F.length && (T[KeyQueue.Unique] = {$nin : F})
 			OnlineData.find(T).sort(DispatchSort).limit(Max - Current).exec(function(E,Q)
 			{
@@ -581,10 +583,14 @@ DispatchInfo = function(T)
 	{
 		Infoing = Util.T
 		if (DispatchInfoPreemptive.length)
-			OnlineData.findOne(ZED.objOf(KeyQueue.Unique,DispatchInfoPreemptive.shift()),function(E,Q)
+			OnlineData.findOne(ZED.objOf(KeyQueue.Unique,InfoNow = DispatchInfoPreemptive.shift()),function(E,Q)
 			{
 				Infoing = Util.F
-				if (E) Util.Debug(__filename,E)
+				if (E)
+				{
+					InfoNow = Util.F
+					Util.Debug(__filename,E)
+				}
 				else
 				{
 					InfoNow = Q[KeyQueue.Unique]
