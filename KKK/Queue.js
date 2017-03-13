@@ -567,7 +567,7 @@ DispatchInfoRefresh = function(Q)
 
 	return OnlineUpdate(ZED.objOf(KeyQueue.Unique,InfoNow),{$set : ZED.objOf(KeyQueue.Part,Part)}).tap(function()
 	{
-		Bus.emit(EventQueue.Queuing,DispatchInfoRefreshLast)
+		Bus.emit(EventQueue.Queuing,DispatchInfoRefreshLast[KeyQueue.Unique])
 		DispatchInfoRefreshLast = Util.F
 	})
 },

@@ -1978,7 +1978,7 @@
 				}
 			}).on(EventQueue.Queuing,function(A)
 			{
-				if (A = Active[A[KeyQueue.Unique] || A])
+				if (A = Active[A])
 				{
 					A[ActiveKeySpeed].text(L(Lang.Queuing))
 					A[ActiveKeyRemain].text('')

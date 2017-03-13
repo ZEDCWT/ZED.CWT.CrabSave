@@ -35,23 +35,20 @@ Select = function(ID,J,R)
 {
 	if (Card.Init === StatusMap[ID] || (J && Card.History === StatusMap[ID]))
 	{
-		R = Active[ID]
-		R[0].attr(DOM.cls,Prefix + (StatusMap[ID] = Card.Cold)).text(L(Lang.Cold))
+		StateTo(ID,Card.Cold,R = Active[ID])
 		Cold.push(ColdMap[ID] = R[1])
 	}
 },
-ReleseState = function(R,ID,T)
+ReleseState = function(ID,R)
 {
-	T = Queue.CardMap[ID]
-	R[0].attr(DOM.cls,Prefix + (StatusMap[ID] = T ? Card.History : Card.Init))
-		.text(L(T ? Lang.History : Lang.Select))
+	StateTo(ID,Queue.CardMap[ID] ? Card.History : Card.Init,R)
 },
 Unselect = function(ID,R,T)
 {
 	if (Card.Cold === StatusMap[ID])
 	{
 		R = Active[ID]
-		ReleseState(R,ID)
+		ReleseState(ID,R)
 		R = R[1][KeySite.Unique]
 		T = ZED.findIndex(function(V)
 		{
@@ -171,8 +168,7 @@ module.exports =
 			if (Q[C])
 			{
 				++R
-				T = Active[C]
-				T && ReleseState(T,C)
+				ReleseState(C)
 				Cold.splice(F,1)
 				ZED.delete_(C,ColdMap)
 			}

@@ -105,7 +105,7 @@ SubsContent = function(Q,R)
 		R.push(ZED.ReduceToObject
 		(
 			KeySite.Index,R.length,
-			KeySite.ID,Util.MF(/v=([^"]+)/,Q),
+			KeySite.ID,Util.MF(/v=([^"&]+)/,Q),
 			KeySite.Img,Util.DecodeHTML(Util.MF(/src="([^"]+)/,Q).replace(/^\/\//,'http://')),
 			KeySite.Title,Util.DecodeHTML(Util.MF(/-title[^]+?title="([^"]+)/,Q)),
 			KeySite.Author,Util.DecodeHTML(Util.MF(/ytid[^>]+>([^<]+)/,Q)),
