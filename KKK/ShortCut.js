@@ -6,6 +6,8 @@ Data = require('../JSONFile')('ShortCut'),
 
 Command =
 {
+	PrevTab : 'Global.PrevTab',
+	NextTab : 'Global.NextTab',
 	ToggleDev : 'Global.ToggleDev',
 
 	SelAll : 'Browser.SelAll',
@@ -20,6 +22,8 @@ Command =
 },
 DefaultMap = ZED.ReduceToObject
 (
+	Command.PrevTab,'[',
+	Command.NextTab,']',
 	Command.ToggleDev,['shift+alt+d','f12'],
 
 	Command.SelAll,'ctrl+a',

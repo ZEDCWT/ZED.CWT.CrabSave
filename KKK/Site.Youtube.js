@@ -218,7 +218,7 @@ R = ZED.ReduceToObject
 	),ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Playlist),
-		KeySite.Judge,[Util.MakeLabelWord('playlist','[\\s/]+','[_0-9A-Za-z-]+')],
+		KeySite.Judge,[Util.MakeLabelWord('playlist','[\\s/]+','[_0-9A-Za-z-]+'),/list=([^&]+)/i],
 		KeySite.Page,MakeListByPlaylist
 	),ZED.ReduceToObject
 	(

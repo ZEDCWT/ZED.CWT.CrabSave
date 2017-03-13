@@ -154,6 +154,8 @@ module.exports =
 	AddSC : Lang('Add shortcut'),
 	DefSC : Lang('Restore default'),
 	Global : Lang('Global'),
+	PrevTab : Lang('Navigate to the previous tab'),
+	NextTab : Lang('Navigate to the next tab'),
 	ToggleDev : Lang('Toggle developer tools'),
 	SelClear : Lang('Clear selection'),
 	PageHead : Lang('Navigate to the first page'),

@@ -118,7 +118,7 @@
 
 	//Config
 	//	Misc
-	YTabCount = 7,
+	YTabCount = 8,
 	//	Global
 	YPadding = 10,
 	YPaddingHalf = 5,
@@ -2706,12 +2706,27 @@
 				M.append(R)
 			})
 
-			SC.on('*',Util.F,function()
+			SC.on('*',Util.F,function(E)
 			{
-				Active && Active.val(SC.keyNames()[0])
+				Active &&
+				(
+					Active.val(SC.keyNames()[0]),
+					Util.PrevDef(E)
+				)
 			})
 
-			UShortCut.cmd(ShortCutCommand.ToggleDev,ToggleDev)
+			UShortCut
+				.cmd(ShortCutCommand.PrevTab,function(X)
+				{
+					X = UTab.Index() - 1
+					UTab.Index(X < 0 ? YTabCount + X : X)
+				})
+				.cmd(ShortCutCommand.NextTab,function(X)
+				{
+					X = UTab.Index() + 1
+					UTab.Index(X < YTabCount ? X : X - YTabCount)
+				})
+				.cmd(ShortCutCommand.ToggleDev,ToggleDev)
 				.on('ctrl+a',Util.N,Util.PrevDef,Util.T)
 
 			return MakeScroll()
