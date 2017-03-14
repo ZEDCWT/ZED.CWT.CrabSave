@@ -193,7 +193,7 @@ The `Cold` tab is something like a todo list, which allows users to confirm thei
 ![Cold list](Screenshot/Cold.png)
 
 |Icon|Action|
-|---|---|
+|:---:|---|
 |![Commit single](Screenshot/Cold.Commit.png)|Commit the current task|
 |![Commit selection](Screenshot/Cold.CommitMany.png)|Commit selected tasks|
 |![Remove selection](Screenshot/ToolBar.RemoveMany.png)|Remove selected tasks|
@@ -206,7 +206,7 @@ After committing, tasks are appended to `Hot` list and are started immediately.
 ![Hot list](Screenshot/Hot.png)
 
 |Icon|Action|
-|---|---|
+|:---:|---|
 |![Pause](Screenshot/Hot.Pause.png) ![Restart](Screenshot/Hot.Restart.png)|Pause or restart the current task|
 |![Remove](Screenshot/List.Remove.png)|Remove the current task|
 |![More](Screenshot/List.More.png)|View detail infomation of the current task|
@@ -225,7 +225,7 @@ A completed task would be removed from the `Hot` list and be appended to the `Hi
 ![History list](Screenshot/History.png)
 
 |Icon|Action|
-|---|---|
+|:---:|---|
 |![Remove](Screenshot/List.Remove.png)|Remove the current item|
 |![More](Screenshot/List.More.png)|View detail information of the current item|
 |![Remove selection](Screenshot/ToolBar.RemoveMany.png)|Remove selected items|
@@ -287,7 +287,7 @@ Some actions can be done by keyboard shortcuts, and they are all configurable.
 
 ![Shortcut](Screenshot/Shortcut.png)
 
-|Action|Default command|
+|Action|Default|
 |---|---|
 |Global \| Navigate to the previous tab|`[`|
 |Global \| Navigate to the next tab|`]`|
