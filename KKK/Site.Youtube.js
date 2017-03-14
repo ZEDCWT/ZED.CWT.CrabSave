@@ -106,7 +106,7 @@ SubsContent = function(Q,R)
 		(
 			KeySite.Index,R.length,
 			KeySite.ID,Util.MF(/v=([^"&]+)/,Q),
-			KeySite.Img,Util.DecodeHTML(Util.MF(/(?:data-thumb|src)="([^"]+)/,Q).replace(/^\/\//,'http://')),
+			KeySite.Img,Util.DecodeHTML(Util.MF(/(?:data-thumb|src(?!.*data-thumb))="([^"]+)/,Q).replace(/^\/\//,'http://')),
 			KeySite.Title,Util.DecodeHTML(Util.MF(/-title[^]+?title="([^"]+)/,Q)),
 			KeySite.Author,Util.DecodeHTML(Util.MF(/ytid[^>]+>([^<]+)/,Q)),
 			KeySite.Date,Util.MF(/meta-info.*?<\/li.*?<li.*?>([^<]+)/,Q),
