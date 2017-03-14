@@ -331,7 +331,6 @@ Available fields
 
 |Field|Description|
 |---|---|
-|\|\||Just a `|` symbol|
 |\|ID\||The ID|
 |\|Author\||The uploader|
 |\|Title\||The title|
@@ -371,27 +370,26 @@ If a item is a `string`, it means that it is one single parameter, and can conta
 
 |Field|Description|
 |---|---|
-|%%|Just a `%` symbol|
-|%Output%|The full path of the merged file|
-|%Head%|The full path of the first file|
-Or if a item is a `string[]`, then it means that it is a loop of multi parameters. If parameters inside contain `%Tail%`, then the loop is based on all full paths of files except the first one, otherwise the `%List%` tells that the loop is based on all full paths.
+|\|Output\||The full path of the merged file|
+|\|Head\||The full path of the first file|
+Or if a item is a `string[]`, then it means that it is a loop of multi parameters. If parameters inside contain `|Tail|`, then the loop is based on all full paths of files except the first one, otherwise the `|List|` tells that the loop is based on all full paths.
 
 Default
 ```js
 "mkvmerge",
 "--output",
-"%Output%",
-"%Head%",
-["+%Tail%"]
+"|Output|",
+"|Head|",
+["+|Tail|"]
 ```
 
 For example, if the full paths of all files are  
 `/X/F.0.flv`  
 `/X/F.1.flv`  
 `/X/F.2.flv`  
-Then `["+","%List%"]` would output  
+Then `["+","|List|"]` would output  
 `+ /X/F.0.flv + /X/F.1.flv + /X/F.2.flv`  
-While `["+","%Tail%"]` would output  
+While `["+","|Tail|"]` would output  
 `+ /X/F.1.flv + /X/F.2.flv`  
 If the output path is `/X/F.mkv`, with the default setting, it would generate  
 `mkvmerge --output /X/F.mkv /X/F.0.flv +/X/F.1.flv +/X/F.2.flv`

@@ -838,7 +838,7 @@
 
 		File,O = {},
 		R = [],S,
-		In = function(Q){S.push(H[1](ZED.Replace(Q,'%',O)))},
+		In = function(Q){S.push(H[1](ZED.Replace(Q,'|',O)))},
 		F,Fa,Fb,Fc;
 
 		/^\s*\[/.test(Make) || (Make = '[' + Make + ']')
@@ -860,7 +860,7 @@
 				MakeIsTail[F] = /_/.test(ZED.Replace
 				(
 					('' + File).replace(/_/g,''),
-					'%',
+					'|',
 					{Tail : '_'}
 				))
 			}
@@ -2772,9 +2772,9 @@
 				KeySetting.Restart,20,
 				KeySetting.Merge,'"mkvmerge",\n' +
 					'"--output",\n' +
-					'"%Output%",\n' +
-					'"%Head%",\n' +
-					'["+%Tail%"]',
+					'"|Output|",\n' +
+					'"|Head|",\n' +
+					'["+|Tail|"]',
 				KeySetting.Suffix,'mkv'
 			),
 			Data,
