@@ -54,6 +54,7 @@ Each video items is displayed with some key information
 |Title|改訂版 ガリかデブかを判定する機械|
 |Author(Optional)|munimunibekkan|
 |Uploaded date|2017.03.11.16.56.45|
+
 The state indicator would be one of four state.
 
 |State|Description|
@@ -255,7 +256,8 @@ PS.
 The suffix of the download URLs control the speed when downloading. And the possible values would be `rate=4100`, `rate=1400`, `rate=1100`, `rate=49` or `dynamic=1`.  
 The `rate=4100` would be the best with average speed of around 4 MB / s, but I only see these when downloading bangumi videos.  
 The `rate=1400` and `rate=1100` would be the second best with average speed of around 1 MB / s, and I am not sure when it will appear.  
-The `dynamic=1` would be the worst because it would transfer around 20.9 MB data as fast as possible and transfer the rest of data in a extreme slow rate in order to control the average speed to be around 200 KB / s. Although it is possible to speed up by pausing-restarting, it is very bothering.
+The `dynamic=1` would be the worst because it would transfer around 20.9 MB data as fast as possible and transfer the rest of data in a extreme slow rate in order to control the average speed to be around 200 KB / s. Although it is possible to speed up by pausing-restarting, it is very bothering.  
+The `rate=49` is only be seen while requesting by IP outside China.
 
 ### YouTube
 
@@ -323,6 +325,8 @@ The default value would be sub folder `Download` inside the setting directory
 
 ### File name format
 
+Default `|Author|/|YYYY|/|Author|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?`
+
 The relative path to the root folder for a certain video.
 
 A `|FieldName|` will be convert into the infomation related to a video, and a `?OptionalPart?` means that this part is optional and will only work if every `|FieldName|` parts inside exist.
@@ -345,8 +349,6 @@ Available fields
 |\|PartTitle\||(Optional) The title of a sub part|
 |\|FileIndex\||(Optional) The index of a file in a splited video counted from 0|
 
-Default `|Author|/|YYYY|/|Author|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?`
-
 For example, with the following infomation.
 
 |Field name|Description|
@@ -357,9 +359,19 @@ For example, with the following infomation.
 |\|YYYY\||2124|
 |\|Date\||2124.12.24.21.24.00|
 |\|FileIndex\||8|
+
 And the file would be in mp4 format, then the final path would be `UP/2124/UP.2124.12.24.21.24.00.TITLE.8.mp4`.
 
 ### Merge command
+
+Default
+```js
+"mkvmerge",
+"--output",
+"|Output|",
+"|Head|",
+["+|Tail|"]
+```
 
 The language here to generate merge command is designed not to be too complicate, so if a merge tool's command format is too complicate, it is recommand to create a batch/shell file receiving a list of files to be merged and do the complicate work inside.
 
@@ -372,16 +384,8 @@ If a item is a `string`, it means that it is one single parameter, and can conta
 |---|---|
 |\|Output\||The full path of the merged file|
 |\|Head\||The full path of the first file|
-Or if a item is a `string[]`, then it means that it is a loop of multi parameters. If parameters inside contain `|Tail|`, then the loop is based on all full paths of files except the first one, otherwise the `|List|` tells that the loop is based on all full paths.
 
-Default
-```js
-"mkvmerge",
-"--output",
-"|Output|",
-"|Head|",
-["+|Tail|"]
-```
+Or if a item is a `string[]`, then it means that it is a loop of multi parameters. If parameters inside contain `|Tail|`, then the loop is based on all full paths of files except the first one, otherwise the `|List|` tells that the loop is based on all full paths.
 
 For example, if the full paths of all files are  
 `/X/F.0.flv`  
