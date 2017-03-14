@@ -100,6 +100,8 @@ MakeFileName = function(Q,PL,UL,Part,F,Fa,I,D,T)
 	D = new Date(Q[KeyQueue.Date])
 	T =
 	{
+		'' : '|',
+		ID : ZED.SafeFileName(Q[KeyQueue.ID]),
 		Author : ZED.SafeFileName(Q[KeyQueue.Author]),
 		Date : ZED.DateToString(WordDate,D),
 		Title : ZED.SafeFileName(Q[KeyQueue.Title])

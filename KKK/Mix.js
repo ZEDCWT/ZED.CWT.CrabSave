@@ -841,7 +841,7 @@
 		In = function(Q){S.push(H[1](ZED.Replace(Q,'%',O)))},
 		F,Fa,Fb,Fc;
 
-		/^\[/.test(Make) || (Make = '[' + Make + ']')
+		/^\s*\[/.test(Make) || (Make = '[' + Make + ']')
 		Make = ZED.JTO(Make)
 
 		if (!ZED.isArray(Make))

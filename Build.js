@@ -7,26 +7,10 @@ Path = require('path'),
 Env = process.env,
 
 Pack = require('electron-packager'),
+Prompt = require('prompt'),
 FS = require('graceful-fs'),
 Uglify = require('uglify-js'),
 
-PackConfig =
-{
-	dir : __dirname,
-	platform : 'win32',
-	arch : 'ia32',
-	out : Path.join(__dirname,'Out'),
-	ignore :
-	[
-		'/\\.vscode',
-		'/Declare',
-		'/Old',
-		'/Build',
-		'/jsconfig'
-	],
-	prune : true,
-	overwrite : true
-},
 UglifyConfig =
 {
 	fromString : true,
@@ -35,7 +19,34 @@ UglifyConfig =
 	output : {screw_ie8 : false}
 };
 
-Observable.wrapNode(Pack)(PackConfig).flatMap(function(Q)
+Prompt.start()
+Observable.wrapNode(Prompt.get,Prompt)([
+{
+	name : 'platform',
+	default : process.platform
+},{
+	name : 'arch',
+	default : process.arch
+}]).flatMap(function(Q)
+{
+	return Observable.wrapNode(Pack)(
+	{
+		dir : __dirname,
+		platform : Q.platform,
+		arch : Q.arch,
+		out : Path.join(__dirname,'Out'),
+		ignore :
+		[
+			'/\\.vscode',
+			'/Declare',
+			'/Old',
+			'/Build',
+			'/jsconfig'
+		],
+		prune : true,
+		overwrite : true
+	})
+}).flatMap(function(Q)
 {
 	if (Env.Just) return Observable.empty()
 	console.log('Uglifing')

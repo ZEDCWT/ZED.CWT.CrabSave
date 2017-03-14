@@ -435,7 +435,7 @@ R = ZED.ReduceToObject
 			{
 				return Util.RequestBody(Cookie.URL(Name,BishiURL(V.cid,Q.bangumi),
 				{
-					Referer : 'http://static.hdslb.com/play.swf'
+					Referer : 'http://www.bilibili.com/video/av' + ID
 				})).map(function(B,D)
 				{
 					B = ZED.JTO(B)
