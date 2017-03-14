@@ -22,10 +22,10 @@ It currently supports the following sites
 
 |Site name|URL|
 |---|---|
-|BiliBili(嗶哩嗶哩)|[http://www.bilibili.com/]()|
-|YouTube|[https://www.youtube.com/]()|
-|NicoNico(ニコニコ)|[http://www.nicovideo.jp/]()|
-|ToonsTV|[https://www.toons.tv/]()|
+|BiliBili(嗶哩嗶哩)|[http://www.bilibili.com/](http://www.bilibili.com/)|
+|YouTube|[https://www.youtube.com/](https://www.youtube.com/)|
+|NicoNico(ニコニコ)|[http://www.nicovideo.jp/](http://www.nicovideo.jp/)|
+|ToonsTV|[https://www.toons.tv/](https://www.toons.tv/)|
 
 ![GUI Interface](Screenshot/Introduction.png)
 
@@ -325,7 +325,7 @@ The default value would be sub folder `Download` inside the setting directory
 
 The relative path to the root folder for a certain video.
 
-A `|FieldName|` will be convert into the infomation related to a video, and a `?OptionalPart?` means this part is optional and will only work if every `|FieldName|` parts inside exist.
+A `|FieldName|` will be convert into the infomation related to a video, and a `?OptionalPart?` means that this part is optional and will only work if every `|FieldName|` parts inside exist.
 
 Available fields
 
