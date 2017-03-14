@@ -21,7 +21,7 @@ CrabSave is designed to be a downloader to download videos from some sites, it s
 It currently supports the following sites
 
 |Site name|URL|
-|-|-|
+|---|---|
 |BiliBili(嗶哩嗶哩)|[http://www.bilibili.com/]()|
 |YouTube|[https://www.youtube.com/]()|
 |NicoNico(ニコニコ)|[http://www.nicovideo.jp/]()|
@@ -45,7 +45,7 @@ Each video items is displayed with some key information
 ![Video item](Screenshot/Browser.Card.png)
 
 |Infomation|Value in the image above|
-|-|-|
+|---|---|
 |Item index|0|
 |ID|TKL9x8jCpto|
 |State indicator|-The span above the image-|
@@ -55,8 +55,9 @@ Each video items is displayed with some key information
 |Author(Optional)|munimunibekkan|
 |Uploaded date|2017.03.11.16.56.45|
 The state indicator would be one of four state.
+
 |State|Description|
-|-|-|
+|---|---|
 |Blank|The Initial state|
 |![Cold](Screenshot/Browser.Card.Cold.png)|This item is selected but not comitted|
 |![Hot](Screenshot/Browser.Card.Hot.png)|This item is comitted|
@@ -192,7 +193,7 @@ The `Cold` tab is something like a todo list, which allows users to confirm thei
 ![Cold list](Screenshot/Cold.png)
 
 |Icon|Action|
-|-|-|
+|---|---|
 |![Commit single](Screenshot/Cold.Commit.png)|Commit the current task|
 |![Commit selection](Screenshot/Cold.CommitMany.png)|Commit selected tasks|
 |![Remove selection](Screenshot/Toolbar.RemoveMany.png)|Remove selected tasks|
@@ -205,7 +206,7 @@ After committing, tasks are appended to `Hot` list and are started immediately.
 ![Hot list](Screenshot/Hot.png)
 
 |Icon|Action|
-|-|-|
+|---|---|
 |![Pause](Screenshot/Hot.Pause.png) ![Restart](Screenshot/Hot.Restart.png)|Pause or restart the current task|
 |![Remove](Screenshot/List.Remove.png)|Remove the current task|
 |![More](Screenshot/List.More.png)|View detail infomation of the current task|
@@ -224,7 +225,7 @@ A completed task would be removed from the `Hot` list and be appended to the `Hi
 ![History list](Screenshot/History.png)
 
 |Icon|Action|
-|-|-|
+|---|---|
 |![Remove](Screenshot/List.Remove.png)|Remove the current item|
 |![More](Screenshot/List.More.png)|View detail information of the current item|
 |![Remove selection](Screenshot/Toolbar.RemoveMany.png)|Remove selected items|
@@ -287,7 +288,7 @@ Some actions can be done by keyboard shortcuts, and they are all configurable.
 ![Shortcut](Screenshot/Shortcut.png)
 
 |Action|Default command|
-|-|-|
+|---|---|
 |Global \| Navigate to the previous tab|`[`|
 |Global \| Navigate to the next tab|`]`|
 |Global \| Toggle developer tools|`shift+alt+d`, `f12`|
@@ -327,8 +328,9 @@ The relative path to the root folder for a certain video.
 A `|FieldName|` will be convert into the infomation related to a video, and a `?OptionalPart?` means this part is optional and will only work if every `|FieldName|` parts inside exist.
 
 Available fields
+
 |Field|Description|
-|-|-|
+|---|---|
 |\|\||Just a `|` symbol|
 |\|ID\||The ID|
 |\|Author\||The uploader|
@@ -346,9 +348,10 @@ Available fields
 
 Default `|Author|/|YYYY|/|Author|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?`
 
-For example, with the following infomation.  
+For example, with the following infomation.
+
 |Field name|Description|
-|-|-|
+|---|---|
 |\|ID\||314|
 |\|Author\||UP|
 |\|Title\||TITLE|
@@ -365,8 +368,9 @@ The value of this setting would be a JSON array, and the `[` `]` around could be
 The first item would always be treated as a `string` because it is the target to execute the command.  
 The following items would be `string` or `string[]`, other wise they would be converted into `string`.  
 If a item is a `string`, it means that it is one single parameter, and can contains variables in the following table.
+
 |Field|Description|
-|-|-|
+|---|---|
 |%%|Just a `%` symbol|
 |%Output%|The full path of the merged file|
 |%Head%|The full path of the first file|
