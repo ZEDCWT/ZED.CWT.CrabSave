@@ -196,7 +196,7 @@ The `Cold` tab is something like a todo list, which allows users to confirm thei
 |---|---|
 |![Commit single](Screenshot/Cold.Commit.png)|Commit the current task|
 |![Commit selection](Screenshot/Cold.CommitMany.png)|Commit selected tasks|
-|![Remove selection](Screenshot/Toolbar.RemoveMany.png)|Remove selected tasks|
+|![Remove selection](Screenshot/ToolBar.RemoveMany.png)|Remove selected tasks|
 |![Commit all](Screenshot/Cold.CommitAll.png)|Commit all tasks|
 
 ## Hot
@@ -212,7 +212,7 @@ After committing, tasks are appended to `Hot` list and are started immediately.
 |![More](Screenshot/List.More.png)|View detail infomation of the current task|
 |![Pause selection](Screenshot/Hot.PauseMany.png)|Pause selected tasks|
 |![Restart selection](Screenshot/Hot.RestartMany.png)|Restart selected tasks|
-|![Remove selection](Screenshot/Toolbar.RemoveMany.png)|Remove selected tasks|
+|![Remove selection](Screenshot/ToolBar.RemoveMany.png)|Remove selected tasks|
 
 The detail information would be shown like this.
 
@@ -228,7 +228,7 @@ A completed task would be removed from the `Hot` list and be appended to the `Hi
 |---|---|
 |![Remove](Screenshot/List.Remove.png)|Remove the current item|
 |![More](Screenshot/List.More.png)|View detail information of the current item|
-|![Remove selection](Screenshot/Toolbar.RemoveMany.png)|Remove selected items|
+|![Remove selection](Screenshot/ToolBar.RemoveMany.png)|Remove selected items|
 |![Merge selection](Screenshot/History.Merge.png)|Generate merge command for selected items|
 
 Because some sites split a video into many sub videos. So a user may want to merge them into one video. And I am not going to force users to use the specificated merge tool, here only the command will be generate. The way to control the command output would be introduced in the [Merge command](#merge-command) section.
