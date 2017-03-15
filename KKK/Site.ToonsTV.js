@@ -70,7 +70,7 @@ R = ZED.ReduceToObject
 			.map(function(Q,F)
 			{
 				Q = Q.activeChannel
-				Say(ZED.Replace('/0/ // /1/, /2/','/',[F,Len,Q.title]))
+				Say(ZED.Replace('/0/ // /1/, /2/','/',[Util.PadTo(Len,F),Len,Q.title]))
 				return ZED.each(function(V)
 				{
 					ZED.delete_('contentType',V)
