@@ -269,6 +269,7 @@
 
 
 
+	//
 	ShapeConfigColorDisabled = '#D1D1D1',
 	ShapeConfigColorEnabled = '#7D7D7D',
 	ShapeConfigColorHover = '#852ED9',
@@ -369,6 +370,8 @@
 		Rotate : 90
 	},
 
+	//Component
+	//	ToolBar
 	MakeToolBarStorage = Array(YTabCount),
 	MakeToolBarLast,
 	MakeToolBarChange = function()
@@ -388,7 +391,7 @@
 			S.addClass(ClassToolBarDisabled)
 	},
 
-
+	//	Count
 	MakeCount = function(Q)
 	{
 		var
@@ -403,6 +406,7 @@
 	RColdCount = MakeCount(Lang.Cold),
 	RHotCount = MakeCount(Lang.Hot),
 
+	//	Save scroll state
 	MakeScroll = function(W,H,S)
 	{
 		S = 0
@@ -419,6 +423,8 @@
 			}
 		}
 	},
+
+	//	Selectable list
 	MakeSelectableList = function
 	(
 		Scroll,Index,
@@ -637,6 +643,7 @@
 	MakeSelectableListShow = ZED.flip(ZED.invokeProp('Show')),
 	MakeSelectableListHide = ZED.flip(ZED.invokeProp('Hide')),
 
+	//	Cover
 	MakeCoverActive,
 	MakeCoverAt,
 	MakeCoverOn = function()
@@ -654,6 +661,7 @@
 		MakeStatusChange()
 	},
 
+	//		Detail
 	MakeDetailActive,
 	MakeDetailTitle,
 	MakeDetailInfoProgress,
@@ -819,6 +827,7 @@
 		}
 	},
 
+	//		Merge
 	MakeMergeEnd,
 	MakeMergeAble,
 	MakeMergeStore,
@@ -970,7 +979,13 @@
 			MakeMergeAble = Util.F
 		}
 	},
+	MakeCoverClose = function()
+	{
+		MakeDetailClose()
+		MakeMergeClose()
+	},
 
+	//	StatusBar
 	MakeStatusText = Array(YTabCount),
 	MakeStatusClass = Array(YTabCount),
 	MakeStatusChange = function(X,Q,S)
@@ -1014,6 +1029,7 @@
 
 
 
+	//Util
 	UShortCut = ZED.ShortCut(),
 	MakeIndex = ZED.curry(function(X,Q)
 	{
@@ -2872,11 +2888,8 @@
 	//ShadowBar
 	RNavi.find('.' + DOM.Tab).append(ShowByClass(ClassShadowBar))
 	//Close Cover
-	RNavi.on(DOM.click,'.' + DOM.Tab,function()
-	{
-		MakeDetailClose()
-		MakeMergeClose()
-	})
+	RNavi.on(DOM.click,'.' + DOM.Tab,MakeCoverClose)
+	UShortCut.cmd(ShortCutCommand.CloseCover,MakeCoverClose)
 	//Detail
 	RDetail.append(RDetailHead,RDetailInfo,RDetailPart)
 	Bus

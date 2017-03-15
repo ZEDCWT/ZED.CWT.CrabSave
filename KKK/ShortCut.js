@@ -9,6 +9,7 @@ Command =
 	PrevTab : 'Global.PrevTab',
 	NextTab : 'Global.NextTab',
 	ToggleDev : 'Global.ToggleDev',
+	CloseCover : 'Global.CloseCover',
 
 	SelAll : 'Browser.SelAll',
 	UnAll : 'Browser.SelClear',
@@ -25,6 +26,7 @@ DefaultMap = ZED.ReduceToObject
 	Command.PrevTab,'[',
 	Command.NextTab,']',
 	Command.ToggleDev,['shift+alt+d','f12'],
+	Command.CloseCover,'esc',
 
 	Command.SelAll,'ctrl+a',
 	Command.UnAll,'shift+ctrl+a',

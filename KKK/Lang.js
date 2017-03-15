@@ -157,6 +157,7 @@ module.exports =
 	PrevTab : Lang('Navigate to the previous tab'),
 	NextTab : Lang('Navigate to the next tab'),
 	ToggleDev : Lang('Toggle developer tools'),
+	CloseCover : Lang('Close covering pages (Detail or Merge page)'),
 	SelClear : Lang('Clear selection'),
 	PageHead : Lang('Navigate to the first page'),
 	PagePrev : Lang('Navigate to the previous page'),
