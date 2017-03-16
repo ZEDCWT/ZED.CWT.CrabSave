@@ -8,6 +8,7 @@ module.exports =
 	id : 'id',
 	cls : 'class',
 	style : 'style',
+	bottom : 'bottom',
 	type : 'type',
 	password : 'password',
 	src : 'src',
@@ -40,6 +41,7 @@ module.exports =
 	blur : 'blur',
 	einput : 'input',
 	aniend : 'animationend',
+	trsend : 'transitionend',
 
 	nbsp : '\xa0',
 

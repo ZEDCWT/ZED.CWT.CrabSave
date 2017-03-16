@@ -116,6 +116,9 @@ module.exports =
 	Errored : Lang('Error occured'),
 	NoEscape : Lang('No escape'),
 
+	//Noti
+	Close : Lang('Close'),
+
 	//History
 	HiInfo : Lang('/0/, /1/ file/2/'),
 

@@ -75,7 +75,7 @@ OfflineData = OfflineDB.Data,
 
 
 NewMap = {},
-New = function(Q)
+New = function(Q,X)
 {
 	var R = [],C,T,F;
 	if (2 !== Loaded) return 0
@@ -117,7 +117,7 @@ New = function(Q)
 				OnlineMap[T] = Util.T
 			}
 			Bus.emit(EventQueue.Change,Online.length)
-			Bus.emit(EventQueue.Newed,R)
+			Bus.emit(EventQueue.Newed,R,X)
 			Dispatch()
 		}
 	})
@@ -145,7 +145,7 @@ MakeIn = function(Q,K,R)
 	return R
 },
 PlayMap = {},
-Play = function(Q)
+Play = function(Q,X)
 {
 	var R = Convert(Q,PlayMap,OnlineMap,ActiveMap,1),F;
 	R.length && OnlineData.update(MakeIn(R),QuerySetActiveTrue,DBAllowMulti,function(E)
@@ -162,7 +162,7 @@ Play = function(Q)
 				ZED.delete_(R[--F],PlayMap)
 				ActiveMap[R[F]] = Util.T
 			}
-			Bus.emit(EventQueue.Played,R)
+			Bus.emit(EventQueue.Played,R,X)
 			Dispatch()
 		}
 	})
@@ -194,7 +194,7 @@ ClearDebuff = function(M,T,F)
 		if (M[T = DispatchInfoPreemptive[--F]])
 			DispatchInfoPreemptive.splice(F,1)
 },
-Pause = function(Q)
+Pause = function(Q,X)
 {
 	var R = Convert(Q,PauseMap,OnlineMap,ActiveMap,0),M,T,F;
 
@@ -225,14 +225,14 @@ Pause = function(Q)
 				Running[T] && InnerPause(T)
 			}
 			ClearDebuff(M)
-			Bus.emit(EventQueue.Paused,R)
+			Bus.emit(EventQueue.Paused,R,X)
 			Dispatch()
 		}
 	})
 	return R.length
 },
 RemoveMap = {},
-Remove = function(Q)
+Remove = function(Q,X)
 {
 	var R = Convert(Q,RemoveMap),M,T,F;
 	R.length && OnlineData.remove(MakeIn(R),DBAllowMulti,function(E)
@@ -257,7 +257,7 @@ Remove = function(Q)
 			Online.length = 0
 			OnlineDB.Each(function(V){Online.push(V[KeyQueue.Unique])})
 			Bus.emit(EventQueue.Change,Online.length)
-				.emit(EventQueue.Removed,R)
+				.emit(EventQueue.Removed,R,X)
 			Dispatch()
 		}
 	})
@@ -401,7 +401,7 @@ Finish = function(Q,T,F)
 	}
 },
 HRemoveMap = {},
-HRemove = function(Q)
+HRemove = function(Q,X)
 {
 	var R = Convert(Q,HRemoveMap,OfflineMap),T,F;
 	R.length && OfflineData.remove(MakeIn(R,KeyQueue.IDHis),DBAllowMulti,function(E)
@@ -425,7 +425,7 @@ HRemove = function(Q)
 			}
 			Offline.length = 0
 			OfflineDB.EachRight(function(V){Offline.push(V[KeyQueue.IDHis])},KeyQueue.Finished)
-			Bus.emit(EventQueue.HRemoved,R)
+			Bus.emit(EventQueue.HRemoved,R,X)
 		}
 	})
 	return R.length

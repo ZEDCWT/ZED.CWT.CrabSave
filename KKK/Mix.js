@@ -36,6 +36,7 @@
 	FnClick = $.fn.click,
 
 	global = ZED.global,
+	setTimeout = global.setTimeout,
 
 	Path = require('path'),
 	Windows = /win/.test(process.platform),
@@ -123,6 +124,7 @@
 	YPadding = 10,
 	YPaddingHalf = 5,
 	YScrollWidth = 16,
+	YScrollWidthHalf = YScrollWidth / 2,
 	YShadowSize = 10,
 	YShadowColor = 'rgba(0,0,0,.4)',
 	//		ToolBar
@@ -136,6 +138,8 @@
 	YListSVG = 20,
 	YCardWidthMin = 160,
 	YCardWidthMax = 200,
+	//		Noti
+	YNotiMargin = 4,
 	//		StatusBar
 	YStatusBarHeight = 40,
 	//		Tab
@@ -169,6 +173,7 @@
 	ClassCount = ZED.KeyGen(),
 	IDStage = ZED.KeyGen(),
 	ClassListSelected = ZED.KeyGen(),
+	ClassScrollable = ZED.KeyGen(),
 	//		Cover
 	ClassCover = ZED.KeyGen(),
 	IDDetail = ZED.KeyGen(),
@@ -177,6 +182,11 @@
 	ClassDetailLabel = ZED.KeyGen(),
 	IDDetailPart = ZED.KeyGen(),
 	IDMerge = ZED.KeyGen(),
+	//		Noti
+	IDNoti = ZED.KeyGen(),
+	ClassNotiTransition = ZED.KeyGen(),
+	ClassNotiEnd = ZED.KeyGen(),
+	ClassNotiClose = ZED.KeyGen(),
 	//		StatusBar
 	IDStatusBar = ZED.KeyGen(),
 	IDStatusBarWrap = ZED.KeyGen(),
@@ -191,7 +201,6 @@
 	ClassShadowBar = ZED.KeyGen(),
 	ClassError = ZED.KeyGen(),
 	//	Util
-	ClassScrollable = ZED.KeyGen(),
 	ClassUnderlineInput = ZED.KeyGen(),
 	ClassShape = ZED.KeyGen(),
 	ClassSingleLine = ZED.KeyGen(),
@@ -247,7 +256,7 @@
 	RToolBarIcon = ShowByRock(IDToolBarIcon),
 	RToolBarItem = ShowByRock(IDToolBarItem),
 	RNavi = $(DOM.div),
-	RStage = ShowByRock(IDStage).attr(DOM.cls,ClassScrollable),
+	RStage = ShowByRock(IDStage),
 	//	Cover
 	RDetail = ShowByRock(IDDetail).attr(DOM.cls,ClassCover),
 	RDetailHead = ShowByRock(IDDetailHead),
@@ -258,6 +267,8 @@
 	RMergeProgress = $(DOM.div),
 	RMergeText = ShowByClassX(DOM.Input,DOM.textarea),
 	RMergeChildren = $(ZED.flatten([RMergeProgress])),
+	//	Noti
+	RNoti = ShowByRock(IDNoti),
 	//	StatusBar
 	RStatusBar = ShowByRock(IDStatusBar),
 	RStatus = ShowByRock(IDStatus),
@@ -407,19 +418,17 @@
 	RHotCount = MakeCount(Lang.Hot),
 
 	//	Save scroll state
-	MakeScroll = function(W,H,S)
+	MakeScroll = function(M,S)
 	{
 		S = 0
 		return {
 			Show : function()
 			{
-				RStage.scrollTop(S)
-				W && W()
+				M.scrollTop(S)
 			},
 			Hide : function()
 			{
-				S = RStage.scrollTop()
-				H && H()
+				S = M.scrollTop()
 			}
 		}
 	},
@@ -604,16 +613,8 @@
 		return {
 			Count : function(){return Count},
 			Selecting : function(){return Selecting},
-			Show : function()
-			{
-				RStage.removeAttr(DOM.cls)
-				Redraw()
-			},
-			Hide : function()
-			{
-				RStage.attr(DOM.cls,ClassScrollable)
-				LastScroll = List.scroll()
-			},
+			Show : Redraw,
+			Hide : function(){LastScroll = List.scroll()},
 			Redraw : function()
 			{
 				if (Index === UTab.Index())
@@ -985,6 +986,68 @@
 		MakeMergeClose()
 	},
 
+	//	Noti
+	MakeNotiProcessing,
+	MakeNotiPool = {},
+	MakeNotiQueue = [],
+	MakeNotiAppend = function(Q,H)
+	{
+		MakeNotiProcessing = Util.T
+		RNoti.append(Q)
+		H = YNotiMargin + Q.outerHeight()
+		RNoti.removeAttr(DOM.cls).css(DOM.bottom,-H)
+		setTimeout(function()
+		{
+			RNoti.attr(DOM.cls,ClassNotiTransition).removeAttr(DOM.style)
+		},50)
+	},
+	MakeNotiEnd = function(S,R)
+	{
+		ZED.delete_(S,MakeNotiPool)
+		R.addClass(ClassNotiEnd)
+	},
+	MakeNotiNew = function(S,Q,J)
+	{
+		var
+		Text = ShowByClass(ClassSingleLine).text(Q),
+		Close = ShowByClass(DOM.Button).text(L(Lang.Close)),
+		R = $(DOM.div);
+
+		Close.on(DOM.click,function()
+		{
+			ZED.delete_(S,MakeNotiPool)
+			R.remove()
+			RNoti.removeAttr(DOM.cls)
+			MakeNotiTransitionEnd()
+		})
+		R.on(DOM.aniend,function(){R.remove()})
+		R.append(Text,Close)
+
+		if (MakeNotiProcessing) MakeNotiQueue.push(R)
+		else MakeNotiAppend(R)
+
+		J && MakeNotiEnd(S,R)
+		return function(Q,J)
+		{
+			Text.text(Q)
+			J && MakeNotiEnd(S,R)
+		}
+	},
+	MakeNoti =top.MN= function(S,Q,J)
+	{
+		if (MakeNotiPool[S]) MakeNotiPool[S](Q,J)
+		else
+		{
+			Q = MakeNotiNew(S,Q,J)
+			J || (MakeNotiPool[S] = Q)
+		}
+	},
+	MakeNotiTransitionEnd = function()
+	{
+		MakeNotiProcessing = Util.F
+		MakeNotiQueue.length && MakeNotiAppend(MakeNotiQueue.shift())
+	},
+
 	//	StatusBar
 	MakeStatusText = Array(YTabCount),
 	MakeStatusClass = Array(YTabCount),
@@ -1007,17 +1070,18 @@
 		MakeStatusClass[X] = Q && (S || ClassStatusInfo)
 		X === UTab.Index() && MakeStatusChange()
 	},
-	MakeStatusX = function(X,L,T)
+	MakeStatusX = function(X,L,T,J)
 	{
-		MakeStatus(X,ReplaceLang(L,T,MakeS(T)))
+		MakeNoti(X,ReplaceLang(L,T,MakeS(T)),J)
 	},
-	MakeToolBarClick = function(R,X,Q,L,H,N)
+	MakeToolBarClick = function(R,Q,L,H,N)
 	{
-		return Q.on(DOM.click,function(T)
+		return Q.on(DOM.click,function(T,X)
 		{
 			Util.StopProp(T)
 			T = R.Count()
-			T = N ? H() : (T && H(R.Selecting()))
+			X = ZED.KeyGen()
+			T = N ? H(X) : (T && H(R.Selecting(),X))
 			0 < T && MakeStatusX(X,L,T)
 		})
 	},
@@ -1065,6 +1129,9 @@
 			'#/R/>div{background:inherit}' +
 			'#/R/ *{box-sizing:border-box}' +
 
+			//Animation keyframe
+			'/e/' +
+
 			//ToolBar
 			'#/T/{height:/t/px}' +
 			'#/M/,#/P/{display:inline-block;height:30px;vertical-align:middle}' +
@@ -1100,11 +1167,9 @@
 			//		Count
 			'./V/{margin-right:20px;float:right}' +
 			//	Stage
-			'#/G/{position:relative;width:/g/px;background:inherit}' +
+			'#/G/{position:relative;width:/g/px;background:inherit;overflow:hidden}' +
 			//		Scroll
-			'./Y/,./W/,#/DT/{overflow-x:hidden;overflow-y:scroll}' +
-			//		ListView
-			'#/G/ ./W/{height:100%}' +
+			'./Y/,./CR/{height:100%;overflow-x:hidden;overflow-y:scroll}' +
 			//			ListViewItem
 			'#/G/ ./Z/{cursor:default}' +
 			'#/G/ ./Z/:hover{background:#EFE5F9}' +
@@ -1136,6 +1201,14 @@
 			'#/MG/>div{margin-bottom:/p/px;font-size:1.2rem}' +
 			'#/MG/ ./BT/{display:inline-block;margin:0 /p/px;padding:1px 3px;font-size:1rem}' +
 			'#/MG/ textarea{min-width:100%;max-width:100%;min-height:80%}' +
+			//		Noti
+			'#/NI/{position:absolute;left:15%;bottom:0;margin-left:-/sh/px;width:70%;z-index:4000}' +
+			'./NT/{transition:bottom .2s linear}' +
+			'#/NI/>div{margin-bottom:/nm/px;padding-left:8px;background:#F0F0F0;box-shadow:0 0 /p/px rgba(0,0,0,.4)}' +
+			'./NE/{animation:/no/ 6s linear}' +
+			'#/NI/>div>*{padding:6px;vertical-align:top}' +
+			'#/NI/ ./SL/{display:inline-block}' +
+			'#/NI/ ./BT/{border-radius:0;float:right}' +
 
 			//StatusBar
 			'#/S/{padding:0 /p/px;height:/s/px}' +
@@ -1149,8 +1222,6 @@
 			'#/C/{position:relative;width:20px;height:20px}' +
 			'#/C/[class]{margin-right:8px}' +
 			'#/C/>div{position:absolute}' +
-			//		Animation keyframe
-			'/e/' +
 			//		Info
 			'./CI/>div{left:8px;width:4px;background:#2672EC}' +
 			'./CI/ #/C/A{top:0;height:12px}' +
@@ -1174,6 +1245,7 @@
 			'#/T/ ./B/{left:0;bottom:-/b/px;width:100%;height:/b/px;box-shadow:inset 0 /b/px /b/px -/b/px /a/;z-index:8000}' +
 			//	Navi
 			'#/N/ ./B/{right:0;top:0;width:/b/px;height:100%;box-shadow:inset -/b/px 0 /b/px -/b/px /a/}' +
+			//	Noti
 			//	StatusBar
 			'#/S/ ./B/{left:0;top:-/b/px;width:100%;height:/b/px;box-shadow:inset 0 -/b/px /b/px -/b/px /a/}' +
 
@@ -1205,7 +1277,7 @@
 				Z : DOM.ListViewItem,
 
 				R : IDRainbow,
-				r : H,//Rainbow Height
+				r : H,
 
 				T : IDToolBar,
 				t : YToolBarHeight,
@@ -1232,6 +1304,13 @@
 				DL : ClassDetailLabel,
 				DP : IDDetailPart,
 				MG : IDMerge,
+				NI : IDNoti,
+				NT : ClassNotiTransition,
+				sh : YScrollWidthHalf,
+				NE : ClassNotiEnd,
+				nm : YNotiMargin,
+				no : ReKeyGen(),
+				NC : ClassNotiClose,
 
 				S : IDStatusBar,
 				s : YStatusBarHeight,
@@ -1247,9 +1326,6 @@
 				j : ReKeyGen(),
 				K : ClassStatusError,
 				k : ReKeyGen(),
-				e : ZED.CSSKeyframe(ReKeyGen(Util.T),{'50%' : {transform : 'translateY(-4px)'}}) +
-					ZED.CSSKeyframe(ReKeyGen(Util.T),{to : {transform : 'rotate(360deg)'}}) +
-					ZED.CSSKeyframe(ReKeyGen(Util.T),{to : {transform : 'rotate(405deg)'}}),
 				D : IDSpeed,
 
 				B : ClassShadowBar,
@@ -1262,7 +1338,16 @@
 				HP : ClassShape,
 				SL : ClassSingleLine,
 
-				p : YPadding
+				p : YPadding,
+
+				e : ZED.CSSKeyframe(ReKeyGen(Util.T),
+				{
+					'60%' : {opacity : 1},
+					to : {opacity : 0}
+				}) +
+					ZED.CSSKeyframe(ReKeyGen(Util.T),{'50%' : {transform : 'translateY(-4px)'}}) +
+					ZED.CSSKeyframe(ReKeyGen(Util.T),{to : {transform : 'rotate(360deg)'}}) +
+					ZED.CSSKeyframe(ReKeyGen(Util.T),{to : {transform : 'rotate(405deg)'}})
 			}
 		)
 	})
@@ -1530,6 +1615,7 @@
 			},
 			T;
 
+			M.addClass(ClassScrollable)
 			MakeEnter(RURL,Go)
 			RGo.on(DOM.click,Go)
 			M.append
@@ -1549,7 +1635,7 @@
 				.cmd(ShortCutCommand.PageNext,MakeIndex(X,FnClick.bind($(T[T.length - 2]))))
 				.cmd(ShortCutCommand.PageTail,MakeIndex(X,FnClick.bind($(ZED.last(T)))))
 
-			return MakeScroll()
+			return MakeScroll(M)
 		}
 	},{
 		Tab : RColdCount(),
@@ -1609,10 +1695,10 @@
 						),
 						MakeToolBarClick
 						(
-							R,X,
+							R,
 							MakeShape(Lang.Commit,ShapeConfigColdListCommit),
 							Lang.CommittingN,
-							function(){return Cold.Commit([Q])},
+							function(X){return Cold.Commit([Q],X)},
 							Util.T
 						)
 					)
@@ -1625,20 +1711,21 @@
 				ZED.noop,ZED.noop,ZED.noop
 			);
 
+			M.addClass(ClassScrollable)
 			MakeToolBarActive(ToolCommit)
 			MakeToolBarActive(ToolRemove)
 			MakeToolBar(X,$(DOM.div).append
 			(
-				MakeToolBarClick(R,X,ToolCommit,Lang.CommittingN,Cold.CommitMany),
-				MakeToolBarClick(R,X,ToolRemove,Lang.RemovedN,function(S)
+				MakeToolBarClick(R,ToolCommit,Lang.CommittingN,Cold.CommitMany),
+				MakeToolBarClick(R,ToolRemove,Util.U,function(S,X)
 				{
 					S = Cold.Remove(S)
+					0 < S && MakeStatusX(X,Lang.RemovedN,S,Util.T)
 					R.Redraw()
-					return S
 				}),
 				MakeToolBarClick
 				(
-					R,X,
+					R,
 					MakeShape(Lang.CommitAll,ShapeConfigColdToolCommitAll,ClassColdCommitAll).append
 					(
 						ZED.Shape(ShapeConfigColdToolCommitAll).attr(DOM.cls,ClassColdCommitAll + 'A'),
@@ -1650,9 +1737,9 @@
 				)
 			))
 			Bus.on(Event.Cold.Change,RColdCount)
-				.on(EventQueue.Newed,function(Q)
+				.on(EventQueue.Newed,function(Q,S)
 				{
-					MakeStatusX(X,Lang.CommittedN,Q.length)
+					MakeStatusX(S,Lang.CommittedN,Q.length)
 					R.Redraw()
 					Cold.Cold.length || UTab.Index(1 + X)
 				})
@@ -1921,15 +2008,16 @@
 				}
 			);
 
+			M.addClass(ClassScrollable)
 			RHotCount(Queue.Online.length)
 			MakeToolBarActive(ToolPlay)
 			MakeToolBarActive(ToolPause)
 			MakeToolBarActive(ToolRemove)
 			MakeToolBar(X,$(DOM.div).append
 			(
-				MakeToolBarClick(R,X,ToolPlay,Lang.RestartingN,Queue.Play),
-				MakeToolBarClick(R,X,ToolPause,Lang.PausingN,Queue.Pause),
-				MakeToolBarClick(R,X,ToolRemove,Lang.RemovingN,Queue.Remove)
+				MakeToolBarClick(R,ToolPlay,Lang.RestartingN,Queue.Play),
+				MakeToolBarClick(R,ToolPause,Lang.PausingN,Queue.Pause),
+				MakeToolBarClick(R,ToolRemove,Lang.RemovingN,Queue.Remove)
 			))
 
 			Bus.on(EventQueue.Change,RHotCount)
@@ -1940,7 +2028,7 @@
 					RHotCount(Q),
 					R.Redraw()
 				)
-			}).on(EventQueue.Played,function(Q,S,T,F)
+			}).on(EventQueue.Played,function(Q,X,S,T,F)
 			{
 				MakeStatusX(X,Lang.RestartedN,F = Q.length)
 				S = R.Selecting()
@@ -1959,7 +2047,7 @@
 			}).on(EventQueue.PauseShow,function(Q,T)
 			{
 				if (T = Active[Q[KeyQueue.Unique]]) MakePercentage(Q,T)
-			}).on(EventQueue.Paused,function(Q,S,T,F)
+			}).on(EventQueue.Paused,function(Q,X,S,T,F)
 			{
 				MakeStatusX(X,Lang.PausedN,F = Q.length)
 				S = R.Selecting()
@@ -1977,7 +2065,7 @@
 					}
 				}
 				UpdateToolBar()
-			}).on(EventQueue.Removed,function(Q)
+			}).on(EventQueue.Removed,function(Q,X)
 			{
 				R.Redraw()
 				MakeStatusX(X,Lang.RemovedN,Q.length)
@@ -2214,12 +2302,13 @@
 				}
 			);
 
+			M.addClass(ClassScrollable)
 			MakeToolBarActive(ToolRemove)
 			MakeToolBarActive(ToolMerge)
 			MakeToolBar(X,$(DOM.div).append
 			(
-				MakeToolBarClick(R,X,ToolRemove,Lang.RemovingN,Queue.HRemove),
-				MakeToolBarClick(R,X,ToolMerge,Util.U,MakeMerge)
+				MakeToolBarClick(R,ToolRemove,Lang.RemovingN,Queue.HRemove),
+				MakeToolBarClick(R,ToolMerge,Util.U,MakeMerge)
 			))
 			Bus.on(EventQueue.First,function(Q)
 			{
@@ -2228,7 +2317,7 @@
 			.on(EventQueue.HRemoved,function(Q)
 			{
 				R.Redraw()
-				MakeStatusX(X,Lang.RemovedN,Q.length)
+				MakeStatusX(X,Lang.RemovedN,Q.length,X)
 			}).on(EventQueue.EHRemove,function(E)
 			{
 				MakeDBError(X,Lang.Remove,E)
@@ -2325,11 +2414,11 @@
 			SafeMap = {},
 			SafeScript = ZED.KeyGen();
 
+			M.addClass(ClassScrollable)
 			global[SafeScript] = function(Q,W)
 			{
 				try{SafeMap[Q](W)}catch(e){}
 			}
-
 			ZED.each(function(V,R)
 			{
 				if (V[KeySite.Component])
@@ -2392,7 +2481,7 @@
 				)
 			)
 
-			return MakeScroll()
+			return MakeScroll(M)
 		}
 	},{
 		Tab : L(Lang.SignIn),
@@ -2562,6 +2651,7 @@
 				})
 			};
 
+			M.addClass(ClassScrollable)
 			ZED.each(function(V,R)
 			{
 				if (V[KeySite.Login])
@@ -2591,7 +2681,7 @@
 
 			Bus.on(Event.Cookie.Change,RefreshCookie)
 
-			return MakeScroll()
+			return MakeScroll(M)
 		}
 	},{
 		Tab : L(Lang.Shortcut),
@@ -2635,6 +2725,7 @@
 				IgnoreInput : Util.F
 			});
 
+			M.addClass(ClassScrollable)
 			ZED.Each(ShortCut.DefaultMap,function(Command,Default)
 			{
 				var
@@ -2745,7 +2836,7 @@
 				.cmd(ShortCutCommand.ToggleDev,ToggleDev)
 				.on('ctrl+a',Util.N,Util.PrevDef,Util.T)
 
-			return MakeScroll()
+			return MakeScroll(M)
 		}
 	},{
 		Tab : L(Lang.Setting),
@@ -2783,7 +2874,7 @@
 				KeySetting.Name,'|Author|/|YYYY|/|Author|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?',
 				KeySetting.Max,5,
 				KeySetting.Font,'Microsoft Yahei',
-				KeySetting.Size,'14',
+				KeySetting.Size,12,
 				KeySetting.Weight,'normal',
 				KeySetting.Restart,20,
 				KeySetting.Merge,'"mkvmerge",\n' +
@@ -2838,6 +2929,7 @@
 
 			T;
 
+			M.addClass(ClassScrollable)
 			Data = Setting.Data()
 			Setting.Default(Default)
 			T = Number(Data[KeySetting.Max])
@@ -2881,7 +2973,7 @@
 			DirInput = M.find('.' + DOM.Input).eq(0).addClass(ClassSettingDir)
 			DirInput.before(MakeShape(Lang.DirSel,ShapeConfigSettingDir,ClassSettingDirOpen,DOM.div).on(DOM.click,OpenDir))
 
-			return MakeScroll()
+			return MakeScroll(M)
 		}
 	})
 
@@ -2962,7 +3054,10 @@
 			(
 				RNavi.append(ShowByClass(ClassShadowBar))
 			),
-			RStage
+			RStage.append
+			(
+				RNoti.on(DOM.trsend,MakeNotiTransitionEnd)
+			)
 		),
 		RStatusBar.append
 		(
@@ -2971,10 +3066,7 @@
 			ShowByRock(IDStatusBarWrap).append
 			(
 				RStatus.append(RStatusIcon,RStatusText),
-				ShowByRock(IDStatusBarRight).append
-				(
-					RSpeed
-				)
+				ShowByRock(IDStatusBarRight).append(RSpeed)
 			)
 		),
 		RHidden

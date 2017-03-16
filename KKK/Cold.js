@@ -150,14 +150,14 @@ module.exports =
 		ChangeCount()
 	},
 	Commit : Queue.New,
-	CommitMany : function(Q,R,F)
+	CommitMany : function(Q,X,R,F)
 	{
 		R = []
 		for (F = 0;F < Cold.length;++F)
 			Q[Cold[F][KeySite.Unique]] && R.push(Cold[F])
-		return Queue.New(R)
+		return Queue.New(R,X)
 	},
-	CommitAll : function(){return Cold.length ? Queue.New(Cold) : 0},
+	CommitAll : function(_,X){return Cold.length ? Queue.New(Cold,X) : 0},
 	Remove : function(Q,R,C,T,F)
 	{
 		R = 0
