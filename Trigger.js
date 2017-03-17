@@ -1,5 +1,9 @@
 'use strict'
 var
+undefined,
+True = !undefined,
+False = !True,
+
 ZED = require('@zed.cwt/zedquery'),
 
 Config = require('./Config'),
@@ -33,7 +37,7 @@ Create = function()
 		y : Data.y,
 		webPreferences :
 		{
-			webSecurity : false
+			webSecurity : False
 		}
 	}),
 
@@ -46,12 +50,12 @@ Create = function()
 	},
 	TrayExit = function()
 	{
-		Quiting = true
+		Quiting = True
 		App.quit()
 	},
 	TrayMake = function()
 	{
-		TrayIcon = new Electron.Tray('./TrayIcon.ico')
+		TrayIcon = new Electron.Tray(Path.join(__dirname,'TrayIcon.ico'))
 		TrayIcon.setToolTip('CrabSave')
 		TrayIcon.setContextMenu(Electron.Menu.buildFromTemplate([
 		{
@@ -66,15 +70,15 @@ Create = function()
 	TrayDestory = function()
 	{
 		TrayIcon && TrayIcon.destroy()
-		TrayIcon = false
+		TrayIcon = False
 	};
 
-	Created = true
+	Created = True
 	Data.Max && Window.maximize()
 	ONS(Window.webContents,'new-window will-navigate',ZED.invokeProp('preventDefault'))
 	ONS(Window,'resize move maximize minimize',function()
 	{
-		(Data.Max = Window.isMaximized()) || ZED.Merge(true,Data,Window.getBounds())
+		(Data.Max = Window.isMaximized()) || ZED.Merge(True,Data,Window.getBounds())
 		Position.Save()
 	})
 	Electron.ipcMain.on('Tray',function(E,Q)
@@ -91,7 +95,7 @@ Create = function()
 		}
 	}).on('closed',function()
 	{
-		Created = false
+		Created = False
 	}).loadURL('file://' + Path.join(__dirname,'KKK/Base.htm'),
 	{
 		userAgent : Config.UA
