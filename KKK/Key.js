@@ -18,7 +18,8 @@ module.exports =
 		Retry : KeyKey(),
 		Restart : KeyKey(),
 		Merge : KeyKey(),
-		Suffix : KeyKey()
+		Suffix : KeyKey(),
+		Tray : KeyKey()
 	},
 	Site :
 	{

@@ -42,6 +42,7 @@
 	Windows = /win/.test(process.platform),
 
 	Electron = require('electron'),
+	IPCRenderer = Electron.ipcRenderer,
 	Remote = Electron.remote,
 	Dialog = Remote.dialog,
 	ToggleDev = function()
@@ -2886,6 +2887,10 @@
 				return ZED.Merge({T : 'I',E : {placeholder : Default[Q]}},S)
 			},
 
+			NotiTray = function()
+			{
+				IPCRenderer.send('Tray',Data[KeySetting.Tray])
+			},
 			RefreshStyle = function(S)
 			{
 				S = ('' + Setting.Data(KeySetting.Size)).trim()
@@ -2925,12 +2930,14 @@
 			M.addClass(ClassScrollable)
 			Data = Setting.Data()
 			Setting.Default(Default)
+			Data[KeySetting.Tray] = !!Data[KeySetting.Tray]
 			T = Number(Data[KeySetting.Max])
 			;(0 < T && T < 11) || (T = Default[KeySetting.Max])
 			Queue.Max(Data[KeySetting.Max] = T)
 			T = Number(Data[KeySetting.Restart])
 			0 < T || (T = Default[KeySetting.Restart])
 			Queue.Wait(Data[KeySetting.Restart] = T)
+			NotiTray()
 			RefreshFont()
 
 			ZED.Preference(
@@ -2946,6 +2953,7 @@
 						Queue.Max(Data[KeySetting.Max])
 						Queue.Dispatch()
 					}],
+					[L(Lang.TTray),[[L(Lang.Yes),Util.F],[L(Lang.No),Util.T]],KeySetting.Tray,NotiTray],
 					[L(Lang.Font),[MakeInput(KeySetting.Font)],KeySetting.Font,RefreshFont],
 					[L(Lang.Size),[MakeInput(KeySetting.Size)],KeySetting.Size,RefreshFont],
 					[
