@@ -157,7 +157,7 @@ module.exports =
 			Q[Cold[F][KeySite.Unique]] && R.push(Cold[F])
 		return Queue.New(R,X)
 	},
-	CommitAll : function(_,X){return Cold.length ? Queue.New(Cold,X) : 0},
+	CommitAll : function(X){return Cold.length ? Queue.New(Cold,X) : 0},
 	Remove : function(Q,R,C,T,F)
 	{
 		R = 0

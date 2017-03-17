@@ -1033,7 +1033,7 @@
 			J && MakeNotiEnd(S,R)
 		}
 	},
-	MakeNoti =top.MN= function(S,Q,J)
+	MakeNoti = function(S,Q,J)
 	{
 		if (MakeNotiPool[S]) MakeNotiPool[S](Q,J)
 		else
@@ -1072,7 +1072,7 @@
 	},
 	MakeStatusX = function(X,L,T,J)
 	{
-		MakeNoti(X,ReplaceLang(L,T,MakeS(T)),J)
+		0 < T && MakeNoti(X,ReplaceLang(L,T,MakeS(T)),J)
 	},
 	MakeToolBarClick = function(R,Q,L,H,N)
 	{
@@ -1719,8 +1719,7 @@
 				MakeToolBarClick(R,ToolCommit,Lang.CommittingN,Cold.CommitMany),
 				MakeToolBarClick(R,ToolRemove,Util.U,function(S,X)
 				{
-					S = Cold.Remove(S)
-					0 < S && MakeStatusX(X,Lang.RemovedN,S,Util.T)
+					MakeStatusX(X,Lang.RemovedN,Cold.Remove(S),Util.T)
 					R.Redraw()
 				}),
 				MakeToolBarClick
@@ -1739,7 +1738,7 @@
 			Bus.on(Event.Cold.Change,RColdCount)
 				.on(EventQueue.Newed,function(Q,S)
 				{
-					MakeStatusX(S,Lang.CommittedN,Q.length)
+					MakeStatusX(S,Lang.CommittedN,Q.length,Util.T)
 					R.Redraw()
 					Cold.Cold.length || UTab.Index(1 + X)
 				})
@@ -1865,28 +1864,22 @@
 						A[ActiveKeyPercentage].addClass(ClassHotPercentageTransition)
 			},
 
-			ClickRemove = function(ID)
+			ClickRemove = function(ID,X)
 			{
-				MakeStatusX(X,Lang.RemovingN,1)
-				Queue.Remove(ZED.objOf(ID,ID))
+				MakeStatusX(X,Lang.RemovingN,Queue.Remove(ZED.objOf(ID,ID),X))
 			},
-			ClickPP = function(A,ID)
+			ClickPP = function(A,X,ID)
 			{
 				Queue.ActiveMap[ID = A[ActiveKeyID]] ?
-				(
-					Queue.Pause(ZED.objOf(ID,ID)),
-					MakeStatusX(X,Lang.PausingN,1)
-				) : (
-					Queue.Play(ZED.objOf(ID,ID)),
-					MakeStatusX(X,Lang.RestartingN,1)
-				)
+					MakeStatusX(X,Lang.PausingN,Queue.Pause(ZED.objOf(ID,ID),X)) :
+					MakeStatusX(X,Lang.RestartingN,Queue.Play(ZED.objOf(ID,ID),X))
 			},
 			MakeAction = function(R,H,Q)
 			{
 				return R.on(DOM.click,function(E)
 				{
 					Util.StopProp(E)
-					H(Q)
+					H(Q,ZED.KeyGen())
 				})
 			},
 
@@ -2030,7 +2023,7 @@
 				)
 			}).on(EventQueue.Played,function(Q,X,S,T,F)
 			{
-				MakeStatusX(X,Lang.RestartedN,F = Q.length)
+				MakeStatusX(X,Lang.RestartedN,F = Q.length,Util.T)
 				S = R.Selecting()
 				for (;F;)
 				{
@@ -2049,7 +2042,7 @@
 				if (T = Active[Q[KeyQueue.Unique]]) MakePercentage(Q,T)
 			}).on(EventQueue.Paused,function(Q,X,S,T,F)
 			{
-				MakeStatusX(X,Lang.PausedN,F = Q.length)
+				MakeStatusX(X,Lang.PausedN,F = Q.length,Util.T)
 				S = R.Selecting()
 				for (;F;)
 				{
@@ -2067,8 +2060,8 @@
 				UpdateToolBar()
 			}).on(EventQueue.Removed,function(Q,X)
 			{
+				MakeStatusX(X,Lang.RemovedN,Q.length,Util.T)
 				R.Redraw()
-				MakeStatusX(X,Lang.RemovedN,Q.length)
 			}).on(EventQueue.EAction,function(L,E)
 			{
 				MakeDBError(X,L,E)
@@ -2218,16 +2211,16 @@
 
 			CountSize = 0,
 
-			ClickRemove = function(ID)
+			ClickRemove = function(ID,X)
 			{
-				Queue.HRemove(ZED.objOf(ID,ID))
+				MakeStatusX(X,Lang.RemovingN,Queue.HRemove(ZED.objOf(ID,ID),X))
 			},
 			MakeAction = function(R,H,Q)
 			{
 				return R.on(DOM.click,function(E)
 				{
 					Util.StopProp(E)
-					H(Q)
+					H(Q,ZED.KeyGen())
 				})
 			},
 
@@ -2314,10 +2307,10 @@
 			{
 				Util.U === Q && R.Redraw()
 			}).on(EventQueue.FHis,R.Redraw)
-			.on(EventQueue.HRemoved,function(Q)
+			.on(EventQueue.HRemoved,function(Q,X)
 			{
 				R.Redraw()
-				MakeStatusX(X,Lang.RemovedN,Q.length,X)
+				MakeStatusX(X,Lang.RemovedN,Q.length,Util.T)
 			}).on(EventQueue.EHRemove,function(E)
 			{
 				MakeDBError(X,Lang.Remove,E)
