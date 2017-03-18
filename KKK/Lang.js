@@ -158,6 +158,7 @@ module.exports =
 	AddSC : Lang('Add shortcut'),
 	DefSC : Lang('Restore default'),
 	Global : Lang('Global'),
+	FocusURL : Lang('Focus on the URL input'),
 	PrevTab : Lang('Navigate to the previous tab'),
 	NextTab : Lang('Navigate to the next tab'),
 	ToggleDev : Lang('Toggle developer tools'),

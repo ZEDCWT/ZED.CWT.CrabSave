@@ -1364,10 +1364,18 @@
 			return ZED.Replace
 			(
 				'#/R/{text-align:center}' +
-				'#/R/>div{margin-top:/p/px!important}' +
+				'#/R/>div{margin-bottom:/p/px!important}' +
 
 				//URL input
-				'#/I/{position:relative;display:inline-block;padding:0 /p/px;width:100%;background:inherit}' +
+				'#/I/' +
+				'{' +
+					'position:relative;' +
+					'display:inline-block;' +
+					'margin-top:/p/px;' +
+					'padding:0 /p/px;' +
+					'width:100%;' +
+					'background:inherit' +
+				'}' +
 				//	Input
 				'#/I/ input{padding:12px 60px 4px 20px;font-size:1.2rem}' +
 				//	Enter button
@@ -1554,6 +1562,7 @@
 						L === GoDetail || (GoPref = {})
 						GoPages = 1
 						Jump(1)
+						RURL.blur()
 					}
 					else GoError(Lang.UknURL,URL)
 				}
@@ -1766,7 +1775,8 @@
 			T = M.find('.' + DOM.Pager).children()
 			M.append(RList)
 			PagerBotton = ZED.Pager({Parent : M,Offset : 1},Jump)
-			UShortCut.cmd(ShortCutCommand.SelAll,MakeIndex(X,Cold.SelAll))
+			UShortCut.cmd(ShortCutCommand.FocusURL,function(){RURL.focus()})
+				.cmd(ShortCutCommand.SelAll,MakeIndex(X,Cold.SelAll))
 				.cmd(ShortCutCommand.UnAll,MakeIndex(X,Cold.UnAll))
 				.cmd(ShortCutCommand.PageHead,MakeIndex(X,FnClick.bind($(T[0]))))
 				.cmd(ShortCutCommand.PagePrev,MakeIndex(X,FnClick.bind($(T[1]))))

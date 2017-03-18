@@ -11,6 +11,7 @@ Command =
 	ToggleDev : 'Global.ToggleDev',
 	CloseCover : 'Global.CloseCover',
 
+	FocusURL : 'Browser.FocusURL',
 	SelAll : 'Browser.SelAll',
 	UnAll : 'Browser.SelClear',
 	PageHead : 'Browser.PageHead',
@@ -28,6 +29,7 @@ DefaultMap = ZED.ReduceToObject
 	Command.ToggleDev,['shift+alt+d','f12'],
 	Command.CloseCover,'esc',
 
+	Command.FocusURL,'f1',
 	Command.SelAll,'ctrl+a',
 	Command.UnAll,'shift+ctrl+a',
 	Command.PageHead,'h',
