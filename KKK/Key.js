@@ -38,12 +38,13 @@ module.exports =
 		Map : KeyKey(),
 		//[Name] reuse
 		//[Judge] reuse
+		//	Page
 		Page : KeyKey(),
-		//Page returns an object
+		//	Page returns an object
 		Pages : KeyKey(),//number | false for
 		Total : KeyKey(),
 		Item : KeyKey(),//array
-		//	Item
+		//		Item
 		Unique : KeyKey(),
 		Index : KeyKey(),
 		ID : KeyKey(),
@@ -52,6 +53,8 @@ module.exports =
 		Author : KeyKey(),
 		Date : KeyKey(),
 		Length : KeyKey(),
+		//	Hint
+		Hint : KeyKey(),
 		//		URL
 		URL : KeyKey(),
 		//	Preference

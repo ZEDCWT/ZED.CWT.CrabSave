@@ -46,6 +46,7 @@ URLMylist = ZED.URLBuild('http://www.bilibili.com/mylist/mylist-',Util.U,'.js'),
 URLDynamic = ZED.URLBuild('http://api.bilibili.com/x/feed/pull?type=0&ps=',PageSize,'&pn=',Util.U),
 URLSearchMain = 'http://search.bilibili.com/all',
 URLSearch = ZED.URLBuild('http://search.bilibili.com/ajax_api/video?keyword=',Util.U,'&page=',Util.U,Util.U),
+URLSearchHint = ZED.URLBuild('http://s.search.bilibili.com/main/suggest?func=suggest&sub_type=tag&tag_num=10&term=',Util.U),
 URLVInfo = ZED.URLBuild('http://api.bilibili.com/view?id=',Util.U,'&batch=1&appkey=',Appkey,'&type=json'),
 URLVInfoURL = function(Q)
 {
@@ -404,6 +405,16 @@ R = ZED.ReduceToObject
 					R[KeySite.PrefDef] = Q
 				}
 
+				return R
+			})
+		},
+		KeySite.Hint,function(Q)
+		{
+			return Util.RequestBody(URLSearchHint(encodeURIComponent(Q))).map(function(Q)
+			{
+				var R = [],F;
+				Q = ZED.JTO(Q)
+				for (F = 0;F < 10 && Q[F];++F) R.push(Q[F].value)
 				return R
 			})
 		}

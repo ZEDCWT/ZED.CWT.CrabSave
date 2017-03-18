@@ -19,6 +19,7 @@ URLUser = ZED.URLBuild('http://www.nicovideo.jp/user/',Util.U,'/video?page=',Uti
 URLMylist = ZED.URLBuild('http://www.nicovideo.jp/mylist/',Util.U),
 URLRepo = ZED.URLBuild('http://www.nicovideo.jp/my/top/user?innerPage=1&mode=next_page&last_timeline=',Util.U),
 URLSearch = ZED.URLBuild('http://www.nicovideo.jp/search/',Util.U,'?page=',Util.U,Util.U),
+URLSearchHint = ZED.URLBuild('http://sug.search.nicovideo.jp/suggestion/complete/',Util.U),
 URLVInfo = ZED.URLBuild('http://ext.nicovideo.jp/api/getthumbinfo/sm',Util.U),
 URLVInfoURL = ZED.URLBuild('http://flapi.nicovideo.jp/api/getflv?v=sm',Util.U),
 URLVideo = ZED.URLBuild('http://www.nicovideo.jp/watch/sm',Util.U),
@@ -271,6 +272,13 @@ R = ZED.ReduceToObject
 					KeySite.Pref,FilterMenu,
 					KeySite.PrefDef,FilterMenuDef
 				)
+			})
+		},
+		KeySite.Hint,function(Q)
+		{
+			return Util.RequestBody(URLSearchHint(encodeURIComponent(Q))).map(function(Q)
+			{
+				return ZED.JTO(Q).candidates || []
 			})
 		}
 	)],

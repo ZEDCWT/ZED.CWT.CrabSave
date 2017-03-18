@@ -72,7 +72,7 @@
 	},
 	MakeEnter = function(Q,S)
 	{
-		ZED.ShortCut({Target : Q}).on('enter',S)
+		return ZED.ShortCut({Target : Q}).on('enter',S)
 	},
 	MakeShape = function(S,Q,C,T)
 	{
@@ -207,6 +207,8 @@
 	ClassSingleLine = ZED.KeyGen(),
 	//	Browser
 	IDBrowserInput = ZED.KeyGen(),
+	IDBrowserHint = ZED.KeyGen(),
+	ClassBrowserHintOn = ZED.KeyGen(),
 	IDBrowserInfo = ZED.KeyGen(),
 	IDBrowserPref = ZED.KeyGen(),
 	ClassBrowserHover = ZED.KeyGen(),
@@ -1170,7 +1172,7 @@
 			//	Stage
 			'#/G/{position:relative;width:/g/px;background:inherit;overflow:hidden}' +
 			//		Scroll
-			'./Y/,./CR/{height:100%;overflow-x:hidden;overflow-y:scroll}' +
+			'./Y/,./CR/{height:100%;background:inherit;overflow-x:hidden;overflow-y:scroll}' +
 			//			ListViewItem
 			'#/G/ ./Z/{cursor:default}' +
 			'#/G/ ./Z/:hover{background:#EFE5F9}' +
@@ -1180,7 +1182,7 @@
 			'#/G/ ./HP/{cursor:pointer}' +
 			'#/G/ ./HP/:hover svg>rect,#/G/ ./HP/:hover circle{fill:#0065CB!important}' +
 			//		Cover
-			'./CR/{position:absolute;left:0;top:0;width:100%;height:100%;background:inherit;text-align:center}' +
+			'./CR/{position:absolute;left:0;top:0;width:100%;height:100%;text-align:center}' +
 			//			Detail
 			'#/DT/>div{text-align:left}' +
 			//				Info
@@ -1362,17 +1364,17 @@
 			return ZED.Replace
 			(
 				'#/R/{text-align:center}' +
-				'#/R/>div{margin-top:10px!important}' +
+				'#/R/>div{margin-top:/p/px!important}' +
 
 				//URL input
-				'#/I/{position:relative;display:inline-block;padding:0 10px;width:100%}' +
-				//	input
+				'#/I/{position:relative;display:inline-block;padding:0 /p/px;width:100%;background:inherit}' +
+				//	Input
 				'#/I/ input{padding:12px 60px 4px 20px;font-size:1.2rem}' +
 				//	Enter button
-				'#/I/>div' +
+				'#/I/>div:not([id])' +
 				'{' +
 					'position:absolute;' +
-					'right:10px;' +
+					'right:/p/px;' +
 					'top:0;' +
 					'bottom:2px;' +
 					'padding:8px 0 0;' +
@@ -1383,13 +1385,34 @@
 					'text-align:center;' +
 					'cursor:pointer' +
 				'}' +
-				'#/I/>div:hover{background:#F3F3F3}' +
+				'#/I/>div:not([id]):hover{background:#F3F3F3}' +
+				//	Hint
+				'#/T/' +
+				'{' +
+					'display:none;' +
+					'position:absolute;' +
+					'left:/p/px;' +
+					'right:/p/px;' +
+					'top:100%;' +
+					'background:inherit;' +
+					'text-align:left;' +
+					'box-shadow:0 3px 8px 0 rgba(0,0,0,.2),0 0 0 1px rgba(0,0,0,.08)' +
+				'}' +
+				'#/T/>*{padding:4px 6px}' +
+				//		Brief
+				'#/T/>span{color:#D1D1D1;font-size:.9rem}' +
+				//		Item
+				'#/T/>div{cursor:pointer}' +
+				//			Hover
+				'#/T/>div:hover:not(./V/){background:#F0F0F0}' +
+				//			Active
+				'./V/{background:#DCEBFC}' +
 
 				//Info panel
-				'#/O/{margin:0 10px;padding:10px;border:solid #66AFE0;border-width:2px 0;font-size:1.1rem}' +
+				'#/O/{margin:0 /p/px;padding:/p/px;border:solid #66AFE0;border-width:2px 0;font-size:1.1rem}' +
 
 				//Preference
-				'#/P/{margin:0 10px}' +
+				'#/P/{margin:0 /p/px}' +
 				'#/P/ table{width:100%}' +
 				'#/P/ th{width:15%}' +
 
@@ -1403,7 +1426,7 @@
 					'border:0;' +
 					'text-align:left;' +
 					'vertical-align:top;' +
-					'box-shadow:0 5px 10px /a/;' +
+					'box-shadow:0 5px /p/px /a/;' +
 				'}' +
 				'#/R/ legend{word-break:break-all}' +
 				//	Card
@@ -1417,6 +1440,8 @@
 				{
 					R : ID,
 					I : IDBrowserInput,
+					T : IDBrowserHint,
+					V : ClassBrowserHintOn,
 					O : IDBrowserInfo,
 					P : IDBrowserPref,
 					H : ClassBrowserHover,
@@ -1442,6 +1467,7 @@
 			RInput = ShowByRock(IDBrowserInput),
 			RURL = ShowByInput(Lang.URL),
 			RGo = ShowByClass(DOM.NoSelect).text('\u2192'),
+			RHint = ShowByRock(IDBrowserHint).attr(DOM.cls,DOM.NoSelect),
 			RInfo = ShowByRock(IDBrowserInfo),
 			RPref = ShowByRock(IDBrowserPref),
 			RList = $(DOM.div),
@@ -1477,49 +1503,60 @@
 			GoID,
 			GoPages,
 			GoPref,
+			GoMatch = function(URL,J,Target,Detail,ID,T)
+			{
+				if (T = URL.match(/^([A-Z\u2E80-\u33FF\u3400-\u9FFF\uAC00-\uD7FF\uF900-\uFAFF]+)(?:\s+([^]*))?$/i))
+				{
+					Target = ZED.toLower(T[1])
+					Detail = T[2] || ''
+					if (!ZED.has(Target,SiteMap)) return J && GoError(Lang.UknSite,Target)
+					Target = SiteMap[Target]
+				}
+				else
+				{
+					Target = ZED.find(function(V){return V[KeySite.Judge].test(URL)},SiteAll)
+					Detail = URL
+					if (!Target) return J && GoError(Lang.UknURL,URL)
+				}
+				Detail = ZED.find(function(V)
+				{
+					return ZED.find(function(V)
+					{
+						return ID = Detail.match(V)
+					},V[KeySite.Judge])
+				},Target[KeySite.Map])
+
+				return Detail && [Target,Detail,ID[1]]
+			},
 			Go = function()
 			{
 				var URL = RURL.val().trim(),L,T;
 
+				GoHintLeave()
 				GoLast && GoLast.end()
 
 				L = GoDetail
 				RInfo.empty().append(ShowByText(ReplaceLang(Lang.ProcURL,URL)))
-				if (T = URL.match(/^([A-Z\u2E80-\u33FF\u3400-\u9FFF\uAC00-\uD7FF\uF900-\uFAFF]+)(?:\s+([^]*))?$/i))
-				{
-					GoTarget = ZED.toLower(T[1])
-					GoDetail = T[2] || ''
-					if (!ZED.has(GoTarget,SiteMap)) return GoError(Lang.UknSite,GoTarget)
-					GoTarget = SiteMap[GoTarget]
-				}
-				else
-				{
-					GoTarget = ZED.find(function(V){return V[KeySite.Judge].test(URL)},SiteAll)
-					GoDetail = URL
-					if (!GoTarget) return GoError(Lang.UknURL,URL)
-				}
 
-				GoDetail = ZED.find(function(V)
+				if (T = GoMatch(URL,Util.T))
 				{
-					return ZED.find(function(V)
+					GoTarget = T[0]
+					GoDetail = T[1]
+					GoID = T[2]
+
+					if (GoDetail)
 					{
-						return GoID = GoDetail.match(V)
-					},V[KeySite.Judge])
-				},GoTarget[KeySite.Map])
+						T = [GoTarget[KeySite.Name],GoDetail[KeySite.Name]]
+						GoID && T.push(GoID)
+						RInfo.append(ShowByText(T.join(' ')))
 
-				if (GoDetail)
-				{
-					GoID = GoID[1]
-					T = [GoTarget[KeySite.Name],GoDetail[KeySite.Name]]
-					GoID && T.push(GoID)
-					RInfo.append(ShowByText(T.join(' ')))
-
-					GoInfo = Util.F
-					L === GoDetail || (GoPref = {})
-					GoPages = 1
-					Jump(1)
+						GoInfo = Util.F
+						L === GoDetail || (GoPref = {})
+						GoPages = 1
+						Jump(1)
+					}
+					else GoError(Lang.UknURL,URL)
 				}
-				else GoError(Lang.UknURL,URL)
 			},
 			Hover = function(C,I,Q)
 			{
@@ -1591,6 +1628,90 @@
 					RList.append(D)
 				},Item)
 			},
+			GoHintCount = 0,
+			GoHintCacheKey = ZED.KeyGen(),
+			GoHintRaw,
+			GoHint = function()
+			{
+				var
+				URL,
+				Target,Detail,ID,
+				At = ++GoHintCount,
+				T;
+
+				GoHintRaw = RURL.val()
+				URL = GoHintRaw.trim()
+				if (T = GoMatch(URL))
+				{
+					Target = T[0]
+					Detail = T[1]
+					ID = T[2]
+
+					if (Detail[KeySite.Hint])
+					{
+						URL = URL.substr(0,URL.length - ID.length)
+						T = Detail[GoHintCacheKey]
+						if (!T) Detail[GoHintCacheKey] = T = {}
+						if (T[ID]) GoHintRender(Target,ID,URL,T[ID])
+						else Detail[KeySite.Hint](ID).start(function(Q)
+						{
+							T[ID] = Q
+							GoHintCount === At && GoHintRender(Target,ID,URL,Q)
+						},ZED.noop)
+					}
+				}
+				else GoHintLeave()
+			},
+			GoHintActive,
+			GoHintAt,
+			GoHintData,
+			GoHintView,
+			GoHintRender = function(Target,ID,Prefix,Q)
+			{
+				if (Q.length)
+				{
+					GoHintActive = Util.T
+					RHint.empty()
+						.append(ShowByText(ReplaceLang(Lang.HintFor,Target[KeySite.Name],ID),DOM.span))
+					GoHintAt = 0
+					GoHintData = []
+					GoHintView = []
+					ZED.each(function(Q,I,R)
+					{
+						I = 1 + GoHintData.length
+						Q = Prefix + Q
+						R = ShowByText(Q).on(DOM.click,function()
+						{
+							RURL.val(Q)
+							Go()
+						})
+						GoHintData.push(Q)
+						GoHintView.push(R)
+						RHint.append(R)
+					},Q)
+					RHint.show()
+				}
+				else GoHintLeave()
+			},
+			GoHintSwitch = function(Q)
+			{
+				if (GoHintAt) GoHintView[GoHintAt - 1].removeAttr(DOM.cls)
+				GoHintAt = Q
+				if (Q)
+				{
+					GoHintView[--Q].attr(DOM.cls,ClassBrowserHintOn)
+					Q = GoHintData[Q]
+				}
+				else Q = GoHintRaw
+				RURL.val(Q)
+			},
+			GoHintLeave = function()
+			{
+				GoHintActive =
+				GoHintData =
+				GoHintView = Util.F
+				RHint.removeAttr(DOM.style)
+			},
 			Jump = function(S)
 			{
 				if (GoDetail)
@@ -1617,11 +1738,27 @@
 			T;
 
 			M.addClass(ClassScrollable)
-			MakeEnter(RURL,Go)
+			MakeEnter(RURL,Go).on('up',Util.N,function(E)
+			{
+				if (GoHintActive)
+				{
+					GoHintSwitch(GoHintAt ? GoHintAt - 1 : GoHintData.length)
+					Util.PrevDef(E)
+				}
+			},Util.T).on('down',Util.N,function(E)
+			{
+				if (GoHintActive)
+				{
+					GoHintSwitch(GoHintAt < GoHintData.length ? 1 + GoHintAt : 0)
+					Util.PrevDef(E)
+				}
+			},Util.T).on('esc',GoHintLeave)
+			RURL.on(DOM.einput + ' ' + DOM.focus,GoHint)
+				.on(DOM.blur,GoHintLeave)
 			RGo.on(DOM.click,Go)
 			M.append
 			(
-				RInput.append(RURL,RGo),
+				RInput.append(RURL,RGo,RHint),
 				RInfo,
 				RPref
 			)
@@ -2492,7 +2629,7 @@
 				'./S/>div./A/{opacity:1}' +
 				//View
 				'./I/{padding:/p/px;width:/i/px}' +
-				'./I/ ./U/{margin:/p/px 0;padding:4px 10px;font-size:1.2rem}' +
+				'./I/ ./U/{margin:/p/px 0;padding:4px /p/px;font-size:1.2rem}' +
 				//	Button
 				'./I/ ./B/{text-align:center}' +
 				//	VCode

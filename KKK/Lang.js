@@ -48,6 +48,7 @@ module.exports =
 
 	//Browser
 	URL : Lang('URL'),
+	HintFor : Lang('Suggestions for /0/ `/1/`'),
 	ProcURL : Lang('Processing `/0/`'),
 	PageInfo : Lang('/0/,~,/1/,. ,/2/,//,/3/, item,/4/,. ,/5/,//,/6/, page,/7/,.'),
 	Video : Lang('Video'),

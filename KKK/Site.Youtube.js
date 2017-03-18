@@ -23,6 +23,7 @@ URLChannelByUser = ZED.URLBuild('https://www.googleapis.com/youtube/v3/channels?
 URLPlaylist = ZED.URLBuild('https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=',Util.U,'&pageToken=',Util.U,'&maxResults=',PageSize,'&key=',GoogleAPIKey),
 URLSubscription = 'https://www.youtube.com/feed/subscriptions',
 URLSearch = ZED.URLBuild('https://www.googleapis.com/youtube/v3/search?part=snippet&q=',Util.U,'&pageToken=',Util.U,'&maxResults=',PageSize,'&type=video',Util.U,'&key=',GoogleAPIKey),
+URLSearchHint = ZED.URLBuild('https://clients1.google.com/complete/search?client=youtube&ds=yt&q=',Util.U,'&callback=_'),
 URLVInfo = ZED.URLBuild('https://www.googleapis.com/youtube/v3/videos?id=',Util.U,'&part=snippet,statistics,recordingDetails&key=',GoogleAPIKey),
 URLWatch = ZED.URLBuild('https://www.youtube.com/watch?v=',Util.U),
 URLVInfoURL = ZED.URLBuild('https://www.youtube.com/get_video_info?video_id=',Util.U,'&eurl=',Util.U,'&el=info&sts=',Util.U),
@@ -271,6 +272,16 @@ R = ZED.ReduceToObject
 					KeySite.Pref,FilterMenu,
 					KeySite.PrefDef,FilterMenuDef
 				)
+			})
+		},
+		KeySite.Hint,function(Q)
+		{
+			return Util.RequestBody(URLSearchHint(encodeURIComponent(Q))).map(function(Q)
+			{
+				var R = [],F;
+				Q = ZED.JTO(Q.replace(/^[^[]+|[^\]]+$/g,''))[1] || []
+				for (F = 0;F < Q.length;++F) R.push(Q[F][0])
+				return R
 			})
 		}
 	),ZED.ReduceToObject
