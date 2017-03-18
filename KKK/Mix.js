@@ -1741,7 +1741,7 @@
 					},function(E)
 					{
 						Util.Debug(__filename,E)
-						E && MakeStatus(X,ZED.isString(E) ? E : E + (E.stack || ''),ClassStatusError)
+						E && MakeStatus(X,E,ClassStatusError)
 					})
 				}
 			},

@@ -91,6 +91,12 @@ RegExp `/(?:^|[^a-z])space(?:[^a-z]\D*)??(\d+)/i`
 Examples  
 `b space 70093`  
 `https://space.bilibili.com/70093`
+#### Bangumi
+RegExp `/(?:^|[^a-z])(?:anime|bangumi)(?:[^a-z]\D*)??(\d+)/i`  
+Examples  
+`b anime 4771`  
+`b bangumi 4771`  
+`http://bangumi.bilibili.com/anime/4771`
 #### Mylist
 RegExp `/(?:^|[^a-z])mylist(?:[^a-z]\D*)??(\d+)/i`  
 Examples  

@@ -42,6 +42,7 @@ URLLoginKey = 'https://passport.bilibili.com/login?act=getkey',
 URLLogin = 'https://passport.bilibili.com/login/dologin',
 URLLoginCheck = 'http://space.bilibili.com/ajax/member/MyInfo',
 URLSpace = ZED.URLBuild('http://space.bilibili.com/ajax/member/getSubmitVideos?mid=',Util.U,'&pagesize=',PageSize,'&page=',Util.U),
+URLBangumi = ZED.URLBuild('http://bangumi.bilibili.com/jsonp/seasoninfo/',Util.U,'.ver'),
 URLMylist = ZED.URLBuild('http://www.bilibili.com/mylist/mylist-',Util.U,'.js'),
 URLDynamic = ZED.URLBuild('http://api.bilibili.com/x/feed/pull?type=0&ps=',PageSize,'&pn=',Util.U),
 URLSearchMain = 'http://search.bilibili.com/all',
@@ -279,6 +280,40 @@ R = ZED.ReduceToObject
 							KeySite.Length,V.length
 						)
 					})
+				)
+			})
+		}
+	),ZED.ReduceToObject
+	(
+		KeySite.Name,L(Lang.Bangumi),
+		KeySite.Judge,[Util.MakeLabelNumber('(?:anime|bangumi)')],
+		KeySite.Page,function(ID)
+		{
+			return Util.RequestBody(URLBangumi(ID)).map(function(Q)
+			{
+				Q = ZED.JTO(Q)
+				Q.code && ZED.Throw(Util.ReplaceLang
+				(
+					Lang.BadCE,
+					Q.code,Q.message
+				))
+				Q = Q.result.episodes
+
+				return ZED.ReduceToObject
+				(
+					KeySite.Pages,1,
+					KeySite.Total,Q.length,
+					KeySite.Item,ZED.map(function(V)
+					{
+						return ZED.ReduceToObject
+						(
+							KeySite.Index,V.index,
+							KeySite.ID,V.av_id,
+							KeySite.Img,V.cover,
+							KeySite.Title,V.index_title,
+							KeySite.Date,new Date(V.update_time)
+						)
+					},Q)
 				)
 			})
 		}

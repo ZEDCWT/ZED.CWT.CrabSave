@@ -55,6 +55,7 @@ module.exports =
 	User : Lang('User'),
 	Channel : Lang('Channel'),
 	Playlist : Lang('Playlist'),
+	Bangumi : Lang('Bangumi'),
 	Mylist : Lang('Mylist'),
 	Dynamic : Lang('Dynamic'),
 	All : Lang('All'),
