@@ -35,6 +35,7 @@ module.exports =
 	error : 'error',
 	mouseover : 'mouseover',
 	mouseout : 'mouseout',
+	mousedown : 'mousedown',
 	mouseup : 'mouseup',
 	click : 'click',
 	focus : 'focus',

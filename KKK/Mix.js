@@ -1408,11 +1408,11 @@
 				'}' +
 				'#/T/>*{padding:4px 6px}' +
 				//		Brief
-				'#/T/>span{color:#D1D1D1;font-size:.9rem}' +
+				'#/T/ span{color:#D1D1D1}' +
 				//		Item
-				'#/T/>div{cursor:pointer}' +
+				'#/T/ div{cursor:pointer}' +
 				//			Hover
-				'#/T/>div:hover:not(./V/){background:#F0F0F0}' +
+				'#/T/ div:hover:not(./V/){background:#F0F0F0}' +
 				//			Active
 				'./V/{background:#DCEBFC}' +
 
@@ -1688,12 +1688,13 @@
 					ZED.each(function(Q,I,R)
 					{
 						I = 1 + GoHintData.length
-						Q = Prefix + Q
-						R = ShowByText(Q).on(DOM.click,function()
+						R = $(DOM.div).text(Q).on(DOM.click,function()
 						{
 							RURL.val(Q)
 							Go()
 						})
+						R.prepend(ShowByText(Prefix,DOM.span))
+						Q = Prefix + Q
 						GoHintData.push(Q)
 						GoHintView.push(R)
 						RHint.append(R)
@@ -1764,6 +1765,7 @@
 			},Util.T).on('esc',GoHintLeave)
 			RURL.on(DOM.einput + ' ' + DOM.focus,GoHint)
 				.on(DOM.blur,GoHintLeave)
+			RHint.on(DOM.mousedown,Util.PrevDef)
 			RGo.on(DOM.click,Go)
 			M.append
 			(
