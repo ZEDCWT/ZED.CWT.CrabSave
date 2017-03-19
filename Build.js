@@ -6,6 +6,7 @@ Path = require('path'),
 
 Env = process.env,
 
+CLI = require('cli'),
 Pack = require('electron-packager'),
 Prompt = require('prompt'),
 FS = require('graceful-fs'),
@@ -18,16 +19,23 @@ UglifyConfig =
 	mangle : {toplevel : true,screw_ie8 : false},
 	output : {screw_ie8 : false}
 };
-
-Prompt.start()
-Observable.wrapNode(Prompt.get,Prompt)([
+CLI.setApp('Build','0.0.0')
+CLI.parse(
 {
-	name : 'platform',
-	default : process.platform
-},{
-	name : 'arch',
-	default : process.arch
-}]).flatMap(function(Q)
+	skip : ['k','Skip choosing platform and arch']
+})
+;(CLI.options.skip ? Observable.just(process) :
+(
+	Prompt.start(),
+	Observable.wrapNode(Prompt.get,Prompt)([
+	{
+		name : 'platform',
+		default : process.platform
+	},{
+		name : 'arch',
+		default : process.arch
+	}])
+)).flatMap(function(Q)
 {
 	return Observable.wrapNode(Pack)(
 	{
