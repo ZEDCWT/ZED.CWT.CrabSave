@@ -49,6 +49,7 @@ CLI.parse(
 			'/Declare',
 			'/Old',
 			'/Build',
+			'/\\.git',
 			'/jsconfig'
 		],
 		prune : true,
