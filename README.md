@@ -1,6 +1,7 @@
 # CrabSave - Just another video downloader with GUI
 
 ## Index
+
 - [Introduction](#introduction)
 - [Browser](#browser)
 - [Search command](#search-command)
@@ -310,6 +311,10 @@ Some actions can be done by keyboard shortcuts, and they are all configurable.
 |Browser \| Navigate to the last page|`l`|
 |List \| Select all|`ctrl+a`|
 |List \| Clear selection|`esc`|
+|List \| Page up|`pgup`|
+|List \| Page down|`pgdn`|
+|List \| Page top|`home`|
+|List \| Page bottom|`end`|
 
 ## Setting
 
@@ -373,6 +378,7 @@ And the file would be in mp4 format, then the final path would be `UP/2124/UP.21
 ### Merge command
 
 Default
+
 ```js
 "mkvmerge",
 "--output",
@@ -408,7 +414,7 @@ If the output path is `/X/F.mkv`, with the default setting, it would generate
 
 ## Build
 
-```
+```bash
 npm i --dev
 npm run build
 ```
@@ -417,5 +423,5 @@ I only tested it in a `Windows 7, x86` system, so errors may occur in other plat
 
 ## Known issues
 
-* **Out of memory?** Running about 3~4 hours with an average speed around 5 MB /s, the app may crash to white screen.
-* **Bad file descriptor.** 3 times in 2250 downloads, it throws an error about bad file descriptor and crash the certain task.
+- **Out of memory?** Running about 3~4 hours with an average speed around 5 MB /s, the app may crash to white screen.
+- **Bad file descriptor.** 3 times in 2250 downloads, it throws an error about bad file descriptor and crash the certain task.

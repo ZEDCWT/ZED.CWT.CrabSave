@@ -20,7 +20,11 @@ Command =
 	PageTail : 'Browser.PageTail',
 
 	ListAll : 'List.SelAll',
-	ListClear : 'List.SelClear'
+	ListClear : 'List.SelClear',
+	ListPgUp : 'List.PgUp',
+	ListPgDn : 'List.PgDn',
+	ListPgTp : 'List.PgTp',
+	ListPgBt : 'List.PgBt'
 },
 DefaultMap = ZED.ReduceToObject
 (
@@ -38,7 +42,11 @@ DefaultMap = ZED.ReduceToObject
 	Command.PageTail,'l',
 
 	Command.ListAll,'ctrl+a',
-	Command.ListClear,'esc'
+	Command.ListClear,'esc',
+	Command.ListPgUp,'pgup',
+	Command.ListPgDn,'pgdn',
+	Command.ListPgTp,'home',
+	Command.ListPgBt,'end'
 );
 
 module.exports =

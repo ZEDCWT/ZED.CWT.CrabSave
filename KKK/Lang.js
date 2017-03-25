@@ -93,6 +93,12 @@ module.exports =
 	Paused : Lang('Paused'),
 	Finish : Lang('Finish'),
 
+	//List
+	PgUp : Lang('Page up'),
+	PgDn : Lang('Page down'),
+	PgTp : Lang('Page top'),
+	PgBt : Lang('Page bottom'),
+
 	//Detail
 	Created : Lang('Created'),
 	Progress : Lang('Progress'),

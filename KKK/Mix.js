@@ -590,7 +590,9 @@
 			}
 			List.recalc().redraw().scroll(LastScroll)
 			Change()
-		};
+		},
+
+		PrevDefKey = ZED.KeyGen();
 
 		Scroll.addClass(DOM.NoSelect).on(DOM.click,ClearChange)
 		UShortCut.cmd(ShortCutCommand.ListClear,MakeIndex(Index,ClearChange))
@@ -611,6 +613,27 @@
 				LastID = Util.F
 				Count = Data.length
 				Change()
+			}))
+			.on('pgup',PrevDefKey,PrevDefKey,Util.T)
+			.on('pgdn',PrevDefKey,PrevDefKey,Util.T)
+			.on('home',PrevDefKey,PrevDefKey,Util.T)
+			.on('end',PrevDefKey,PrevDefKey,Util.T)
+			.cmd(PrevDefKey,MakeIndex(Index,Util.PrevDef))
+			.cmd(ShortCutCommand.ListPgUp,MakeIndex(Index,function()
+			{
+				List.scroll(List.scroll() - Scroll.height() + 20)
+			}))
+			.cmd(ShortCutCommand.ListPgDn,MakeIndex(Index,function()
+			{
+				List.scroll(List.scroll() + Scroll.height() - 20)
+			}))
+			.cmd(ShortCutCommand.ListPgTp,MakeIndex(Index,function()
+			{
+				List.scroll(0)
+			}))
+			.cmd(ShortCutCommand.ListPgBt,MakeIndex(Index,function()
+			{
+				List.scroll(List.range())
 			}))
 
 		return {
@@ -1098,9 +1121,9 @@
 
 	//Util
 	UShortCut = ZED.ShortCut(),
-	MakeIndex = ZED.curry(function(X,Q)
+	MakeIndex = ZED.curry(function(X,Q,S)
 	{
-		!MakeCoverActive && X === UTab.Index() && Q()
+		!MakeCoverActive && X === UTab.Index() && Q(S)
 	},3),
 	UTab = ZED.Tab(
 	{

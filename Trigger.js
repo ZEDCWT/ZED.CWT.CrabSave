@@ -55,6 +55,7 @@ Create = function()
 	},
 	TrayMake = function()
 	{
+		TrayIcon && TrayIcon.destroy()
 		TrayIcon = new Electron.Tray(Path.join(__dirname,'TrayIcon.ico'))
 		TrayIcon.setToolTip('CrabSave')
 		TrayIcon.setContextMenu(Electron.Menu.buildFromTemplate([
