@@ -33,7 +33,6 @@
 	Setting = require('./Setting'),
 
 	$ = ZED.jQuery,
-	FnClick = $.fn.click,
 
 	global = ZED.global,
 	setTimeout = global.setTimeout,
@@ -949,7 +948,7 @@
 			MakeMergeProcess(L,0)
 			MakeMergeStore = []
 			MakeMergeAble = Util.F
-			MakeMergeEnd = Observable.from(Q)
+			MakeMergeEnd = Observable.from(Q,ZED.Scheduler.async)
 				.flatMapOnline(1,QueueHInfo)
 				.map(function(Q,F)
 				{
@@ -1768,6 +1767,9 @@
 					})
 				}
 			},
+
+			MakeClick = ZED.curry(function(Q){Q.click()},2),
+
 			T;
 
 			M.addClass(ClassScrollable)
@@ -1803,10 +1805,10 @@
 			UShortCut.cmd(ShortCutCommand.FocusURL,function(){RURL.focus()})
 				.cmd(ShortCutCommand.SelAll,MakeIndex(X,Cold.SelAll))
 				.cmd(ShortCutCommand.UnAll,MakeIndex(X,Cold.UnAll))
-				.cmd(ShortCutCommand.PageHead,MakeIndex(X,FnClick.bind($(T[0]))))
-				.cmd(ShortCutCommand.PagePrev,MakeIndex(X,FnClick.bind($(T[1]))))
-				.cmd(ShortCutCommand.PageNext,MakeIndex(X,FnClick.bind($(T[T.length - 2]))))
-				.cmd(ShortCutCommand.PageTail,MakeIndex(X,FnClick.bind($(ZED.last(T)))))
+				.cmd(ShortCutCommand.PageHead,MakeIndex(X,MakeClick(T[0])))
+				.cmd(ShortCutCommand.PagePrev,MakeIndex(X,MakeClick(T[1])))
+				.cmd(ShortCutCommand.PageNext,MakeIndex(X,MakeClick(T[T.length - 2])))
+				.cmd(ShortCutCommand.PageTail,MakeIndex(X,MakeClick(ZED.last(T))))
 
 			return MakeScroll(M)
 		}
