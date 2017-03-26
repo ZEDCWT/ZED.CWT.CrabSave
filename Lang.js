@@ -8,6 +8,7 @@ module.exports =
 {
 	L : _Lang,
 
+	DevTool : Lang('Toggle Dev Tools'),
 	Restore : Lang('Restore'),
 	Exit : Lang('Exit')
 }

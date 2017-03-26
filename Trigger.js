@@ -60,6 +60,12 @@ Create = function()
 		TrayIcon.setToolTip('CrabSave')
 		TrayIcon.setContextMenu(Electron.Menu.buildFromTemplate([
 		{
+			label : L(Lang.DevTool),
+			click : function()
+			{
+				Window.webContents.toggleDevTools()
+			}
+		},{
 			label : L(Lang.Restore),
 			click : TrayRestore
 		},{
