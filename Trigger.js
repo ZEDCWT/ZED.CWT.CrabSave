@@ -122,6 +122,7 @@ Roll = function(Q)
 if (App.makeSingleInstance(Roll)) App.quit()
 else
 {
+	App.setPath('userData',Path.join(Config.Root,'UserData'))
 	App.on('ready',Create)
 		.on('activate',function()
 		{
