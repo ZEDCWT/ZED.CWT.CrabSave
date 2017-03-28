@@ -929,7 +929,7 @@
 			}
 			R.push(S.join(' '))
 		}
-		RMergeText.val(R.join('\n'))
+		RMergeText.val(R.join('\n') + '\n')
 	},
 	MakeMerge = function(Q,L)
 	{
