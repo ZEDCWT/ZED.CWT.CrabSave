@@ -44,7 +44,11 @@
 	IPCRenderer = Electron.ipcRenderer,
 	Remote = Electron.remote,
 	Dialog = Remote.dialog,
-	ToggleDev = function()
+	ViewReload = function()
+	{
+		Remote.getCurrentWebContents().reload()
+	},
+	ViewToggleDev = function()
 	{
 		Remote.getCurrentWebContents().toggleDevTools()
 	},
@@ -3001,7 +3005,8 @@
 					X = UTab.Index() + 1
 					UTab.Index(X < YTabCount ? X : X - YTabCount)
 				})
-				.cmd(ShortCutCommand.ToggleDev,ToggleDev)
+				.cmd(ShortCutCommand.Reload,ViewReload)
+				.cmd(ShortCutCommand.ToggleDev,ViewToggleDev)
 				.on('ctrl+a',Util.N,Util.PrevDef,Util.T)
 
 			return MakeScroll(M)

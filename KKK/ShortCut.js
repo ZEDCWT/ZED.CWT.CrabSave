@@ -8,8 +8,9 @@ Command =
 {
 	PrevTab : 'Global.PrevTab',
 	NextTab : 'Global.NextTab',
-	ToggleDev : 'Global.ToggleDev',
 	CloseCover : 'Global.CloseCover',
+	ToggleDev : 'Global.ToggleDev',
+	Reload : 'Global.Reload',
 
 	FocusURL : 'Browser.FocusURL',
 	SelAll : 'Browser.SelAll',
@@ -30,8 +31,9 @@ DefaultMap = ZED.ReduceToObject
 (
 	Command.PrevTab,'[',
 	Command.NextTab,']',
-	Command.ToggleDev,['shift+alt+d','f12'],
 	Command.CloseCover,'esc',
+	Command.Reload,'ctrl+r',
+	Command.ToggleDev,['shift+alt+d','f12'],
 
 	Command.FocusURL,'f1',
 	Command.SelAll,'ctrl+a',
