@@ -2,6 +2,7 @@
 {
 	'use strict'
 	var
+	Started = new Date,
 	ZED = require('@zed.cwt/zedquery'),
 	Observable = ZED.Observable,
 
@@ -1076,6 +1077,9 @@
 		MakeNotiProcessing = Util.F
 		MakeNotiQueue.length && MakeNotiAppend(MakeNotiQueue.shift())
 	},
+	//		DB Load
+	MakeDBLoadKey = ZED.KeyGen(),
+	MakeDBLoadState = 0,
 
 	//	StatusBar
 	MakeStatusText = Array(YTabCount),
@@ -3165,6 +3169,11 @@
 	//Detail
 	RDetail.append(RDetailHead,RDetailInfo,RDetailPart)
 	Bus
+		//Noti
+		.on(EventQueue.First,function()
+		{
+			++MakeDBLoadState < 2 || MakeNoti(MakeDBLoadKey,ReplaceLang(Lang.DBDone,ZED.now() - Started.getTime()),Util.T)
+		})
 		//Queue
 		.on(EventQueue.Info,MakeDetailMake(function()
 		{
@@ -3261,6 +3270,7 @@
 	$(function()
 	{
 		Rainbow.appendTo('body')
+		setTimeout(function(){MakeNoti(MakeDBLoadKey,L(Lang.DB))},50)
 		Queue.Dispatch()
 	})
 }()
