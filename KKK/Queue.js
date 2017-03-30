@@ -312,21 +312,21 @@ ErrorLook = function(R,C,T,F)
 		if (0 < C) Bus.emit(EventQueue.ErrorLook,T,C / 1000)
 		else
 		{
-			Bus.emit(EventQueue.Queuing,T)
+			Bus.emit(EventQueue.ErrorEnd,T)
 			ZED.delete_(T,ErrorMap)
 			ErrorQueue.splice(F,1)
 		}
 	}
 	R === ErrorQueue.length || Dispatch()
 },
-ErrorOn = function(ID,E)
+ErrorOn = function(ID,E,J)
 {
 	Util.Debug(__filename,E)
 	ErrorMap[ID] = ZED.now()
 	ErrorQueue.push(ID)
 	InnerPause(ID)
 	Dispatch()
-	Bus.emit(EventQueue.Error,ID,WaitDisplay)
+	Bus.emit(EventQueue.Error,ID,WaitDisplay,J)
 },
 Error = function(Q,E,ID)
 {
@@ -537,7 +537,7 @@ DispatchInfoEnd = function()
 },
 DispatchInfoError = function(E)
 {
-	ErrorOn(InfoNow,E)
+	ErrorOn(InfoNow,E,Util.T)
 	DispatchInfoEnd()
 },
 DispatchInfoFinish = function()

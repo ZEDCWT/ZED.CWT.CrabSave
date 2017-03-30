@@ -2311,18 +2311,26 @@
 					A[ActiveKeySpeed].text(L(Lang.Refreshing))
 					A[ActiveKeyRemain].text('')
 				}
-			}).on(EventQueue.Error,function(A,S)
+			}).on(EventQueue.Error,function(A,S,J)
 			{
 				if (A = Active[A])
 				{
 					A[ActiveKeySpeed].text(L(Lang.EConn))
 					A[ActiveKeyRemain].text('-' + ZED.SecondsToString(S))
 					A[ActiveKeyPercentage].removeClass(ClassHotPercentageActive)
+					J && A[ActiveKeyInfo].text(L(Lang.ReadyInfo))
 				}
 			}).on(EventQueue.ErrorLook,function(A,S)
 			{
 				if (A = Active[A])
 					A[ActiveKeyRemain].text('-' + ZED.SecondsToString(S))
+			}).on(EventQueue.ErrorEnd,function(Q,A)
+			{
+				if (A = Active[Q])
+				{
+					A[ActiveKeySpeed].text(L(Queue.ActiveMap[Q] ? Lang.Queuing : Lang.Paused))
+					A[ActiveKeyRemain].text('')
+				}
 			}).on(EventQueue.EFinish,function(E)
 			{
 				MakeDBError(X,Lang.Finish,E)

@@ -38,6 +38,7 @@ module.exports =
 
 		Error : EventKey(),
 		ErrorLook : EventKey(),
+		ErrorEnd : EventKey(),
 
 		Finish : EventKey(),
 		EFinish : EventKey(),
