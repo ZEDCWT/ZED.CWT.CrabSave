@@ -300,8 +300,9 @@ Some actions can be done by keyboard shortcuts, and they are all configurable.
 |---|---|
 |Global \| Navigate to the previous tab|`[`|
 |Global \| Navigate to the next tab|`]`|
-|Global \| Toggle developer tools|`shift+alt+d`, `f12`|
 |Global \| Close covering pages (Detail or Merge page)|`esc`|
+|Global \| Reload|`ctrl+r`|
+|Global \| Toggle developer tools|`shift+alt+d`, `f12`|
 |Browser \| Focus on the URL input|`f1`|
 |Browser \| Select all|`ctrl+a`|
 |Browser \| Clear selection|`shift+ctrl+a`|
