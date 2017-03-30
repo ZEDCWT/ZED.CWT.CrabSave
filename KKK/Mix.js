@@ -1447,9 +1447,9 @@
 				//		Brief
 				'#/T/ span{color:#D1D1D1}' +
 				//		Item
-				'#/T/ div{cursor:pointer}' +
+				'#/T/ div div{cursor:pointer}' +
 				//			Hover
-				'#/T/ div:hover:not(./V/){background:#F0F0F0}' +
+				'#/T/ div div:hover{background:#F0F0F0!important}' +
 				//			Active
 				'./V/{background:#DCEBFC}' +
 
@@ -1515,6 +1515,8 @@
 			RURL = ShowByInput(Lang.URL),
 			RGo = ShowByClass(DOM.NoSelect).text('\u2192'),
 			RHint = ShowByRock(IDBrowserHint).attr(DOM.cls,DOM.NoSelect),
+			RHintTitle = $(DOM.span),
+			RHintList = $(DOM.div),
 			RInfo = ShowByRock(IDBrowserInfo),
 			RPref = ShowByRock(IDBrowserPref),
 			RList = $(DOM.div),
@@ -1697,8 +1699,12 @@
 					Detail = T[1]
 					ID = T[2]
 
-					if (Detail[KeySite.Hint])
+					if (Util.U !== ID && Detail[KeySite.Hint])
 					{
+						RHintTitle.text(ReplaceLang(Lang.HintFor,Target[KeySite.Name],ID))
+						RHintList.text(L(Lang.Loading))
+						GoHintLeave()
+						RHint.show()
 						URL = URL.substr(0,URL.length - ID.length)
 						T = Detail[GoHintCacheKey]
 						if (!T) Detail[GoHintCacheKey] = T = {}
@@ -1709,6 +1715,7 @@
 							GoHintCount === At && GoHintRender(Target,ID,URL,Q)
 						},ZED.noop)
 					}
+					else GoHintLeave()
 				}
 				else GoHintLeave()
 			},
@@ -1718,11 +1725,10 @@
 			GoHintView,
 			GoHintRender = function(Target,ID,Prefix,Q)
 			{
-				if (Q.length && RURL.is(':focus'))
+				if (Q.length)
 				{
+					RHintList.empty()
 					GoHintActive = Util.T
-					RHint.empty()
-						.append(ShowByText(ReplaceLang(Lang.HintFor,Target[KeySite.Name],ID),DOM.span))
 					GoHintAt = 0
 					GoHintData = []
 					GoHintView = []
@@ -1738,11 +1744,10 @@
 						Q = Prefix + Q
 						GoHintData.push(Q)
 						GoHintView.push(R)
-						RHint.append(R)
+						RHintList.append(R)
 					},Q)
-					RHint.show()
 				}
-				else GoHintLeave()
+				else RHintList.text(L(Lang.HintEmpty))
 			},
 			GoHintSwitch = function(Q)
 			{
@@ -1806,14 +1811,18 @@
 					GoHintSwitch(GoHintAt < GoHintData.length ? 1 + GoHintAt : 0)
 					Util.PrevDef(E)
 				}
-			},Util.T).on('esc',GoHintLeave)
+			},Util.T).on('esc',Util.N,GoHintLeave)
 			RURL.on(DOM.einput + ' ' + DOM.focus,GoHint)
 				.on(DOM.blur,GoHintLeave)
 			RHint.on(DOM.mousedown,Util.PrevDef)
 			RGo.on(DOM.click,Go)
 			M.append
 			(
-				RInput.append(RURL,RGo,RHint),
+				RInput.append
+				(
+					RURL,RGo,
+					RHint.append(RHintTitle,RHintList)
+				),
 				RInfo,
 				RPref
 			)
