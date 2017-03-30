@@ -104,6 +104,16 @@
 	{
 		return ShowByClassX(ClassUnderlineInput,S || DOM.input).attr(DOM.placeholder,L(Q))
 	},
+	ShowByCheckBox = function(S,J,C,I,T)
+	{
+		return ShowByClass(ClassCheckBox).append
+		(
+			I = $(DOM.input).attr(DOM.type,DOM.checkbox).attr(DOM.checked,!!J)
+				.attr(DOM.id,T = ZED.KeyGen())
+				.on(DOM.change,function(){C(I[0][DOM.checked])}),
+			ShowByClassX(DOM.NoSelect,DOM.label).attr(DOM.for,T).text(L(S))
+		)
+	},
 	MakeAt = function(Q,S)
 	{
 		return Q && S ?
@@ -216,6 +226,7 @@
 	ClassUnderlineInput = ZED.KeyGen(),
 	ClassShape = ZED.KeyGen(),
 	ClassSingleLine = ZED.KeyGen(),
+	ClassCheckBox = ZED.KeyGen(),
 	//	Browser
 	IDBrowserInput = ZED.KeyGen(),
 	IDBrowserHint = ZED.KeyGen(),
@@ -632,11 +643,11 @@
 			.cmd(PrevDefKey,MakeIndex(Index,Util.PrevDef))
 			.cmd(ShortCutCommand.ListPgUp,MakeIndex(Index,function()
 			{
-				List.scroll(List.scroll() - Scroll.height() + 20)
+				List.scroll(List.scroll() - Scroll.height() + 50)
 			}))
 			.cmd(ShortCutCommand.ListPgDn,MakeIndex(Index,function()
 			{
-				List.scroll(List.scroll() + Scroll.height() - 20)
+				List.scroll(List.scroll() + Scroll.height() - 50)
 			}))
 			.cmd(ShortCutCommand.ListPgTp,MakeIndex(Index,function()
 			{
@@ -1301,6 +1312,8 @@
 			'./HP/{display:inline-block;line-height:0}' +
 			//	Single line
 			'./SL/{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}' +
+			//	CheckBox
+			'./CB/{display:inline-block}' +
 
 			//Index
 			//	Toolbar shadow should be higher than NaviStage
@@ -1377,6 +1390,7 @@
 				UI : ClassUnderlineInput,
 				HP : ClassShape,
 				SL : ClassSingleLine,
+				CB : ClassCheckBox,
 
 				p : YPadding,
 
@@ -1449,9 +1463,9 @@
 				//		Item
 				'#/T/ div div{cursor:pointer}' +
 				//			Hover
-				'#/T/ div div:hover{background:#F0F0F0!important}' +
+				'#/T/ div div:hover{background:#F0F0F0}' +
 				//			Active
-				'./V/{background:#DCEBFC}' +
+				'./V/{background:#DCEBFC!important}' +
 
 				//Info panel
 				'#/O/{margin:0 /p/px;padding:/p/px;border:solid #66AFE0;border-width:2px 0;font-size:1.1rem}' +
@@ -2915,10 +2929,14 @@
 				//Button
 				'./B/{padding:0 6px;color:#2672EC;border-bottom:1px solid;cursor:pointer}' +
 				//Input
-				'#/R/ input{padding:4px 6px 0;width:60%;cursor:text}',
+				'#/R/ ./U/{padding:4px 6px 0;width:30%;cursor:text}' +
+				//CheckBox
+				'#/R/ ./U/+div{display:inline-block;margin-left:20px}' +
+				'#/R/ input[type="checkbox"]{margin-left:/p/px}',
 				'/',
 				{
 					S : ClassShape,
+					U : ClassUnderlineInput,
 
 					R : ID,
 					T : ClassShortCutTitle,
@@ -2934,6 +2952,10 @@
 		{
 			var
 			Active,
+			ListKeyWrap = 0,
+			ListKeySwitch = 1,
+			ListKeySwitchKey = 0,
+			ListKeySwitchWhen = 1,
 			SC = ZED.ShortCut(
 			{
 				Target : M,
@@ -2948,61 +2970,89 @@
 
 				List = [],
 
-				Build = function(Q)
-				{
-					ZED.each(function(V)
-					{
-						Add(V)
-						UShortCut.on(V,Command)
-					},Q || Default)
-				},
-
 				Save = function()
 				{
-					ShortCut.Save(Command,ZED.filter(ZED.identity,ZED.map(function(V){return V[1].val()},List)))
-				},
-
-				Add = function(Q,I,L)
-				{
-					I = ShowByClassX(ClassUnderlineInput + ' ' + DOM.NoSelect,DOM.input)
-						.attr(DOM.readonly,'')
-						.val(L = ZED.isString(Q) ? Q : '')
-						.on(DOM.focus,function(){Active = I})
-						.on(DOM.blur,function(T)
-						{
-							I === Active && (Active = Util.F)
-							T = I.val()
-							if (L !== T)
-							{
-								UShortCut.off(L,Command)
-								T && UShortCut.on(T,Command)
-								L = T
-								Save()
-							}
-						})
-					R.append(Q = $(DOM.div).append
+					ShortCut.Save(Command,ZED.filter
 					(
-						MakeShape(Lang.Remove,ShapeConfigShortCutRemove)
-							.on(DOM.click,function()
-							{
-								Remove(Q)
-								Save()
-							}),
-						I
+						ZED.nth(ListKeySwitchKey),
+						ZED.map(ZED.nth(ListKeySwitch),List)
 					))
-					List.push(Q = [Q,I])
 				},
-				Remove = function(Q,T)
+				On = function(Q)
 				{
-					T = Q[1].val()
-					T && UShortCut.off(T,Command)
-					Q[0].detach()
-					for (T = List.length;T;) if (Q === List[--T])
+					UShortCut.on
+					(
+						Q[ListKeySwitchKey],
+						ShortCut.Up & Q[ListKeySwitchWhen] ? Command : Util.N,
+						ShortCut.Down & Q[ListKeySwitchWhen] ? Command : Util.N,
+						!(ShortCut.SwitchOnce & Q[ListKeySwitchWhen])
+					)
+				},
+				Off = function(Q){UShortCut.off(Q[ListKeySwitchKey],Command,Command)},
+				ReBind = function()
+				{
+					//It does not check if a shortcut is unique, so this must be handled
+					ZED.each(function(Q){Off(Q[ListKeySwitch])},List)
+					ZED.each(function(Q){On(Q[ListKeySwitch])},List)
+					Save()
+				},
+				Add = function(Q,S,W,I)
+				{
+					if (ZED.isArray(Q))
 					{
-						List.splice(T,1)
+						S = Q[ListKeySwitchWhen]
+						Q = Q[ListKeySwitchKey]
+					}
+					Q = ZED.isString(Q) ? Q : ''
+					ZED.isNumber(S) || (S = ShortCut.Up)
+					R.append(W = $(DOM.div).append
+					(
+						MakeShape(Lang.Remove,ShapeConfigShortCutRemove).on(DOM.click,function()
+						{
+							Remove(W)
+							ReBind()
+						}),
+						I = ShowByClassX(ClassUnderlineInput + ' ' + DOM.NoSelect,DOM.input)
+							.attr(DOM.readonly,'')
+							.val(Q)
+							.on(DOM.focus,function(){Active = I})
+							.on(DOM.blur,function()
+							{
+								I === Active && (Active = Util.F)
+								Off(S)
+								S[0] = I.val()
+								ReBind()
+							}),
+						ZED.reduce(function(D,V)
+						{
+							D.append(ShowByCheckBox(V[0],V[1] & S,function(Q)
+							{
+								Q ? S[1] |= V : S[1] &= ~V
+								Off(S)
+								ReBind()
+							}))
+							V = V[1]
+						},$(DOM.div),
+						[
+							[Lang.SCUp,ShortCut.Up],
+							[Lang.SCDown,ShortCut.Down],
+							[Lang.SCOnce,ShortCut.Once]
+						])
+					))
+					List.push(W = [W,S = [Q,S]])
+					On(S)
+				},
+				Remove = function(Q,F)
+				{
+					Off(Q[ListKeySwitch])
+					Q[ListKeyWrap].detach()
+					for (F = List.length;F;) if (Q === List[--F])
+					{
+						List.splice(F,1)
 						break
 					}
-				};
+				},
+				Build = ZED.each(Add);
 
 				Default = ZED.isArray(Default) ? Default : [Default]
 
@@ -3018,12 +3068,12 @@
 						ShowByClassX(ClassShortCutButton + ' ' + DOM.NoSelect,DOM.span).text(L(Lang.DefSC)).on(DOM.click,function(F)
 						{
 							for (F = List.length;F;) Remove(List[--F])
-							Build()
+							Build(Default)
 							ShortCut.Remove(Command)
 						})
 					)
 				)
-				Build(ShortCut.Data(Command))
+				Build(ShortCut.Data(Command) || Default)
 
 				M.append(R)
 			})

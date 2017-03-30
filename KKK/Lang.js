@@ -167,6 +167,9 @@ module.exports =
 	//ShortCut
 	AddSC : Lang('Add shortcut'),
 	DefSC : Lang('Restore default'),
+	SCDown : Lang('When key pressed'),
+	SCUp : Lang('When key released'),
+	SCOnce : Lang('Ignore continuous pressing'),
 	Global : Lang('Global'),
 	FocusURL : Lang('Focus on the URL input'),
 	PrevTab : Lang('Navigate to the previous tab'),

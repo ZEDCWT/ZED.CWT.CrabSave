@@ -11,6 +11,8 @@ module.exports =
 	bottom : 'bottom',
 	type : 'type',
 	password : 'password',
+	checkbox : 'checkbox',
+	checked : 'checked',
 	src : 'src',
 	title : 'title',
 	href : 'href',
@@ -18,6 +20,7 @@ module.exports =
 	placeholder : 'placeholder',
 	readonly : 'readonly',
 	rows : 'rows',
+	for : 'for',
 
 	br : '<br>',
 	div : '<div>',
@@ -29,6 +32,7 @@ module.exports =
 	fieldset : '<fieldset>',
 	legend : '<legend>',
 	iframe : '<iframe>',
+	label : '<label>',
 
 	Div : 'div',
 	Img : 'img',
@@ -44,6 +48,7 @@ module.exports =
 	focus : 'focus',
 	blur : 'blur',
 	einput : 'input',
+	change : 'change',
 	aniend : 'animationend',
 	trsend : 'transitionend',
 

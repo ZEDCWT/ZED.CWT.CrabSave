@@ -4,6 +4,10 @@ ZED = require('@zed.cwt/zedquery'),
 
 Data = require('../JSONFile')('ShortCut'),
 
+SwitchUp = 1,
+SwitchDown = SwitchUp << 1,
+SwitchOnce = SwitchDown << 1,
+
 Command =
 {
 	PrevTab : 'Global.PrevTab',
@@ -29,13 +33,13 @@ Command =
 },
 DefaultMap = ZED.ReduceToObject
 (
-	Command.PrevTab,'[',
-	Command.NextTab,']',
+	Command.PrevTab,[['[',SwitchDown]],
+	Command.NextTab,[[']',SwitchDown]],
 	Command.CloseCover,'esc',
 	Command.Reload,'ctrl+r',
 	Command.ToggleDev,['shift+alt+d','f12'],
 
-	Command.FocusURL,'f1',
+	Command.FocusURL,[['f1',SwitchDown]],
 	Command.SelAll,'ctrl+a',
 	Command.UnAll,'shift+ctrl+a',
 	Command.PageHead,'h',
@@ -45,14 +49,17 @@ DefaultMap = ZED.ReduceToObject
 
 	Command.ListAll,'ctrl+a',
 	Command.ListClear,'esc',
-	Command.ListPgUp,'pgup',
-	Command.ListPgDn,'pgdn',
-	Command.ListPgTp,'home',
-	Command.ListPgBt,'end'
+	Command.ListPgUp,[['pgup',SwitchDown]],
+	Command.ListPgDn,[['pgdn',SwitchDown]],
+	Command.ListPgTp,[['home',SwitchDown]],
+	Command.ListPgBt,[['end',SwitchDown]]
 );
 
 module.exports =
 {
+	Up : SwitchUp,
+	Down : SwitchDown,
+	Once : SwitchOnce,
 	Data : Data.Data,
 	Save : function(Q,S)
 	{
