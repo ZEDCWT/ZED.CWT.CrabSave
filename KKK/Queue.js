@@ -461,8 +461,11 @@ Dispatch = function(T,F)
 					T = Q[F]
 					++Current
 					Running[T[KeyQueue.Unique]] = Util.T
-					ZED.isNull(T[KeyQueue.Size]) || Download.Play(T)
-					Bus.emit(EventQueue.Processing,T)
+					ZED.isNull(T[KeyQueue.Size]) ||
+					(
+						Bus.emit(EventQueue.Processing,T),
+						Download.Play(T)
+					)
 				}
 				DispatchRequired && Dispatch()
 			})
@@ -543,7 +546,11 @@ DispatchInfoFinish = function()
 		OnlineData.findOne(ZED.objOf(KeyQueue.Unique,InfoNow),function(E,Q)
 		{
 			if (E) Util.Debug(__filename,E)
-			else Download.Play(Q)
+			else
+			{
+				Bus.emit(EventQueue.Processing,Q)
+				Download.Play(Q)
+			}
 		})
 	DispatchInfoEnd()
 },
