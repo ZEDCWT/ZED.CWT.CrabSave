@@ -128,6 +128,7 @@ R = ZED.ReduceToObject
 						KeySite.Img,FitQulity(V.thumbnails),
 						KeySite.Title,V.title,
 						KeySite.Author,Q.title,
+						KeySite.AuthorLink,URLChannel(ID.split('/')[0]),
 						KeySite.Date,new Date(FindDate(Q,V))
 					)]
 				)
@@ -156,6 +157,7 @@ R = ZED.ReduceToObject
 							KeySite.Img,FitQulity(V.thumbnails),
 							KeySite.Title,V.title,
 							KeySite.Author,Q.title,
+							KeySite.AuthorLink,URLChannel(Q.id),
 							KeySite.Date,new Date(V.publicationTime)
 						)
 					})
@@ -186,6 +188,7 @@ R = ZED.ReduceToObject
 						KeySite.Img,O.thumbnails,
 						KeySite.Title,O.title,
 						KeySite.Author,O.c,
+						KeySite.AuthorLink,URLChannel(O.id.split('/')[0]),
 						KeySite.Date,new Date(O.publicationTime)
 					))
 				}

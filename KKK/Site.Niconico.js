@@ -15,7 +15,8 @@ PageSize = 30,
 
 URLLogin = 'https://secure.nicovideo.jp/secure/login',
 URLLoginCheck = 'http://seiga.nicovideo.jp/',
-URLUser = ZED.URLBuild('http://www.nicovideo.jp/user/',Util.U,'/video?page=',Util.U),
+URLUserPrefix = 'http://www.nicovideo.jp/user/',
+URLUser = ZED.URLBuild(URLUserPrefix,Util.U,'/video?page=',Util.U),
 URLMylist = ZED.URLBuild('http://www.nicovideo.jp/mylist/',Util.U),
 URLRepo = ZED.URLBuild('http://www.nicovideo.jp/my/top/user?innerPage=1&mode=next_page&last_timeline=',Util.U),
 URLSearch = ZED.URLBuild('http://www.nicovideo.jp/search/',Util.U,'?page=',Util.U,Util.U),
@@ -87,6 +88,7 @@ R = ZED.ReduceToObject
 						KeySite.Img,Util.MF(/l_url>([^<]+)/,Q),
 						KeySite.Title,Util.DecodeHTML(Util.MF(/itle>([^<]+)/,Q)),
 						KeySite.Author,Util.DecodeHTML(Util.MF(/name>([^<]+)/,Q)),
+						KeySite.AuthorLink,URLUserPrefix + Util.MF(/user_id>(\d+)/,Q),
 						KeySite.Date,Util.MF(/ieve>([^<]+)/,Q)
 					)]
 				)
@@ -125,6 +127,7 @@ R = ZED.ReduceToObject
 								KeySite.Img,Util.MF(/src="([^"]+)/,V),
 								KeySite.Title,Util.DecodeHTML(Util.MF(/h5>[^>]+>([^<]+)/,V)),
 								KeySite.Author,A,
+								KeySite.AuthorLink,URLUserPrefix + ID,
 								KeySite.Date,Util.DateDirect(ZED.match(/\d+/g,Util.MF(/posttime">([^<]+)/,V)))
 							))
 						},
@@ -148,9 +151,9 @@ R = ZED.ReduceToObject
 				F,Fa,
 				T;
 
-				Q = Util.MF(/preload\([^\[]+(\[[^\]]+\])/,Q)
-				Q || ZED.Throw(L(Lang.Bad))
-				Q = ZED.filter(function(V){return 0 === V.item_type},ZED.JTO(Q))
+				Q = ZED.JTO(Util.MF(/preload\([^\[]+([^]+\])\);\n/,Q))
+				ZED.isArray(Q) || ZED.Throw(L(Lang.Bad))
+				Q = ZED.filter(function(V){return 0 === V.item_type},Q)
 					.sort(function(Q,S){return S.item_data.first_retrieve - Q.item_data.first_retrieve})
 				Len = Q.length
 				Len || ZED.Throw(L(Lang.EmptyList))
@@ -205,6 +208,7 @@ R = ZED.ReduceToObject
 							KeySite.Img,Util.MF(/original="([^"]+)/,Q),
 							KeySite.Title,Util.DecodeHTML(Util.MF(/info[^]+sm\d+[^>]+>([^<]+)/,Q)).trim(),
 							KeySite.Author,Util.DecodeHTML(Util.MF(/user">([^<]+)/,Q)).trim(),
+							KeySite.AuthorLink,URLUserPrefix + Util.MF(/user\/(\d+)/,Q),
 							KeySite.Date,new Date(Util.MF(/datetime="([^"]+)/,Q))
 						))
 					}

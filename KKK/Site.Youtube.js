@@ -18,6 +18,7 @@ PageSize = 30,
 GoogleAPIKey = 'AIzaSyA_ltEFFYL4E_rOBYkQtA8aKHnL5QR_uMA',
 URLMain = 'https://www.youtube.com/',
 URLLoginCheck = 'https://www.youtube.com/account',
+URLChannelPrefix = URLMain + 'channel/',
 URLChannel = ZED.URLBuild('https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=',Util.U,'&key=',GoogleAPIKey),
 URLChannelByUser = ZED.URLBuild('https://www.googleapis.com/youtube/v3/channels?part=contentDetails&forUsername=',Util.U,'&key=',GoogleAPIKey),
 URLPlaylist = ZED.URLBuild('https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=',Util.U,'&pageToken=',Util.U,'&maxResults=',PageSize,'&key=',GoogleAPIKey),
@@ -74,6 +75,7 @@ MakeReturnBySnippet = function(Q,X,T)
 				KeySite.Img,FitQulity(ZED.path(['snippet','thumbnails'],V)).url,
 				KeySite.Title,ZED.path(['snippet','title'],V),
 				KeySite.Author,ZED.path(['snippet','channelTitle'],V),
+				KeySite.AuthorLink,URLChannelPrefix + ZED.path(['snippet','channelId'],V),
 				KeySite.Date,new Date(ZED.path(['snippet','publishedAt'],V))
 			)
 		})
@@ -110,6 +112,7 @@ SubsContent = function(Q,R)
 			KeySite.Img,Util.DecodeHTML(Util.MF(/(?:data-thumb|src(?!.*data-thumb))="([^"]+)/,Q).replace(/^\/\//,'http://')),
 			KeySite.Title,Util.DecodeHTML(Util.MF(/-title[^]+?title="([^"]+)/,Q)),
 			KeySite.Author,Util.DecodeHTML(Util.MF(/ytid[^>]+>([^<]+)/,Q)),
+			KeySite.AuthorLink,URLMain + Util.MF(/\/((?:user|channel)\/[^"]+)/,Q),
 			KeySite.Date,Util.MF(/meta-info.*?<\/li.*?<li.*?>([^<]+)/,Q),
 			KeySite.Length,Util.MF(/-time"[^>]+>([^<]+)/,Q)
 		))
@@ -306,6 +309,7 @@ R = ZED.ReduceToObject
 						KeySite.Img,FitQulity(Q.thumbnails).url,
 						KeySite.Title,Q.title,
 						KeySite.Author,Q.channelTitle,
+						KeySite.AuthorLink,URLChannelPrefix + Q.channelId,
 						KeySite.Date,new Date(Q.publishedAt)
 					)]
 				)

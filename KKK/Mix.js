@@ -106,8 +106,15 @@
 	},
 	MakeAt = function(Q,S)
 	{
-		return ShowByClass(ClassSingleLine).attr(DOM.title,Q + '@' + S)
-			.append(Q,ShowByText('@',DOM.span),S)
+		return Q && S ?
+			ShowByClass(ClassSingleLine).attr(DOM.title,Q + '@' + S)
+				.append
+				(
+					ShowByText(Q),
+					ShowByText('@',DOM.span),
+					ShowByText(S)
+				) :
+			ShowByClass(ClassSingleLine).attr(DOM.title,Q).text(Q)
 	},
 	MakeSizePercentage = function(S,D)
 	{
@@ -1473,7 +1480,9 @@
 				'./H/ ./K/,./N/{background:rgba(102,175,224,.7)}' +
 				'./L/,./M/{background:#66AFE0}' +
 				//		Image
-				'#/R/ img{width:/i/px;cursor:pointer}',
+				'#/R/ img{width:/i/px;cursor:pointer}' +
+				//		AuthorLink
+				'#/R/ a{display:block}',
 				'/',
 				{
 					R : ID,
@@ -1661,7 +1670,9 @@
 						),
 						V[KeySite.Length] && ShowByText(V[KeySite.Length]),
 						ShowByText(V[KeySite.Title]),
-						V[KeySite.Author] && ShowByText(V[KeySite.Author]),
+						V[KeySite.Author] && (V[KeySite.AuthorLink] ?
+							ShowByText(V[KeySite.Author],DOM.a).attr(DOM.href,V[KeySite.AuthorLink]) :
+							ShowByText(V[KeySite.Author])),
 						MakeSiteDate(V)
 					)
 					RList.append(D)
@@ -1707,7 +1718,7 @@
 			GoHintView,
 			GoHintRender = function(Target,ID,Prefix,Q)
 			{
-				if (Q.length)
+				if (Q.length && RURL.is(':focus'))
 				{
 					GoHintActive = Util.T
 					RHint.empty()
@@ -1808,6 +1819,15 @@
 			)
 			PagerUp = ZED.Pager({Parent : M,Offset : 1},Jump)
 			T = M.find('.' + DOM.Pager).children()
+			RList.on(DOM.click,DOM.A,function(E)
+			{
+				Util.PrevDef(E)
+				Util.StopProp(E)
+				E = E.target.getAttribute(DOM.href)
+				E && RURL.val(E)
+				Go()
+				return Util.F
+			})
 			M.append(RList)
 			PagerBotton = ZED.Pager({Parent : M,Offset : 1},Jump)
 			UShortCut.cmd(ShortCutCommand.FocusURL,function(){RURL.focus()})
@@ -1834,7 +1854,8 @@
 				//Info block
 				'#/R/ ./M/>div{margin-right:/m/px;padding:/p/px}' +
 				//@ mark
-				'#/R/ div>span{margin:0 4px;color:#00F;font-weight:bold}' +
+				'#/R/ ./L/ div{display:inline-block}' +
+				'#/R/ ./L/ span{margin:0 4px;color:#00F;font-weight:bold}' +
 				//Commit wrap
 				'#/R/ ./M/>span{position:absolute;right:/p/px;top:50%;transform:translateY(-/l/px)}' +
 				//Commit
@@ -1843,6 +1864,7 @@
 				{
 					M : DOM.ListViewItem,
 
+					L : ClassSingleLine,
 					A : ClassColdCommitAll,
 
 					R : ID,

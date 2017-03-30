@@ -13,6 +13,7 @@ module.exports =
 	password : 'password',
 	src : 'src',
 	title : 'title',
+	href : 'href',
 	width : 'width',
 	placeholder : 'placeholder',
 	readonly : 'readonly',
@@ -24,12 +25,14 @@ module.exports =
 	input : '<input>',
 	textarea : '<textarea>',
 	img : '<img>',
+	a : '<a>',
 	fieldset : '<fieldset>',
 	legend : '<legend>',
 	iframe : '<iframe>',
 
 	Div : 'div',
 	Img : 'img',
+	A : 'a',
 
 	load : 'load',
 	error : 'error',

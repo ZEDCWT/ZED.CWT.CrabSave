@@ -41,7 +41,8 @@ URLCaptcha = 'https://passport.bilibili.com/captcha',
 URLLoginKey = 'https://passport.bilibili.com/login?act=getkey',
 URLLogin = 'https://passport.bilibili.com/login/dologin',
 URLLoginCheck = 'http://space.bilibili.com/ajax/member/MyInfo',
-URLSpace = ZED.URLBuild('http://space.bilibili.com/ajax/member/getSubmitVideos?mid=',Util.U,'&pagesize=',PageSize,'&page=',Util.U),
+DomainSpace = 'http://space.bilibili.com/',
+URLSpace = ZED.URLBuild(DomainSpace,'ajax/member/getSubmitVideos?mid=',Util.U,'&pagesize=',PageSize,'&page=',Util.U),
 URLBangumi = ZED.URLBuild('http://bangumi.bilibili.com/jsonp/seasoninfo/',Util.U,'.ver'),
 URLMylist = ZED.URLBuild('http://www.bilibili.com/mylist/mylist-',Util.U,'.js'),
 URLDynamic = ZED.URLBuild('http://api.bilibili.com/x/feed/pull?type=0&ps=',PageSize,'&pn=',Util.U),
@@ -245,6 +246,7 @@ R = ZED.ReduceToObject
 						KeySite.Img,Q.pic,
 						KeySite.Title,Q.title,
 						KeySite.Author,Q.author,
+						KeySite.AuthorLink,DomainSpace + Q.mid,
 						KeySite.Date,new Date(1000 * Q.created)
 					)]
 				)
@@ -276,6 +278,7 @@ R = ZED.ReduceToObject
 							KeySite.Img,V.pic,
 							KeySite.Title,V.title,
 							KeySite.Author,V.author,
+							KeySite.AuthorLink,DomainSpace + ID,
 							KeySite.Date,new Date(1000 * V.created),
 							KeySite.Length,V.length
 						)
@@ -380,6 +383,7 @@ R = ZED.ReduceToObject
 							KeySite.Img,V.pic,
 							KeySite.Title,V.title,
 							KeySite.Author,V.author,
+							KeySite.AuthorLink,DomainSpace + V.mid,
 							KeySite.Date,new Date(V.create),
 							KeySite.Length,V.duration
 						)
@@ -412,6 +416,7 @@ R = ZED.ReduceToObject
 						KeySite.Img,PadURL(Util.MF(/src="([^"]+)/,Q)),
 						KeySite.Title,Util.DecodeHTML(Util.MF(/title".+?title="([^"]+)/,Q)),
 						KeySite.Author,Util.DecodeHTML(Util.MF(/up-name[^>]+>([^<]+)/,Q)),
+						KeySite.AuthorLink,DomainSpace + Util.MF(/space\.[^\/]+\/(\d+)/,Q),
 						KeySite.Date,Util.MF(/-date.+?i>([^<]+)/,Q).trim(),
 						KeySite.Length,Util.MF(/_rb">([^<]+)/,Q).trim()
 					))

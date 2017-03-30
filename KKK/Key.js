@@ -51,6 +51,7 @@ module.exports =
 		Img : KeyKey(),
 		Title : KeyKey(),
 		Author : KeyKey(),
+		AuthorLink : KeyKey(),
 		Date : KeyKey(),
 		Length : KeyKey(),
 		//	Hint
