@@ -92,6 +92,9 @@ Create = function()
 	{
 		DontCloseToTray = Q
 		Q ? TrayDestory() : TrayMake()
+	}).on('Ping',function(E,Q)
+	{
+		TrayIcon && TrayIcon.setToolTip(Q)
 	})
 	Window.on('close',function(E)
 	{

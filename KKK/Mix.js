@@ -3312,10 +3312,20 @@
 	)
 	//StatusBar Icon
 	ZED.each(function(V){RStatusIcon.append(ShowByRock(IDStatusIcon + ZED.chr(65 + V)))},ZED.range(0,2))
-	//Speed
+	//Speed & Ping
 	Bus.on(EventDownload.SpeedTotal,function(Q)
 	{
-		RSpeed.text(ZED.FormatSize(Q) + '/s')
+		Q = ZED.FormatSize(Q) + '/s'
+		RSpeed.text(Q)
+		IPCRenderer.send('Ping',ZED.Replace
+		(
+			'[|Count|] |Speed|',
+			'|',
+			{
+				Count : Queue.Online.length,
+				Speed : Q
+			}
+		))
 	})
 
 	Rainbow.append
