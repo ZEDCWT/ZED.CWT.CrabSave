@@ -59,6 +59,7 @@ URLVInfoURL = function(Q)
 		otype : 'json'
 	})
 },
+URLVideo = ZED.URLBuild('http://www.bilibili.com/video/av',Util.U),
 URLPlayer = 'http://static.hdslb.com/player/js/bilibiliPlayer.min.js',
 
 FrameTool,
@@ -517,6 +518,7 @@ R = ZED.ReduceToObject
 		.retryWhen(OverspeedRetry)
 	},
 	KeySite.IDView,ZED.add('av'),
+	KeySite.IDLink,URLVideo,
 	KeySite.Pack,ZED.identity
 );
 

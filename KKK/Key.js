@@ -50,6 +50,8 @@ module.exports =
 		PrefDef : KeyKey(),
 		//IDView
 		IDView : KeyKey(),
+		//IDLink
+		IDLink : KeyKey(),
 		//Pack
 		Pack : KeyKey()
 	},

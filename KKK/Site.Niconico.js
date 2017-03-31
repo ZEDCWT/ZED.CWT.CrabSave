@@ -313,6 +313,7 @@ R = ZED.ReduceToObject
 		})
 	},
 	KeySite.IDView,ZED.add('sm'),
+	KeySite.IDLink,URLVideo,
 	KeySite.Pack,function(S,Q)
 	{
 		return Util.RequestHead(Cookie.URL(Name,URLVideo(Q[KeyQueue.ID]))).map(function(H)

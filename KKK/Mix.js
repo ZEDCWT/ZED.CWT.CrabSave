@@ -1494,9 +1494,7 @@
 				'./H/ ./K/,./N/{background:rgba(102,175,224,.7)}' +
 				'./L/,./M/{background:#66AFE0}' +
 				//		Image
-				'#/R/ img{width:/i/px;cursor:pointer}' +
-				//		AuthorLink
-				'#/R/ a{display:block}',
+				'#/R/ img{width:/i/px;cursor:pointer}',
 				'/',
 				{
 					R : ID,
@@ -1669,12 +1667,10 @@
 					D = $(DOM.fieldset)
 					D.append
 					(
-						ShowByText
+						ShowByText(V[KeySite.Index] + ' | ',DOM.legend).append
 						(
-							V[KeySite.Index] +
-							' | ' +
-							SiteMap[V[KeySite.Name]][KeySite.IDView](V[KeySite.ID]),
-							DOM.legend
+							ShowByText(SiteMap[V[KeySite.Name]][KeySite.IDView](V[KeySite.ID]),DOM.a)
+								.attr(DOM.href,SiteMap[V[KeySite.Name]][KeySite.IDLink](V[KeySite.ID]))
 						),
 						Hover(D,V[KeySite.Unique],Cold.New(GoTarget,V)),
 						V[KeySite.Img] && Hover
@@ -1687,7 +1683,8 @@
 						V[KeySite.Length] && ShowByText(V[KeySite.Length]),
 						ShowByText(V[KeySite.Title]),
 						V[KeySite.Author] && (V[KeySite.AuthorLink] ?
-							ShowByText(V[KeySite.Author],DOM.a).attr(DOM.href,V[KeySite.AuthorLink]) :
+							$(DOM.div).append(ShowByText(V[KeySite.Author],DOM.a)
+								.attr(DOM.href,V[KeySite.AuthorLink])) :
 							ShowByText(V[KeySite.Author])),
 						MakeSiteDate(V)
 					)

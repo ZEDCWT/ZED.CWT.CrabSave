@@ -226,6 +226,7 @@ R = ZED.ReduceToObject
 		})
 	},
 	KeySite.IDView,ZED.identity,
+	KeySite.IDLink,URLChannel,
 	KeySite.Pack,ZED.identity
 );
 
