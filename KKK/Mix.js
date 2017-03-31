@@ -1708,9 +1708,10 @@
 				{
 					Target = T[0]
 					Detail = T[1]
-					ID = T[2]
+					ID = T[2] || ''
+					ID = ID.trim()
 
-					if (Util.U !== ID && Detail[KeySite.Hint])
+					if (ID && Detail[KeySite.Hint])
 					{
 						RHintTitle.text(ReplaceLang(Lang.HintFor,Target[KeySite.Name],ID))
 						RHintList.text(L(Lang.Loading))
