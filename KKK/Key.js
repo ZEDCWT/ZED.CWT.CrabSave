@@ -2,25 +2,12 @@
 var
 ZED = require('@zed.cwt/zedquery'),
 
-KeyKey = ZED.StableKeyGen(20170122),
-QueueKey = ZED.StableKeyGen(17022026);
+SettingKey = ZED.StableKeyGen(20170122),
+QueueKey = ZED.StableKeyGen(17022026),
+KeyKey = ZED.StableKeyGen(20170331);
 
 module.exports =
 {
-	Setting :
-	{
-		Dir : KeyKey(),
-		Name : KeyKey(),
-		Max : KeyKey(),
-		Font : KeyKey(),
-		Size : KeyKey(),
-		Weight : KeyKey(),
-		Retry : KeyKey(),
-		Restart : KeyKey(),
-		Merge : KeyKey(),
-		Suffix : KeyKey(),
-		Tray : KeyKey()
-	},
 	Site :
 	{
 		Name : KeyKey(),
@@ -97,5 +84,19 @@ module.exports =
 		Root : QueueKey(),
 		Dir : QueueKey(),
 		File : QueueKey()
+	},
+	Setting :
+	{
+		Dir : SettingKey(),
+		Name : SettingKey(),
+		Max : SettingKey(),
+		Font : SettingKey(),
+		Size : SettingKey(),
+		Weight : SettingKey(),
+		Retry : SettingKey(),
+		Restart : SettingKey(),
+		Merge : SettingKey(),
+		Suffix : SettingKey(),
+		Tray : SettingKey()
 	}
 }

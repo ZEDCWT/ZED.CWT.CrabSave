@@ -24,21 +24,22 @@ WordDate = ZED.map(WordPack,WordDateSingle).join('.'),
 
 Active = {},
 
-Start = function(Q,I,At,URL,Done,Size,Begin,Down,Dirty)
+Start = function(Q,I,At,URL,Done,Size)
 {
+	var Begin,Down,Dirty;
+
 	ZED.isObject(URL) || (URL = {url : URL})
-	ZED.Merge(Util.F,Util.T,
-	{
-		timeout : 1500,
-		forever : Util.T,
-		headers :
-		{
-			'User-Agent' : Config.UA
-		}
-	},URL)
 	Down = Downloader(
 	{
-		request : URL,
+		request : ZED.Merge(Util.F,Util.T,
+		{
+			timeout : 1500,
+			forever : Util.T,
+			headers :
+			{
+				'User-Agent' : Config.UA
+			}
+		},URL),
 		newreq : Util.T,
 		path : At,
 		last : Q[KeyQueue.File][I] && Path.join(Q[KeyQueue.Dir],Q[KeyQueue.File][I]),
