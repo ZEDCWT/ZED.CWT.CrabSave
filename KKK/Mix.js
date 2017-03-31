@@ -2790,8 +2790,8 @@
 				Active = R
 				R.attr(DOM.cls,ClassSignInSiteActive)
 				Target = V
-				RefreshVCode(Util.F)
 				RInfo.empty()
+				RefreshVCode(Util.F)
 				RefreshCookie()
 				SwitchOn = []
 				ZED.each(function(V,P)
@@ -2809,7 +2809,6 @@
 			{
 				if (J || VCodeTarget !== Target)
 				{
-					VCodeTarget = Target
 					VCodeEnd && VCodeEnd.end()
 					RVCodeImg.removeAttr(DOM.src).attr(DOM.title,L(Util.F === J ? Lang.ClkLoad : Lang.Loading))
 					if (Target[KeySite.VCode])
@@ -2817,6 +2816,7 @@
 						RVCode.removeAttr(DOM.style)
 						if (Util.F !== J)
 						{
+							VCodeTarget = Target
 							VCodeEnd = Target[KeySite.VCode]().start(function(Q)
 							{
 								if (ZED.isArrayLike(Q))
@@ -2833,6 +2833,7 @@
 					}
 					else
 					{
+						VCodeTarget = Target
 						VCodeEnd = Util.F
 						RVCode.hide()
 					}
@@ -2889,6 +2890,7 @@
 					RSite.append(R)
 				}
 			},SiteAll)
+			RVCodeInput.on(DOM.focus,ZED.nAry(0,RefreshVCode))
 			RVCodeImg.on(DOM.click,RefreshVCode)
 			MakeEnter(RVCodeInput,SignIn)
 			RExe.on(DOM.click,SignIn)
