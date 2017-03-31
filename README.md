@@ -1,4 +1,4 @@
-# CrabSave - Just another video downloader with GUI
+﻿# CrabSave - Just another video downloader with GUI
 
 ## Index
 
@@ -388,9 +388,9 @@ Default
 ["+|Tail|"]
 ```
 
-The language here to generate merge command is designed not to be too complicate, so if a merge tool's command format is too complicate, it is recommand to create a batch/shell file receiving a list of files to be merged and do the complicate work inside.
+The language here to generate merge command is designed not to be too complicate, so if a merge tool's command format is too complicate, it is recommand to create a batch/shell file receiving a list of files to be merged and doing the complicate work inside.
 
-The value of this setting would be a JSON array, and the `[` `]` around could be omitted.  
+The value of this setting would be a JSON array, and the surrounding `[]` could be omitted.  
 The first item would always be treated as a `string` because it is the target to execute the command.  
 The following items would be `string` or `string[]`, other wise they would be converted into `string`.  
 If a item is a `string`, it means that it is one single parameter, and can contains variables in the following table.
