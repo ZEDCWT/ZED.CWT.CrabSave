@@ -1725,7 +1725,10 @@
 						{
 							T[ID] = Q
 							GoHintCount === At && GoHintRender(Target,ID,URL,Q)
-						},ZED.noop)
+						},function()
+						{
+							GoHintCount === At && RHintList.text(L(Lang.Errored))
+						})
 					}
 					else GoHintLeave()
 				}
