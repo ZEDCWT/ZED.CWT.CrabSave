@@ -33,7 +33,7 @@ Start = function(Q,I,At,URL,Done,Size)
 	{
 		request : ZED.Merge(Util.F,Util.T,
 		{
-			timeout : 1500,
+			timeout : 3000,
 			forever : Util.T,
 			headers :
 			{

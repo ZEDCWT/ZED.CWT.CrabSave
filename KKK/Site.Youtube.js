@@ -207,7 +207,7 @@ R = ZED.ReduceToObject
 	KeySite.Map,[ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.User),
-		KeySite.Judge,[Util.MakeLabelWord('user','[\\s/]+','[_0-9A-Za-z-]+')],
+		KeySite.Judge,[Util.MakeLabelWord('user')],
 		KeySite.Page,function(ID,X)
 		{
 			return MakeList(ID,X,URLChannelByUser,MakeListCacheUser)
@@ -215,7 +215,7 @@ R = ZED.ReduceToObject
 	),ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Channel),
-		KeySite.Judge,[Util.MakeLabelWord('channel','[\\s/]+','[_0-9A-Za-z-]+')],
+		KeySite.Judge,[Util.MakeLabelWord('channel')],
 		KeySite.Page,function(ID,X)
 		{
 			return MakeList(ID,X,URLChannel,MakeListCacheChannel)
@@ -223,7 +223,7 @@ R = ZED.ReduceToObject
 	),ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Playlist),
-		KeySite.Judge,[Util.MakeLabelWord('playlist','[\\s/]+','[_0-9A-Za-z-]+'),/list=([^&]+)/i],
+		KeySite.Judge,[Util.MakeLabelWord('playlist'),/list=([^&]+)/i],
 		KeySite.Page,MakeListByPlaylist
 	),ZED.ReduceToObject
 	(
@@ -265,7 +265,7 @@ R = ZED.ReduceToObject
 	),ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Search),
-		KeySite.Judge,[/^(?:find|search)\s+(.*)$/i],
+		KeySite.Judge,Util.RSearch,
 		KeySite.Page,function(Q,X,O)
 		{
 			return Util.RequestBody(Util.MakeSearch(URLSearch,Q,ZED.Code.PageToken(PageSize * (X - 1)),O)).map(function(Q)
@@ -291,7 +291,7 @@ R = ZED.ReduceToObject
 	),ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Video),
-		KeySite.Judge,[/v=([^&]+)/,/^([_0-9A-Za-z-]+)$/],
+		KeySite.Judge,[/v=([^&]+)/,/^([_\dA-Za-z-]+)$/],
 		KeySite.Page,function(ID)
 		{
 			return Util.RequestBody(Cookie.URL(Name,URLVInfo(ID))).map(function(Q)

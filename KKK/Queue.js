@@ -419,7 +419,7 @@ HRemove = function(Q,X)
 				ZED.delete_(T,HRemoveMap)
 				ZED.delete_(T,OfflineMap)
 				//ZED.delete_(T,OffSizeMap)
-				T = T.replace(/\.\d+\.[A-Z0-9]+$/,'')
+				T = T.replace(/\.\d+\.[\dA-Z]+$/,'')
 				1 === CardMap[T] ? ZED.delete_(T,CardMap) : --CardMap[T]
 				R[F] = T
 			}

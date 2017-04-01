@@ -27,6 +27,8 @@ It currently supports the following sites
 |YouTube|[https://www.youtube.com/](https://www.youtube.com/)|
 |NicoNico(ニコニコ)|[http://www.nicovideo.jp/](http://www.nicovideo.jp/)|
 |ToonsTV|[https://www.toons.tv/](https://www.toons.tv/)|
+|Iwara|[http://www.iwara.tv/](http://www.iwara.tv/)|
+|Iwara Ecchi|[http://ecchi.iwara.tv/](http://ecchi.iwara.tv/)|
 
 ![GUI Interface](Screenshot/Introduction.png)
 
@@ -193,6 +195,28 @@ Require loading component.
 RegExp `/^$/`  
 Examples  
 `t`
+### Iwara & Iwara Ecchi
+Alias : I.
+Ecchi Aliases : IE, EI.
+#### Video ID
+RegExp `/videos\/([\da-z]+)/i`  
+Examples  
+`i b3ggwieowslyvgln`  
+`http://www.iwara.tv/videos/b3ggwieowslyvgln`  
+`ie yp1Yc9Q3uZ3GA94`  
+`http://ecchi.iwara.tv/videos/yp1Yc9Q3uZ3GA94`
+#### Uploader
+RegExp `/(?:^|[^a-z])users?(?:[\s\/]+)??([^\s\/]+)/i`  
+Examples  
+`i user rickyman`  
+`http://www.iwara.tv/users/rickyman`  
+`ie user hk5dz3`  
+`http://ecchi.iwara.tv/users/hk5dz3`
+#### Search
+RegExp `/^(?:find|search)\s+(.*)$/i`  
+Examples  
+`i find test`  
+`ie find test`
 
 ## Cold
 

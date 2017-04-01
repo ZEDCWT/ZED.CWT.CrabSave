@@ -395,7 +395,7 @@ R = ZED.ReduceToObject
 	),ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Search),
-		KeySite.Judge,[/^(?:find|search)\s+(.*)$/i],
+		KeySite.Judge,Util.RSearch,
 		KeySite.Page,function(Q,X,O)
 		{
 			return Util.RequestBody(Util.MakeSearch(URLSearch,Q,X,O)).map(function(Q,R)

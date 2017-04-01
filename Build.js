@@ -55,6 +55,7 @@ Full = function()
 			[
 				'/\\.vscode',
 				'/Declare',
+				'/KKK/SiteTemplate\\.js',
 				'/Old',
 				'/Build',
 				'/\\.git',

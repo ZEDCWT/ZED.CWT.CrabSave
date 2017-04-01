@@ -100,6 +100,8 @@ module.exports =
 	T : True,
 	F : False,
 
+	RSearch : [/^(?:find|search)\s+(.*)$/i],
+
 	Bus : ZED.Emitter(),
 	Look : function(Q){Look.push(Q)},
 
@@ -147,9 +149,9 @@ module.exports =
 	{
 		return RegExp('(?:^|[^a-z])' + Q + '(?:[^a-z]\\D*)??(\\d+)','i')
 	},
-	MakeLabelWord : function(Q,S,R)
+	MakeLabelWord : function(Q,R,S)
 	{
-		return RegExp('(?:^|[^a-z])' + Q + '(?:' + S + ')??(' + R + ')','i')
+		return RegExp('(?:^|[^a-z])' + Q + '(?:' + (S || '[\\s/]+') + ')??(' + (R || '[_\\dA-Z-]+') + ')','i')
 	},
 	MakeSearch : function(URL,Q,X,O)
 	{
@@ -168,7 +170,7 @@ module.exports =
 	{
 		Q.lastIndex = 0
 		T = Q.exec(S)
-		T && C(T[0])
+		T && C(J ? T : T[0])
 		for (;Q.lastIndex;)
 		{
 			T = Q.exec(S)

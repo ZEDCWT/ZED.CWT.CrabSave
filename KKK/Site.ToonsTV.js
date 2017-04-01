@@ -109,7 +109,7 @@ R = ZED.ReduceToObject
 	KeySite.Map,[ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Video),
-		KeySite.Judge,[/channels\/([0-9A-Z_]+\/[0-9A-Z_]+)/i,/^([0-9A-Z_]+\/[0-9A-Z_]+)$/i],
+		KeySite.Judge,[/channels\/([\dA-Z_]+\/[\dA-Z_]+)/i,/^([\dA-Z_]+\/[\dA-Z_]+)$/i],
 		KeySite.Page,function(ID)
 		{
 			return Util.RequestBody(URLChannel(ID)).map(Extract).map(function(Q,V)
@@ -137,7 +137,7 @@ R = ZED.ReduceToObject
 	),ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Channel),
-		KeySite.Judge,[/channels\/([0-9A-Z_]+)/i,/^([0-9A-Z_]+)$/i],
+		KeySite.Judge,[/channels\/([\dA-Z_]+)/i,/^([\dA-Z_]+)$/i],
 		KeySite.Page,function(ID)
 		{
 			return Util.RequestBody(URLChannel(ID)).map(Extract).map(function(Q)
