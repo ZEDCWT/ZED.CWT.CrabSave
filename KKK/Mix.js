@@ -793,6 +793,7 @@
 
 		MakeDetailFile = []
 		MakeDetailURL = []
+		RDetailPart.empty()
 		if (Part.length) ZED.Each(Part,function(F,V)
 		{
 			RDetailPart.append
