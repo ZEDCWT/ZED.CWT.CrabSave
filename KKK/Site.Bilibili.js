@@ -519,7 +519,10 @@ R = ZED.ReduceToObject
 	},
 	KeySite.IDView,ZED.add('av'),
 	KeySite.IDLink,URLVideo,
-	KeySite.Pack,ZED.identity
+	KeySite.Pack,function(Q)
+	{
+		return {url : Q,timeout : 3000}
+	}
 );
 
 module.exports = R
