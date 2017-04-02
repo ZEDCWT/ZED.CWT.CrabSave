@@ -33,11 +33,8 @@ Start = function(Q,I,At,URL,Done,Size)
 	{
 		request : ZED.Merge(Util.F,Util.T,
 		{
-			forever : Util.T,
-			headers :
-			{
-				'User-Agent' : Config.UA
-			}
+			//forever : Util.T,
+			headers : {'User-Agent' : Config.UA}
 		},URL),
 		newreq : Util.T,
 		path : At,
