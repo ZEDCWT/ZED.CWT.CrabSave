@@ -1126,11 +1126,12 @@
 	{
 		0 < T && MakeNoti(X,ReplaceLang(L,T,MakeS(T)),J)
 	},
+	MakeToolBarClickKeyCall = ZED.KeyGen(),
 	MakeToolBarClick = function(R,Q,L,H,N)
 	{
-		return Q.on(DOM.click,function(T,X)
+		return Q.on(DOM.click,Q[MakeToolBarClickKeyCall] = function(T,X)
 		{
-			Util.StopProp(T)
+			T && Util.StopProp(T)
 			T = R.Count()
 			X = ZED.KeyGen()
 			T = N ? H(X) : (T && H(R.Selecting(),X))
@@ -1907,6 +1908,11 @@
 			var
 			ToolCommit = MakeShape(Lang.Commit,ShapeConfigColdToolCommit),
 			ToolRemove = MakeShape(Lang.Remove,ShapeConfigColdToolRemove),
+			ToolCommitAll = MakeShape(Lang.CommitAll,ShapeConfigColdToolCommitAll,ClassColdCommitAll).append
+			(
+				ZED.Shape(ShapeConfigColdToolCommitAll).attr(DOM.cls,ClassColdCommitAll + 'A'),
+				ZED.Shape(ShapeConfigColdToolCommitAll).attr(DOM.cls,ClassColdCommitAll + 'B')
+			),
 
 			R = MakeSelectableList
 			(
@@ -1952,18 +1958,7 @@
 					MakeStatusX(X,Lang.RemovedN,Cold.Remove(S),Util.T)
 					R.Redraw()
 				}),
-				MakeToolBarClick
-				(
-					R,
-					MakeShape(Lang.CommitAll,ShapeConfigColdToolCommitAll,ClassColdCommitAll).append
-					(
-						ZED.Shape(ShapeConfigColdToolCommitAll).attr(DOM.cls,ClassColdCommitAll + 'A'),
-						ZED.Shape(ShapeConfigColdToolCommitAll).attr(DOM.cls,ClassColdCommitAll + 'B')
-					),
-					Lang.CommittingN,
-					Cold.CommitAll,
-					Util.T
-				)
+				MakeToolBarClick(R,ToolCommitAll,Lang.CommittingN,Cold.CommitAll,Util.T)
 			))
 			Bus.on(Event.Cold.Change,RColdCount)
 				.on(EventQueue.Newed,function(Q,S)
@@ -1976,6 +1971,9 @@
 				{
 					MakeDBError(X,Lang.Commit,E)
 				})
+			UShortCut
+				.cmd(ShortCutCommand.CommitSel,function(){ToolCommit[MakeToolBarClickKeyCall]()})
+				.cmd(ShortCutCommand.CommitAll,function(){ToolCommitAll[MakeToolBarClickKeyCall]()})
 
 			return R
 		}

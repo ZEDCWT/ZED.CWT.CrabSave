@@ -24,6 +24,9 @@ Command =
 	PageNext : 'Browser.PageNext',
 	PageTail : 'Browser.PageTail',
 
+	CommitSel : 'Cold.CommitSel',
+	CommitAll : 'Cold.CommitAll',
+
 	ListAll : 'List.SelAll',
 	ListClear : 'List.SelClear',
 	ListPgUp : 'List.PgUp',
@@ -46,6 +49,9 @@ DefaultMap = ZED.ReduceToObject
 	Command.PagePrev,'j',
 	Command.PageNext,'k',
 	Command.PageTail,'l',
+
+	Command.CommitSel,'enter',
+	Command.CommitAll,'ctrl+enter',
 
 	Command.ListAll,'ctrl+a',
 	Command.ListClear,'esc',

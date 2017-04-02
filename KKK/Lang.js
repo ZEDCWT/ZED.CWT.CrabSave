@@ -40,6 +40,7 @@ module.exports =
 	SelAll : Lang('Select all'),
 	UnAll : Lang('Unselect all'),
 	Commit : Lang('Commit'),
+	CommitSel : Lang('Commit selection'),
 	CommitAll : Lang('Commit all'),
 	Remove : Lang('Remove'),
 	Merge : Lang('Merge'),

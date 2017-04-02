@@ -334,6 +334,8 @@ Some actions can be done by keyboard shortcuts, and they are all configurable.
 |Browser \| Navigate to the previous page|`j`|
 |Browser \| Navigate to the next page|`k`|
 |Browser \| Navigate to the last page|`l`|
+|Cold \| Commit selection|`enter`|
+|Cold \| Commit all|`ctrl+enter`|
 |List \| Select all|`ctrl+a`|
 |List \| Clear selection|`esc`|
 |List \| Page up|`pgup`|
