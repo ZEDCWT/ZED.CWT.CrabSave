@@ -1589,7 +1589,9 @@
 					},V[KeySite.Judge])
 				},Target[KeySite.Map])
 
-				return Detail && [Target,Detail,ID[1]]
+				return Detail ?
+					[Target,Detail,ID[1]] :
+					J && GoError(Lang.UknURL,URL)
 			},
 			Go = function()
 			{
@@ -1619,7 +1621,6 @@
 						Jump(1)
 						RURL.blur()
 					}
-					else GoError(Lang.UknURL,URL)
 				}
 			},
 			Hover = function(C,I,Q)
