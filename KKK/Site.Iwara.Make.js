@@ -34,6 +34,8 @@ module.exports = function(Domain,SubName,Judge)
 			{
 				return Util.RequestBody(URLVideo(ID)).map(function(Q)
 				{
+					/player/.test(Q) || ZED.Throw(L(Lang.Bad))
+
 					return ZED.ReduceToObject
 					(
 						KeySite.Pages,1,
