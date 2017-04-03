@@ -55,24 +55,26 @@ Create = function()
 	},
 	TrayMake = function()
 	{
-		TrayIcon && TrayIcon.destroy()
-		TrayIcon = new Electron.Tray(Path.join(__dirname,'TrayIcon.ico'))
-		TrayIcon.setToolTip('CrabSave')
-		TrayIcon.setContextMenu(Electron.Menu.buildFromTemplate([
+		if (!TrayIcon)
 		{
-			label : L(Lang.DevTool),
-			click : function()
+			TrayIcon = new Electron.Tray(Path.join(__dirname,'TrayIcon.ico'))
+			TrayIcon.setToolTip('CrabSave')
+			TrayIcon.setContextMenu(Electron.Menu.buildFromTemplate([
 			{
-				Window.webContents.toggleDevTools()
-			}
-		},{
-			label : L(Lang.Restore),
-			click : TrayRestore
-		},{
-			label : L(Lang.Exit),
-			click : TrayExit
-		}]))
-		ONS(TrayIcon,'click double-click',TrayRestore)
+				label : L(Lang.DevTool),
+				click : function()
+				{
+					Window.webContents.toggleDevTools()
+				}
+			},{
+				label : L(Lang.Restore),
+				click : TrayRestore
+			},{
+				label : L(Lang.Exit),
+				click : TrayExit
+			}]))
+			ONS(TrayIcon,'click double-click',TrayRestore)
+		}
 	},
 	TrayDestory = function()
 	{
