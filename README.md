@@ -287,7 +287,7 @@ PS.
 The suffix of the download URLs control the speed when downloading. And the possible values would be `rate=4100`, `rate=1400`, `rate=1100`, `rate=49` or `dynamic=1`.  
 The `rate=4100` would be the best with average speed of around 4 MB / s, but I only see these when downloading bangumi videos.  
 The `rate=1400` and `rate=1100` would be the second best with average speed of around 1 MB / s, and I am not sure when it will appear.  
-The `dynamic=1` would be the worst because it would transfer around 20.9 MB data as fast as possible and transfer the rest of data in a extreme slow rate in order to control the average speed to be around 200 KB / s. Although it is possible to speed up by pausing-restarting, it is very bothering.  
+The `dynamic=1` ~~would be the worst~~ is not so good but not that bad. It would transfer around 20.9 MB data as fast as possible and transfer the rest of data in a extreme slow rate in order to control the average speed to be around 200 KB / s. Although it is possible to speed up by pausing-restarting, it is very bothering.  
 The `rate=49` is only be seen while requesting by IP outside China.
 
 ### YouTube
