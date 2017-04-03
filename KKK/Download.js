@@ -42,6 +42,7 @@ Start = function(Q,I,At,URL,Done,Size)
 		thread : 1,
 		force : !Done[I],
 		interval : Config.Speed,
+		forcerange : Util.T,
 		only200 : Util.T
 	}).on('connected',function()
 	{
