@@ -24,7 +24,7 @@ module.exports = function(Domain,SubName,Judge)
 
 	return ZED.ReduceToObject
 	(
-		KeySite.Name,Name + (SubName && ' ' + SubName),
+		KeySite.Name,Name + SubName,
 		KeySite.Judge,Judge,
 		KeySite.Map,[ZED.ReduceToObject
 		(
@@ -121,7 +121,7 @@ module.exports = function(Domain,SubName,Judge)
 				return Util.RequestBody(URLVInfoURL(ID)).map(function(U,T)
 				{
 					U = ZED.JTO(U)[0]
-					T = Util.MF(/file=.*?%2F(\d{10,})_/,U.uri)
+					T = Util.MF(/file=.*?%2F(\d{10,})(?:[\da-z]{5})?_/,U.uri)
 
 					return ZED.ReduceToObject
 					(

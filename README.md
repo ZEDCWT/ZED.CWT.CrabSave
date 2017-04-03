@@ -28,7 +28,7 @@ It currently supports the following sites
 |NicoNico(ニコニコ)|[http://www.nicovideo.jp/](http://www.nicovideo.jp/)|
 |ToonsTV|[https://www.toons.tv/](https://www.toons.tv/)|
 |Iwara|[http://www.iwara.tv/](http://www.iwara.tv/)|
-|Iwara Ecchi|[http://ecchi.iwara.tv/](http://ecchi.iwara.tv/)|
+|IwaraEcchi|[http://ecchi.iwara.tv/](http://ecchi.iwara.tv/)|
 
 ![GUI Interface](Screenshot/Introduction.png)
 
@@ -195,7 +195,7 @@ Require loading component.
 RegExp `/^$/`  
 Examples  
 `t`
-### Iwara & Iwara Ecchi
+### Iwara & IwaraEcchi
 Alias : I.
 Ecchi Aliases : IE, EI.
 #### Video ID
