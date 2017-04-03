@@ -284,10 +284,10 @@ If this component is not loaded. A user would be still able to download videos, 
 Or. A user would be able to access to 1080P videos of bangumi when the user is signed in with a `Big Member` account (though I do not think someone would download bilibili version instead of a any other versions, which is much more stable. And the user would be able to use filters while searching.
 
 PS.  
-The suffix of the download URLs control the speed when downloading. And the possible values would be `rate=4100`, `rate=1400`, `rate=1100`, `rate=49` or `dynamic=1`.  
+The suffix of the download URLs control the speed when downloading. And the possible values would be `rate=4100`, `rate=1400`, `rate=1100`, `rate=49`, `dynamic=1` or some others.  
 The `rate=4100` would be the best with average speed of around 4 MB / s, but I only see these when downloading bangumi videos.  
-The `rate=1400` and `rate=1100` would be the second best with average speed of around 1 MB / s, and I am not sure when it will appear.  
-The `dynamic=1` ~~would be the worst~~ is not so good but not that bad. It would transfer around 20.9 MB data as fast as possible and transfer the rest of data in a extreme slow rate in order to control the average speed to be around 200 KB / s. Although it is possible to speed up by pausing-restarting, it is very bothering.  
+The `rate=1400`, `rate=1100` and some others with rate around 1000 would be the second best with average speed of around 1 MB / s. It seems to appear in the GMT+8 morning.  
+The `dynamic=1` ~~would be the worst~~ is not so good but not that bad. It would transfer around 20.9 MB data as fast as possible and transfer the rest of data in a extreme slow rate in order to control the average speed to be around 100 KB / s. ~~Although it is possible to speed up by pausing-restarting, it is very bothering.~~ It is handled by auto-restarting.  
 The `rate=49` is only be seen while requesting by IP outside China.
 
 ### YouTube
