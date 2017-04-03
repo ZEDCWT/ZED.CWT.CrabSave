@@ -118,14 +118,15 @@ module.exports = function(Domain,SubName,Judge)
 		{
 			return Util.RequestBody(URLVideo(ID)).flatMap(function(Q)
 			{
-				return Util.RequestBody(URLVInfoURL(ID)).map(function(U)
+				return Util.RequestBody(URLVInfoURL(ID)).map(function(U,T)
 				{
 					U = ZED.JTO(U)[0]
+					T = Util.MF(/file=.*?%2F(\d{10,})_/,U.uri)
 
 					return ZED.ReduceToObject
 					(
 						KeyQueue.Author,Util.DecodeHTML(Util.MF(/username">([^<]+)/,Q)),
-						KeyQueue.Date,ZED.now(new Date(Util.MU(/\d{4}(?:-\d\d)+ \d\d:\d\d/,Q))),
+						KeyQueue.Date,ZED.now(new Date(T ? 1000 * T : Util.MU(/\d{4}(?:-\d\d)+ \d\d:\d\d/,Q))),
 						KeyQueue.Part,[ZED.ReduceToObject
 						(
 							KeyQueue.URL,[U.uri],
