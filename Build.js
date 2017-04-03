@@ -21,9 +21,8 @@ Output = Path.join(__dirname,'Out'),
 UglifyConfig =
 {
 	fromString : true,
-	compress : {screw_ie8 : false},
-	mangle : {toplevel : true,screw_ie8 : false},
-	output : {screw_ie8 : false}
+	compress : {reduce_vars : false,collapse_vars : false},
+	mangle : {toplevel : true}
 },
 Compress = function(Q)
 {
