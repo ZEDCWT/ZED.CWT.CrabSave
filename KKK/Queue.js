@@ -285,20 +285,21 @@ ReinfoLook = function(R,C,T,F)
 	for (F = 0;F < R.length;++F) DispatchInfoPreemptive.push(R[F])
 	F && (InfoNow || DispatchInfo())
 },
+ReinfoUpdate = function(ID)
+{
+	ReinfoMap[ID] = ZED.now()
+	ReinfoQueue.push(ID)
+	InnerPause(ID)
+	Bus.emit(EventQueue.Reinfo,ID,WaitDisplay)
+	Dispatch()
+},
 Reinfo = function(Q,ID)
 {
 	ID = Q[KeyQueue.Unique]
 	ReinfoMap[ID] || OnlineData.update({_id : Q._id},Q,function(E)
 	{
 		if (E) Error(Q,E)
-		else
-		{
-			ReinfoMap[ID] = ZED.now()
-			ReinfoQueue.push(ID)
-			InnerPause(ID)
-			Bus.emit(EventQueue.Reinfo,ID,WaitDisplay)
-			Dispatch()
-		}
+		else ReinfoUpdate(ID)
 	})
 },
 ErrorMap = {},
@@ -495,6 +496,7 @@ Infoing,
 InfoNow,
 InfoSite,
 InfoEnd,
+InfoIsSizing,
 DispatchInfoGot = function(Q)
 {
 	Q[KeyQueue.Unique] = InfoNow
@@ -519,11 +521,14 @@ DispatchInfoGot = function(Q)
 		(
 			Bus.emit(EventQueue.SizeGot,Q),
 			Observable.empty()
-		) : Download.Size(Q,InfoSite).tap(function(S)
-		{
-			OnSizeMap[InfoNow] = S[KeyQueue.Size]
-			Bus.emit(EventQueue.SizeGot,ZED.Merge(Q,S))
-		}).flatMap(DispatchSizeGot)
+		) : (
+			InfoIsSizing = Util.T,
+			Download.Size(Q,InfoSite).tap(function(S)
+			{
+				OnSizeMap[InfoNow] = S[KeyQueue.Size]
+				Bus.emit(EventQueue.SizeGot,ZED.Merge(Q,S))
+			}).flatMap(DispatchSizeGot)
+		)
 	})
 },
 DispatchSizeGot = function(S)
@@ -532,12 +537,13 @@ DispatchSizeGot = function(S)
 },
 DispatchInfoEnd = function()
 {
-	InfoNow = InfoEnd = Util.F
+	InfoNow = InfoEnd = InfoIsSizing = Util.F
 	Dispatch()
 },
 DispatchInfoError = function(E)
 {
-	ErrorOn(InfoNow,E,Util.T)
+	if (Util.OReinfo === E) ReinfoUpdate(InfoNow)
+	else ErrorOn(InfoNow,E,Util.T)
 	DispatchInfoEnd()
 },
 DispatchInfoFinish = function()
@@ -569,10 +575,23 @@ DispatchInfoRefresh = function(Q)
 	{
 		URL = Part[F][KeyQueue.URL]
 		for (Fa = -1;++Fa < URL.length;)
-			Sizes[++I] <= Done[I] || (URL[Fa] = New[F][KeyQueue.URL][Fa])
+			(Sizes && Sizes[++I] <= Done[I]) || (URL[Fa] = New[F][KeyQueue.URL][Fa])
 	}
 
-	return OnlineUpdate(ZED.objOf(KeyQueue.Unique,InfoNow),{$set : ZED.objOf(KeyQueue.Part,Part)}).tap(function()
+	return OnlineUpdate
+	(
+		ZED.objOf(KeyQueue.Unique,InfoNow),
+		{$set : ZED.objOf(KeyQueue.Part,Part)}
+	).flatMap(function()
+	{
+		return Sizes ?
+			Observable.empty() :
+			Download.Size(DispatchInfoRefreshLast,InfoSite).tap(function(S)
+			{
+				OnSizeMap[InfoNow] = S[KeyQueue.Size]
+				Bus.emit(EventQueue.SizeGot,ZED.Merge(DispatchInfoRefreshLast,S))
+			}).flatMap(DispatchSizeGot)
+	}).tap(function()
 	{
 		Bus.emit(EventQueue.Queuing,DispatchInfoRefreshLast[KeyQueue.Unique])
 		DispatchInfoRefreshLast = Util.F
@@ -603,18 +622,26 @@ DispatchInfo = function(T)
 					InfoNow = Q[KeyQueue.Unique]
 					DispatchInfoRefreshLast = Q
 					Bus.emit(EventQueue.Refresh,Q)
-					InfoEnd = Site.Map[Q[KeyQueue.Name]][KeySite.URL](Q[KeyQueue.ID],Q)
+					InfoSite = Site.Map[Q[KeyQueue.Name]]
+					InfoEnd = InfoSite[KeySite.URL](Q[KeyQueue.ID],Q)
 						.flatMap(DispatchInfoRefresh)
 						.start(ZED.noop,DispatchInfoError,DispatchInfoFinish)
 				}
 			})
 		else
 		{
-			if (ErrorQueue.length)
+			if (ReinfoQueue.length || ErrorQueue.length)
 			{
 				T = {}
 				T[KeyQueue.Size] = DBExistFalse
-				T[KeyQueue.Unique] = {$nin : ErrorQueue}
+				T[KeyQueue.Unique] =
+				{
+					$nin : ReinfoQueue.length ?
+						ErrorQueue.length ?
+							ReinfoQueue.concat(ErrorQueue) :
+							ReinfoQueue :
+						ErrorQueue
+				}
 			}
 			else T = QueryNoSize
 			OnlineData.find(T).sort(DispatchSort).limit(1).exec(function(E,Q)
@@ -628,15 +655,16 @@ DispatchInfo = function(T)
 					T = Q[KeyQueue.Part]
 					Bus.emit(T ? EventQueue.InfoGot : EventQueue.Info,Q)
 					InfoSite = Site.Map[Q[KeyQueue.Name]]
-					T = T ?
+					T = T ? (
+						InfoIsSizing = Util.T,
 						Download.Size(Q,InfoSite).tap(function(S)
 						{
 							S[KeyQueue.Unique] = InfoNow
 							OnSizeMap[InfoNow] = S[KeyQueue.Size]
 							Bus.emit(EventQueue.SizeGot,S)
-						}).flatMap(DispatchSizeGot) :
-						InfoSite[KeySite.URL](Q[KeyQueue.ID],Q)
-							.flatMap(DispatchInfoGot)
+						}).flatMap(DispatchSizeGot)
+					) : InfoSite[KeySite.URL](Q[KeyQueue.ID],Q)
+						.flatMap(DispatchInfoGot)
 					InfoEnd = T.start(ZED.noop,DispatchInfoError,DispatchInfoFinish)
 				}
 			})
@@ -676,6 +704,7 @@ module.exports =
 
 	//Hot
 	IsInfo : function(Q,J){return InfoNow === Q && (J ^ !DispatchInfoRefreshLast)},
+	IsSize : function(Q){return InfoNow === Q && InfoIsSizing},
 	IsReadyRefresh : function(Q){return 0 <= DispatchInfoPreemptive.indexOf(Q)},
 	IsRunning : function(Q){return Running[Q]},
 

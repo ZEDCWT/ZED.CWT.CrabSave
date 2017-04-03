@@ -2145,11 +2145,13 @@
 							Title.text(Q[KeyQueue.Title])
 							Info.text
 							(
-								Q[KeyQueue.Part] ?
-									Util.U === Q[KeyQueue.Size] ?
-										L(Lang.GetSize) :
-										MakeSizePercentage(Q[KeyQueue.Size],Q[KeyQueue.DoneSum]) :
-									L(Queue.IsInfo(Q[KeyQueue.Unique]) ? Lang.GetInfo : Lang.ReadyInfo)
+								Queue.IsInfo(Q[KeyQueue.Unique]) ?
+									L(Queue.IsSize(Q[KeyQueue.Unique]) ? Lang.GetSize : Lang.GetInfo) :
+									Q[KeyQueue.Part] ?
+										Util.U === Q[KeyQueue.Size] ?
+											L(Lang.ReadySize) :
+											MakeSizePercentage(Q[KeyQueue.Size],Q[KeyQueue.DoneSum]) :
+										L(Lang.ReadyInfo)
 							)
 							if (Queue.ReinfoMap[ID])
 							{
@@ -2374,7 +2376,9 @@
 			{
 				if (A = Active[Q])
 				{
-					A[ActiveKeySpeed].text(L(Queue.ActiveMap[Q] ? Lang.Queuing : Lang.Paused))
+					A[ActiveKeySpeed].text(L(Queue.ActiveMap[Q] ?
+						Queue.OnlineMap[Q] ?
+						Lang.Processing : Lang.Queuing : Lang.Paused))
 					A[ActiveKeyRemain].text('')
 				}
 			}).on(EventQueue.EFinish,function(E)

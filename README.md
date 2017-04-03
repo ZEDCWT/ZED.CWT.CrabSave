@@ -1,4 +1,4 @@
-﻿# CrabSave - Just another video downloader with GUI
+# CrabSave - Just another video downloader with GUI
 
 ## Index
 
@@ -292,7 +292,8 @@ The `rate=49` is only be seen while requesting by IP outside China.
 
 ### YouTube
 
-Some videos like `My2FRPA3Gf8` are protected with a `sig` field, so without loading this component, these videos cannot be downloaded.
+Some videos such as `Oc8bSX1kCCo` are protected with a `sig` field, so without loading this component, these videos cannot be downloaded.  
+This component may be expired after weaks, so it is required to load it again manually if some tasks hint `URL expired` frequently.
 
 Here is what will happen while loading this component.  
 ![Component YouTube](Screenshot/Component.YouTube.png)

@@ -247,7 +247,7 @@ module.exports =
 							Sizes[F] = H || 0
 							Bus.emit(EventDownload.Size,Q,H,F)
 						}
-						else ZED.Throw()
+						else ZED.Throw(Util.OReinfo)
 					})
 			})
 			.finish()

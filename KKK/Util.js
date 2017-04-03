@@ -101,6 +101,7 @@ module.exports =
 	F : False,
 
 	RSearch : [/^(?:find|search)\s+(.*)$/i],
+	OReinfo : {},
 
 	Bus : ZED.Emitter(),
 	Look : function(Q){Look.push(Q)},
