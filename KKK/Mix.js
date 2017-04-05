@@ -1120,7 +1120,7 @@
 	{
 		MakeStatusText[X] = Q
 		MakeStatusClass[X] = Q && (S || ClassStatusInfo)
-		X === UTab.Index() && MakeStatusChange()
+		!MakeCoverActive && X === UTab.Index() && MakeStatusChange()
 	},
 	MakeStatusX = function(X,L,T,J)
 	{
@@ -2377,7 +2377,7 @@
 				if (A = Active[Q])
 				{
 					A[ActiveKeySpeed].text(L(Queue.ActiveMap[Q] ?
-						Queue.OnlineMap[Q] ?
+						Queue.IsRunning(Q) ?
 						Lang.Processing : Lang.Queuing : Lang.Paused))
 					A[ActiveKeyRemain].text('')
 				}
