@@ -1481,7 +1481,7 @@
 				'#/R/ fieldset' +
 				'{' +
 					'display:inline-block;' +
-					'margin:/p/px /h/px;' +
+					'margin:/h/px;' +
 					'padding:/p/px;' +
 					'width:/c/px;' +
 					'border:0;' +
