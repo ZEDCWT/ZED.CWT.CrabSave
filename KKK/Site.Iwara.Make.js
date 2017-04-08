@@ -10,7 +10,15 @@ Lang = require('./Lang'),
 L = Lang.L,
 
 Name = 'Iwara',
-PageSize = 40;
+PageSize = 40,
+
+MakePages = function(Q,T)
+{
+	T = Util.MF(/ last"[^]+?page=(\d+)/,Q)
+	return T ?
+		1 + Number(T) :
+		Util.MF(/last">(\d+)/,Q) || 1
+};
 
 module.exports = function(Domain,SubName,Judge)
 {
@@ -20,7 +28,8 @@ module.exports = function(Domain,SubName,Judge)
 	URLUserPrefix = URLDomain + 'users/',
 	URLUser = ZED.URLBuild(URLUserPrefix,Util.U,'/videos?page=',Util.U),
 	URLVInfoURL = ZED.URLBuild(URLDomain,'api/video/',Util.U),
-	URLSearch = ZED.URLBuild(URLDomain,'search?query=',Util.U);
+	URLVideoAll = ZED.URLBuild(URLDomain,'videos?page=',Util.U,Util.U,Util.U),
+	URLSearch = ZED.URLBuild(URLDomain,'search?query=',Util.U,'&page=',Util.U);
 
 	return ZED.ReduceToObject
 	(
@@ -84,11 +93,51 @@ module.exports = function(Domain,SubName,Judge)
 			}
 		),ZED.ReduceToObject
 		(
+			KeySite.Name,L(Lang.All),
+			KeySite.Judge,[/^(?:all)?$/i],
+			KeySite.Page,function(T,X,O)
+			{
+				return Util.RequestBody(Util.MakeSearch(URLVideoAll,'',--X,O)).map(function(Q,R)
+				{
+					R = []
+					Util.ML(/"node-[^]+?username[^<]+/g,Q,function(Q)
+					{
+						R.push(ZED.ReduceToObject
+						(
+							KeySite.Index,36 * X + R.length,
+							KeySite.ID,Util.MF(/videos\/([^"\/]+)"/,Q),
+							KeySite.Img,Util.MF(/src="([^"]+)/,Q),
+							KeySite.Title,Util.DecodeHTML(Util.MF(/title">[^>]+?>([^<]+)/,Q)),
+							KeySite.Author,Util.DecodeHTML(Util.MF(/username">([^<]+)/,Q)),
+							KeySite.AuthorLink,URLUserPrefix + Util.MF(/users\/([^"]+)/,Q)
+						))
+					})
+					R = ZED.ReduceToObject
+					(
+						KeySite.Pages,MakePages(Q),
+						KeySite.Total,R.length,
+						KeySite.Item,R
+					)
+					if (Q = Util.MU(/list-inline[^]+?<\/ul/,Q))
+					{
+						R[KeySite.Pref] = [[Util.MF(/title">([^<]+)/,Q),T = [],'sort']]
+						Util.ML(/sort=([^"]+)[^>]+>([^<]+)/g,Q,function(Q)
+						{
+							/trail/.test(Q[0]) && (R[KeySite.PrefDef] = {sort : Q[1]})
+							T.push([Q[2],Q[1]])
+						},Util.T)
+					}
+
+					return R
+				})
+			}
+		),ZED.ReduceToObject
+		(
 			KeySite.Name,L(Lang.Search),
 			KeySite.Judge,Util.RSearch,
 			KeySite.Page,function(ID,X)
 			{
-				return Util.RequestBody(URLSearch(encodeURIComponent(ID),X)).map(function(Q,R)
+				return Util.RequestBody(URLSearch(encodeURIComponent(ID),--X)).map(function(Q,R)
 				{
 					R = []
 					Util.ML(/id="node[^<]+<[^"]+"row[^]+?heart/g,Q,function(Q)
@@ -107,7 +156,7 @@ module.exports = function(Domain,SubName,Judge)
 
 					return ZED.ReduceToObject
 					(
-						KeySite.Pages,1 + (Number(Util.MF(/last"[^?]+\?page=(\d+)/,Q)) || 0),
+						KeySite.Pages,MakePages(Q),
 						KeySite.Total,R.length,
 						KeySite.Item,R
 					)
@@ -125,6 +174,7 @@ module.exports = function(Domain,SubName,Judge)
 
 					return ZED.ReduceToObject
 					(
+						KeyQueue.Title,Util.DecodeHTML(Util.MF(/title">([^<]+)/,Q)),
 						KeyQueue.Author,Util.DecodeHTML(Util.MF(/username">([^<]+)/,Q)),
 						KeyQueue.Date,ZED.now(new Date(T ? 1000 * T : Util.MU(/\d{4}(?:-\d\d)+ \d\d:\d\d/,Q))),
 						KeyQueue.Part,[ZED.ReduceToObject

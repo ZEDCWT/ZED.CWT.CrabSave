@@ -177,6 +177,9 @@ Examples `i b3ggwieowslyvgln`, `http://www.iwara.tv/videos/b3ggwieowslyvgln`, `i
 #### Uploader
 RegExp `/(?:^|[^a-z])users?(?:[\s\/]+)??([^\s\/]+)/i`  
 Examples `i user rickyman`, `http://www.iwara.tv/users/rickyman`, `ie user hk5dz3`, `http://ecchi.iwara.tv/users/hk5dz3`
+#### All
+RegExp `/^(?:all)?$/i`  
+Examples `i`, `ie`
 #### Search
 RegExp `/^(?:find|search)\s+(.*)$/i`  
 Examples `i find test`, `ie find test`
