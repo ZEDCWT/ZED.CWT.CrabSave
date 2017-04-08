@@ -23,6 +23,7 @@ URLChannel = ZED.URLBuild('https://www.googleapis.com/youtube/v3/channels?part=c
 URLChannelByUser = ZED.URLBuild('https://www.googleapis.com/youtube/v3/channels?part=contentDetails&forUsername=',Util.U,'&key=',GoogleAPIKey),
 URLPlaylist = ZED.URLBuild('https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=',Util.U,'&pageToken=',Util.U,'&maxResults=',PageSize,'&key=',GoogleAPIKey),
 URLSubscription = 'https://www.youtube.com/feed/subscriptions',
+URLFollowing = 'https://www.youtube.com/subscription_manager',
 URLSearch = ZED.URLBuild('https://www.googleapis.com/youtube/v3/search?part=snippet&q=',Util.U,'&pageToken=',Util.U,'&maxResults=',PageSize,'&type=video',Util.U,'&key=',GoogleAPIKey),
 URLSearchHint = ZED.URLBuild('https://clients1.google.com/complete/search?client=youtube&ds=yt&q=',Util.U,'&callback=_'),
 URLVInfo = ZED.URLBuild('https://www.googleapis.com/youtube/v3/videos?id=',Util.U,'&part=snippet,statistics,recordingDetails&key=',GoogleAPIKey),
@@ -261,6 +262,34 @@ R = ZED.ReduceToObject
 						KeySite.Item,R
 					)
 				})
+		}
+	),ZED.ReduceToObject
+	(
+		KeySite.Name,L(Lang.Following),
+		KeySite.Judge,Util.RFollow,
+		KeySite.Page,function()
+		{
+			return Util.RequestBody(Cookie.URL(Name,URLFollowing)).map(function(Q,R)
+			{
+				R = []
+				Util.ML(/tion-thumb[^]+?<\/div/g,Q,function(Q)
+				{
+					R.push(ZED.ReduceToObject
+					(
+						KeySite.Index,R.length,
+						KeySite.ID,Util.F,
+						KeySite.Img,Util.MF(/data-thumb="([^"]+)/,Q),
+						KeySite.Author,Util.DecodeHTML(Util.MF(/title="([^"]+)/,Q)),
+						KeySite.AuthorLink,URLMain + Util.MF(/\/((?:user|channel)\/[^"]+)/,Q)
+					))
+				})
+				return ZED.ReduceToObject
+				(
+					KeySite.Pages,1,
+					KeySite.Total,Util.MF(/-title">[^>]+>(\d+)/,Q),
+					KeySite.Item,R
+				)
+			})
 		}
 	),ZED.ReduceToObject
 	(

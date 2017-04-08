@@ -100,6 +100,7 @@ module.exports =
 	T : True,
 	F : False,
 
+	RFollow : [/^(?:fav|fo(?:llow(?:ing)?)?|up(?:loader)?)?$/i],
 	RSearch : [/^(?:find|search)\s+(.*)$/i],
 	OReinfo : {},
 

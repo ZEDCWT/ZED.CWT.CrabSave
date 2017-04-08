@@ -84,139 +84,102 @@ All site names may have aliases, and the shortest one would be used in the follo
 Aliases : Bili, B.
 #### Video ID
 RegExp `/^(\d+)$/`, `/(?:^|[^a-z])av(?:[^a-z]\D*)??(\d+)/i`  
-Examples  
-`av314`  
-`b 314`  
-`b av314`  
-`http://www.bilibili.com/video/av314`
+Examples `av314`, `b 314`, `b av314`, `http://www.bilibili.com/video/av314`
 #### Uploader
 RegExp `/(?:^|[^a-z])space(?:[^a-z]\D*)??(\d+)/i`  
-Examples  
-`b space 70093`  
-`https://space.bilibili.com/70093`
+Examples `b space 70093`, `https://space.bilibili.com/70093`
 #### Bangumi
 RegExp `/(?:^|[^a-z])(?:anime|bangumi)(?:[^a-z]\D*)??(\d+)/i`  
-Examples  
-`b anime 4771`  
-`b bangumi 4771`  
-`http://bangumi.bilibili.com/anime/4771`
+Examples `b anime 4771`, `b bangumi 4771`, `http://bangumi.bilibili.com/anime/4771`
 #### Mylist
 RegExp `/(?:^|[^a-z])mylist(?:[^a-z]\D*)??(\d+)/i`  
-Examples  
-`b mylist 9`  
-`http://www.bilibili.com/mylist9`
+Examples `b mylist 9`, `http://www.bilibili.com/mylist9`
 #### Dynamic
 Require signing in.  
 RegExp `/^(?:dynamic)?$/i`  
-Examples  
-`b`  
-`b dynamic`
+Examples `b`, `b dynamic`
+#### Following uploaders
+Require signing in.  
+RegExp `/^(?:fav|fo(?:llow(?:ing)?)?|up(?:loader)?)?$/i`  
+Examples `b up`
 #### Search
 RegExp `/^(?:find|search)\s+(.*)$/i`  
-Examples  
-`b find test something`
+Examples `b find test something`
+
 ### YouTube
 Aliases : YTB, Y.
 #### Video ID
 RegExp `/v=([^&]+)/`, `/^([_0-9A-Za-z-]+)$/`  
-Examples  
-`y 9bZkp7q19f0`  
-`y v=9bZkp7q19f0`  
-`https://www.youtube.com/watch?v=9bZkp7q19f0`
+Examples `y 9bZkp7q19f0`, `y v=9bZkp7q19f0`, `https://www.youtube.com/watch?v=9bZkp7q19f0`
 #### Uploader
 RegExp `/(?:^|[^a-z])user(?:[\s\/]+)??([_0-9A-Za-z-]+)/i`  
-Examples  
-`y user munimunibekkan`  
-`https://www.youtube.com/user/munimunibekkan`
+Examples `y user munimunibekkan`, `https://www.youtube.com/user/munimunibekkan`
 #### Channel
 RegExp `/(?:^|[^a-z])channel(?:[\s\/]+)??([_0-9A-Za-z-]+)/i`  
-Examples  
-`y channel UCyKNzTQpYtKliiBmz4Ep5Hw`  
-`https://www.youtube.com/channel/UCyKNzTQpYtKliiBmz4Ep5Hw`
+Examples `y channel UCyKNzTQpYtKliiBmz4Ep5Hw`, `https://www.youtube.com/channel/UCyKNzTQpYtKliiBmz4Ep5Hw`
 #### Playlist
 RegExp `/(?:^|[^a-z])playlist(?:[^a-z]\D*)??(\d+)/i`, `/list=([^&]+)/i`  
-Examples  
-`y playlist UUyKNzTQpYtKliiBmz4Ep5Hw`  
-`https://www.youtube.com/playlist?list=UUyKNzTQpYtKliiBmz4Ep5Hw`
+Examples `y playlist UUyKNzTQpYtKliiBmz4Ep5Hw`, `https://www.youtube.com/playlist?list=UUyKNzTQpYtKliiBmz4Ep5Hw`
 #### Subscription
 Require signing in.  
 RegExp `/^(?:sub(?:scri(?:be|ptions?))?)?$/i`  
-Examples  
-`y`  
-`y subscription`
+Examples `y`, `y subscription`
+#### Following uploaders
+Require signing in.  
+RegExp `/^(?:fav|fo(?:llow(?:ing)?)?|up(?:loader)?)?$/i`  
+Examples `y fo`
 #### Search
 RegExp `/^(?:find|search)\s+(.*)$/i`  
-Examples  
-`y find 4k test`
+Examples `y find 4k test`
+
 ### NicoNico
 Aliases : ニコニコ, ニコ, Nico, N.
 #### Video ID
 RegExp `/^(\d+)$/`, `/(?:^|[^a-z])av(?:[^a-z]\D*)??(\d+)/i`  
-Examples  
-`sm9`  
-`n 9`  
-`n sm9`  
-`http://www.nicovideo.jp/watch/sm9`
+Examples `sm9`, `n 9`, `n sm9`, `http://www.nicovideo.jp/watch/sm9`
 #### Uploader
 RegExp `/(?:^|[^a-z])user(?:[^a-z]\D*)??(\d+)/i`  
-Examples  
-`n user 25371352`  
-`http://www.nicovideo.jp/user/25371352`
+Examples `n user 25371352`, `http://www.nicovideo.jp/user/25371352`
 #### Mylist
 RegExp `/(?:^|[^a-z])mylist(?:[^a-z]\D*)??(\d+)/i`  
-Examples  
-`n mylist 52151642`  
-`http://www.nicovideo.jp/mylist/52151642`
+Examples `n mylist 52151642`, `http://www.nicovideo.jp/mylist/52151642`
 #### ニコレポ
 Require signing in.  
 RegExp `/^(?:repo|my|top)?$/i`  
-Examples  
-`n`  
-`n my`  
-`n top`
+Examples `n`, `n my`, `n top`
+#### Following uploaders
+Require signing in.  
+RegExp `/^(?:fav|fo(?:llow(?:ing)?)?|up(?:loader)?)?$/i`  
+Examples `n fav`
 #### Search
 RegExp `/^(?:find|search)\s+(.*)$/i`  
-Examples  
-`n find けものフレンズ`
+Examples `n find けものフレンズ`
+
 ### ToonsTV
 Aliases : Toons, T.
 #### Video ID
 RegExp `/channels\/([0-9A-Z_]+\/[0-9A-Z_]+)/i`, `/^([0-9A-Z_]+\/[0-9A-Z_]+)$/i`  
-Examples  
-`t Piggy_Tales_3/6411f1c08a224700`  
-`https://www.toons.tv/channels/Piggy_Tales_3/6411f1c08a224700`
+Examples `t Piggy_Tales_3/6411f1c08a224700`, `https://www.toons.tv/channels/Piggy_Tales_3/6411f1c08a224700`
 #### Channel
 RegExp `/channels\/([0-9A-Z_]+)/i`, `/^([0-9A-Z_]+)$/i`  
-Examples  
-`t Piggy_Tales_3`  
-`https://www.toons.tv/channels/Piggy_Tales_3`
+Examples `t Piggy_Tales_3`, `https://www.toons.tv/channels/Piggy_Tales_3`
 #### All
 Require loading component.  
 RegExp `/^$/`  
-Examples  
-`t`
+Examples `t`
+
 ### Iwara & IwaraEcchi
 Alias : I.
 Ecchi Aliases : IE, EI.
 #### Video ID
 RegExp `/videos\/([\da-z]+)/i`  
-Examples  
-`i b3ggwieowslyvgln`  
-`http://www.iwara.tv/videos/b3ggwieowslyvgln`  
-`ie yp1Yc9Q3uZ3GA94`  
-`http://ecchi.iwara.tv/videos/yp1Yc9Q3uZ3GA94`
+Examples `i b3ggwieowslyvgln`, `http://www.iwara.tv/videos/b3ggwieowslyvgln`, `ie yp1Yc9Q3uZ3GA94`, `http://ecchi.iwara.tv/videos/yp1Yc9Q3uZ3GA94`
 #### Uploader
 RegExp `/(?:^|[^a-z])users?(?:[\s\/]+)??([^\s\/]+)/i`  
-Examples  
-`i user rickyman`  
-`http://www.iwara.tv/users/rickyman`  
-`ie user hk5dz3`  
-`http://ecchi.iwara.tv/users/hk5dz3`
+Examples `i user rickyman`, `http://www.iwara.tv/users/rickyman`, `ie user hk5dz3`, `http://ecchi.iwara.tv/users/hk5dz3`
 #### Search
 RegExp `/^(?:find|search)\s+(.*)$/i`  
-Examples  
-`i find test`  
-`ie find test`
+Examples `i find test`, `ie find test`
 
 ## Cold
 

@@ -1643,7 +1643,7 @@
 					Change : function(){Jump(S)}
 				})
 
-				GoPages = Q[KeySite.Pages]
+				GoPages = Number(Q[KeySite.Pages])
 				if (Item.length)
 				{
 					GoInfo[InfoKeyFrom](Item[0][KeySite.Index])
@@ -1668,7 +1668,7 @@
 				ZED.each(function(V,D)
 				{
 					D = $(DOM.fieldset)
-					D.append
+					V[KeySite.ID] ? D.append
 					(
 						ShowByText(V[KeySite.Index] + ' | ',DOM.legend).append
 						(
@@ -1682,9 +1682,19 @@
 							ShowByClassX(DOM.NoSelect,DOM.img)
 								.attr(DOM.src,V[KeySite.Img])
 								.attr(DOM.title,V[KeySite.Title])
-						),
+						)
+					) : D.append
+					(
+						ShowByText(V[KeySite.Index],DOM.legend),
+						V[KeySite.Img] && $(DOM.a).attr(DOM.href,V[KeySite.AuthorLink])
+							.append(ShowByClassX(DOM.NoSelect,DOM.img)
+								.attr(DOM.src,V[KeySite.Img])
+								.attr(DOM.title,V[KeySite.Title]))
+					)
+					D.append
+					(
 						V[KeySite.Length] && ShowByText(V[KeySite.Length]),
-						ShowByText(V[KeySite.Title]),
+						V[KeySite.Title] && ShowByText(V[KeySite.Title]),
 						V[KeySite.Author] && (V[KeySite.AuthorLink] ?
 							$(DOM.div).append(ShowByText(V[KeySite.Author],DOM.a)
 								.attr(DOM.href,V[KeySite.AuthorLink])) :
@@ -1850,7 +1860,7 @@
 			{
 				Util.PrevDef(E)
 				Util.StopProp(E)
-				E = E.target.getAttribute(DOM.href)
+				E = E.currentTarget.getAttribute(DOM.href)
 				E && RURL.val(E)
 				Go()
 				return Util.F

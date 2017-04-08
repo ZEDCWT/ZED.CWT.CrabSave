@@ -19,6 +19,7 @@ URLUserPrefix = 'http://www.nicovideo.jp/user/',
 URLUser = ZED.URLBuild(URLUserPrefix,Util.U,'/video?page=',Util.U),
 URLMylist = ZED.URLBuild('http://www.nicovideo.jp/mylist/',Util.U),
 URLRepo = ZED.URLBuild('http://www.nicovideo.jp/my/top/user?innerPage=1&mode=next_page&last_timeline=',Util.U),
+URLFollowing = ZED.URLBuild('http://www.nicovideo.jp/my/fav/user?page=',Util.U),
 URLSearch = ZED.URLBuild('http://www.nicovideo.jp/search/',Util.U,'?page=',Util.U,Util.U),
 URLSearchHint = ZED.URLBuild('http://sug.search.nicovideo.jp/suggestion/complete/',Util.U),
 URLVInfo = ZED.URLBuild('http://ext.nicovideo.jp/api/getthumbinfo/sm',Util.U),
@@ -222,6 +223,34 @@ R = ZED.ReduceToObject
 				(
 					KeySite.Pages,1 + RepoActive.length,
 					KeySite.Total,R.length,
+					KeySite.Item,R
+				)
+			})
+		}
+	),ZED.ReduceToObject
+	(
+		KeySite.Name,L(Lang.Following),
+		KeySite.Judge,Util.RFollow,
+		KeySite.Page,function(_,X)
+		{
+			return Util.RequestBody(Cookie.URL(Name,URLFollowing(X))).map(function(Q,R)
+			{
+				R = []
+				Util.ML(/thumbCont[^]+?buttonShape/g,Q,function(Q)
+				{
+					R.push(ZED.ReduceToObject
+					(
+						KeySite.Index,R.length,
+						KeySite.ID,Util.F,
+						KeySite.Img,Util.MF(/src="([^"]+)/,Q),
+						KeySite.Author,Util.DecodeHTML(Util.MF(/alt="([^"]+)/,Q)),
+						KeySite.AuthorLink,URLUserPrefix + Util.MF(/user\/(\d+)/,Q)
+					))
+				})
+				return ZED.ReduceToObject
+				(
+					KeySite.Pages,Util.MF(/>(\d+)<(?![^]*>\d)/,Util.MU(/pager"[^]+?<\/div/,Q)),
+					KeySite.Total,Util.MF(/favUser[^(]+\((\d+)/,Q),
 					KeySite.Item,R
 				)
 			})

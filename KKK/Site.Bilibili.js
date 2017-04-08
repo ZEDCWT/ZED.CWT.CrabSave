@@ -46,6 +46,7 @@ URLSpace = ZED.URLBuild(DomainSpace,'ajax/member/getSubmitVideos?mid=',Util.U,'&
 URLBangumi = ZED.URLBuild('http://bangumi.bilibili.com/jsonp/seasoninfo/',Util.U,'.ver'),
 URLMylist = ZED.URLBuild('http://www.bilibili.com/mylist/mylist-',Util.U,'.js'),
 URLDynamic = ZED.URLBuild('http://api.bilibili.com/x/feed/pull?type=0&ps=',PageSize,'&pn=',Util.U),
+URLFollowing = ZED.URLBuild('https://space.bilibili.com/ajax/friend/GetAttentionList?mid=',Util.U,'&page=',Util.U),
 URLSearchMain = 'http://search.bilibili.com/all',
 URLSearch = ZED.URLBuild('http://search.bilibili.com/ajax_api/video?keyword=',Util.U,'&page=',Util.U,Util.U),
 URLSearchHint = ZED.URLBuild('http://s.search.bilibili.com/main/suggest?func=suggest&sub_type=tag&tag_num=10&term=',Util.U),
@@ -112,7 +113,10 @@ R = ZED.ReduceToObject
 		BishiMethod = BishiMethod[1]
 		FrameTool = Reg(function(W)
 		{
-			W.$ = W.jQuery = ZED.Merge(function(){},ZED.jQuery)
+			W.$ = W.jQuery = ZED.Merge(function()
+			{
+				return {data : ZED.noop}
+			},ZED.jQuery)
 			W.setTimeout = function(Q){Q()}
 			ZED.delete_('localStorage',W)
 			W.JSON.parse = ZED.JTO
@@ -201,7 +205,7 @@ R = ZED.ReduceToObject
 				form :
 				{
 					act : 'login',
-					keeptime : 3E8,
+					keeptime : 2592000,
 					userid : ID,
 					pwd : ZED.Code.RSAEncode(Q.key || '',Q.hash + PW),
 					vdcode : Code
@@ -391,6 +395,36 @@ R = ZED.ReduceToObject
 					})
 				)
 			})
+		}
+	),ZED.ReduceToObject
+	(
+		KeySite.Name,L(Lang.Following),
+		KeySite.Judge,Util.RFollow,
+		KeySite.Page,function(Q,X)
+		{
+			Q = Util.CookieTo(Cookie.Read(Name)).DedeUserID
+			return Q ? Util.RequestBody(URLFollowing(Q,X)).map(function(Q)
+			{
+				Q = ZED.JTO(Q)
+				Q.status || ZED.Throw(Util.ReplaceLang(Lang.BadE,Q.data))
+				Q = Q.data
+				return ZED.ReduceToObject
+				(
+					KeySite.Pages,Q.pages,
+					KeySite.Total,Q.results,
+					KeySite.Item,ZED.Map(Q.list,function(F,V)
+					{
+						return ZED.ReduceToObject
+						(
+							KeySite.Index,20 * (X - 1) + F,
+							KeySite.ID,Util.F,
+							KeySite.Img,V.face,
+							KeySite.Author,V.uname,
+							KeySite.AuthorLink,DomainSpace + V.fid
+						)
+					})
+				)
+			}) : Observable.throw(L(Lang.NotSigned))
 		}
 	),ZED.ReduceToObject
 	(

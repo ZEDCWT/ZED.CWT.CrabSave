@@ -63,6 +63,7 @@ module.exports =
 	All : Lang('All'),
 	Search : Lang('Search'),
 	Subs : Lang('Subscription'),
+	Following : Lang('Following'),
 	UknSite : Lang('Unknown site id `/0/`'),
 	UknURL : Lang('Unknown URL format `/0/`'),
 	Bad : Lang('Bad response'),
