@@ -3107,11 +3107,13 @@
 			UShortCut
 				.cmd(ShortCutCommand.PrevTab,function(X)
 				{
+					MakeCoverClose()
 					X = UTab.Index() - 1
 					UTab.Index(X < 0 ? YTabCount + X : X)
 				})
 				.cmd(ShortCutCommand.NextTab,function(X)
 				{
+					MakeCoverClose()
 					X = UTab.Index() + 1
 					UTab.Index(X < YTabCount ? X : X - YTabCount)
 				})
