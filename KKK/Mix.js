@@ -1983,8 +1983,8 @@
 					MakeDBError(X,Lang.Commit,E)
 				})
 			UShortCut
-				.cmd(ShortCutCommand.CommitSel,function(){ToolCommit[MakeToolBarClickKeyCall]()})
-				.cmd(ShortCutCommand.CommitAll,function(){ToolCommitAll[MakeToolBarClickKeyCall]()})
+				.cmd(ShortCutCommand.CommitSel,MakeIndex(X,ToolCommit[MakeToolBarClickKeyCall]))
+				.cmd(ShortCutCommand.CommitAll,MakeIndex(X,ToolCommitAll[MakeToolBarClickKeyCall]))
 
 			return R
 		}
