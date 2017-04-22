@@ -26,7 +26,7 @@ Active = {},
 
 Start = function(Q,I,At,URL,Done,Size)
 {
-	var Begin,Down,Dirty;
+	var Begin,Down,Dirty,LowSpeedCount = 0;
 
 	ZED.isObject(URL) || (URL = {url : URL})
 	Down = Downloader(
@@ -65,6 +65,15 @@ Start = function(Q,I,At,URL,Done,Size)
 		Done[I] = R.Saved
 		Q[KeyQueue.DoneSum] = ZED.Sum(Done)
 		Dirty || (Begin < R.Saved && (Down.Dirty = Dirty = Util.T))
+		if (URL.timeout)
+		{
+			R.Speed < 2 ? ++LowSpeedCount : LowSpeedCount = 0
+			LowSpeedCount < URL.timeout / Config.Speed ||
+			(
+				Down.Stop(),
+				Down.emit('die','Low speed')
+			)
+		}
 	}).on('done',function()
 	{
 		Down.Dirty = Util.T

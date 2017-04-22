@@ -555,7 +555,7 @@ R = ZED.ReduceToObject
 	KeySite.IDLink,URLVideo,
 	KeySite.Pack,function(Q)
 	{
-		return {url : Q,timeout : 3000}
+		return {url : Q,timeout : 2500}
 	}
 );
 
