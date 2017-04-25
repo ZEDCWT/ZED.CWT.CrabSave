@@ -49,6 +49,7 @@ URLDynamic = ZED.URLBuild('http://api.bilibili.com/x/feed/pull?type=0&ps=',PageS
 URLFollowing = ZED.URLBuild('https://space.bilibili.com/ajax/friend/GetAttentionList?mid=',Util.U,'&page=',Util.U),
 URLSearchMain = 'http://search.bilibili.com/all',
 URLSearch = ZED.URLBuild('http://search.bilibili.com/ajax_api/video?keyword=',Util.U,'&page=',Util.U,Util.U),
+URLSearchBangumi = ZED.URLBuild('https://app.bilibili.com/x/v2/search/type?keyword=',Util.U,'&type=1'),
 URLSearchHint = ZED.URLBuild('http://s.search.bilibili.com/main/suggest?func=suggest&sub_type=tag&tag_num=10&term=',Util.U),
 URLVInfo = ZED.URLBuild('http://api.bilibili.com/view?id=',Util.U,'&batch=1&appkey=',Appkey,'&type=json'),
 URLVInfoURL = function(Q)
@@ -105,7 +106,7 @@ OverspeedRetry = function(Q)
 R = ZED.ReduceToObject
 (
 	KeySite.Name,Name,
-	KeySite.Judge,/\.bilibili\.|^av\d+$/i,
+	KeySite.Judge,/\.bilibili\.|^av\d+$|^bilibili:\/\//i,
 	KeySite.Frame,function(Reg)
 	{
 		BishiMethod = Component.Data(Name) || []
@@ -299,19 +300,29 @@ R = ZED.ReduceToObject
 		{
 			return Util.RequestBody(URLBangumi(ID)).map(function(Q)
 			{
-				Q = ZED.JTO(Q)
+				Q = ZED.JTO(Q.replace(/^[a-z]+\(|\);\s*$/ig,''))
 				Q.code && ZED.Throw(Util.ReplaceLang
 				(
 					Lang.BadCE,
 					Q.code,Q.message
 				))
-				Q = Q.result.episodes
+				Q = Q.result
 
 				return ZED.ReduceToObject
 				(
 					KeySite.Pages,1,
-					KeySite.Total,Q.length,
-					KeySite.Item,ZED.map(function(V)
+					KeySite.Total,Q.seasons.length + Q.episodes.length,
+					KeySite.Item,ZED.Map(Q.seasons,function(F,V)
+					{
+						return ZED.ReduceToObject
+						(
+							KeySite.Index,F,
+							KeySite.Img,V.cover,
+							KeySite.Title,V.title,
+							KeySite.Author,V.season_id,
+							KeySite.AuthorLink,URLBangumi(V.season_id)
+						)
+					}).concat(ZED.map(function(V)
 					{
 						return ZED.ReduceToObject
 						(
@@ -321,7 +332,7 @@ R = ZED.ReduceToObject
 							KeySite.Title,V.index_title,
 							KeySite.Date,new Date(V.update_time)
 						)
-					},Q)
+					},Q.episodes))
 				)
 			})
 		}
@@ -430,9 +441,9 @@ R = ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Search),
 		KeySite.Judge,Util.RSearch,
-		KeySite.Page,function(Q,X,O)
+		KeySite.Page,function(Raw,X,O)
 		{
-			return Util.RequestBody(Util.MakeSearch(URLSearch,Q,X,O)).map(function(Q,R)
+			return Util.RequestBody(Util.MakeSearch(URLSearch,Raw,X,O)).flatMap(function(Q,R)
 			{
 				Q = ZED.JTO(Q)
 				Q.code && ZED.Throw(Util.ReplaceLang
@@ -480,7 +491,25 @@ R = ZED.ReduceToObject
 					R[KeySite.PrefDef] = Q
 				}
 
-				return R
+				return 1 < X ?
+					Observable.just(R) :
+					Util.RequestBody(URLSearchBangumi(encodeURIComponent(Raw))).map(function(Q)
+					{
+						Q = ZED.Map(ZED.path(['data','items'],ZED.JTO(Q)) || [],function(F,V)
+						{
+							return ZED.ReduceToObject
+							(
+								KeySite.Index,F,
+								KeySite.Img,V.cover,
+								KeySite.Title,V.title,
+								KeySite.Author,V.param,
+								KeySite.AuthorLink,V.uri
+							)
+						})
+						R[KeySite.Total] += Q.length
+						R[KeySite.Item] = Q.concat(R[KeySite.Item])
+						return R
+					})
 			})
 		},
 		KeySite.Hint,function(Q)
