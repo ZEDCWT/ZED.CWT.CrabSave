@@ -584,7 +584,11 @@ R = ZED.ReduceToObject
 	KeySite.IDLink,URLVideo,
 	KeySite.Pack,function(Q)
 	{
-		return {url : Q,timeout : 2500}
+		return {
+			url : Q,
+			headers : {Referer : 'http://static.hdslb.com/play.swf'},
+			timeout : 2500
+		}
 	}
 );
 
