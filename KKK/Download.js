@@ -80,6 +80,7 @@ Start = function(Q,I,At,URL,Done,Size)
 		Download(Q)
 	}).on('die',function(E)
 	{
+		if (Size[I] <= Done[I]) --Done[I]
 		if (ZED.isNumber(E))
 		{
 			//Done[I] = 0
