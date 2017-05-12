@@ -591,7 +591,7 @@ DispatchInfoRefresh = function(Q)
 				OnSizeMap[InfoNow] = S[KeyQueue.Size]
 				Bus.emit(EventQueue.SizeGot,ZED.Merge(DispatchInfoRefreshLast,S))
 			}).flatMap(DispatchSizeGot)
-	}).tap(function()
+	}).tap(Util.N,Util.N,function()
 	{
 		Bus.emit(EventQueue.Queuing,DispatchInfoRefreshLast[KeyQueue.Unique])
 		DispatchInfoRefreshLast = Util.F
