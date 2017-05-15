@@ -1,7 +1,7 @@
 {
   "name": "zedcwt_crabsave",
   "productName": "CrabSave",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "main": "Trigger.js",
   "scripts": {
@@ -9,15 +9,16 @@
     "build": "node Build"
   },
   "devDependencies": {
-    "electron": "^1.6.5",
+    "electron": "^1.7.0",
     "electron-packager": "^8.6.0",
-    "uglify-js": "^2.8.21"
+    "uglify-js": "^2.8.24"
   },
   "dependencies": {
-    "@zed.cwt/downloader": "^0.1.4",
+    "@zed.cwt/downloader": "^0.1.5",
     "@zed.cwt/jquery": "^0.0.3",
-    "@zed.cwt/zedquery": "^0.4.6",
+    "@zed.cwt/zedquery": "^0.4.7",
     "cli": "^1.0.1",
+    "electron-packager": "^8.7.0",
     "graceful-fs": "^4.1.11",
     "nedb": "^1.8.0",
     "prompt": "^1.0.0",
