@@ -349,7 +349,7 @@ R = ZED.ReduceToObject
 		{
 			Cookie.Save(Name,H)
 			return Cookie.URL(Name,S)
-		})
+		}).delay(1000)
 	}
 );
 
