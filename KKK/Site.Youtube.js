@@ -173,6 +173,7 @@ R = ZED.ReduceToObject
 			{
 				Q = Q.replace(/=[^=]+...split\(""\S+ ..join\(""/,'=SIGN$&')
 				STS = Util.MF(/sts:(\d+)/,Q)
+				Say('STS : ' + STS)
 				Say(L(Lang.FileWrite))
 				return Util.writeFile(FrameTool[0],Q)
 			}).flatMap(function()
