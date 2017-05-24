@@ -136,9 +136,12 @@ module.exports =
 	{
 		A = ZED.Arrayify(arguments)
 		A[0] = Path.basename(A[0]).replace(/\.js$/,'')
-		ZED.isObject(A[1]) && DebugPool.Push(A[1])
-		A.unshift('DEBUG')
-		console.error.apply(console,A)
+		if (2 < A.length || !A[1] || !/getaddrinfo|ETIMEDOUT|ESOCKETTIMEDOUT/.test(A[1].message))
+		{
+			ZED.isObject(A[1]) && DebugPool.Push(A[1])
+			A.unshift('DEBUG')
+			console.error.apply(console,A)
+		}
 	},
 	DebugPool : DebugPool,
 	Fatal : function(Q)
