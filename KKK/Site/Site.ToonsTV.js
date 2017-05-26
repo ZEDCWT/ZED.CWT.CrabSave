@@ -3,13 +3,13 @@ var
 ZED = require('@zed.cwt/zedquery'),
 Observable = ZED.Observable,
 
-Util = require('./Util'),
-Key = require('./Key'),
+Util = require('../Util'),
+Key = require('../Key'),
 KeySite = Key.Site,
 KeyQueue = Key.Queue,
-Lang = require('./Lang'),
+Lang = require('../Lang'),
 L = Lang.L,
-Component = require('./Component'),
+Component = require('../Component'),
 
 Name = 'ToonsTV',
 PageSize = 30,

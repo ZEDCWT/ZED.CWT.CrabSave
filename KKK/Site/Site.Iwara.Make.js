@@ -2,11 +2,11 @@
 var
 ZED = require('@zed.cwt/zedquery'),
 
-Util = require('./Util'),
-Key = require('./Key'),
+Util = require('../Util'),
+Key = require('../Key'),
 KeySite = Key.Site,
 KeyQueue = Key.Queue,
-Lang = require('./Lang'),
+Lang = require('../Lang'),
 L = Lang.L,
 
 Name = 'Iwara',
