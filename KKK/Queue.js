@@ -32,17 +32,14 @@ ActiveMap = {},
 Offline = [],
 OfflineMap = {},
 CardMap = {},
-CardMapUp = function(Q)
-{
-	CardMap[Q] ? ++CardMap[Q] : CardMap[Q] = 1
-},
+CardMapUp = Q => CardMap[Q] ? ++CardMap[Q] : CardMap[Q] = 1,
 OnSizeMap = {},
 OffSizeMap = {},
 OnlineCount = 80000000 - 1,
 Loaded = 0,
-OnlineDB = DB('Online',function()
+OnlineDB = DB('Online',() =>
 {
-	OnlineDB.Each(function(V,U)
+	OnlineDB.Each((V,U) =>
 	{
 		OnlineCount < V._id && (OnlineCount = V._id)
 		U = V[KeyQueue.Unique]
@@ -56,9 +53,9 @@ OnlineDB = DB('Online',function()
 },[[KeyQueue.Unique,Util.T]]),
 OnlineData = OnlineDB.Data,
 OnlineUpdate = Observable.wrapNode(OnlineData.update,OnlineData),
-OfflineDB = DB('Offline',function()
+OfflineDB = DB('Offline',() =>
 {
-	OfflineDB.EachRight(function(V,U)
+	OfflineDB.EachRight((V,U) =>
 	{
 		OnlineCount < V._id && (OnlineCount = V._id)
 		U = V[KeyQueue.IDHis]
@@ -75,7 +72,7 @@ OfflineData = OfflineDB.Data,
 
 
 NewMap = {},
-New = function(Q,X)
+New = (Q,X) =>
 {
 	var R = [],C,T,F;
 	if (2 !== Loaded) return 0
@@ -98,7 +95,7 @@ New = function(Q,X)
 			))
 		}
 	}
-	if (R.length) OnlineData.insert(R,function(E)
+	if (R.length) OnlineData.insert(R,E =>
 	{
 		if (E)
 		{
@@ -123,7 +120,7 @@ New = function(Q,X)
 	})
 	return R.length
 },
-Convert = function(Q,M,O,S,J)
+Convert = (Q,M,O,S,J) =>
 {
 	var R = [],T,F;
 	O = O || OnlineMap
@@ -138,17 +135,17 @@ Convert = function(Q,M,O,S,J)
 	}
 	return R
 },
-MakeIn = function(Q,K,R)
-{
-	R = {}
-	R[K || KeyQueue.Unique] = {$in : Q}
-	return R
-},
+MakeIn = (Q,K,R) =>
+(
+	R = {},
+	R[K || KeyQueue.Unique] = {$in : Q},
+	R
+),
 PlayMap = {},
-Play = function(Q,X)
+Play = (Q,X) =>
 {
 	var R = Convert(Q,PlayMap,OnlineMap,ActiveMap,1),F;
-	R.length && OnlineData.update(MakeIn(R),QuerySetActiveTrue,DBAllowMulti,function(E)
+	R.length && OnlineData.update(MakeIn(R),QuerySetActiveTrue,DBAllowMulti,E =>
 	{
 		if (E)
 		{
@@ -169,7 +166,7 @@ Play = function(Q,X)
 	return R.length
 },
 PauseMap = {},
-InnerPause = function(Q)
+InnerPause = Q =>
 {
 	if (Running[Q])
 	{
@@ -178,7 +175,7 @@ InnerPause = function(Q)
 	}
 	Download.Pause(Q)
 },
-ClearDebuff = function(M,T,F)
+ClearDebuff = (M,T,F) =>
 {
 	for (F = ReinfoQueue.length;F;) if (M[T = ReinfoQueue[--F]])
 	{
@@ -194,11 +191,11 @@ ClearDebuff = function(M,T,F)
 		if (M[T = DispatchInfoPreemptive[--F]])
 			DispatchInfoPreemptive.splice(F,1)
 },
-Pause = function(Q,X)
+Pause = (Q,X) =>
 {
 	var R = Convert(Q,PauseMap,OnlineMap,ActiveMap,0),M,T,F;
 
-	R.length && OnlineData.update(MakeIn(R),QuerySetActiveFalse,DBAllowMulti,function(E)
+	R.length && OnlineData.update(MakeIn(R),QuerySetActiveFalse,DBAllowMulti,E =>
 	{
 		if (E)
 		{
@@ -232,10 +229,10 @@ Pause = function(Q,X)
 	return R.length
 },
 RemoveMap = {},
-Remove = function(Q,X)
+Remove = (Q,X) =>
 {
 	var R = Convert(Q,RemoveMap),M,T,F;
-	R.length && OnlineData.remove(MakeIn(R),DBAllowMulti,function(E)
+	R.length && OnlineData.remove(MakeIn(R),DBAllowMulti,E =>
 	{
 		if (E)
 		{
@@ -255,7 +252,7 @@ Remove = function(Q,X)
 			}
 			ClearDebuff(M)
 			Online.length = 0
-			OnlineDB.Each(function(V){Online.push(V[KeyQueue.Unique])})
+			OnlineDB.Each(V => Online.push(V[KeyQueue.Unique]))
 			Bus.emit(EventQueue.Change,Online.length)
 				.emit(EventQueue.Removed,R,X)
 			Dispatch()
@@ -266,7 +263,7 @@ Remove = function(Q,X)
 
 ReinfoMap = {},
 ReinfoQueue = [],
-ReinfoLook = function(R,C,T,F)
+ReinfoLook = (R,C,T,F) =>
 {
 	R = []
 	for (F = ReinfoQueue.length;F;)
@@ -285,7 +282,7 @@ ReinfoLook = function(R,C,T,F)
 	for (F = 0;F < R.length;++F) DispatchInfoPreemptive.push(R[F])
 	F && (InfoNow || DispatchInfo())
 },
-ReinfoUpdate = function(ID)
+ReinfoUpdate = ID =>
 {
 	ReinfoMap[ID] = ZED.now()
 	ReinfoQueue.push(ID)
@@ -293,18 +290,18 @@ ReinfoUpdate = function(ID)
 	Bus.emit(EventQueue.Reinfo,ID,WaitDisplay)
 	Dispatch()
 },
-Reinfo = function(Q,ID)
+Reinfo = (Q,ID) =>
 {
 	ID = Q[KeyQueue.Unique]
-	ReinfoMap[ID] || OnlineData.update({_id : Q._id},Q,function(E)
-	{
-		if (E) Error(Q,E)
-		else ReinfoUpdate(ID)
-	})
+	ReinfoMap[ID] || OnlineData.update
+	(
+		{_id : Q._id},Q,
+		E => E ? Error(Q,E) : ReinfoUpdate(ID)
+	)
 },
 ErrorMap = {},
 ErrorQueue = [],
-ErrorLook = function(R,C,T,F)
+ErrorLook = (R,C,T,F) =>
 {
 	for (F = R = ErrorQueue.length;F;)
 	{
@@ -320,7 +317,7 @@ ErrorLook = function(R,C,T,F)
 	}
 	R === ErrorQueue.length || Dispatch()
 },
-ErrorOn = function(ID,E,J)
+ErrorOn = (ID,E,J) =>
 {
 	Util.Debug(__filename,E)
 	ErrorMap[ID] = ZED.now()
@@ -329,10 +326,10 @@ ErrorOn = function(ID,E,J)
 	Dispatch()
 	Bus.emit(EventQueue.Error,ID,WaitDisplay,J)
 },
-Error = function(Q,E,ID)
+Error = (Q,E,ID) =>
 {
 	ID = Q[KeyQueue.Unique]
-	ErrorMap[ID] || OnlineData.update({_id : Q._id},Q,function(EE)
+	ErrorMap[ID] || OnlineData.update({_id : Q._id},Q,EE =>
 	{
 		ErrorOn(ID,E)
 		EE && Util.Debug(__filename,EE)
@@ -341,7 +338,7 @@ Error = function(Q,E,ID)
 
 FinishQueue = [],
 Finishing,
-Finish = function(Q,T,F)
+Finish = (Q,T,F) =>
 {
 	if (Q)
 	{
@@ -357,7 +354,7 @@ Finish = function(Q,T,F)
 		Finishing = Util.T
 		Q = FinishQueue
 		FinishQueue = []
-		OfflineData.insert(Q,function(E)
+		OfflineData.insert(Q,E =>
 		{
 			if (E)
 			{
@@ -375,7 +372,7 @@ Finish = function(Q,T,F)
 					CardMapUp(T[KeyQueue.Unique])
 				}
 				Bus.emit(EventQueue.FHis)
-				OnlineData.remove({_id : {$in : ZED.pluck('_id',Q)}},DBAllowMulti,function(E)
+				OnlineData.remove({_id : {$in : ZED.pluck('_id',Q)}},DBAllowMulti,E =>
 				{
 					Finishing = Util.F
 					if (E) Bus.emit(EventQueue.EFinish,E)
@@ -390,7 +387,7 @@ Finish = function(Q,T,F)
 							Bus.emit(EventQueue.Finish,Q[F])
 						}
 						Online.length = 0
-						OnlineDB.Each(function(V){Online.push(V[KeyQueue.Unique])})
+						OnlineDB.Each(V => Online.push(V[KeyQueue.Unique]))
 						Bus.emit(EventQueue.Change,Online.length)
 							.emit(EventQueue.FHot)
 						Finish()
@@ -402,10 +399,10 @@ Finish = function(Q,T,F)
 	}
 },
 HRemoveMap = {},
-HRemove = function(Q,X)
+HRemove = (Q,X) =>
 {
 	var R = Convert(Q,HRemoveMap,OfflineMap),T,F;
-	R.length && OfflineData.remove(MakeIn(R,KeyQueue.IDHis),DBAllowMulti,function(E)
+	R.length && OfflineData.remove(MakeIn(R,KeyQueue.IDHis),DBAllowMulti,E =>
 	{
 		if (E)
 		{
@@ -425,7 +422,7 @@ HRemove = function(Q,X)
 				R[F] = T
 			}
 			Offline.length = 0
-			OfflineDB.EachRight(function(V){Offline.push(V[KeyQueue.IDHis])},KeyQueue.Finished)
+			OfflineDB.EachRight(V => Offline.push(V[KeyQueue.IDHis]),KeyQueue.Finished)
 			Bus.emit(EventQueue.HRemoved,R,X)
 		}
 	})
@@ -439,7 +436,7 @@ Running = {},
 Dispatching,
 DispatchRequired,
 DispatchSort = {_id : 1},
-Dispatch = function(T,F)
+Dispatch = (T,F) =>
 {
 	if (Dispatching) DispatchRequired = Util.T
 	else
@@ -454,7 +451,7 @@ Dispatch = function(T,F)
 			F = F.concat(ReinfoQueue,ErrorQueue,DispatchInfoPreemptive)
 			InfoNow && F.push(InfoNow)
 			F.length && (T[KeyQueue.Unique] = {$nin : F})
-			OnlineData.find(T).sort(DispatchSort).limit(Max - Current).exec(function(E,Q)
+			OnlineData.find(T).sort(DispatchSort).limit(Max - Current).exec((E,Q) =>
 			{
 				Dispatching = Util.F
 				if (!E) for (F = 0;F < Q.length;++F)
@@ -477,7 +474,7 @@ Dispatch = function(T,F)
 			T = {}
 			T[KeyQueue.Active] = Util.T
 			T[KeyQueue.Unique] = {$in : ZED.keys(Running)}
-			OnlineData.find(T).sort(DispatchSort).skip(Max).exec(function(E,Q)
+			OnlineData.find(T).sort(DispatchSort).skip(Max).exec((E,Q) =>
 			{
 				Dispatching = Util.F
 				if (!E) for (F = 0;F < Q.length;++F)
@@ -497,7 +494,7 @@ InfoNow,
 InfoSite,
 InfoEnd,
 InfoIsSizing,
-DispatchInfoGot = function(Q)
+DispatchInfoGot = Q =>
 {
 	Q[KeyQueue.Unique] = InfoNow
 	if (Q[KeyQueue.Sizes])
@@ -507,49 +504,44 @@ DispatchInfoGot = function(Q)
 	}
 	if (!Q[KeyQueue.Done])
 	{
-		Q[KeyQueue.Done] = ZED.repeat(0,ZED.reduce(function(D,V)
-		{
-			return D + V[KeyQueue.URL].length
-		},0,Q[KeyQueue.Part]))
+		Q[KeyQueue.Done] = ZED.repeat(0,ZED.reduce((D,V) => D + V[KeyQueue.URL].length,0,Q[KeyQueue.Part]))
 		Q[KeyQueue.DoneSum] = 0
 	}
 	if (!Q[KeyQueue.File]) Q[KeyQueue.File] = ZED.map(ZED.always(''),Q[KeyQueue.Done])
-	return OnlineUpdate(ZED.objOf(KeyQueue.Unique,InfoNow),{$set : Q}).flatMap(function()
-	{
-		Bus.emit(EventQueue.InfoGot,Q)
-		return Q[KeyQueue.Sizes] ?
+	return OnlineUpdate(ZED.objOf(KeyQueue.Unique,InfoNow),{$set : Q})
+		.flatMap(() =>
 		(
-			Bus.emit(EventQueue.SizeGot,Q),
-			Observable.empty()
-		) : (
-			InfoIsSizing = Util.T,
-			Download.Size(Q,InfoSite).tap(function(S)
-			{
-				OnSizeMap[InfoNow] = S[KeyQueue.Size]
-				Bus.emit(EventQueue.SizeGot,ZED.Merge(Q,S))
-			}).flatMap(DispatchSizeGot)
-		)
-	})
+			Bus.emit(EventQueue.InfoGot,Q),
+			Q[KeyQueue.Sizes] ?
+			(
+				Bus.emit(EventQueue.SizeGot,Q),
+				Observable.empty()
+			) : (
+				InfoIsSizing = Util.T,
+				Download.Size(Q,InfoSite).tap(S =>
+				{
+					OnSizeMap[InfoNow] = S[KeyQueue.Size]
+					Bus.emit(EventQueue.SizeGot,ZED.Merge(Q,S))
+				}).flatMap(DispatchSizeGot)
+			)
+		))
 },
-DispatchSizeGot = function(S)
-{
-	return OnlineUpdate(ZED.objOf(KeyQueue.Unique,InfoNow),{$set : S})
-},
-DispatchInfoEnd = function()
+DispatchSizeGot = S => OnlineUpdate(ZED.objOf(KeyQueue.Unique,InfoNow),{$set : S}),
+DispatchInfoEnd = () =>
 {
 	InfoNow = InfoEnd = InfoIsSizing = Util.F
 	Dispatch()
 },
-DispatchInfoError = function(E)
+DispatchInfoError = E =>
 {
 	if (Util.OReinfo === E) ReinfoUpdate(InfoNow)
 	else ErrorOn(InfoNow,E,Util.T)
 	DispatchInfoEnd()
 },
-DispatchInfoFinish = function()
+DispatchInfoFinish = () =>
 {
 	if (Running[InfoNow] && !Download.Active[InfoNow])
-		OnlineData.findOne(ZED.objOf(KeyQueue.Unique,InfoNow),function(E,Q)
+		OnlineData.findOne(ZED.objOf(KeyQueue.Unique,InfoNow),(E,Q) =>
 		{
 			if (E) Util.Debug(__filename,E)
 			else
@@ -561,7 +553,7 @@ DispatchInfoFinish = function()
 	DispatchInfoEnd()
 },
 DispatchInfoRefreshLast,
-DispatchInfoRefresh = function(Q)
+DispatchInfoRefresh = Q =>
 {
 	var
 	Part = DispatchInfoRefreshLast[KeyQueue.Part],
@@ -582,23 +574,23 @@ DispatchInfoRefresh = function(Q)
 	(
 		ZED.objOf(KeyQueue.Unique,InfoNow),
 		{$set : ZED.objOf(KeyQueue.Part,Part)}
-	).flatMap(function()
-	{
-		return Sizes ?
+	).flatMap
+	(
+		() => Sizes ?
 			Observable.empty() :
-			Download.Size(DispatchInfoRefreshLast,InfoSite).tap(function(S)
+			Download.Size(DispatchInfoRefreshLast,InfoSite).tap(S =>
 			{
 				OnSizeMap[InfoNow] = S[KeyQueue.Size]
 				Bus.emit(EventQueue.SizeGot,ZED.Merge(DispatchInfoRefreshLast,S))
 			}).flatMap(DispatchSizeGot)
-	}).tap(Util.N,Util.N,function()
+	).tap(Util.N,Util.N,() =>
 	{
 		Bus.emit(EventQueue.Queuing,DispatchInfoRefreshLast[KeyQueue.Unique])
 		DispatchInfoRefreshLast = Util.F
 	})
 },
 DispatchInfoPreemptive = [],
-DispatchInfo = function(T)
+DispatchInfo = T =>
 {
 	if (InfoEnd && !OnlineMap[InfoNow])
 	{
@@ -609,25 +601,29 @@ DispatchInfo = function(T)
 	{
 		Infoing = Util.T
 		if (DispatchInfoPreemptive.length)
-			OnlineData.findOne(ZED.objOf(KeyQueue.Unique,InfoNow = DispatchInfoPreemptive.shift()),function(E,Q)
-			{
-				Infoing = Util.F
-				if (E)
+			OnlineData.findOne
+			(
+				ZED.objOf(KeyQueue.Unique,InfoNow = DispatchInfoPreemptive.shift()),
+				(E,Q) =>
 				{
-					InfoNow = Util.F
-					Util.Debug(__filename,E)
+					Infoing = Util.F
+					if (E)
+					{
+						InfoNow = Util.F
+						Util.Debug(__filename,E)
+					}
+					else
+					{
+						InfoNow = Q[KeyQueue.Unique]
+						DispatchInfoRefreshLast = Q
+						Bus.emit(EventQueue.Refresh,Q)
+						InfoSite = Site.Map[Q[KeyQueue.Name]]
+						InfoEnd = InfoSite[KeySite.URL](Q[KeyQueue.ID],Q)
+							.flatMap(DispatchInfoRefresh)
+							.start(ZED.noop,DispatchInfoError,DispatchInfoFinish)
+					}
 				}
-				else
-				{
-					InfoNow = Q[KeyQueue.Unique]
-					DispatchInfoRefreshLast = Q
-					Bus.emit(EventQueue.Refresh,Q)
-					InfoSite = Site.Map[Q[KeyQueue.Name]]
-					InfoEnd = InfoSite[KeySite.URL](Q[KeyQueue.ID],Q)
-						.flatMap(DispatchInfoRefresh)
-						.start(ZED.noop,DispatchInfoError,DispatchInfoFinish)
-				}
-			})
+			)
 		else
 		{
 			if (ReinfoQueue.length || ErrorQueue.length)
@@ -644,7 +640,7 @@ DispatchInfo = function(T)
 				}
 			}
 			else T = QueryNoSize
-			OnlineData.find(T).sort(DispatchSort).limit(1).exec(function(E,Q)
+			OnlineData.find(T).sort(DispatchSort).limit(1).exec((E,Q) =>
 			{
 				Infoing = Util.F
 				if (E) Util.Debug(__filename,E)
@@ -657,7 +653,7 @@ DispatchInfo = function(T)
 					InfoSite = Site.Map[Q[KeyQueue.Name]]
 					T = T ? (
 						InfoIsSizing = Util.T,
-						Download.Size(Q,InfoSite).tap(function(S)
+						Download.Size(Q,InfoSite).tap(S =>
 						{
 							S[KeyQueue.Unique] = InfoNow
 							OnSizeMap[InfoNow] = S[KeyQueue.Size]
@@ -672,10 +668,7 @@ DispatchInfo = function(T)
 	}
 };
 
-Bus.on(EventDownload.Save,function(Q)
-{
-	OnlineData.update({_id : Q._id},Q)
-})
+Bus.on(EventDownload.Save,Q => OnlineData.update({_id : Q._id},Q))
 	.on(EventDownload.Error,Error)
 	.on(EventDownload.Reinfo,Reinfo)
 	.on(EventDownload.Finish,Finish)
@@ -697,21 +690,18 @@ module.exports =
 	ReinfoMap : ReinfoMap,
 	ErrorMap : ErrorMap,
 
-	Max : function(Q){return Util.U === Q ? Max : Max = Number(Q)},
-	Wait : function(Q){return Util.U === Q ? Wait : Wait = 1000 * (WaitDisplay = Number(Q))},
+	Max : Q => Util.U === Q ? Max : Max = Number(Q),
+	Wait : Q => Util.U === Q ? Wait : Wait = 1000 * (WaitDisplay = Number(Q)),
 
 	Dispatch : Dispatch,
 
 	//Hot
-	IsInfo : function(Q,J){return InfoNow === Q && (J ^ !DispatchInfoRefreshLast)},
-	IsSize : function(Q){return InfoNow === Q && InfoIsSizing},
-	IsReadyRefresh : function(Q){return 0 <= DispatchInfoPreemptive.indexOf(Q)},
-	IsRunning : function(Q){return Running[Q]},
+	IsInfo : (Q,J) => InfoNow === Q && (J ^ !DispatchInfoRefreshLast),
+	IsSize : Q => InfoNow === Q && InfoIsSizing,
+	IsReadyRefresh : Q => 0 <= DispatchInfoPreemptive.indexOf(Q),
+	IsRunning : Q => Running[Q],
 
-	Info : function(Q,C)
-	{
-		return OnlineData.findOne(ZED.objOf(KeyQueue.Unique,Q),C)
-	},
+	Info : (Q,C) => OnlineData.findOne(ZED.objOf(KeyQueue.Unique,Q),C),
 	New : New,
 	Play : Play,
 	Pause : Pause,
@@ -719,9 +709,6 @@ module.exports =
 
 	//History
 	Finish : Finish,
-	HInfo : function(Q,C)
-	{
-		return OfflineData.findOne(ZED.objOf(KeyQueue.IDHis,Q),C)
-	},
+	HInfo : (Q,C) => OfflineData.findOne(ZED.objOf(KeyQueue.IDHis,Q),C),
 	HRemove : HRemove
 }

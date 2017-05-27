@@ -18,13 +18,13 @@ Setting = require('./Setting'),
 
 Path = require('path'),
 
-WordPack = function(Q){return '%' + Q + '%'},
+WordPack = Q => `%${Q}%`,
 WordDateSingle = ['YYYY','MM','DD','HH','NN','SS'],
 WordDate = ZED.map(WordPack,WordDateSingle).join('.'),
 
 Active = {},
 
-Start = function(Q,I,At,URL,Done,Size)
+Start = (Q,I,At,URL,Done,Size) =>
 {
 	var Begin,Down,Dirty,LowSpeedCount = 0;
 
@@ -44,14 +44,13 @@ Start = function(Q,I,At,URL,Done,Size)
 		interval : Config.Speed,
 		forcerange : Util.T,
 		only200 : Util.T
-	}).on('connected',function()
-	{
+	}).on('connected',() =>
 		Dirty = Begin = Down.Info.Saved
-	}).on('size',function(Q)
+	).on('size',Q =>
 	{
 		Size[I] = Q
 		Down.Dirty = Util.T
-	}).on('path',function(S)
+	}).on('path',S =>
 	{
 		S = Path.basename(S)
 		Q[KeyQueue.File][I] === S ||
@@ -60,7 +59,7 @@ Start = function(Q,I,At,URL,Done,Size)
 			Bus.emit(EventDownload.File,Q,S,I),
 			Down.Dirty = Util.T
 		)
-	}).on('data',function(R)
+	}).on('data',R =>
 	{
 		Done[I] = R.Saved
 		Q[KeyQueue.DoneSum] = ZED.Sum(Done)
@@ -74,11 +73,11 @@ Start = function(Q,I,At,URL,Done,Size)
 				Down.emit('die','Low speed')
 			)
 		}
-	}).on('done',function()
+	}).on('done',() =>
 	{
 		Down.Dirty = Util.T
 		Download(Q)
-	}).on('die',function(E)
+	}).on('die',E =>
 	{
 		if (Size[I] <= Done[I]) --Done[I]
 		if (ZED.isNumber(E))
@@ -96,14 +95,11 @@ Start = function(Q,I,At,URL,Done,Size)
 			Bus.emit(EventDownload.Error,Q,E)
 	})
 	Down.Q = Q
-	Down.D = function()
-	{
-		return 0 <= Begin && Begin < Down.Info.Saved
-	}
+	Down.D = () => 0 <= Begin && Begin < Down.Info.Saved
 	Active[Q[KeyQueue.Unique]] = Down
 },
 
-MakeFileName = function(Q,PL,UL,Part,F,Fa,I,D,T)
+MakeFileName = (Q,PL,UL,Part,F,Fa,I,D,T) =>
 {
 	D = new Date(Q[KeyQueue.Date])
 	T =
@@ -113,23 +109,22 @@ MakeFileName = function(Q,PL,UL,Part,F,Fa,I,D,T)
 		Date : ZED.DateToString(WordDate,D),
 		Title : ZED.SafeFileName(Q[KeyQueue.Title])
 	}
-	ZED.each(function(V)
-	{
-		T[V] = ZED.DateToString(WordPack(V),D)
-	},WordDateSingle)
+	ZED.each(V => T[V] = ZED.DateToString(WordPack(V),D),WordDateSingle)
 	if (1 < PL) T.PartIndex = Util.PadTo(PL,F)
 	if (Part[KeyQueue.Title]) T.PartTitle = ZED.SafeFileName(Part[KeyQueue.Title])
 	if (1 < UL) T.FileIndex = Util.PadTo(UL,Fa)
 	if (!Q[KeyQueue.Format]) Q[KeyQueue.Format] = Setting.Data(KeySetting.Name)
 	T = ZED.Replace
 	(
-		Q[KeyQueue.Format].replace(/\?([^?]+)\?/g,function(Q,S)
-		{
-			return ZED.all(function(Q)
-			{
-				return ZED.has(Q.substr(1,Q.length - 2),T)
-			},Q.match(/\|[^|]+\|/)) ? S : ''
-		}),
+		Q[KeyQueue.Format].replace
+		(
+			/\?([^?]+)\?/g,
+			(Q,S) => ZED.all
+			(
+				Q => ZED.has(Q.substr(1,Q.length - 2),T),
+				Q.match(/\|[^|]+\|/)
+			) ? S : ''
+		),
 		'|',
 		T
 	) + Part[KeyQueue.Suffix]
@@ -143,7 +138,7 @@ MakeFileName = function(Q,PL,UL,Part,F,Fa,I,D,T)
 	Q[KeyQueue.File][I] || Bus.emit(EventDownload.File,Q,Q[KeyQueue.File][I] = Path.basename(T),I)
 	return T
 },
-Download = function(Q)
+Download = Q =>
 {
 	var
 	Target = Site.Map[Q[KeyQueue.Name]],
@@ -183,16 +178,13 @@ Download = function(Q)
 		Part = Part[F]
 		URL = Target[KeySite.Pack](URL[Fa],Q)
 
-		T = Util.mkdirp(Q[KeyQueue.Dir]).flatMap(function()
-		{
-			return URL.start ? URL : Observable.just(URL)
-		}).start(function(URL)
-		{
-			Start(Q,I,MakeFileName(Q,PL,UL,Part,F,Fa,I),URL,Done,Size)
-		},function(E)
-		{
-			Bus.emit(EventDownload.Error,Q,E)
-		})
+		T = Util.mkdirp(Q[KeyQueue.Dir])
+			.flatMap(() => URL.start ? URL : Observable.just(URL))
+			.start
+			(
+				URL => Start(Q,I,MakeFileName(Q,PL,UL,Part,F,Fa,I),URL,Done,Size),
+				E => Bus.emit(EventDownload.Error,Q,E)
+			)
 		Active[Q[KeyQueue.Unique]] =
 		{
 			Q : Q,
@@ -203,11 +195,8 @@ Download = function(Q)
 	}
 },
 
-Play = function(Q)
-{
-	Active[Q[KeyQueue.Unique]] || Download(Q)
-},
-Pause = function(Q)
+Play = Q => Active[Q[KeyQueue.Unique]] || Download(Q),
+Pause = Q =>
 {
 	if (Active[Q])
 	{
@@ -216,10 +205,10 @@ Pause = function(Q)
 	}
 };
 
-Util.Look(function(R)
+Util.Look(R =>
 {
 	R = 0
-	ZED.Each(Active,function(F,V)
+	ZED.Each(Active,(F,V) =>
 	{
 		R += (F = 1000 * V.Speed())
 		Bus.emit(EventDownload.Speed,F,V.Q)
@@ -236,7 +225,7 @@ module.exports =
 {
 	Active : Active,
 
-	Size : function(Q,At)
+	Size : (Q,At) =>
 	{
 		var
 		Pack = At[KeySite.Pack],
@@ -244,31 +233,27 @@ module.exports =
 		Size = 0,
 		Sizes = Array(URL.length);
 
-		return Observable.from(URL)
-			.flatMapOnline(1,function(V,F)
+		return Util.from(URL)
+			.flatMapOnline(1,(V,F) =>
 			{
-				return Util.RequestHead(Pack(V,Q))
-					.tap(function(H)
+				return Util.RequestHead(Pack(V,Q)).tap(H =>
+				{
+					if (200 <= H.statusCode && H.statusCode < 300)
 					{
-						if (200 <= H.statusCode && H.statusCode < 300)
-						{
-							H = Number(H.headers['content-length'])
-							Size += H
-							Sizes[F] = H || 0
-							Bus.emit(EventDownload.Size,Q,H,F)
-						}
-						else ZED.Throw(Util.OReinfo)
-					})
+						H = Number(H.headers['content-length'])
+						Size += H
+						Sizes[F] = H || 0
+						Bus.emit(EventDownload.Size,Q,H,F)
+					}
+					else ZED.Throw(Util.OReinfo)
+				})
 			})
 			.finish()
-			.map(function()
-			{
-				return ZED.ReduceToObject
-				(
-					KeyQueue.Size,Size || 0,
-					KeyQueue.Sizes,Sizes
-				)
-			})
+			.map(() => ZED.ReduceToObject
+			(
+				KeyQueue.Size,Size || 0,
+				KeyQueue.Sizes,Sizes
+			))
 	},
 
 	FileName : MakeFileName,

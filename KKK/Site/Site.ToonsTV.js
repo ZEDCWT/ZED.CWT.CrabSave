@@ -22,102 +22,85 @@ FrameTool,
 FrameRepeater = ZED.Repeater(),
 Video,
 
-Extract = function(Q)
-{
-	return ZED.JTO(Util.MF(/bundled-json">([^<]+)/,Q)).dataView
-},
-FitQulity = function(Q)
-{
-	return ZED.find(ZED.pipe(ZED.prop('width'),ZED.lt(300)),Q).url
-},
-FindDate = function(Q,V)
-{
-	return ZED.find
-	(
-		ZED.pipe(ZED.prop('title'),ZED.identical(V.title)),
-		Q.videos
-	).publicationTime
-},
-Compare = ZED.comparator(function(Q,S){return Q < S}),
+Extract = Q => ZED.JTO(Util.MF(/bundled-json">([^<]+)/,Q)).dataView,
+FitQulity = Q => ZED.find(ZED.pipe(ZED.prop('width'),ZED.lt(300)),Q).url,
+FindDate = (Q,V) => ZED.find
+(
+	ZED.pipe(ZED.prop('title'),ZED.identical(V.title)),
+	Q.videos
+).publicationTime,
+Compare = ZED.comparator((Q,S) => Q < S),
 
 R = ZED.ReduceToObject
 (
 	KeySite.Name,Name,
 	KeySite.Judge,/\.toons\./i,
-	KeySite.Frame,function(Reg)
+	KeySite.Frame,Reg => FrameTool = Reg(ZED.noop,W =>
 	{
-		FrameTool = Reg(ZED.noop,function(W)
+		Video = W.M
+		if (ZED.isArray(Video)) FrameRepeater.finish()
+		else
 		{
-			Video = W.M
-			if (ZED.isArray(Video)) FrameRepeater.finish()
-			else
-			{
-				Video = Util.F
-				FrameRepeater.error(L(Lang.Bad))
-			}
-		},Component.Data(Name))
-	},
-	KeySite.Component,function(Say,Len)
-	{
-		Say(Util.ReplaceLang(Lang.LoadScr,L(Lang.HP)))
-		return Util.RequestBody(URLDomain)
+			Video = Util.F
+			FrameRepeater.error(L(Lang.Bad))
+		}
+	},Component.Data(Name)),
+	KeySite.Component,(Say,Len) =>
+	(
+		Say(Util.ReplaceLang(Lang.LoadScr,L(Lang.HP))),
+		Util.RequestBody(URLDomain)
 			.map(Extract)
 			.pluck('allChannels')
-			.tap(function(Q){Say(Util.ReplaceLang(Lang.ToonsSub,Len = Q.length))})
+			.tap(Q => Say(Util.ReplaceLang(Lang.ToonsSub,Len = Q.length)))
 			.flatMap(ZED.identity)
-			.flatMapOnline(1,function(Q){return Util.RequestBody(URLChannel(Q.id)).retry()})
+			.flatMapOnline(1,Q => Util.RequestBody(URLChannel(Q.id)).retry())
 			.map(Extract)
-			.map(function(Q,F)
-			{
-				Q = Q.activeChannel
-				Say(ZED.Replace('/0/ // /1/, /2/','/',[Util.PadTo(Len,F),Len,Q.title]))
-				return ZED.each(function(V)
+			.map((Q,F) =>
+			(
+				Q = Q.activeChannel,
+				Say(ZED.Replace('/0/ // /1/, /2/','/',[Util.PadTo(Len,F),Len,Q.title])),
+				ZED.each(V =>
 				{
 					ZED.delete_('contentType',V)
 					V.c = Q.title
 					V.id = Q.id + '/' + V.id
 					V.thumbnails = FitQulity(V.thumbnails)
 				},Q.videos)
-			})
-			.reduce(function(D,V){return D.concat(V)})
-			.flatMap(function(Q,M)
-			{
-				M = ZED.reduce(function(D,V){D[V.id] = Util.T},{},Q)
-				Video && ZED.each(function(V){M[V.id] || Q.push(V)},Video)
-				Q = Q.sort(function(Q,S)
-				{
-					return Q.publicationTime === S.publicationTime ?
-						Compare(Q.id,S.id) :
-						S.publicationTime - Q.publicationTime
-				})
-				Say(Util.ReplaceLang(Lang.ToonsNew,Video ? Q.length - Video.length : Q.length))
-				Say(L(Lang.FileWrite))
-				return Util.writeFile(FrameTool[0],'M=' + ZED.OTJ(Q))
-			})
-			.flatMap(function()
-			{
-				Component.Save(ZED.objOf(Name,9))
-				FrameRepeater = ZED.Repeater()
-				FrameTool[1]()
-				return FrameRepeater
-			})
-	},
-	KeySite.ComCheck,function()
-	{
-		return Video ? Observable.empty() : Observable.throw(L(Lang.ComNot))
-	},
+			))
+			.reduce((D,V) => {D.concat(V)})
+			.flatMap((Q,M) =>
+			(
+				M = ZED.reduce((D,V) => {D[V.id] = Util.T},{},Q),
+				Video && ZED.each(V => M[V.id] || Q.push(V),Video),
+				Q = Q.sort((Q,S) => Q.publicationTime === S.publicationTime ?
+					Compare(Q.id,S.id) :
+					S.publicationTime - Q.publicationTime),
+				Say(Util.ReplaceLang(Lang.ToonsNew,Video ? Q.length - Video.length : Q.length)),
+				Say(L(Lang.FileWrite)),
+				Util.writeFile(FrameTool[0],'M=' + ZED.OTJ(Q))
+			))
+			.flatMap(() =>
+			(
+				Component.Save(ZED.objOf(Name,9)),
+				FrameRepeater = ZED.Repeater(),
+				FrameTool[1](),
+				FrameRepeater
+			))
+	),
+	KeySite.ComCheck,() => Video ?
+		Observable.empty() :
+		Observable.throw(L(Lang.ComNot)),
 	KeySite.Map,[ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Video),
 		KeySite.Judge,[/channels\/([\dA-Z_]+\/[\dA-Z_]+)/i,/^([\dA-Z_]+\/[\dA-Z_]+)$/i],
-		KeySite.Page,function(ID)
-		{
-			return Util.RequestBody(URLChannel(ID)).map(Extract).map(function(Q,V)
-			{
-				V = Q.activeVideo
-				Q = Q.activeChannel
-
-				return ZED.ReduceToObject
+		KeySite.Page,ID => Util.RequestBody(URLChannel(ID))
+			.map(Extract)
+			.map((Q,V) =>
+			(
+				V = Q.activeVideo,
+				Q = Q.activeChannel,
+				ZED.ReduceToObject
 				(
 					KeySite.Pages,1,
 					KeySite.Total,1,
@@ -132,43 +115,37 @@ R = ZED.ReduceToObject
 						KeySite.Date,new Date(FindDate(Q,V))
 					)]
 				)
-			})
-		}
+			))
 	),ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Channel),
 		KeySite.Judge,[/channels\/([\dA-Z_]+)/i,/^([\dA-Z_]+)$/i],
-		KeySite.Page,function(ID)
-		{
-			return Util.RequestBody(URLChannel(ID)).map(Extract).map(function(Q)
-			{
-				Q = Q.activeChannel
-
-				return ZED.ReduceToObject
+		KeySite.Page,ID => Util.RequestBody(URLChannel(ID))
+			.map(Extract)
+			.map(Q =>
+			(
+				Q = Q.activeChannel,
+				ZED.ReduceToObject
 				(
 					KeySite.Pages,1,
 					KeySite.Total,Q.videos.length,
-					KeySite.Item,ZED.Map(Q.videos,function(F,V)
-					{
-						return ZED.ReduceToObject
-						(
-							KeySite.Index,F,
-							KeySite.ID,Q.id + '/' + V.id,
-							KeySite.Img,FitQulity(V.thumbnails),
-							KeySite.Title,V.title,
-							KeySite.Author,Q.title,
-							KeySite.AuthorLink,URLChannel(Q.id),
-							KeySite.Date,new Date(V.publicationTime)
-						)
-					})
+					KeySite.Item,ZED.Map(Q.videos,(F,V) => ZED.ReduceToObject
+					(
+						KeySite.Index,F,
+						KeySite.ID,Q.id + '/' + V.id,
+						KeySite.Img,FitQulity(V.thumbnails),
+						KeySite.Title,V.title,
+						KeySite.Author,Q.title,
+						KeySite.AuthorLink,URLChannel(Q.id),
+						KeySite.Date,new Date(V.publicationTime)
+					))
 				)
-			})
-		}
+			))
 	),ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.All),
 		KeySite.Judge,[/^$/],
-		KeySite.Page,function(_,X)
+		KeySite.Page,(_,X) =>
 		{
 			var
 			R = [],
@@ -202,17 +179,16 @@ R = ZED.ReduceToObject
 			else return Observable.throw(L(Lang.ComNot))
 		}
 	)],
-	KeySite.URL,function(ID)
-	{
-		return Util.RequestBody(URLChannel(ID)).map(Extract).map(function(Q,V,J,T)
-		{
-			V = Q.activeVideo
-			Q = Q.activeChannel
-			T = ZED.find(ZED.T,V.renditions)
-			T || ZED.Throw(L(Lang.NoURL))
-			T = ZED.match(/^(.*\/)([^_]+).*_([^_]+)\..*$/,T.url)
-
-			return ZED.ReduceToObject
+	KeySite.URL,ID => Util.RequestBody(URLChannel(ID))
+		.map(Extract)
+		.map((Q,V,J,T) =>
+		(
+			V = Q.activeVideo,
+			Q = Q.activeChannel,
+			T = ZED.find(ZED.T,V.renditions),
+			T || ZED.Throw(L(Lang.NoURL)),
+			T = ZED.match(/^(.*\/)([^_]+).*_([^_]+)\..*$/,T.url),
+			ZED.ReduceToObject
 			(
 				KeyQueue.Title,V.episodeNumber ? ZED.FillLeft(V.episodeNumber,2) + '.' + V.title : V.title,
 				KeyQueue.Author,Name + '.' + Q.title,
@@ -223,8 +199,7 @@ R = ZED.ReduceToObject
 					KeyQueue.Suffix,'.mp4'
 				)]
 			)
-		})
-	},
+		)),
 	KeySite.IDView,ZED.identity,
 	KeySite.IDLink,URLChannel,
 	KeySite.Pack,ZED.identity

@@ -16,16 +16,13 @@ Path = require('path'),
 Electron = require('electron'),
 App = Electron.app,
 
-ONS = function(Q,O,E)
-{
-	ZED.each(function(V){Q.on(V,E)},O.split(' '))
-},
+ONS = (Q,O,E) => ZED.each(V => Q.on(V,E),O.split(' ')),
 
 
 
 DontCloseToTray,
 Created,
-Create = function()
+Create = () =>
 {
 	var
 	Data = Position.Data(),
@@ -44,16 +41,13 @@ Create = function()
 	Quiting,
 
 	TrayIcon,
-	TrayRestore = function()
-	{
-		Window.show()
-	},
-	TrayExit = function()
+	TrayRestore = () => Window.show(),
+	TrayExit = () =>
 	{
 		Quiting = True
 		App.quit()
 	},
-	TrayMake = function()
+	TrayMake = () =>
 	{
 		if (!TrayIcon)
 		{
@@ -62,10 +56,7 @@ Create = function()
 			TrayIcon.setContextMenu(Electron.Menu.buildFromTemplate([
 			{
 				label : L(Lang.DevTool),
-				click : function()
-				{
-					Window.webContents.toggleDevTools()
-				}
+				click : () => Window.webContents.toggleDevTools()
 			},{
 				label : L(Lang.Restore),
 				click : TrayRestore
@@ -76,7 +67,7 @@ Create = function()
 			ONS(TrayIcon,'click double-click',TrayRestore)
 		}
 	},
-	TrayDestory = function()
+	TrayDestory = () =>
 	{
 		TrayIcon && TrayIcon.destroy()
 		TrayIcon = False
@@ -85,38 +76,33 @@ Create = function()
 	Created = True
 	Data.Max && Window.maximize()
 	ONS(Window.webContents,'new-window will-navigate',ZED.invokeProp('preventDefault'))
-	ONS(Window,'resize move maximize minimize',function()
+	ONS(Window,'resize move maximize minimize',() =>
 	{
 		(Data.Max = Window.isMaximized()) || ZED.Merge(True,Data,Window.getBounds())
 		Position.Save()
 	})
-	Electron.ipcMain.on('Tray',function(E,Q)
+	Electron.ipcMain.on('Tray',(E,Q) =>
 	{
 		DontCloseToTray = Q
 		Q ? TrayDestory() : TrayMake()
-	}).on('Ping',function(E,Q)
-	{
-		TrayIcon && TrayIcon.setToolTip(Q)
-	})
-	Window.on('close',function(E)
+	}).on('Ping',(E,Q) => TrayIcon && TrayIcon.setToolTip(Q))
+	Window.on('close',E =>
 	{
 		if (!DontCloseToTray && !Quiting)
 		{
 			E.preventDefault()
 			Window.hide()
 		}
-	}).on('closed',function()
-	{
-		Created = False
-	}).loadURL('file://' + Path.join(__dirname,'KKK/Base.htm'),
-	{
-		userAgent : Config.UA
-	})
+	}).on('closed',() => Created = False).loadURL
+	(
+		'file://' + Path.join(__dirname,'KKK/Base.htm'),
+		{userAgent : Config.UA}
+	)
 },
 
 
 
-Roll = function(Q)
+Roll = Q =>
 {
 	if (2 < Q.length)
 	{
@@ -129,18 +115,9 @@ else
 {
 	App.setPath('userData',Path.join(Config.Root,'UserData'))
 	App.on('ready',Create)
-		.on('activate',function()
-		{
-			Created || Create()
-		})
-		.on('window-all-closed',function()
-		{
-			'darwin' === process.platform || App.quit()
-		})
-		.on('browser-window-created',function(E,W)
-		{
-			W.setMenu(null)
-		})
+		.on('activate',() => Created || Create())
+		.on('window-all-closed',() => 'darwin' === process.platform || App.quit())
+		//.on('browser-window-created',(E,W) => W.setMenu(null))
 
 	Roll(process.argv)
 }

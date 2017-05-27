@@ -6,6 +6,7 @@ False = !True,
 
 ZED = require('@zed.cwt/zedquery'),
 Observable = ZED.Observable,
+Scheduler = ZED.Scheduler,
 $ = ZED.jQuery,
 
 Config = require('../Config'),
@@ -19,76 +20,89 @@ Request = require('request').defaults({timeout : 10E3}),
 
 
 
+Look = [],
+
+
+
 PoolSize = 20,
-Pool = function()
+Pool = () =>
 {
 	var
 	Data = Array(PoolSize),
 	P = -1;
 
 	return {
-		Push : function(Q)
+		Push : Q =>
 		{
 			++P < PoolSize || (P = 0)
 			Data[P] = Q
 		},
-		Peek : function(N)
-		{
-			N = P - Math.abs(N || 0)
-			N < 0 && (N += PoolSize)
-			N < PoolSize || (N -= PoolSize)
-			return Data[N]
-		}
+		Peek : N =>
+		(
+			N = P - Math.abs(N || 0),
+			N < 0 && (N += PoolSize),
+			N < PoolSize || (N -= PoolSize),
+			Data[N]
+		)
 	}
 },
 
 
 
 RequestPool = Pool(),
-RequestWrap = function(Q,H)
-{
-	ZED.isObject(Q) || (Q = {url : Q})
-	Q.gzip = True
-	H = Q.headers || (Q.headers = {})
-	H.Accept = '*/*'
-	H['User-Agent'] = H['User-Agent'] || Config.UA
-	return Q
-},
-RequestHead = function(Q)
-{
-	RequestPool.Push(Q)
-	return Observable.create(function(O,X)
-	{
-		X = Request(RequestWrap(Q)).on('error',function(E){O.error(E)})
-			.on('response',function(H)
+RequestWrap = (Q,H) =>
+(
+	ZED.isObject(Q) || (Q = {url : Q}),
+	Q.gzip = True,
+	H = Q.headers || (Q.headers = {}),
+	H.Accept = '*/*',
+	H['User-Agent'] = H['User-Agent'] || Config.UA,
+	Q
+),
+RequestHead = Q =>
+(
+	RequestPool.Push(Q),
+	Observable.create((O,X) =>
+	(
+		X = Request(RequestWrap(Q)).on('error',E => O.error(E))
+			.on('response',H =>
 			{
 				X.abort()
 				O.data(H).finish()
-			})
-		return function(){X.abort()}
-	})
-},
-RequestBase = function(H)
+			}),
+		() => X.abort()
+	))
+),
+RequestBase = H => Q =>
+(
+	RequestPool.Push(Q),
+	Observable.create((O,X) =>
+	(
+		X = Request(RequestWrap(Q),(E,I,R) => E ?
+			O.error(E) :
+			O.data(H ? [I,R] : R).finish()),
+		() => X.abort()
+	))
+),
+
+DebugFilter = /getaddrinfo|ETIMEDOUT|ESOCKETTIMEDOUT|ECONNRESET/,
+DebugPool = Pool(),
+
+ML = (Q,S,C,J,T) =>
 {
-	return function(Q)
+	Q.lastIndex = 0
+	T = Q.exec(S)
+	T && C(J ? T : T[0])
+	for (;Q.lastIndex;)
 	{
-		RequestPool.Push(Q)
-		return Observable.create(function(O,X)
-		{
-			X = Request(RequestWrap(Q),function(E,I,R)
-			{
-				E ? O.error(E) : O.data(H ? [I,R] : R).finish()
-			})
-			return function(){X.abort()}
-		})
+		T = Q.exec(S)
+		T && C(J ? T : T[0])
 	}
 },
 
-DebugPool = Pool(),
-Look = [],
 DecodeHTML = $('<div>');
 
-setInterval(function(F)
+setInterval(F =>
 {
 	for (F = Look.length;F;) Look[--F]()
 },Config.Speed)
@@ -105,28 +119,29 @@ module.exports =
 	OReinfo : {},
 
 	Bus : ZED.Emitter(),
-	Look : function(Q){Look.push(Q)},
+	Look : Q => Look.push(Q),
 
 	//Observable
+	from : Q => Observable.from(Q,Scheduler.async),
+
 	RequestPool : RequestPool,
 	RequestHead : RequestHead,
 	RequestBody : RequestBase(False),
 	RequestFull : RequestBase(True),
-	ajax : function(Q)
-	{
-		ZED.isObject(Q) || (Q = {url : Q})
-
-		return Observable.create(function(O,X)
-		{
+	ajax : Q =>
+	(
+		ZED.isObject(Q) || (Q = {url : Q}),
+		Observable.create((O,X) =>
+		(
 			X = $.ajax(ZED.Merge(
 			{
 				dataType : 'text',
-				success : function(Q){O.data(Q).finish()},
-				error : function(E){O.error(E)}
-			},Q))
-			return function(){X.abort()}
-		})
-	},
+				success : Q => O.data(Q).finish(),
+				error : E => O.error(E)
+			},Q)),
+			() => X.abort()
+		))
+	),
 	mkdirp : Observable.wrapNode(ZED.mkdirp),
 	readFile : Observable.wrapNode(FS.readFile),
 	writeFile : Observable.wrapNode(FS.writeFile),
@@ -136,7 +151,7 @@ module.exports =
 	{
 		A = ZED.Arrayify(arguments)
 		A[0] = Path.basename(A[0]).replace(/\.js$/,'')
-		if (2 < A.length || !A[1] || !/getaddrinfo|ETIMEDOUT|ESOCKETTIMEDOUT/.test(A[1].message))
+		if (2 < A.length || !A[1] || !DebugFilter.test(A[1].message))
 		{
 			ZED.isObject(A[1]) && DebugPool.Push(A[1])
 			A.unshift('DEBUG')
@@ -144,96 +159,66 @@ module.exports =
 		}
 	},
 	DebugPool : DebugPool,
-	Fatal : function(Q)
+	Fatal : Q =>
 	{
 		alert(ZED.Replace(L(Lang.Fatal),'/',[Q]))
 		process.exit(1)
 	},
-	MakeUnique : function(Q,S){return Q + '.' + S},
-	MakeLabelNumber : function(Q)
-	{
-		return RegExp('(?:^|[^a-z])' + Q + '(?:[^a-z]\\D*)??(\\d+)','i')
-	},
-	MakeLabelWord : function(Q,R,S)
-	{
-		return RegExp('(?:^|[^a-z])' + Q + '(?:' + (S || '[\\s/]+') + ')??(' + (R || '[_\\dA-Z-]+') + ')','i')
-	},
-	MakeSearch : function(URL,Q,X,O)
-	{
-		return URL(encodeURIComponent(Q),X,ZED.Reduce(O || {},function(D,F,V)
-		{
-			return V ? D + '&' + F + '=' + V : D
-		},''))
-	},
-	PrevDef : function(E){E.preventDefault()},
-	StopProp : function(E){E.stopPropagation()},
+	MakeUnique : (Q,S) => Q + '.' + S,
+	MakeLabelNumber : Q => RegExp('(?:^|[^a-z])' + Q + '(?:[^a-z]\\D*)??(\\d+)','i'),
+	MakeLabelWord : (Q,R,S) => RegExp('(?:^|[^a-z])' + Q + '(?:' + (S || '[\\s/]+') + ')??(' + (R || '[_\\dA-Z-]+') + ')','i'),
+	MakeSearch : (URL,Q,X,O) => URL
+	(
+		encodeURIComponent(Q),X,
+		ZED.Reduce(O || {},(D,F,V) => V ? `${D}&${F}=${V}` : D,'')
+	),
+	PrevDef : E => E.preventDefault(),
+	StopProp : E => E.stopPropagation(),
 
 	//Global dependencies
-	MU : function(Q,S){return ZED.match(Q,S)[0] || ''},
-	MF : function(Q,S,X){return ZED.match(Q,S)[X || 1] || ''},
-	ML : function(Q,S,C,J,T)
-	{
-		Q.lastIndex = 0
-		T = Q.exec(S)
-		T && C(J ? T : T[0])
-		for (;Q.lastIndex;)
-		{
-			T = Q.exec(S)
-			T && C(J ? T : T[0])
-		}
-	},
-	DateDirect : function(Q)
-	{
-		return new Date
-		(
-			Q[0] && Q[0].length < 3 ? '20' + Q[0] : Q[0],
-			Q[1] - 1,
-			Q[2],
-			Q[3],Q[4],Q[5] || 0
-		)
-	},
-	PadTo : function(S,Q)
-	{
-		return ZED.FillLeft(Q,(S - 1 + '').length)
-	},
+	MU : (S,Q) => ZED.match(S,Q)[0] || '',
+	MF : (S,Q,X) => ZED.match(S,Q)[X || 1] || '',
+	ML : ML,
+	MA : (S,Q,C,J,R) =>
+	(
+		R = [],
+		ML(S,Q,Q => (Q = C(Q,R.length)) && R.push(Q),J),
+		R
+	),
+	DateDirect : Q => new Date
+	(
+		Q[0] && Q[0].length < 3 ? '20' + Q[0] : Q[0],
+		Q[1] - 1,
+		Q[2],
+		Q[3],Q[4],Q[5] || 0
+	),
+	PadTo : (S,Q) => ZED.FillLeft(Q,(S - 1 + '').length),
 	ReplaceLang : function(Q,S)
 	{
 		return ZED.Replace(L(Q),'/',ZED.isArray(S) ? S : ZED.tail(arguments))
 	},
-	CookieSolve : function(Q)
+	CookieSolve : Q => ZED.reduce((D,V) =>
 	{
-		return ZED.reduce(function(D,V)
-		{
-			V = V.split('; ')[0].match(/^([^=]+)=([^]*)/)
-			D[V[1]] = V[2]
-		},{},ZED.isObject(Q) ? Q.headers['set-cookie'] : Q)
-	},
-	CookieMake : function(Q)
+		V = V.split('; ')[0].match(/^([^=]+)=([^]*)/)
+		D[V[1]] = V[2]
+	},{},ZED.isObject(Q) ? Q.headers['set-cookie'] : Q),
+	CookieMake : Q => ZED.Reduce(Q,(D,F,V) =>
 	{
-		return ZED.Reduce(Q,function(D,F,V)
-		{
-			D.push(F + '=' + V)
-		},[]).sort().join('; ')
-	},
-	CookieTo : function(Q)
+		D.push(F + '=' + V)
+	},[]).sort().join('; '),
+	CookieTo : Q => ZED.reduce((D,V) =>
 	{
-		return ZED.reduce(function(D,V)
-		{
-			V = V.match(/^([^=]+)=([^]*)/)
-			V && (D[V[1]] = V[2])
-		},{},Q.split('; '))
-	},
-	Best : function(Q)
-	{
-		return ZED.reduce(ZED.maxBy(ZED.prop(Q)),ZED.objOf(Q,-Infinity))
-	},
+		V = V.match(/^([^=]+)=([^]*)/)
+		V && (D[V[1]] = V[2])
+	},{},Q.split('; ')),
+	Best : Q => ZED.reduce(ZED.maxBy(ZED.prop(Q)),ZED.objOf(Q,-Infinity)),
 
 	//Misc
-	DecodeHTML : function(Q)
-	{
-		DecodeHTML.html(Q)
-		Q = DecodeHTML.text()
-		DecodeHTML.text('')
-		return Q
-	}
+	DecodeHTML : Q =>
+	(
+		DecodeHTML.html(Q),
+		Q = DecodeHTML.text(),
+		DecodeHTML.text(''),
+		Q
+	)
 }

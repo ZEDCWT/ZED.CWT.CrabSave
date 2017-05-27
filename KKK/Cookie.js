@@ -6,27 +6,27 @@ Util = require('./Util'),
 EventCookieChange = require('./Event').Cookie.Change,
 Save = require('../JSONFile')('Cookie'),
 
-Read = function(Q)
-{
-	Q = Save.Data(Q)
-	return Q ? String(Q) : ''
-};
+Read = Q =>
+(
+	Q = Save.Data(Q),
+	Q ? String(Q) : ''
+);
 
 module.exports =
 {
-	Read : Read,
-	Head : function(Q){return {Cookie : Read(Q)}},
-	URL : function(Q,S,H){return {url : S,headers : ZED.Merge({Cookie : Read(Q)},H)}},
-	Set : function(Q,S)
+	Read,
+	Head : Q => ({Cookie : Read(Q)}),
+	URL : (Q,S,H) => ({url : S,headers : ZED.Merge({Cookie : Read(Q)},H)}),
+	Set : (Q,S) =>
 	{
 		Save.Save(ZED.objOf(Q,S))
 		Util.Bus.emit(EventCookieChange)
 	},
-	Save : function(Q,S)
-	{
-		S = ZED.Merge(Util.CookieSolve(S),Util.CookieTo(Read(Q)))
-		Save.Save(ZED.objOf(Q,Util.CookieMake(S)))
-		Util.Bus.emit(EventCookieChange)
-		return S
-	}
+	Save : (Q,S) =>
+	(
+		S = ZED.Merge(Util.CookieSolve(S),Util.CookieTo(Read(Q))),
+		Save.Save(ZED.objOf(Q,Util.CookieMake(S))),
+		Util.Bus.emit(EventCookieChange),
+		S
+	)
 }

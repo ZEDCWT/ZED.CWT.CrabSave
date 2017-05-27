@@ -31,7 +31,7 @@ ColdMap = {},
 StatusMap = {},
 Active = {},
 
-Select = function(ID,J,R)
+Select = (ID,J,R) =>
 {
 	if (Card.Init === StatusMap[ID] || (J && Card.History === StatusMap[ID]))
 	{
@@ -39,21 +39,15 @@ Select = function(ID,J,R)
 		Cold.push(ColdMap[ID] = R[1])
 	}
 },
-ReleseState = function(ID,R)
-{
-	StateTo(ID,Queue.CardMap[ID] ? Card.History : Card.Init,R)
-},
-Unselect = function(ID,R,T)
+ReleseState = (ID,R) => StateTo(ID,Queue.CardMap[ID] ? Card.History : Card.Init,R),
+Unselect = (ID,R,T) =>
 {
 	if (Card.Cold === StatusMap[ID])
 	{
 		R = Active[ID]
 		ReleseState(ID,R)
 		R = R[1][KeySite.Unique]
-		T = ZED.findIndex(function(V)
-		{
-			return V[KeySite.Unique] === R
-		},Cold)
+		T = ZED.findIndex(V => V[KeySite.Unique] === R,Cold)
 		T < 0 ||
 		(
 			Cold.splice(T,1),
@@ -62,19 +56,16 @@ Unselect = function(ID,R,T)
 	}
 },
 
-ChangeCount = function()
-{
-	Bus.emit(EventCold.Change,Cold.length)
-},
+ChangeCount = () => Bus.emit(EventCold.Change,Cold.length),
 
-StateTo = function(ID,S,R)
+StateTo = (ID,S,R) =>
 {
 	R = R || Active[ID]
 	R && R[0].attr(DOM.cls,Prefix + S).text(LangMap[S])
 	StatusMap[ID] = S
 };
 
-Bus.on(EventQueue.Newed,function(R,M,F)
+Bus.on(EventQueue.Newed,(R,M,F) =>
 {
 	M = {}
 	for (F = R.length;F;) M[R[--F][KeyQueue.Unique]] = Util.T
@@ -89,17 +80,16 @@ Bus.on(EventQueue.Newed,function(R,M,F)
 		}
 	}
 	ChangeCount()
-}).on(EventQueue.Removed,function(R,T,F)
+}).on(EventQueue.Removed,(R,T,F) =>
 {
 	for (F = R.length;F;)
 	{
 		T = R[--F]
 		StatusMap[T] && StateTo(T,Queue.CardMap[T] ? Card.History : Card.Init)
 	}
-}).on(EventQueue.Finish,function(Q)
-{
+}).on(EventQueue.Finish,Q =>
 	StateTo(Q[KeyQueue.Unique],Card.History)
-}).on(EventQueue.HRemoved,function(R,T,F)
+).on(EventQueue.HRemoved,(R,T,F) =>
 {
 	for (F = R.length;F;)
 	{
@@ -113,8 +103,8 @@ module.exports =
 	Cold : Cold,
 	Map : ColdMap,
 
-	Reset : function(){Active = {}},
-	New : function(Target,O,R,S,ID)
+	Reset : () => Active = {},
+	New : (Target,O,R,S,ID) =>
 	{
 		ID = O[KeySite.Unique]
 		S = StatusMap[ID]
@@ -130,7 +120,7 @@ module.exports =
 		Active[ID] = [R,O]
 		return R
 	},
-	Click : function(ID)
+	Click : ID =>
 	{
 		var State = StatusMap[ID];
 		ZED.ClearSelection()
@@ -139,26 +129,26 @@ module.exports =
 			Card.Hot === State || Select(ID,Util.T)
 		ChangeCount()
 	},
-	SelAll : function()
+	SelAll : () =>
 	{
 		ZED.EachKey(Active,Select)
 		ChangeCount()
 	},
-	UnAll : function()
+	UnAll : () =>
 	{
 		ZED.EachKey(Active,Unselect)
 		ChangeCount()
 	},
 	Commit : Queue.New,
-	CommitMany : function(Q,X,R,F)
+	CommitMany : (Q,X,R,F) =>
 	{
 		R = []
 		for (F = 0;F < Cold.length;++F)
 			Q[Cold[F][KeySite.Unique]] && R.push(Cold[F])
 		return Queue.New(R,X)
 	},
-	CommitAll : function(X){return Cold.length ? Queue.New(Cold,X) : 0},
-	Remove : function(Q,R,C,T,F)
+	CommitAll : X => Cold.length ? Queue.New(Cold,X) : 0,
+	Remove : (Q,R,C,T,F) =>
 	{
 		R = 0
 		for (F = Cold.length;F;)

@@ -2,7 +2,7 @@
 var
 ZED = require('@zed.cwt/zedquery'),
 _Lang = ZED.Lang(),
-Lang = function(Q){return _Lang(Q,'')};
+Lang = Q => _Lang(Q,'');
 
 module.exports =
 {

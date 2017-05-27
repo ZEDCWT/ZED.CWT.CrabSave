@@ -37,7 +37,7 @@ Map =
 	ei : IwaraEcchi
 };
 
-ZED.each(function(V){Map[V[KeySiteName]] = Map[V[KeySiteName].toLowerCase()] = V},All)
+ZED.each(V => Map[V[KeySiteName]] = Map[V[KeySiteName].toLowerCase()] = V,All)
 
 module.exports =
 {

@@ -12,15 +12,11 @@ L = Lang.L,
 Name = 'Iwara',
 PageSize = 40,
 
-MakePages = function(Q,T)
-{
-	T = Util.MF(/ last"[^]+?page=(\d+)/,Q)
-	return T ?
-		1 + Number(T) :
-		Util.MF(/last">(\d+)/,Q) || 1
-};
+MakePages = (Q,T) => (T = Util.MF(/ last"[^]+?page=(\d+)/,Q)) ?
+	1 + Number(T) :
+	Util.MF(/last">(\d+)/,Q) || 1;
 
-module.exports = function(Domain,SubName,Judge)
+module.exports = (Domain,SubName,Judge) =>
 {
 	var
 	URLDomain = 'http://' + Domain + '.iwara.tv/',
@@ -39,153 +35,118 @@ module.exports = function(Domain,SubName,Judge)
 		(
 			KeySite.Name,L(Lang.Video),
 			KeySite.Judge,[/^([\da-z]+)$/,Util.MakeLabelWord('videos?','[\\da-z]+')],
-			KeySite.Page,function(ID)
-			{
-				return Util.RequestBody(URLVideo(ID)).map(function(Q)
-				{
-					/player/.test(Q) || ZED.Throw(L(Lang.Bad))
-
-					return ZED.ReduceToObject
+			KeySite.Page,ID => Util.RequestBody(URLVideo(ID)).map(Q =>
+			(
+				/player/.test(Q) || ZED.Throw(L(Lang.Bad)),
+				ZED.ReduceToObject
+				(
+					KeySite.Pages,1,
+					KeySite.Total,1,
+					KeySite.Item,[ZED.ReduceToObject
 					(
-						KeySite.Pages,1,
-						KeySite.Total,1,
-						KeySite.Item,[ZED.ReduceToObject
-						(
-							KeySite.Index,0,
-							KeySite.ID,ID,
-							KeySite.Img,Util.MF(/poster="([^"]+)/,Q),
-							KeySite.Title,Util.DecodeHTML(Util.MF(/title">([^<]+)/,Q)),
-							KeySite.Author,Util.DecodeHTML(Util.MF(/username">([^<]+)/,Q)),
-							KeySite.AuthorLink,URLUserPrefix + Util.MF(/users\/([^"]+)/,Q),
-							KeySite.Date,Util.MU(/\d{4}(?:-\d\d)+ \d\d:\d\d/,Q)
-						)]
-					)
-				})
-			}
+						KeySite.Index,0,
+						KeySite.ID,ID,
+						KeySite.Img,Util.MF(/poster="([^"]+)/,Q),
+						KeySite.Title,Util.DecodeHTML(Util.MF(/title">([^<]+)/,Q)),
+						KeySite.Author,Util.DecodeHTML(Util.MF(/username">([^<]+)/,Q)),
+						KeySite.AuthorLink,URLUserPrefix + Util.MF(/users\/([^"]+)/,Q),
+						KeySite.Date,Util.MU(/\d{4}(?:-\d\d)+ \d\d:\d\d/,Q)
+					)]
+				)
+			))
 		),ZED.ReduceToObject
 		(
 			KeySite.Name,L(Lang.User),
 			KeySite.Judge,[Util.MakeLabelWord('users?','[^\\s\/]+')],
-			KeySite.Page,function(ID,X)
-			{
-				return Util.RequestBody(URLUser(ID,--X)).map(function(Q,R)
-				{
-					R = []
-					Util.ML(/id="node[^]+?username[^<]+/g,Q,function(Q)
-					{
-						R.push(ZED.ReduceToObject
-						(
-							KeySite.Index,PageSize * X + R.length,
-							KeySite.ID,Util.MF(/videos\/([^"]+)/,Q),
-							KeySite.Img,Util.MF(/src="([^"]+)/,Q),
-							KeySite.Title,Util.DecodeHTML(Util.MF(/alt="([^"]+)/,Q)),
-							KeySite.Author,Util.DecodeHTML(Util.MF(/username">([^<]+)/,Q)),
-							KeySite.AuthorLink,URLUserPrefix + Util.MF(/users\/([^"]+)/,Q)
-						))
-					})
-					return ZED.ReduceToObject
+			KeySite.Page,(ID,X) => Util.RequestBody(URLUser(ID,--X))
+				.map(Q => ZED.ReduceToObject
+				(
+					KeySite.Pages,1 + (Number(Util.MF(/last"[^?]+\?page=(\d+)/,Q)) || 0),
+					KeySite.Total,'~' + PageSize * (1 + X),
+					KeySite.Item,Util.MA(/id="node[^]+?username[^<]+/g,Q,(Q,I) => ZED.ReduceToObject
 					(
-						KeySite.Pages,1 + (Number(Util.MF(/last"[^?]+\?page=(\d+)/,Q)) || 0),
-						KeySite.Total,'~' + PageSize * (1 + X),
-						KeySite.Item,R
-					)
-				})
-			}
+						KeySite.Index,PageSize * X + I,
+						KeySite.ID,Util.MF(/videos\/([^"]+)/,Q),
+						KeySite.Img,Util.MF(/src="([^"]+)/,Q),
+						KeySite.Title,Util.DecodeHTML(Util.MF(/alt="([^"]+)/,Q)),
+						KeySite.Author,Util.DecodeHTML(Util.MF(/username">([^<]+)/,Q)),
+						KeySite.AuthorLink,URLUserPrefix + Util.MF(/users\/([^"]+)/,Q)
+					))
+				))
 		),ZED.ReduceToObject
 		(
 			KeySite.Name,L(Lang.All),
 			KeySite.Judge,[/^(?:all)?$/i],
-			KeySite.Page,function(T,X,O)
-			{
-				return Util.RequestBody(Util.MakeSearch(URLVideoAll,'',--X,O)).map(function(Q,R)
+			KeySite.Page,(_,X,O) => Util.RequestBody(Util.MakeSearch(URLVideoAll,'',--X,O))
+				.map((Q,R) =>
 				{
-					R = []
-					Util.ML(/"node-[^]+?username[^<]+/g,Q,function(Q)
-					{
-						R.push(ZED.ReduceToObject
+					R = ZED.ReduceToObject
+					(
+						KeySite.Pages,MakePages(Q),
+						KeySite.Total,R.length,
+						KeySite.Item,Util.MA(/"node-[^]+?username[^<]+/g,Q,(Q,I) => ZED.ReduceToObject
 						(
-							KeySite.Index,36 * X + R.length,
+							KeySite.Index,36 * X + I,
 							KeySite.ID,Util.MF(/videos\/([^"\/]+)"/,Q),
 							KeySite.Img,Util.MF(/src="([^"]+)/,Q),
 							KeySite.Title,Util.DecodeHTML(Util.MF(/title">[^>]+?>([^<]+)/,Q)),
 							KeySite.Author,Util.DecodeHTML(Util.MF(/username">([^<]+)/,Q)),
 							KeySite.AuthorLink,URLUserPrefix + Util.MF(/users\/([^"]+)/,Q)
 						))
-					})
-					R = ZED.ReduceToObject
-					(
-						KeySite.Pages,MakePages(Q),
-						KeySite.Total,R.length,
-						KeySite.Item,R
 					)
 					if (Q = Util.MU(/list-inline[^]+?<\/ul/,Q))
 					{
-						R[KeySite.Pref] = [[Util.MF(/title">([^<]+)/,Q),T = [],'sort']]
-						Util.ML(/sort=([^"]+)[^>]+>([^<]+)/g,Q,function(Q)
-						{
-							/trail/.test(Q[0]) && (R[KeySite.PrefDef] = {sort : Q[1]})
-							T.push([Q[2],Q[1]])
-						},Util.T)
+						R[KeySite.Pref] = [
+						[
+							Util.MF(/title">([^<]+)/,Q),
+							Util.MA(/sort=([^"]+)[^>]+>([^<]+)/g,Q,Q =>
+							(
+								/trail/.test(Q[0]) && (R[KeySite.PrefDef] = {sort : Q[1]}),
+								[Q[2],Q[1]]
+							),Util.T),
+							'sort'
+						]]
 					}
 
 					return R
 				})
-			}
 		),ZED.ReduceToObject
 		(
 			KeySite.Name,L(Lang.Search),
 			KeySite.Judge,Util.RSearch,
-			KeySite.Page,function(ID,X)
-			{
-				return Util.RequestBody(URLSearch(encodeURIComponent(ID),--X)).map(function(Q,R)
-				{
-					R = []
-					Util.ML(/id="node[^<]+<[^"]+"row[^]+?heart/g,Q,function(Q)
-					{
-						R.push(ZED.ReduceToObject
-						(
-							KeySite.Index,R.length,
-							KeySite.ID,Util.MF(/videos\/([^"\/]+)"/,Q),
-							KeySite.Img,Util.MF(/src="([^"]+)/,Q),
-							KeySite.Title,Util.DecodeHTML(Util.MF(/title">[^>]+?>([^<]+)/,Q)),
-							KeySite.Author,Util.DecodeHTML(Util.MF(/username">([^<]+)/,Q)),
-							KeySite.AuthorLink,URLUserPrefix + Util.MF(/users\/([^"]+)/,Q),
-							KeySite.Date,Util.MU(/\d{4}(?:-\d\d)+ \d\d:\d\d/,Q)
-						))
-					})
-
-					return ZED.ReduceToObject
+			KeySite.Page,(ID,X) => Util.RequestBody(URLSearch(encodeURIComponent(ID),--X))
+				.map(Q => ZED.ReduceToObject
+				(
+					KeySite.Pages,MakePages(Q),
+					KeySite.Item,Util.MA(/id="node[^<]+<[^"]+"row[^]+?heart/g,Q,(Q,I) => ZED.ReduceToObject
 					(
-						KeySite.Pages,MakePages(Q),
-						KeySite.Total,R.length,
-						KeySite.Item,R
-					)
-				})
-			}
+						KeySite.Index,I,
+						KeySite.ID,Util.MF(/videos\/([^"\/]+)"/,Q),
+						KeySite.Img,Util.MF(/src="([^"]+)/,Q),
+						KeySite.Title,Util.DecodeHTML(Util.MF(/title">[^>]+?>([^<]+)/,Q)),
+						KeySite.Author,Util.DecodeHTML(Util.MF(/username">([^<]+)/,Q)),
+						KeySite.AuthorLink,URLUserPrefix + Util.MF(/users\/([^"]+)/,Q),
+						KeySite.Date,Util.MU(/\d{4}(?:-\d\d)+ \d\d:\d\d/,Q)
+					))
+				))
 		)],
-		KeySite.URL,function(ID)
-		{
-			return Util.RequestBody(URLVideo(ID)).flatMap(function(Q)
-			{
-				return Util.RequestBody(URLVInfoURL(ID)).map(function(U,T)
-				{
-					U = ZED.JTO(U)[0]
-					T = Util.MF(/file=.*?%2F(\d{10,})(?:[\da-z]{5})?_/,U.uri)
-
-					return ZED.ReduceToObject
+		KeySite.URL,ID => Util.RequestBody(URLVideo(ID))
+			.flatMap(Q => Util.RequestBody(URLVInfoURL(ID)).map((U,T) =>
+			(
+				U = ZED.JTO(U)[0],
+				T = Util.MF(/file=.*?%2F(\d{10,})(?:[\da-z]{5})?_/,U.uri),
+				ZED.ReduceToObject
+				(
+					KeyQueue.Title,Util.DecodeHTML(Util.MF(/title">([^<]+)/,Q)),
+					KeyQueue.Author,Util.DecodeHTML(Util.MF(/username">([^<]+)/,Q)),
+					KeyQueue.Date,ZED.now(new Date(T ? 1000 * T : Util.MU(/\d{4}(?:-\d\d)+ \d\d:\d\d/,Q))),
+					KeyQueue.Part,[ZED.ReduceToObject
 					(
-						KeyQueue.Title,Util.DecodeHTML(Util.MF(/title">([^<]+)/,Q)),
-						KeyQueue.Author,Util.DecodeHTML(Util.MF(/username">([^<]+)/,Q)),
-						KeyQueue.Date,ZED.now(new Date(T ? 1000 * T : Util.MU(/\d{4}(?:-\d\d)+ \d\d:\d\d/,Q))),
-						KeyQueue.Part,[ZED.ReduceToObject
-						(
-							KeyQueue.URL,[U.uri],
-							KeyQueue.Suffix,'.' + (U.mime && U.mime.replace(/^[^\/]+\//,'') || 'mp4')
-						)]
-					)
-				})
-			})
-		},
+						KeyQueue.URL,[U.uri],
+						KeyQueue.Suffix,'.' + (U.mime && U.mime.replace(/^[^\/]+\//,'') || 'mp4')
+					)]
+				)
+			))),
 		KeySite.IDView,ZED.identity,
 		KeySite.IDLink,URLVideo,
 		KeySite.Pack,ZED.identity

@@ -67,12 +67,12 @@ module.exports =
 	Down : SwitchDown,
 	Once : SwitchOnce,
 	Data : Data.Data,
-	Save : function(Q,S)
+	Save : (Q,S) =>
 	{
 		Data.Data()[Q] = S
 		Data.Save()
 	},
-	Remove : function(Q)
+	Remove : Q =>
 	{
 		ZED.delete_(Q,Data.Data())
 		Data.Save()

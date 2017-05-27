@@ -19,19 +19,19 @@ R = ZED.ReduceToObject
 (
 	KeySite.Name,Name,
 	KeySite.Judge,/_/i,
-	KeySite.Login,function(ID,PW)
+	KeySite.Login,(ID,PW) =>
 	{
 	},
-	KeySite.Check,function()
+	KeySite.Check,() =>
 	{
 	},
 	KeySite.Map,[ZED.ReduceToObject
 	(
 		KeySite.Name,L(),
 		KeySite.Judge,[],
-		KeySite.Page,function(ID,X)
+		KeySite.Page,(ID,X) =>
 		{
-			return Util.RequestBody().map(function()
+			return Util.RequestBody().map(() =>
 			{
 				return ZED.ReduceToObject
 				(
@@ -51,9 +51,9 @@ R = ZED.ReduceToObject
 			})
 		}
 	)],
-	KeySite.URL,function(ID)
+	KeySite.URL,ID =>
 	{
-		return Util.RequestBody().map(function()
+		return Util.RequestBody().map(() =>
 		{
 			return ZED.ReduceToObject
 			(

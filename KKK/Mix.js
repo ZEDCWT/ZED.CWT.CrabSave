@@ -814,7 +814,7 @@
 
 		MakeDetailInfoProgress && MakeDetailInfoProgress.text(MakeDetailProgress(Q))
 		Done && MakeDetailInfoDownloaded.text(ZED.FormatSize(Q[KeyQueue.DoneSum]))
-		Size && ZED.Each(MakeDetailURL,function(F,V){V.text(MakeSizePercentage(Size[F],Done[F]))})
+		Size && ZED.Each(MakeDetailURL,(F,V) => V.text(MakeSizePercentage(Size[F],Done[F])))
 	},
 	MakeDetailSetup = function(ID,Q)
 	{
@@ -972,7 +972,7 @@
 			MakeMergeProcess(L,0)
 			MakeMergeStore = []
 			MakeMergeAble = Util.F
-			MakeMergeEnd = Observable.from(Q,ZED.Scheduler.async)
+			MakeMergeEnd = Util.from(Q)
 				.flatMapOnline(1,QueueHInfo)
 				.map(function(Q,F)
 				{
@@ -1655,6 +1655,7 @@
 					GoInfo[InfoKeyTo]('-')
 				}
 				GoInfo[InfoKeyCount](Item.length)
+				Q[KeySite.Total] || (Q[KeySite.Total] = Item.length)
 				GoInfo[InfoKeyTotal](Q[KeySite.Total])
 				GoInfo[InfoKeyTotalS](MakeS(Q[KeySite.Total]))
 				GoInfo[InfoKeyAt](S)
@@ -3040,7 +3041,7 @@
 								S[0] = I.val()
 								ReBind()
 							}),
-						ZED.reduce(function(D,V)
+						ZED.reduce((D,V) =>
 						{
 							D.append(ShowByCheckBox(V[0],V[1] & S,function(Q)
 							{
@@ -3314,7 +3315,7 @@
 	RMerge.append
 	(
 		RMergeProgress,
-		ZED.reduce(function(D,V)
+		ZED.reduce((D,V) =>
 		{
 			D.append(ShowByClass(DOM.Button).text(L(V[1])).on(DOM.click,function()
 			{
