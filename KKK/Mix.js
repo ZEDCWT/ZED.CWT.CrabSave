@@ -1,4 +1,4 @@
-~function()
+(() =>
 {
 	'use strict'
 	var
@@ -45,97 +45,61 @@
 	IPCRenderer = Electron.ipcRenderer,
 	Remote = Electron.remote,
 	Dialog = Remote.dialog,
-	ViewReload = function()
-	{
-		Remote.getCurrentWebContents().reload()
-	},
-	ViewToggleDev = function()
-	{
-		Remote.getCurrentWebContents().toggleDevTools()
-	},
+	ViewReload = () => Remote.getCurrentWebContents().reload(),
+	ViewToggleDev = () => Remote.getCurrentWebContents().toggleDevTools(),
 
 
 
 	DateToStringFormatFile = '%YYYY%.%MM%.%DD%.%HH%.%NN%.%SS%',
 	DateToStringFormatDisplay = '%YYYY%.%MM%.%DD% %HH%:%NN%:%SS%.%MS%',
 	ReKeyGenStore = [],
-	ReKeyGen = function(Q)
-	{
-		return Q ? ReKeyGenStore.shift() :
+	ReKeyGen = Q => Q ?
+		ReKeyGenStore.shift() :
 		(
 			ReKeyGenStore.push(Q = ZED.KeyGen()),
 			Q
-		)
-	},
-	MakeSiteDate = function(Q)
-	{
-		Q = Q[KeySite.Date]
-		return ZED.isDate(Q) || ZED.now(new Date(Q)) ?
+		),
+	MakeSiteDate = Q =>
+	(
+		Q = Q[KeySite.Date],
+		ZED.isDate(Q) || ZED.now(new Date(Q)) ?
 			ZED.DateToString(DateToStringFormatFile,Q) :
 			Q
-	},
-	MakeEnter = function(Q,S)
-	{
-		return ZED.ShortCut({Target : Q}).on('enter',S)
-	},
-	MakeShape = function(S,Q,C,T)
-	{
-		return ShowByClassX(ClassShape + (C ? ' ' + C : ''),T || DOM.span).attr(DOM.title,L(S)).append(ZED.Shape(Q))
-	},
+	),
+	MakeEnter = (Q,S) => ZED.ShortCut({Target : Q}).on('enter',S),
+	MakeShape = (S,Q,C,T) => ShowByClassX(ClassShape + (C ? ' ' + C : ''),T || DOM.span)
+		.attr(DOM.title,L(S))
+		.append(ZED.Shape(Q)),
 
-	MakeS = function(Q){return 1 === Q ? '' : 's'},
-	ShowByRock = function(Q)
-	{
-		return $(DOM.div).attr(DOM.id,Q)
-	},
-	ShowByClass = function(Q)
-	{
-		return $(DOM.div).attr(DOM.cls,Q)
-	},
-	ShowByClassX = function(Q,S)
-	{
-		return $(S).attr(DOM.cls,Q)
-	},
-	ShowByText = function(Q,S)
-	{
-		return $(S || DOM.div).text(Q)
-	},
-	ShowByInput = function(Q,S)
-	{
-		return ShowByClassX(ClassUnderlineInput,S || DOM.input).attr(DOM.placeholder,L(Q))
-	},
-	ShowByCheckBox = function(S,J,C,I,T)
-	{
-		return ShowByClass(ClassCheckBox).append
+	MakeS = Q => 1 === Q ? '' : 's',
+	ShowByRock = Q => $(DOM.div).attr(DOM.id,Q),
+	ShowByClass = Q => $(DOM.div).attr(DOM.cls,Q),
+	ShowByClassX = (Q,S) => $(S).attr(DOM.cls,Q),
+	ShowByText = (Q,S) => $(S || DOM.div).text(Q),
+	ShowByInput = (Q,S) => ShowByClassX(ClassUnderlineInput,S || DOM.input)
+		.attr(DOM.placeholder,L(Q)),
+	ShowByCheckBox = (S,J,C,I,T) => ShowByClass(ClassCheckBox).append
+	(
+		I = $(DOM.input).attr(DOM.type,DOM.checkbox).attr(DOM.checked,!!J)
+			.attr(DOM.id,T = ZED.KeyGen())
+			.on(DOM.change,() => C(I[0][DOM.checked])),
+		ShowByClassX(DOM.NoSelect,DOM.label).attr(DOM.for,T).text(L(S))
+	),
+	MakeAt = (Q,S) => Q && S ?
+		ShowByClass(ClassSingleLine).attr(DOM.title,Q + '@' + S).append
 		(
-			I = $(DOM.input).attr(DOM.type,DOM.checkbox).attr(DOM.checked,!!J)
-				.attr(DOM.id,T = ZED.KeyGen())
-				.on(DOM.change,function(){C(I[0][DOM.checked])}),
-			ShowByClassX(DOM.NoSelect,DOM.label).attr(DOM.for,T).text(L(S))
-		)
-	},
-	MakeAt = function(Q,S)
-	{
-		return Q && S ?
-			ShowByClass(ClassSingleLine).attr(DOM.title,Q + '@' + S)
-				.append
-				(
-					ShowByText(Q),
-					ShowByText('@',DOM.span),
-					ShowByText(S)
-				) :
-			ShowByClass(ClassSingleLine).attr(DOM.title,Q).text(Q)
-	},
-	MakeSizePercentage = function(S,D)
-	{
-		return ZED.isNull(S) ?
-			L(Lang.Calculating) :
-			S ?
-				S === D ?
-					ReplaceLang(Lang.Completed,ZED.FormatSize(S)) :
-					ReplaceLang(Lang.SizeP,ZED.FormatSize(D),ZED.FormatSize(S),ZED.Format(100 * D / S)) :
-				ReplaceLang(Lang.SizeNP,ZED.FormatSize(D))
-	},
+			ShowByText(Q),
+			ShowByText('@',DOM.span),
+			ShowByText(S)
+		) :
+		ShowByClass(ClassSingleLine).attr(DOM.title,Q).text(Q),
+	MakeSizePercentage = (S,D) => ZED.isNull(S) ?
+		L(Lang.Calculating) :
+		S ?
+			S === D ?
+				ReplaceLang(Lang.Completed,ZED.FormatSize(S)) :
+				ReplaceLang(Lang.SizeP,ZED.FormatSize(D),ZED.FormatSize(S),ZED.Format(100 * D / S)) :
+			ReplaceLang(Lang.SizeNP,ZED.FormatSize(D)),
 
 
 
@@ -298,7 +262,7 @@
 	RStatusBar = ShowByRock(IDStatusBar),
 	RStatus = ShowByRock(IDStatus),
 	RStatusIcon = ShowByRock(IDStatusIcon)
-		.on(DOM.aniend,function(){RStatusIcon.removeClass(ClassStatusIconAnimation)}),
+		.on(DOM.aniend,() => RStatusIcon.removeClass(ClassStatusIconAnimation)),
 	RStatusText = ShowByClass(ClassSingleLine),
 	RSpeed = ShowByRock(IDSpeed),
 	RHidden = ShowByRock().hide(),
@@ -410,63 +374,46 @@
 	//	ToolBar
 	MakeToolBarStorage = Array(YTabCount),
 	MakeToolBarLast,
-	MakeToolBarChange = function()
+	MakeToolBarChange = () =>
 	{
 		MakeToolBarLast && MakeToolBarLast.detach()
 		if (MakeToolBarLast = MakeToolBarStorage[UTab.Index()])
 			RToolBarItem.append(MakeToolBarLast)
 	},
-	MakeToolBar = function(X,Q)
-	{
-		MakeToolBarStorage[X] = Q
-	},
-	MakeToolBarActive = function(S,Q)
-	{
-		Q ?
-			S.removeClass(ClassToolBarDisabled) :
-			S.addClass(ClassToolBarDisabled)
-	},
+	MakeToolBar = (X,Q) => MakeToolBarStorage[X] = Q,
+	MakeToolBarActive = (S,Q) => Q ?
+		S.removeClass(ClassToolBarDisabled) :
+		S.addClass(ClassToolBarDisabled),
 
 	//	Count
-	MakeCount = function(Q)
-	{
-		var
+	MakeCount = (Q,S,R) =>
+	(
 		S = ShowByClassX(ClassCount,DOM.span),
-		R = $(DOM.div).append(L(Q),S);
-
-		return function(Q)
-		{
-			return ZED.isNull(Q) ? R : S.text(Q ? '[' + Q + ']' : '')
-		}
-	},
+		R = $(DOM.div).append(L(Q),S),
+		Q => ZED.isNull(Q) ? R : S.text(Q ? '[' + Q + ']' : '')
+	),
 	RColdCount = MakeCount(Lang.Cold),
 	RHotCount = MakeCount(Lang.Hot),
 
 	//	Save scroll state
-	MakeScroll = function(M,S)
-	{
-		S = 0
-		return {
-			Show : function()
-			{
-				M.scrollTop(S)
-			},
-			Hide : function()
-			{
-				S = M.scrollTop()
-			}
+	MakeScroll = (M,S) =>
+	(
+		S = 0,
+		{
+			Show : () => M.scrollTop(S),
+			Hide : () => S = M.scrollTop()
 		}
-	},
+	),
 
 	//	Selectable list
-	MakeSelectableList = function
+	MakeSelectableList =
 	(
 		Scroll,Index,
 		Data,Map,Key,
 		Measure,Make,Destroy,
 		SelectChange,
 		OnSelect,OnUnselect,OnClear
-	){
+	) => {
 		var
 		LastScroll = 0,
 
@@ -476,9 +423,9 @@
 		Count = 0,
 		Active = {},
 
-		Clear = function()
+		Clear = () =>
 		{
-			ZED.EachKey(Selecting,function(V)
+			ZED.EachKey(Selecting,(V) =>
 			{
 				V = Active[V],
 				V && V.removeClass(ClassListSelected)
@@ -489,24 +436,21 @@
 			Count = 0
 			OnClear()
 		},
-		Change = function()
-		{
-			SelectChange(Count)
-		},
+		Change = () => SelectChange(Count),
 		ClearChange = ZED.pipe(Clear,Change),
 		List = ZED.ListView(
 		{
 			Scroll : Scroll,
 			Data : Data,
 			Measure : Measure,
-			Make : function(Q,X)
+			Make : (Q,X) =>
 			{
 				var
 				ID = Key ? Q[Key] : Q,
 				On = Selecting[ID],
 				R = Active[ID] = Make(Q,X);
 
-				R.on(DOM.click,function(E)
+				R.on(DOM.click,E =>
 				{
 					var
 					Shift = E.shiftKey,
@@ -539,7 +483,7 @@
 								OnSelect(Data[F])
 							}
 						}
-						ZED.Each(S,function(F,V)
+						ZED.Each(S,(F,V) =>
 						{
 							Selecting[F] ||
 							(
@@ -585,7 +529,7 @@
 				On && R.addClass(ClassListSelected)
 				return R
 			},
-			Destroy : function(Q,V)
+			Destroy : (Q,V) =>
 			{
 				Q.off(DOM.click)
 				Active[Key ? V[Key] : V] = Util.F
@@ -594,20 +538,17 @@
 			Later : Util.T
 		}),
 
-		Redraw = function()
+		Redraw = () =>
 		{
 			Active = {}
 			if (Count)
 			{
-				ZED.Each(Selecting,function(F,V)
-				{
-					ZED.has(F,Map) ||
-					(
-						--Count,
-						ZED.delete_(F,Selecting),
-						OnUnselect(V)
-					)
-				})
+				ZED.Each(Selecting,(F,V) => ZED.has(F,Map) ||
+				(
+					--Count,
+					ZED.delete_(F,Selecting),
+					OnUnselect(V)
+				))
 				LastIndex = LastID ? ZED.max(0,Data.indexOf(Map[LastID])) : 0
 			}
 			List.recalc().redraw().scroll(LastScroll)
@@ -618,9 +559,9 @@
 
 		Scroll.addClass(DOM.NoSelect).on(DOM.click,ClearChange)
 		UShortCut.cmd(ShortCutCommand.ListClear,MakeIndex(Index,ClearChange))
-			.cmd(ShortCutCommand.ListAll,MakeIndex(Index,function()
+			.cmd(ShortCutCommand.ListAll,MakeIndex(Index,() =>
 			{
-				ZED.each(function(V,ID)
+				ZED.each((V,ID) =>
 				{
 					ID = Key ? V[Key] : V
 					if (!Selecting[ID])
@@ -641,29 +582,17 @@
 			.on('home',PrevDefKey,PrevDefKey,Util.T)
 			.on('end',PrevDefKey,PrevDefKey,Util.T)
 			.cmd(PrevDefKey,MakeIndex(Index,Util.PrevDef))
-			.cmd(ShortCutCommand.ListPgUp,MakeIndex(Index,function()
-			{
-				List.scroll(List.scroll() - Scroll.height() + 50)
-			}))
-			.cmd(ShortCutCommand.ListPgDn,MakeIndex(Index,function()
-			{
-				List.scroll(List.scroll() + Scroll.height() - 50)
-			}))
-			.cmd(ShortCutCommand.ListPgTp,MakeIndex(Index,function()
-			{
-				List.scroll(0)
-			}))
-			.cmd(ShortCutCommand.ListPgBt,MakeIndex(Index,function()
-			{
-				List.scroll(List.range())
-			}))
+			.cmd(ShortCutCommand.ListPgUp,MakeIndex(Index,() => List.scroll(List.scroll() - Scroll.height() + 50)))
+			.cmd(ShortCutCommand.ListPgDn,MakeIndex(Index,() => List.scroll(List.scroll() + Scroll.height() - 50)))
+			.cmd(ShortCutCommand.ListPgTp,MakeIndex(Index,() => List.scroll(0)))
+			.cmd(ShortCutCommand.ListPgBt,MakeIndex(Index,() => List.scroll(List.range())))
 
 		return {
-			Count : function(){return Count},
-			Selecting : function(){return Selecting},
+			Count : () => Count,
+			Selecting : () => Selecting,
 			Show : Redraw,
-			Hide : function(){LastScroll = List.scroll()},
-			Redraw : function()
+			Hide : () => LastScroll = List.scroll(),
+			Redraw : () =>
 			{
 				if (Index === UTab.Index())
 				{
@@ -673,12 +602,12 @@
 			}
 		}
 	},
-	MakeSelecting = function(X,R)
+	MakeSelecting = (X,R) =>
 	{
 		R = R.Count()
 		MakeStatus(X,R ? ReplaceLang(Lang.SelectingN,R,MakeS(R)) : '')
 	},
-	MakeSelSize = function(X,R,S,P)
+	MakeSelSize = (X,R,S,P) =>
 	{
 		R = R.Count()
 		MakeStatus(X,R ? ReplaceLang
@@ -695,7 +624,7 @@
 	//	Cover
 	MakeCoverActive,
 	MakeCoverAt,
-	MakeCoverOn = function()
+	MakeCoverOn = () =>
 	{
 		MakeCoverActive = Util.T
 		MakeCoverAt = UTab.Index()
@@ -703,7 +632,7 @@
 		RStatusText.text('')
 		RStatusIcon.removeAttr(DOM.cls)
 	},
-	MakeCoverOff = function()
+	MakeCoverOff = () =>
 	{
 		MakeCoverActive = Util.F
 		MakeCoverAt === UTab.Index() && MakeToolBarChange()
@@ -719,36 +648,27 @@
 	MakeDetailInfoDownloaded,
 	MakeDetailFile,
 	MakeDetailURL,
-	MakeDetailSetupSingle = function(S,Q)
+	MakeDetailSetupSingle = (S,Q) => ShowByClass(ClassSingleLine).append
+	(
+		ShowByClassX(ClassDetailLabel,DOM.span).text(L(S)),
+		' ',
+		ZED.isObject(Q) ? Q : ShowByText(Q,DOM.span)
+	),
+	MakeDetailProgress = Q => Q[KeyQueue.Finished] ?
+		ReplaceLang(Lang.FinishedAt,ZED.DateToString(DateToStringFormatDisplay,Q[KeyQueue.Finished])) :
+		Q[KeyQueue.Done] ?
+			0 < Q[KeyQueue.Size] ?
+				ZED.Format(100 * Q[KeyQueue.DoneSum] / Q[KeyQueue.Size]) + '%' :
+				L(Lang.Unfinished) :
+			'0%',
+	MakeDetailSize = Q => Q[KeyQueue.Size] < 0 ?
+		L(Lang.Calculating) :
+		Q[KeyQueue.Size] ?
+			ZED.FormatSize(Q[KeyQueue.Size]) :
+			L(Lang.SizeUn),
+	MakeDetailSetupURL = (V,Q) =>
 	{
-		return ShowByClass(ClassSingleLine).append
-		(
-			ShowByClassX(ClassDetailLabel,DOM.span).text(L(S)),
-			' ',
-			ZED.isObject(Q) ? Q : ShowByText(Q,DOM.span)
-		)
-	},
-	MakeDetailProgress = function(Q)
-	{
-		return Q[KeyQueue.Finished] ?
-			ReplaceLang(Lang.FinishedAt,ZED.DateToString(DateToStringFormatDisplay,Q[KeyQueue.Finished])) :
-			Q[KeyQueue.Done] ?
-				0 < Q[KeyQueue.Size] ?
-					ZED.Format(100 * Q[KeyQueue.DoneSum] / Q[KeyQueue.Size]) + '%' :
-					L(Lang.Unfinished) :
-				'0%'
-	},
-	MakeDetailSize = function(Q)
-	{
-		return Q[KeyQueue.Size] < 0 ?
-			L(Lang.Calculating) :
-			Q[KeyQueue.Size] ?
-				ZED.FormatSize(Q[KeyQueue.Size]) :
-				L(Lang.SizeUn)
-	},
-	MakeDetailSetupURL = function(V,Q)
-	{
-		ZED.each(function(V)
+		ZED.each(V =>
 		{
 			var I = MakeDetailURL.length,File,Size;
 
@@ -768,7 +688,7 @@
 			MakeDetailURL.push(Size)
 		},V)
 	},
-	MakeDetailSetupInfo = function(Q)
+	MakeDetailSetupInfo = Q =>
 	{
 		var
 		Part = Q[KeyQueue.Part];
@@ -794,7 +714,7 @@
 		MakeDetailFile = []
 		MakeDetailURL = []
 		RDetailPart.empty()
-		if (Part.length) ZED.Each(Part,function(F,V)
+		if (Part.length) ZED.Each(Part,(F,V) =>
 		{
 			RDetailPart.append
 			(
@@ -806,7 +726,7 @@
 		})
 		else MakeDetailSetupURL(Part[0][KeyQueue.URL],Q)
 	},
-	MakeDetailRefresh = function(Q)
+	MakeDetailRefresh = Q =>
 	{
 		var
 		Size = Q[KeyQueue.Sizes],
@@ -816,7 +736,7 @@
 		Done && MakeDetailInfoDownloaded.text(ZED.FormatSize(Q[KeyQueue.DoneSum]))
 		Size && ZED.Each(MakeDetailURL,(F,V) => V.text(MakeSizePercentage(Size[F],Done[F])))
 	},
-	MakeDetailSetup = function(ID,Q)
+	MakeDetailSetup = (ID,Q) =>
 	{
 		MakeCoverOn()
 		if (MakeDetailActive) RDetailChildren.empty()
@@ -832,7 +752,7 @@
 		else RDetailInfo.text(L(Queue.IsInfo(Q[KeyQueue.Unique]) ? Lang.GetInfo : Lang.ReadyInfo))
 	},
 	MakeDetailQuerying,
-	MakeDetail = function(Q,J)
+	MakeDetail = (Q,J) =>
 	{
 		J = ZED.isArray(Q)
 		J && (Q = Q[0])
@@ -844,7 +764,7 @@
 				MakeDetailQuerying = Util.F
 				MakeDetailSetup(Q,Download.Active[Q].Q)
 			}
-			else (J ? Queue.HInfo : Queue.Info)(Q,function(E,R)
+			else (J ? Queue.HInfo : Queue.Info)(Q,(E,R) =>
 			{
 				if (!E && MakeDetailQuerying === Q)
 				{
@@ -854,7 +774,7 @@
 			})
 		}
 	},
-	MakeDetailClose = function()
+	MakeDetailClose = () =>
 	{
 		if (MakeDetailActive)
 		{
@@ -869,25 +789,16 @@
 			MakeDetailURL = Util.F
 		}
 	},
-	MakeDetailMake = function(H)
-	{
-		return function(Q,S,R)
-		{
-			MakeDetailActive === Q[KeyQueue.Unique] && H(Q,S,R)
-		}
-	},
+	MakeDetailMake = H => (Q,S,R) => MakeDetailActive === Q[KeyQueue.Unique] && H(Q,S,R),
 
 	//		Merge
 	MakeMergeEnd,
 	MakeMergeAble,
 	MakeMergeStore,
-	MakeMergeProcess = function(L,S)
-	{
-		RMergeProgress.text(ReplaceLang(Lang.ProcessingN,S,L))
-	},
+	MakeMergeProcess = (L,S) => RMergeProgress.text(ReplaceLang(Lang.ProcessingN,S,L)),
 	MakeMergeEscapeWin = [ZED.ShellWinProgram,ZED.ShellWinArgument],
 	MakeMergeEscapeUnix = [ZED.ShellUnix,ZED.ShellUnix],
-	MakeMergeCompose = function(H)
+	MakeMergeCompose = H =>
 	{
 		var
 		Make = Setting.Data(KeySetting.Merge),
@@ -897,7 +808,7 @@
 
 		File,O = {},
 		R = [],S,
-		In = function(Q){S.push(H[1](ZED.Replace(Q,'|',O)))},
+		In = Q => S.push(H[1](ZED.Replace(Q,'|',O))),
 		F,Fa,Fb,Fc;
 
 		/^\s*\[/.test(Make) || (Make = '[' + Make + ']')
@@ -955,7 +866,7 @@
 		}
 		RMergeText.val(R.join('\n') + '\n')
 	},
-	MakeMerge = function(Q,L)
+	MakeMerge = (Q,L) =>
 	{
 		Q = ZED.keys(Q)
 		if (L = Q.length)
@@ -974,7 +885,7 @@
 			MakeMergeAble = Util.F
 			MakeMergeEnd = Util.from(Q)
 				.flatMapOnline(1,QueueHInfo)
-				.map(function(Q,F)
+				.map((Q,F) =>
 				{
 					var
 					Parts,
@@ -995,27 +906,28 @@
 								MakeMergeStore.push(
 								[
 									Download.FileName(Q,Parts.length,0,Part,F,0,0),
-									ZED.map(function(V)
-									{
-										return Path.join(Q[KeyQueue.Dir],V)
-									},Q[KeyQueue.File].slice(I,I + T))
+									ZED.map
+									(
+										V => Path.join(Q[KeyQueue.Dir],V),
+										Q[KeyQueue.File].slice(I,I + T)
+									)
 								])
 							}
 							I += T
 						}
 					}
-				}).start(Util.N,function(E)
+				}).start(Util.N,E =>
 				{
 					Util.Debug(__filename,E)
 					RMergeProgress.text(L(Lang.Errored))
-				},function()
+				},() =>
 				{
 					MakeMergeAble = Util.T
 					MakeMergeCompose(Windows ? MakeMergeEscapeWin : MakeMergeEscapeUnix)
 				})
 		}
 	},
-	MakeMergeClose = function()
+	MakeMergeClose = () =>
 	{
 		if (MakeMergeEnd)
 		{
@@ -1029,7 +941,7 @@
 			MakeMergeAble = Util.F
 		}
 	},
-	MakeCoverClose = function()
+	MakeCoverClose = () =>
 	{
 		MakeDetailClose()
 		MakeMergeClose()
@@ -1039,50 +951,47 @@
 	MakeNotiProcessing,
 	MakeNotiPool = {},
 	MakeNotiQueue = [],
-	MakeNotiAppend = function(Q,H)
+	MakeNotiAppend = (Q,H) =>
 	{
 		MakeNotiProcessing = Util.T
 		RNoti.append(Q)
 		H = YNotiMargin + Q.outerHeight()
 		RNoti.removeAttr(DOM.cls).css(DOM.bottom,-H)
-		setTimeout(function()
-		{
-			RNoti.attr(DOM.cls,ClassNotiTransition).removeAttr(DOM.style)
-		},50)
+		setTimeout(() => RNoti.attr(DOM.cls,ClassNotiTransition).removeAttr(DOM.style),50)
 	},
-	MakeNotiEnd = function(S,R)
+	MakeNotiEnd = (S,R) =>
 	{
 		ZED.delete_(S,MakeNotiPool)
 		R.addClass(ClassNotiEnd)
 	},
-	MakeNotiNew = function(S,Q,J)
+	MakeNotiNew = (S,Q,J) =>
 	{
 		var
 		Text = ShowByClass(ClassSingleLine).text(Q),
 		Close = ShowByClass(DOM.Button).text(L(Lang.Close)),
 		R = $(DOM.div);
 
-		Close.on(DOM.click,function()
+		Close.on(DOM.click,() =>
 		{
 			ZED.delete_(S,MakeNotiPool)
 			R.remove()
 			RNoti.removeAttr(DOM.cls)
 			MakeNotiTransitionEnd()
 		})
-		R.on(DOM.aniend,function(){R.remove()})
+		R.on(DOM.aniend,() => R.remove())
 		R.append(Text,Close)
 
 		if (MakeNotiProcessing) MakeNotiQueue.push(R)
 		else MakeNotiAppend(R)
 
 		J && MakeNotiEnd(S,R)
-		return function(Q,J)
+		return (Q,J) =>
 		{
 			Text.text(Q)
 			J && MakeNotiEnd(S,R)
 		}
 	},
-	MakeNoti = function(S,Q,J)
+	MakeNoti = (S,Q,J) =>
 	{
 		if (MakeNotiPool[S]) MakeNotiPool[S](Q,J)
 		else
@@ -1091,7 +1000,7 @@
 			J || (MakeNotiPool[S] = Q)
 		}
 	},
-	MakeNotiTransitionEnd = function()
+	MakeNotiTransitionEnd = () =>
 	{
 		MakeNotiProcessing = Util.F
 		MakeNotiQueue.length && MakeNotiAppend(MakeNotiQueue.shift())
@@ -1103,7 +1012,7 @@
 	//	StatusBar
 	MakeStatusText = Array(YTabCount),
 	MakeStatusClass = Array(YTabCount),
-	MakeStatusChange = function(X,Q,S)
+	MakeStatusChange = (X,Q,S) =>
 	{
 		X = UTab.Index()
 		Q = MakeStatusText[X]
@@ -1116,29 +1025,23 @@
 		else RStatusText.text('')
 		S || RStatusIcon.removeAttr(DOM.cls)
 	},
-	MakeStatus = function(X,Q,S)
+	MakeStatus = (X,Q,S) =>
 	{
 		MakeStatusText[X] = Q
 		MakeStatusClass[X] = Q && (S || ClassStatusInfo)
 		!MakeCoverActive && X === UTab.Index() && MakeStatusChange()
 	},
-	MakeStatusX = function(X,L,T,J)
-	{
-		0 < T && MakeNoti(X,ReplaceLang(L,T,MakeS(T)),J)
-	},
+	MakeStatusX = (X,L,T,J) => 0 < T && MakeNoti(X,ReplaceLang(L,T,MakeS(T)),J),
 	MakeToolBarClickKeyCall = ZED.KeyGen(),
-	MakeToolBarClick = function(R,Q,L,H,N)
+	MakeToolBarClick = (R,Q,L,H,N) => Q.on(DOM.click,Q[MakeToolBarClickKeyCall] = (T,X) =>
 	{
-		return Q.on(DOM.click,Q[MakeToolBarClickKeyCall] = function(T,X)
-		{
-			T && Util.StopProp(T)
-			T = R.Count()
-			X = ZED.KeyGen()
-			T = N ? H(X) : (T && H(R.Selecting(),X))
-			0 < T && MakeStatusX(X,L,T)
-		})
-	},
-	MakeDBError = function(X,G,E)
+		T && Util.StopProp(T)
+		T = R.Count()
+		X = ZED.KeyGen()
+		T = N ? H(X) : (T && H(R.Selecting(),X))
+		0 < T && MakeStatusX(X,L,T)
+	}),
+	MakeDBError = (X,G,E) =>
 	{
 		Util.Debug(__filename,E)
 		MakeStatus(X,ReplaceLang(Lang.ErrWhile,L(G)),ClassStatusError)
@@ -1148,31 +1051,27 @@
 
 	//Util
 	UShortCut = ZED.ShortCut(),
-	MakeIndex = ZED.curry(function(X,Q,S)
-	{
-		!MakeCoverActive && X === UTab.Index() && Q(S)
-	},3),
+	MakeIndex = ZED.curry((X,Q,S) => !MakeCoverActive && X === UTab.Index() && Q(S),3),
 	UTab = ZED.Tab(
 	{
 		Tab : RNavi,
 		Content : RStage,
 		Default : 0,
-		Show : function()
+		Show : () =>
 		{
 			MakeToolBarChange()
 			MakeStatusChange()
 		}
 	});
 
-	ZED.onError = function(E){Util.Debug(__filename,E)}
+	ZED.onError = E => Util.Debug(__filename,E)
 
-	ZED.CSS(ZED.KeyGen(),function(W,H)
-	{
-		YStageWidth = ZED.max(2 * YNaviWidth,W - YNaviWidth)
-		YStageWidthWithoutScroll = YStageWidth - YScrollWidth
-		YStageHeight = ZED.max(YToolBarHeight + YStatusBarHeight,H - YToolBarHeight - YStatusBarHeight)
-
-		return ZED.Replace
+	ZED.CSS(ZED.KeyGen(),(W,H) =>
+	(
+		YStageWidth = ZED.max(2 * YNaviWidth,W - YNaviWidth),
+		YStageWidthWithoutScroll = YStageWidth - YScrollWidth,
+		YStageHeight = ZED.max(YToolBarHeight + YStatusBarHeight,H - YToolBarHeight - YStatusBarHeight),
+		ZED.Replace
 		(
 			'html,body{margin:0;padding:0;background:#F7F7F7;color:#6C6C6C;overflow:hidden}' +
 			'input,textarea{background:transparent;color:#6C6C6C;outline:0}' +
@@ -1406,15 +1305,21 @@
 					ZED.CSSKeyframe(ReKeyGen(Util.T),{to : {transform : 'rotate(405deg)'}})
 			}
 		)
-	})
+	))
 
 	UTab.Add(
 	{
 		Tab : L(Lang.Browser),
-		CSS : function(ID,W)
-		{
-			W = ZED.FlexibleFit(YStageWidthWithoutScroll - YPadding - YPadding,YCardWidthMin,YCardWidthMax,YPadding)
-			return ZED.Replace
+		CSS : (ID,W) =>
+		(
+			W = ZED.FlexibleFit
+			(
+				YStageWidthWithoutScroll - YPadding - YPadding,
+				YCardWidthMin,
+				YCardWidthMax,
+				YPadding
+			),
+			ZED.Replace
 			(
 				'#/R/{text-align:center}' +
 				'#/R/>div{margin-bottom:/p/px!important}' +
@@ -1519,10 +1424,10 @@
 					a : YShadowColor
 				}
 			)
-		},
+		),
 		Show : MakeSelectableListShow,
 		BeforeHide : MakeSelectableListHide,
-		Content : function(M,X)
+		Content : (M,X) =>
 		{
 			var
 			RInput = ShowByRock(IDBrowserInput),
@@ -1566,7 +1471,7 @@
 			GoID,
 			GoPages,
 			GoPref,
-			GoMatch = function(URL,J,Target,Detail,ID,T)
+			GoMatch = (URL,J,Target,Detail,ID,T) =>
 			{
 				if (T = URL.match(/^([A-Z\u2E80-\u33FF\u3400-\u9FFF\uAC00-\uD7FF\uF900-\uFAFF]+)(?:\s+([^]*))?$/i))
 				{
@@ -1577,23 +1482,21 @@
 				}
 				else
 				{
-					Target = ZED.find(function(V){return V[KeySite.Judge].test(URL)},SiteAll)
+					Target = ZED.find(V => V[KeySite.Judge].test(URL),SiteAll)
 					Detail = URL
 					if (!Target) return J && GoError(Lang.UknURL,URL)
 				}
-				Detail = ZED.find(function(V)
-				{
-					return ZED.find(function(V)
-					{
-						return ID = Detail.match(V)
-					},V[KeySite.Judge])
-				},Target[KeySite.Map])
+				Detail = ZED.find
+				(
+					V => ZED.find(V => ID = Detail.match(V),V[KeySite.Judge]),
+					Target[KeySite.Map]
+				)
 
 				return Detail ?
 					[Target,Detail,ID[1]] :
 					J && GoError(Lang.UknURL,URL)
 			},
-			Go = function()
+			Go = () =>
 			{
 				var URL = RURL.val().trim(),L,T;
 
@@ -1623,13 +1526,10 @@
 					}
 				}
 			},
-			Hover = function(C,I,Q)
-			{
-				return Q.on(DOM.click,function(){Cold.Click(I)})
-					.on(DOM.mouseover,function(){C.attr(DOM.cls,ClassBrowserHover)})
-					.on(DOM.mouseout,function(){C.removeAttr(DOM.cls)})
-			},
-			Render = function(Q,S)
+			Hover = (C,I,Q) => Q.on(DOM.click,() => Cold.Click(I))
+				.on(DOM.mouseover,() => C.attr(DOM.cls,ClassBrowserHover))
+				.on(DOM.mouseout,() => C.removeAttr(DOM.cls)),
+			Render = (Q,S) =>
 			{
 				var Item = Q[KeySite.Item];
 
@@ -1640,7 +1540,7 @@
 					Set : Q[KeySite.Pref],
 					Data : ZED.Merge(GoPref,Q[KeySite.PrefDef]),
 					Table : Util.T,
-					Change : function(){Jump(S)}
+					Change : () => Jump(S)
 				})
 
 				GoPages = Number(Q[KeySite.Pages])
@@ -1666,7 +1566,7 @@
 				PagerBotton(S,GoPages)
 				RList.empty()
 				Cold.Reset()
-				ZED.each(function(V,D)
+				ZED.each((V,D) =>
 				{
 					D = $(DOM.fieldset)
 					V[KeySite.ID] ? D.append
@@ -1708,7 +1608,7 @@
 			GoHintCount = 0,
 			GoHintCacheKey = ZED.KeyGen(),
 			GoHintRaw,
-			GoHint = function()
+			GoHint = () =>
 			{
 				var
 				URL,
@@ -1735,14 +1635,11 @@
 						T = Detail[GoHintCacheKey]
 						if (!T) Detail[GoHintCacheKey] = T = {}
 						if (T[ID]) GoHintRender(Target,ID,URL,T[ID])
-						else Detail[KeySite.Hint](ID).start(function(Q)
+						else Detail[KeySite.Hint](ID).start(Q =>
 						{
 							T[ID] = Q
 							GoHintCount === At && GoHintRender(Target,ID,URL,Q)
-						},function()
-						{
-							GoHintCount === At && RHintList.text(L(Lang.Errored))
-						})
+						},() => GoHintCount === At && RHintList.text(L(Lang.Errored)))
 					}
 					else GoHintLeave()
 				}
@@ -1752,7 +1649,7 @@
 			GoHintAt,
 			GoHintData,
 			GoHintView,
-			GoHintRender = function(Target,ID,Prefix,Q)
+			GoHintRender = (Target,ID,Prefix,Q) =>
 			{
 				if (Q.length)
 				{
@@ -1761,10 +1658,10 @@
 					GoHintAt = 0
 					GoHintData = []
 					GoHintView = []
-					ZED.each(function(Q,I,R)
+					ZED.each((Q,I,R) =>
 					{
 						I = 1 + GoHintData.length
-						R = $(DOM.div).text(Q).on(DOM.click,function()
+						R = $(DOM.div).text(Q).on(DOM.click,() =>
 						{
 							RURL.val(Q)
 							Go()
@@ -1778,7 +1675,7 @@
 				}
 				else RHintList.text(L(Lang.HintEmpty))
 			},
-			GoHintSwitch = function(Q)
+			GoHintSwitch = Q =>
 			{
 				if (GoHintAt) GoHintView[GoHintAt - 1].removeAttr(DOM.cls)
 				GoHintAt = Q
@@ -1790,30 +1687,35 @@
 				else Q = GoHintRaw
 				RURL.val(Q)
 			},
-			GoHintLeave = function()
+			GoHintLeave = () =>
 			{
 				GoHintActive =
 				GoHintData =
 				GoHintView = Util.F
 				RHint.removeAttr(DOM.style)
 			},
-			Jump = function(S)
+			Jump = S =>
 			{
 				if (GoDetail)
 				{
 					S = ZED.min(ZED.max(1,S || 0),GoPages)
 					MakeStatus(X,L(Lang.Loading),ClassStatusLoading)
-					GoLast = GoDetail[KeySite.Page](GoID,S,GoPref).start(function(Q)
+					GoLast = GoDetail[KeySite.Page](GoID,S,GoPref).start(Q =>
 					{
 						GoLast = Util.F
 						MakeStatus(X)
 						GoInfo = GoInfo || ZED.EazyLog(InfoLog,$(DOM.div).appendTo(RInfo),Util.T)
-						ZED.each(function(V)
-						{
-							V[KeySite.Unique] = Util.MakeUnique(V[KeySite.Name] = GoTarget[KeySite.Name],V[KeySite.ID])
-						},Q[KeySite.Item])
+						ZED.each
+						(
+							V => V[KeySite.Unique] = Util.MakeUnique
+							(
+								V[KeySite.Name] = GoTarget[KeySite.Name],
+								V[KeySite.ID]
+							),
+							Q[KeySite.Item]
+						)
 						Render(Q,S)
-					},function(E)
+					},E =>
 					{
 						Util.Debug(__filename,E)
 						E && MakeStatus(X,E,ClassStatusError)
@@ -1821,19 +1723,19 @@
 				}
 			},
 
-			MakeClick = ZED.curry(function(Q){Q.click()},2),
+			MakeClick = Q => () => Q.click(),
 
 			T;
 
 			M.addClass(ClassScrollable)
-			MakeEnter(RURL,Go).on('up',Util.N,function(E)
+			MakeEnter(RURL,Go).on('up',Util.N,E =>
 			{
 				if (GoHintActive)
 				{
 					GoHintSwitch(GoHintAt ? GoHintAt - 1 : GoHintData.length)
 					Util.PrevDef(E)
 				}
-			},Util.T).on('down',Util.N,function(E)
+			},Util.T).on('down',Util.N,E =>
 			{
 				if (GoHintActive)
 				{
@@ -1857,18 +1759,18 @@
 			)
 			PagerUp = ZED.Pager({Parent : M,Offset : 1},Jump)
 			T = M.find('.' + DOM.Pager).children()
-			RList.on(DOM.click,DOM.A,function(E)
-			{
-				Util.PrevDef(E)
-				Util.StopProp(E)
-				E = E.currentTarget.getAttribute(DOM.href)
-				E && RURL.val(E)
-				Go()
-				return Util.F
-			})
+			RList.on(DOM.click,DOM.A,E =>
+			(
+				Util.PrevDef(E),
+				Util.StopProp(E),
+				E = E.currentTarget.getAttribute(DOM.href),
+				E && RURL.val(E),
+				Go(),
+				Util.F
+			))
 			M.append(RList)
 			PagerBotton = ZED.Pager({Parent : M,Offset : 1},Jump)
-			UShortCut.cmd(ShortCutCommand.FocusURL,function(){RURL.focus()})
+			UShortCut.cmd(ShortCutCommand.FocusURL,() => RURL.focus())
 				.cmd(ShortCutCommand.SelAll,MakeIndex(X,Cold.SelAll))
 				.cmd(ShortCutCommand.UnAll,MakeIndex(X,Cold.UnAll))
 				.cmd(ShortCutCommand.PageHead,MakeIndex(X,MakeClick(T[0])))
@@ -1880,42 +1782,39 @@
 		}
 	},{
 		Tab : RColdCount(),
-		CSS : function(ID)
-		{
-			return ZED.Replace
-			(
-				//Commit all
-				'./A/{position:relative}' +
-				'./A/A,./A/B{position:absolute;top:0}' +
-				'./A/A{left:20%}' +
-				'./A/B{left:40%}' +
-				//Info block
-				'#/R/ ./M/>div{margin-right:/m/px;padding:/p/px}' +
-				//@ mark
-				'#/R/ ./L/ div{display:inline-block}' +
-				'#/R/ ./L/ span{margin:0 4px;color:#00F;font-weight:bold}' +
-				//Commit wrap
-				'#/R/ ./M/>span{position:absolute;right:/p/px;top:50%;transform:translateY(-/l/px)}' +
-				//Commit
-				'#/R/ svg{width:/v/px;height:/v/px}',
-				'/',
-				{
-					M : DOM.ListViewItem,
+		CSS : ID => ZED.Replace
+		(
+			//Commit all
+			'./A/{position:relative}' +
+			'./A/A,./A/B{position:absolute;top:0}' +
+			'./A/A{left:20%}' +
+			'./A/B{left:40%}' +
+			//Info block
+			'#/R/ ./M/>div{margin-right:/m/px;padding:/p/px}' +
+			//@ mark
+			'#/R/ ./L/ div{display:inline-block}' +
+			'#/R/ ./L/ span{margin:0 4px;color:#00F;font-weight:bold}' +
+			//Commit wrap
+			'#/R/ ./M/>span{position:absolute;right:/p/px;top:50%;transform:translateY(-/l/px)}' +
+			//Commit
+			'#/R/ svg{width:/v/px;height:/v/px}',
+			'/',
+			{
+				M : DOM.ListViewItem,
 
-					L : ClassSingleLine,
-					A : ClassColdCommitAll,
+				L : ClassSingleLine,
+				A : ClassColdCommitAll,
 
-					R : ID,
-					m : YPadding + YListSVG + YPadding,
-					v : YListSVG,
-					l : YListSVG / 2,
-					p : YPadding
-				}
-			)
-		},
+				R : ID,
+				m : YPadding + YListSVG + YPadding,
+				v : YListSVG,
+				l : YListSVG / 2,
+				p : YPadding
+			}
+		),
 		Show : MakeSelectableListShow,
 		BeforeHide : MakeSelectableListHide,
-		Content : function(M,X)
+		Content : (M,X) =>
 		{
 			var
 			ToolCommit = MakeShape(Lang.Commit,ShapeConfigColdToolCommit),
@@ -1931,26 +1830,23 @@
 				M,X,
 				Cold.Cold,Cold.Map,KeySite.Unique,
 				Util.F,
-				function(Q)
-				{
-					return $(DOM.div).append
+				Q => $(DOM.div).append
+				(
+					$(DOM.div).append
 					(
-						$(DOM.div).append
-						(
-							MakeAt(SiteMap[Q[KeySite.Name]][KeySite.IDView](Q[KeySite.ID]),Q[KeySite.Name]),
-							MakeAt(Q[KeySite.Title],Q[KeySite.Author]),
-							$(DOM.div).text(MakeSiteDate(Q))
-						),
-						MakeToolBarClick
-						(
-							R,
-							MakeShape(Lang.Commit,ShapeConfigColdListCommit),
-							Lang.CommittingN,
-							function(X){return Cold.Commit([Q],X)},
-							Util.T
-						)
+						MakeAt(SiteMap[Q[KeySite.Name]][KeySite.IDView](Q[KeySite.ID]),Q[KeySite.Name]),
+						MakeAt(Q[KeySite.Title],Q[KeySite.Author]),
+						$(DOM.div).text(MakeSiteDate(Q))
+					),
+					MakeToolBarClick
+					(
+						R,
+						MakeShape(Lang.Commit,ShapeConfigColdListCommit),
+						Lang.CommittingN,
+						X => Cold.Commit([Q],X),
+						Util.T
 					)
-				},ZED.noop,function(Q)
+				),ZED.noop,Q =>
 				{
 					MakeToolBarActive(ToolCommit,Q)
 					MakeToolBarActive(ToolRemove,Q)
@@ -1965,7 +1861,7 @@
 			MakeToolBar(X,$(DOM.div).append
 			(
 				MakeToolBarClick(R,ToolCommit,Lang.CommittingN,Cold.CommitMany),
-				MakeToolBarClick(R,ToolRemove,Util.U,function(S,X)
+				MakeToolBarClick(R,ToolRemove,Util.U,(S,X) =>
 				{
 					MakeStatusX(X,Lang.RemovedN,Cold.Remove(S),Util.T)
 					R.Redraw()
@@ -1973,16 +1869,13 @@
 				MakeToolBarClick(R,ToolCommitAll,Lang.CommittingN,Cold.CommitAll,Util.T)
 			))
 			Bus.on(Event.Cold.Change,RColdCount)
-				.on(EventQueue.Newed,function(Q,S)
+				.on(EventQueue.Newed,(Q,S) =>
 				{
 					MakeStatusX(S,Lang.CommittedN,Q.length,Util.T)
 					R.Redraw()
 					Cold.Cold.length || UTab.Index(1 + X)
 				})
-				.on(EventQueue.ENew,function(E)
-				{
-					MakeDBError(X,Lang.Commit,E)
-				})
+				.on(EventQueue.ENew,E => MakeDBError(X,Lang.Commit,E))
 			UShortCut
 				.cmd(ShortCutCommand.CommitSel,MakeIndex(X,ToolCommit[MakeToolBarClickKeyCall]))
 				.cmd(ShortCutCommand.CommitAll,MakeIndex(X,ToolCommitAll[MakeToolBarClickKeyCall]))
@@ -1991,11 +1884,11 @@
 		}
 	},{
 		Tab : RHotCount(),
-		CSS : function(ID,W,T)
-		{
-			W = YStageWidthWithoutScroll - YHotControlWidth
-			T = YHotTitlePercentage * W
-			return ZED.Replace
+		CSS : (ID,W,T) =>
+		(
+			W = YStageWidthWithoutScroll - YHotControlWidth,
+			T = YHotTitlePercentage * W,
+			ZED.Replace
 			(
 				'./H/,./S/,./C/,./O/{display:inline-block;vertical-align:middle}' +
 				//Title
@@ -2045,10 +1938,10 @@
 					p : YPadding
 				}
 			)
-		},
+		),
 		Show : MakeSelectableListShow,
 		BeforeHide : MakeSelectableListHide,
-		Content : function(M,X)
+		Content : (M,X) =>
 		{
 			var
 			ToolPlay = MakeShape(Lang.Restart,ShapeConfigHotToolPlay),
@@ -2070,7 +1963,7 @@
 			CountSize = 0,
 			CountSizePlus = 0,
 
-			UpdateToolBar = function()
+			UpdateToolBar = () =>
 			{
 				MakeToolBarActive(ToolPlay,CountPaused)
 				MakeToolBarActive(ToolPause,CountActive)
@@ -2078,7 +1971,7 @@
 				MakeSelSize(X,R,CountSize,CountSizePlus)
 			},
 
-			MakeSpeed = function(ID,Q,A,S)
+			MakeSpeed = (ID,Q,A,S) =>
 			{
 				A[ActiveKeySpeed].text
 				(
@@ -2093,7 +1986,7 @@
 						''
 				)
 			},
-			MakePercentage = function(Q,A)
+			MakePercentage = (Q,A) =>
 			{
 				Q[KeyQueue.Size] ?
 					Q[KeyQueue.DoneSum] && 0 < Q[KeyQueue.Size] &&
@@ -2104,24 +1997,15 @@
 						A[ActiveKeyPercentage].addClass(ClassHotPercentageTransition)
 			},
 
-			ClickRemove = function(ID,X)
+			ClickRemove = (ID,X) => MakeStatusX(X,Lang.RemovingN,Queue.Remove(ZED.objOf(ID,ID),X)),
+			ClickPP = (A,X,ID) => Queue.ActiveMap[ID = A[ActiveKeyID]] ?
+				MakeStatusX(X,Lang.PausingN,Queue.Pause(ZED.objOf(ID,ID),X)) :
+				MakeStatusX(X,Lang.RestartingN,Queue.Play(ZED.objOf(ID,ID),X)),
+			MakeAction = (R,H,Q) => R.on(DOM.click,E =>
 			{
-				MakeStatusX(X,Lang.RemovingN,Queue.Remove(ZED.objOf(ID,ID),X))
-			},
-			ClickPP = function(A,X,ID)
-			{
-				Queue.ActiveMap[ID = A[ActiveKeyID]] ?
-					MakeStatusX(X,Lang.PausingN,Queue.Pause(ZED.objOf(ID,ID),X)) :
-					MakeStatusX(X,Lang.RestartingN,Queue.Play(ZED.objOf(ID,ID),X))
-			},
-			MakeAction = function(R,H,Q)
-			{
-				return R.on(DOM.click,function(E)
-				{
-					Util.StopProp(E)
-					H(Q,ZED.KeyGen())
-				})
-			},
+				Util.StopProp(E)
+				H(Q,ZED.KeyGen())
+			}),
 
 			R = MakeSelectableList
 			(
@@ -2135,7 +2019,7 @@
 						ShowByClass(ClassSingleLine + ' ' + ClassHotInfo).text(DOM.nbsp)
 					)
 				),
-				function(ID)
+				ID =>
 				{
 					var
 					Title = ShowByClass(ClassSingleLine + ' ' + ClassHotTitle).text(DOM.nbsp),
@@ -2149,7 +2033,7 @@
 					PPS = PP.children(),
 					ActiveObj = [ID,Title,Info,Speed,Remain,Percentage,0,PP,PPS],
 
-					Make = function(E,Q)
+					Make = (E,Q) =>
 					{
 						if (!E)
 						{
@@ -2215,12 +2099,9 @@
 						),
 						Percentage
 					)
-				},function(Q)
-				{
-					ZED.delete_(Q,Active)
-				},
+				},Q => ZED.delete_(Q,Active),
 				UpdateToolBar,
-				function(Q)
+				Q =>
 				{
 					Queue.ActiveMap[Q] ? ++CountActive : ++CountPaused
 					Q = Queue.OnSizeMap[Q]
@@ -2228,7 +2109,7 @@
 						++CountSizePlus :
 						(CountSize += Q)
 				},
-				function(Q)
+				Q =>
 				{
 					Queue.ActiveMap[Q] ? --CountActive : --CountPaused
 					Q = Queue.OnSizeMap[Q]
@@ -2236,7 +2117,7 @@
 						--CountSizePlus :
 						(CountSize -= Q)
 				},
-				function()
+				() =>
 				{
 					CountActive = CountPaused =
 					CountSize = CountSizePlus = 0
@@ -2256,14 +2137,11 @@
 			))
 
 			Bus.on(EventQueue.Change,RHotCount)
-			.on(EventQueue.First,function(Q)
-			{
-				Q &&
-				(
-					RHotCount(Q),
-					R.Redraw()
-				)
-			}).on(EventQueue.Played,function(Q,X,S,T,F)
+			.on(EventQueue.First,Q => Q &&
+			(
+				RHotCount(Q),
+				R.Redraw()
+			)).on(EventQueue.Played,(Q,X,S,T,F) =>
 			{
 				MakeStatusX(X,Lang.RestartedN,F = Q.length,Util.T)
 				S = R.Selecting()
@@ -2279,10 +2157,9 @@
 					}
 				}
 				UpdateToolBar()
-			}).on(EventQueue.PauseShow,function(Q,T)
-			{
-				if (T = Active[Q[KeyQueue.Unique]]) MakePercentage(Q,T)
-			}).on(EventQueue.Paused,function(Q,X,S,T,F)
+			}).on(EventQueue.PauseShow,(Q,T) =>
+				(T = Active[Q[KeyQueue.Unique]]) && MakePercentage(Q,T))
+			.on(EventQueue.Paused,(Q,X,S,T,F) =>
 			{
 				MakeStatusX(X,Lang.PausedN,F = Q.length,Util.T)
 				S = R.Selecting()
@@ -2300,14 +2177,12 @@
 					}
 				}
 				UpdateToolBar()
-			}).on(EventQueue.Removed,function(Q,X)
+			}).on(EventQueue.Removed,(Q,X) =>
 			{
 				MakeStatusX(X,Lang.RemovedN,Q.length,Util.T)
 				R.Redraw()
-			}).on(EventQueue.EAction,function(L,E)
-			{
-				MakeDBError(X,L,E)
-			}).on(EventQueue.Processing,function(A)
+			}).on(EventQueue.EAction,(L,E) => MakeDBError(X,L,E))
+			.on(EventQueue.Processing,A =>
 			{
 				if (A = Active[A[KeyQueue.Unique]])
 				{
@@ -2315,7 +2190,7 @@
 					A[ActiveKeyRemain].text('')
 					A[ActiveKeyPercentage].addClass(ClassHotPercentageActive)
 				}
-			}).on(EventQueue.Queuing,function(A)
+			}).on(EventQueue.Queuing,A =>
 			{
 				if (A = Active[A])
 				{
@@ -2323,18 +2198,18 @@
 					A[ActiveKeyRemain].text('')
 					A[ActiveKeyPercentage].removeClass(ClassHotPercentageActive)
 				}
-			}).on(EventQueue.Info,function(A)
+			}).on(EventQueue.Info,A =>
 			{
 				if (A = Active[A[KeyQueue.Unique]])
 					A[ActiveKeyInfo].text(L(Lang.GetInfo))
-			}).on(EventQueue.InfoGot,function(Q,A)
+			}).on(EventQueue.InfoGot,(Q,A) =>
 			{
 				if (A = Active[Q[KeyQueue.Unique]])
 				{
 					A[ActiveKeyInfo].text(L(Lang.GetSize))
 					Q[KeyQueue.Title] && A[ActiveKeyTitle].text(Q[KeyQueue.Title])
 				}
-			}).on(EventQueue.SizeGot,function(Q,A)
+			}).on(EventQueue.SizeGot,(Q,A) =>
 			{
 				if (A = Active[Q[KeyQueue.Unique]])
 					A[ActiveKeyInfo].text(MakeSizePercentage(Q[KeyQueue.Size],Q[KeyQueue.DoneSum] || 0))
@@ -2344,7 +2219,7 @@
 					CountSize += Q[KeyQueue.Size]
 					MakeSelSize(X,R,CountSize,CountSizePlus)
 				}
-			}).on(EventQueue.Reinfo,function(A,S)
+			}).on(EventQueue.Reinfo,(A,S) =>
 			{
 				if (A = Active[A])
 				{
@@ -2352,25 +2227,25 @@
 					A[ActiveKeyRemain].text('-' + ZED.SecondsToString(S))
 					A[ActiveKeyPercentage].removeClass(ClassHotPercentageActive)
 				}
-			}).on(EventQueue.ReinfoLook,function(A,S)
+			}).on(EventQueue.ReinfoLook,(A,S) =>
 			{
 				if (A = Active[A])
 					A[ActiveKeyRemain].text('-' + ZED.SecondsToString(S))
-			}).on(EventQueue.RRefresh,function(A)
+			}).on(EventQueue.RRefresh,A =>
 			{
 				if (A = Active[A])
 				{
 					A[ActiveKeySpeed].text(L(Lang.RRefresh))
 					A[ActiveKeyRemain].text('')
 				}
-			}).on(EventQueue.Refresh,function(A)
+			}).on(EventQueue.Refresh,A =>
 			{
 				if (A = Active[A[KeyQueue.Unique]])
 				{
 					A[ActiveKeySpeed].text(L(Lang.Refreshing))
 					A[ActiveKeyRemain].text('')
 				}
-			}).on(EventQueue.Error,function(A,S,J)
+			}).on(EventQueue.Error,(A,S,J) =>
 			{
 				if (A = Active[A])
 				{
@@ -2379,11 +2254,11 @@
 					A[ActiveKeyPercentage].removeClass(ClassHotPercentageActive)
 					J && A[ActiveKeyInfo].text(L(Lang.ReadyInfo))
 				}
-			}).on(EventQueue.ErrorLook,function(A,S)
+			}).on(EventQueue.ErrorLook,(A,S) =>
 			{
 				if (A = Active[A])
 					A[ActiveKeyRemain].text('-' + ZED.SecondsToString(S))
-			}).on(EventQueue.ErrorEnd,function(Q,A)
+			}).on(EventQueue.ErrorEnd,(Q,A) =>
 			{
 				if (A = Active[Q])
 				{
@@ -2392,11 +2267,9 @@
 						Lang.Processing : Lang.Queuing : Lang.Paused))
 					A[ActiveKeyRemain].text('')
 				}
-			}).on(EventQueue.EFinish,function(E)
-			{
-				MakeDBError(X,Lang.Finish,E)
-			}).on(EventQueue.FHot,R.Redraw)
-			.on(EventDownload.Speed,function(S,Q,A)
+			}).on(EventQueue.EFinish,E => MakeDBError(X,Lang.Finish,E))
+			.on(EventQueue.FHot,R.Redraw)
+			.on(EventDownload.Speed,(S,Q,A) =>
 			{
 				if (A = Active[Q[KeyQueue.Unique]])
 				{
@@ -2410,11 +2283,11 @@
 		}
 	},{
 		Tab : L(Lang.History),
-		CSS : function(ID,W,T)
-		{
-			W = YStageWidthWithoutScroll - YHistoryControlWidth
-			T = YHistoryTitlePercentage * W
-			return ZED.Replace
+		CSS : (ID,W,T) =>
+		(
+			W = YStageWidthWithoutScroll - YHistoryControlWidth,
+			T = YHistoryTitlePercentage * W,
+			ZED.Replace
 			(
 				//Merge
 				'./E/ svg{transform:translateY(-3px)}' +
@@ -2452,10 +2325,10 @@
 					p : YPadding
 				}
 			)
-		},
+		),
 		Show : MakeSelectableListShow,
 		BeforeHide : MakeSelectableListHide,
-		Content : function(M,X)
+		Content : (M,X) =>
 		{
 			var
 			ToolRemove = MakeShape(Lang.Remove,ShapeConfigHistoryToolRemove),
@@ -2463,18 +2336,12 @@
 
 			CountSize = 0,
 
-			ClickRemove = function(ID,X)
+			ClickRemove = (ID,X) => MakeStatusX(X,Lang.RemovingN,Queue.HRemove(ZED.objOf(ID,ID),X)),
+			MakeAction = (R,H,Q) => R.on(DOM.click,E =>
 			{
-				MakeStatusX(X,Lang.RemovingN,Queue.HRemove(ZED.objOf(ID,ID),X))
-			},
-			MakeAction = function(R,H,Q)
-			{
-				return R.on(DOM.click,function(E)
-				{
-					Util.StopProp(E)
-					H(Q,ZED.KeyGen())
-				})
-			},
+				Util.StopProp(E)
+				H(Q,ZED.KeyGen())
+			}),
 
 			R = MakeSelectableList
 			(
@@ -2488,7 +2355,7 @@
 						ShowByClass(ClassSingleLine + ' ' + ClassHistoryInfo).text(DOM.nbsp)
 					)
 				),
-				function(ID)
+				ID =>
 				{
 					var
 					Title = ShowByClass(ClassSingleLine + ' ' + ClassHistoryTitle).text(DOM.nbsp),
@@ -2496,7 +2363,7 @@
 					DateYMD = ShowByClass(ClassSingleLine),
 					DateHNS = ShowByClass(ClassSingleLine);
 
-					Queue.HInfo(ID,function(E,Q)
+					Queue.HInfo(ID,(E,Q) =>
 					{
 						if (!E)
 						{
@@ -2527,24 +2394,15 @@
 							MakeDetail,[ID]
 						)
 					)
-				},ZED.noop,function(Q)
+				},ZED.noop,Q =>
 				{
 					MakeToolBarActive(ToolRemove,Q)
 					MakeToolBarActive(ToolMerge,Q)
 					MakeSelSize(X,R,CountSize)
 				},
-				function(Q)
-				{
-					CountSize += Queue.OffSizeMap[Q]
-				},
-				function(Q)
-				{
-					CountSize -= Queue.OffSizeMap[Q]
-				},
-				function()
-				{
-					CountSize = 0
-				}
+				Q => CountSize += Queue.OffSizeMap[Q],
+				Q => CountSize -= Queue.OffSizeMap[Q],
+				() => CountSize = 0
 			);
 
 			M.addClass(ClassScrollable)
@@ -2555,44 +2413,37 @@
 				MakeToolBarClick(R,ToolRemove,Lang.RemovingN,Queue.HRemove),
 				MakeToolBarClick(R,ToolMerge,Util.U,MakeMerge)
 			))
-			Bus.on(EventQueue.First,function(Q)
-			{
-				Util.U === Q && R.Redraw()
-			}).on(EventQueue.FHis,R.Redraw)
-			.on(EventQueue.HRemoved,function(Q,X)
-			{
-				R.Redraw()
-				MakeStatusX(X,Lang.RemovedN,Q.length,Util.T)
-			}).on(EventQueue.EHRemove,function(E)
-			{
-				MakeDBError(X,Lang.Remove,E)
-			})
+			Bus.on(EventQueue.First,Q => Util.U === Q && R.Redraw())
+				.on(EventQueue.FHis,R.Redraw)
+				.on(EventQueue.HRemoved,(Q,X) =>
+				{
+					R.Redraw()
+					MakeStatusX(X,Lang.RemovedN,Q.length,Util.T)
+				})
+				.on(EventQueue.EHRemove,E => MakeDBError(X,Lang.Remove,E))
 
 			return R
 		}
 	},{
 		Tab : L(Lang.Component),
-		CSS : function(ID)
-		{
-			return ZED.Replace
-			(
-				'#/R/ ./B/{margin-bottom:/p/px}' +
-				'#/I/{border:solid #66AFE0;border-width:2px 0}' +
-				'#/I/ div{margin:4px 2px}',
-				'/',
-				{
-					B : DOM.Button,
+		CSS : ID => ZED.Replace
+		(
+			'#/R/ ./B/{margin-bottom:/p/px}' +
+			'#/I/{border:solid #66AFE0;border-width:2px 0}' +
+			'#/I/ div{margin:4px 2px}',
+			'/',
+			{
+				B : DOM.Button,
 
-					R : ID,
-					I : IDComponentInfo,
+				R : ID,
+				I : IDComponentInfo,
 
-					p : YPadding
-				}
-			)
-		},
+				p : YPadding
+			}
+		),
 		Show : MakeSelectableListShow,
 		BeforeHide : MakeSelectableListHide,
-		Content : function(M,X)
+		Content : (M,X) =>
 		{
 			var
 			RSite = ShowByClass(ClassComponentSite),
@@ -2604,7 +2455,7 @@
 			Target,
 			Active,
 
-			Switch = function(R,V)
+			Switch = (R,V) =>
 			{
 				Active && Active.removeAttr(DOM.cls)
 				Active = R
@@ -2613,62 +2464,50 @@
 			},
 
 			SayFrom,
-			Say = function(Q)
-			{
-				RInfo.prepend($(DOM.div).append
-				(
-					ShowByText(ZED.MSToString(ZED.now() - SayFrom).replace(/^00:/,''),DOM.span)
-						.attr(DOM.title,ZED.DateToString(DateToStringFormatDisplay)),
-					' | ',
-					ShowByText(Q,DOM.span)
-				))
-			},
+			Say = Q => RInfo.prepend($(DOM.div).append
+			(
+				ShowByText(ZED.MSToString(ZED.now() - SayFrom).replace(/^00:/,''),DOM.span)
+					.attr(DOM.title,ZED.DateToString(DateToStringFormatDisplay)),
+				' | ',
+				ShowByText(Q,DOM.span)
+			)),
 
 			LoadLast,
-			Load = function()
+			Load = () =>
 			{
 				MakeStatus(X,L(Lang.Loading),ClassStatusLoading)
 				LoadLast && LoadLast.end()
 				RInfo.empty()
 				SayFrom = ZED.now()
-				LoadLast = Target[KeySite.Component](Say).start(ZED.noop,function(E)
+				LoadLast = Target[KeySite.Component](Say).start(ZED.noop,E =>
 				{
 					Util.Debug(__filename,E)
 					MakeStatus(X,E,ClassStatusError)
-				},function()
-				{
-					MakeStatus(X,L(Lang.ComLoaded))
-				})
+				},() => MakeStatus(X,L(Lang.ComLoaded)))
 			},
 
 			CheckLast,
-			Check = function()
+			Check = () =>
 			{
 				MakeStatus(X,L(Lang.Loading),ClassStatusLoading)
 				CheckLast && CheckLast.end()
-				CheckLast = Target[KeySite.ComCheck]().start(ZED.noop,function(E)
+				CheckLast = Target[KeySite.ComCheck]().start(ZED.noop,E =>
 				{
 					Util.Debug(__filename,E)
 					MakeStatus(X,E,ClassStatusError)
-				},function()
-				{
-					MakeStatus(X,L(Lang.ComLoaded))
-				})
+				},() => MakeStatus(X,L(Lang.ComLoaded)))
 			},
 
 			SafeMap = {},
 			SafeScript = ZED.KeyGen();
 
 			M.addClass(ClassScrollable)
-			global[SafeScript] = function(Q,W)
-			{
-				try{SafeMap[Q](W)}catch(e){}
-			}
-			ZED.each(function(V,R)
+			global[SafeScript] = (Q,W) => {try{SafeMap[Q](W)}catch(e){}}
+			ZED.each((V,R) =>
 			{
 				if (V[KeySite.Component])
 				{
-					V[KeySite.Frame] && V[KeySite.Frame](function(Safe,Load,J)
+					V[KeySite.Frame] && V[KeySite.Frame]((Safe,Load,J) =>
 					{
 						var
 						Frame = $(DOM.iframe),
@@ -2689,26 +2528,18 @@
 							'<body>',
 							[V[KeySite.Name],SafeScript,JSPath.replace(/\\/g,'/')]
 						)),
-						Refresh = function()
-						{
-							Frame.attr(DOM.src,URL)
-						};
+						Refresh = () => Frame.attr(DOM.src,URL);
 
 						SafeMap[V[KeySite.Name]] = Safe
-						Frame.on(DOM.load,function()
-						{
-							Load(Element.contentWindow)
-						})
+						Frame.on(DOM.load,() => Load(Element.contentWindow))
 						J && Refresh()
 
 						RHidden.append(Frame)
 
 						return [JSPath,Refresh]
 					})
-					R = $(DOM.div).text(V[KeySite.Name]).on(DOM.click,function()
-					{
-						Switch(R,V)
-					})
+					R = $(DOM.div).text(V[KeySite.Name])
+						.on(DOM.click,() => Switch(R,V))
 					Target || Switch(R,V)
 					RSite.append(R)
 				}
@@ -2730,58 +2561,55 @@
 		}
 	},{
 		Tab : L(Lang.SignIn),
-		CSS : function()
-		{
-			return ZED.Replace
-			(
-				'./S/,./I/{display:inline-block;vertical-align:top}' +
-				//Site
-				'./S/{width:/s/px}' +
-				'./S/>div{margin:/p/px 0;padding:/p/px;cursor:pointer}' +
-				'./S/>div:hover,./A/{color:#2672EC}' +
-				'./S/>div:hover{opacity:.5}' +
-				'./S/>div./A/{opacity:1}' +
-				//View
-				'./I/{padding:/p/px;width:/i/px}' +
-				'./I/ ./U/{margin:/p/px 0;padding:4px /p/px;font-size:1.2rem}' +
-				//	Button
-				'./I/ ./B/{text-align:center}' +
-				//	VCode
-				'#/V/{position:relative}' +
-				'#/V/ ./U/{width:50%}' +
-				'#/V/ img' +
-				'{' +
-					'position:absolute;' +
-					'left:50%;' +
-					'bottom:0;' +
-					'padding:/p/px;' +
-					'max-width:50%;' +
-					'max-height:100%;' +
-					'overflow:hidden;' +
-					'cursor:pointer' +
-				'}' +
-				//	Cookie
-				'./I/ textarea{max-width:100%;font-size:.9rem!important}',
-				'/',
-				{
-					B : DOM.Button,
+		CSS : () => ZED.Replace
+		(
+			'./S/,./I/{display:inline-block;vertical-align:top}' +
+			//Site
+			'./S/{width:/s/px}' +
+			'./S/>div{margin:/p/px 0;padding:/p/px;cursor:pointer}' +
+			'./S/>div:hover,./A/{color:#2672EC}' +
+			'./S/>div:hover{opacity:.5}' +
+			'./S/>div./A/{opacity:1}' +
+			//View
+			'./I/{padding:/p/px;width:/i/px}' +
+			'./I/ ./U/{margin:/p/px 0;padding:4px /p/px;font-size:1.2rem}' +
+			//	Button
+			'./I/ ./B/{text-align:center}' +
+			//	VCode
+			'#/V/{position:relative}' +
+			'#/V/ ./U/{width:50%}' +
+			'#/V/ img' +
+			'{' +
+				'position:absolute;' +
+				'left:50%;' +
+				'bottom:0;' +
+				'padding:/p/px;' +
+				'max-width:50%;' +
+				'max-height:100%;' +
+				'overflow:hidden;' +
+				'cursor:pointer' +
+			'}' +
+			//	Cookie
+			'./I/ textarea{max-width:100%;font-size:.9rem!important}',
+			'/',
+			{
+				B : DOM.Button,
 
-					U : ClassUnderlineInput,
+				U : ClassUnderlineInput,
 
-					S : ClassSignInSite,
-					s : YSignInSiteWidth,
-					A : ClassSignInSiteActive,
-					I : ClassSignInView,
-					i : YStageWidthWithoutScroll - YSignInSiteWidth,
-					V : IDSignInInputVCode,
+				S : ClassSignInSite,
+				s : YSignInSiteWidth,
+				A : ClassSignInSiteActive,
+				I : ClassSignInView,
+				i : YStageWidthWithoutScroll - YSignInSiteWidth,
+				V : IDSignInInputVCode,
 
-					p : YPadding
-				}
-			)
-		},
+				p : YPadding
+			}
+		),
 		Show : MakeSelectableListShow,
 		BeforeHide : MakeSelectableListHide,
-		Content : function(M,X)
+		Content : (M,X) =>
 		{
 			var
 			RSite = ShowByClass(ClassSignInSite),
@@ -2802,7 +2630,7 @@
 			VCodeEnd,
 
 			SwitchOn,
-			Switch = function(R,V)
+			Switch = (R,V) =>
 			{
 				Active && Active.removeAttr(DOM.cls)
 				Active = R
@@ -2812,7 +2640,7 @@
 				RefreshVCode(Util.F)
 				RefreshCookie()
 				SwitchOn = []
-				ZED.each(function(V,P)
+				ZED.each((V,P) =>
 				{
 					ZED.isArray(V) && (V = V[0],P = Util.T)
 					V = ShowByInput(V)
@@ -2823,7 +2651,7 @@
 				},Target[KeySite.Require] || DefaultRequire)
 				RVCodeInput.val('')
 			},
-			RefreshVCode = function(J)
+			RefreshVCode = J =>
 			{
 				if (J || VCodeTarget !== Target)
 				{
@@ -2835,14 +2663,11 @@
 						if (Util.F !== J)
 						{
 							VCodeTarget = Target
-							VCodeEnd = Target[KeySite.VCode]().start(function(Q)
-							{
-								if (ZED.isArrayLike(Q))
-								{
-									Q = ZED.Code.Base64Encode(ZED.Code.UTF8ToBinB(ZED.map(ZED.chr,Q).join('')))
-									RVCodeImg.removeAttr(DOM.title).attr(DOM.src,'data:image/jpg;base64,' + Q)
-								}
-							},function(E)
+							VCodeEnd = Target[KeySite.VCode]().start(Q => ZED.isArrayLike(Q) &&
+							(
+								Q = ZED.Code.Base64Encode(ZED.Code.UTF8ToBinB(ZED.map(ZED.chr,Q).join(''))),
+								RVCodeImg.removeAttr(DOM.title).attr(DOM.src,'data:image/jpg;base64,' + Q)
+							),E =>
 							{
 								Util.Debug(__filename,E)
 								RVCodeImg.attr(DOM.title,L(Lang.VCFail))
@@ -2857,13 +2682,10 @@
 					}
 				}
 			},
-			RefreshCookie = function()
-			{
-				RCookie.val(Cookie.Read(Target[KeySite.Name]))
-			},
+			RefreshCookie = () => RCookie.val(Cookie.Read(Target[KeySite.Name])),
 
 			SignInEnd,
-			SignIn = function()
+			SignIn = () =>
 			{
 				MakeStatus(X,L(Lang.Signing),ClassStatusLoading)
 				SignInEnd && SignInEnd.end()
@@ -2871,10 +2693,7 @@
 				(
 					Target,
 					ZED.map(ZED.invokeProp('val'),SwitchOn).concat(RVCodeInput.val())
-				).start(function(Q)
-				{
-					MakeStatus(X,Q)
-				},function(E)
+				).start(Q => MakeStatus(X,Q),E =>
 				{
 					Util.Debug(__filename,E)
 					MakeStatus(X,L(Lang.SIError),ClassStatusError)
@@ -2882,28 +2701,29 @@
 			},
 
 			CheckEnd,
-			Check = function()
+			Check = () =>
 			{
 				Cookie.Set(Target[KeySite.Name],RCookie.val())
 				MakeStatus(X,L(Lang.Checking),ClassStatusLoading)
 				CheckEnd && CheckEnd.end()
-				CheckEnd = Target[KeySite.Check]().start(function(Q)
-				{
-					MakeStatus(X,Q ? ReplaceLang(Lang.Checked,Q) : L(Lang.NotSigned))
-				},function(E)
-				{
-					Util.Debug(__filename,E)
-					MakeStatus(X,L(Lang.CheckError),ClassStatusError)
-				})
+				CheckEnd = Target[KeySite.Check]().start
+				(
+					Q => MakeStatus(X,Q ? ReplaceLang(Lang.Checked,Q) : L(Lang.NotSigned)),
+					E =>
+					{
+						Util.Debug(__filename,E)
+						MakeStatus(X,L(Lang.CheckError),ClassStatusError)
+					}
+				)
 			};
 
 			M.addClass(ClassScrollable)
-			ZED.each(function(V,R)
+			ZED.each((V,R) =>
 			{
 				if (V[KeySite.Login])
 				{
 					R = $(DOM.div).text(V[KeySite.Name])
-						.on(DOM.click,function(){Switch(R,V)})
+						.on(DOM.click,() => Switch(R,V))
 					Target || Switch(R,V)
 					RSite.append(R)
 				}
@@ -2932,41 +2752,38 @@
 		}
 	},{
 		Tab : L(Lang.Shortcut),
-		CSS : function(ID)
-		{
-			return ZED.Replace
-			(
-				//Control and input
-				'#/R/ span,#/R/ input{vertical-align:middle}' +
-				//Control
-				'#/R/ ./S/{margin-right:/p/px;width:20px;height:20px}' +
-				//Title
-				'./T/{padding:/p/px;background:#EBEBEB}' +
-				//Detail
-				'./T/~div{margin:/p/px}' +
-				//Button
-				'./B/{padding:0 6px;color:#2672EC;border-bottom:1px solid;cursor:pointer}' +
-				//Input
-				'#/R/ ./U/{padding:4px 6px 0;width:30%;cursor:text}' +
-				//CheckBox
-				'#/R/ ./U/+div{display:inline-block;margin-left:20px}' +
-				'#/R/ input[type="checkbox"]{margin-left:/p/px}',
-				'/',
-				{
-					S : ClassShape,
-					U : ClassUnderlineInput,
+		CSS : ID => ZED.Replace
+		(
+			//Control and input
+			'#/R/ span,#/R/ input{vertical-align:middle}' +
+			//Control
+			'#/R/ ./S/{margin-right:/p/px;width:20px;height:20px}' +
+			//Title
+			'./T/{padding:/p/px;background:#EBEBEB}' +
+			//Detail
+			'./T/~div{margin:/p/px}' +
+			//Button
+			'./B/{padding:0 6px;color:#2672EC;border-bottom:1px solid;cursor:pointer}' +
+			//Input
+			'#/R/ ./U/{padding:4px 6px 0;width:30%;cursor:text}' +
+			//CheckBox
+			'#/R/ ./U/+div{display:inline-block;margin-left:20px}' +
+			'#/R/ input[type="checkbox"]{margin-left:/p/px}',
+			'/',
+			{
+				S : ClassShape,
+				U : ClassUnderlineInput,
 
-					R : ID,
-					T : ClassShortCutTitle,
-					B : ClassShortCutButton,
+				R : ID,
+				T : ClassShortCutTitle,
+				B : ClassShortCutButton,
 
-					p : YPadding
-				}
-			)
-		},
+				p : YPadding
+			}
+		),
 		Show : MakeSelectableListShow,
 		BeforeHide : MakeSelectableListHide,
-		Content : function(M)
+		Content : M =>
 		{
 			var
 			Active,
@@ -2981,14 +2798,14 @@
 			});
 
 			M.addClass(ClassScrollable)
-			ZED.Each(ShortCut.DefaultMap,function(Command,Default)
+			ZED.Each(ShortCut.DefaultMap,(Command,Default) =>
 			{
 				var
 				R = $(DOM.div),
 
 				List = [],
 
-				Save = function()
+				Save = () =>
 				{
 					ShortCut.Save(Command,ZED.filter
 					(
@@ -2996,7 +2813,7 @@
 						ZED.map(ZED.nth(ListKeySwitch),List)
 					))
 				},
-				On = function(Q)
+				On = Q =>
 				{
 					UShortCut.on
 					(
@@ -3006,15 +2823,15 @@
 						!(ShortCut.SwitchOnce & Q[ListKeySwitchWhen])
 					)
 				},
-				Off = function(Q){UShortCut.off(Q[ListKeySwitchKey],Command,Command)},
-				ReBind = function()
+				Off = Q => UShortCut.off(Q[ListKeySwitchKey],Command,Command),
+				ReBind = () =>
 				{
 					//It does not check if a shortcut is unique, so this must be handled
-					ZED.each(function(Q){Off(Q[ListKeySwitch])},List)
-					ZED.each(function(Q){On(Q[ListKeySwitch])},List)
+					ZED.each(Q => Off(Q[ListKeySwitch]),List)
+					ZED.each(Q => On(Q[ListKeySwitch]),List)
 					Save()
 				},
-				Add = function(Q,S,W,I)
+				Add = (Q,S,W,I) =>
 				{
 					if (ZED.isArray(Q))
 					{
@@ -3025,7 +2842,7 @@
 					ZED.isNumber(S) || (S = ShortCut.Up)
 					R.append(W = $(DOM.div).append
 					(
-						MakeShape(Lang.Remove,ShapeConfigShortCutRemove).on(DOM.click,function()
+						MakeShape(Lang.Remove,ShapeConfigShortCutRemove).on(DOM.click,() =>
 						{
 							Remove(W)
 							ReBind()
@@ -3033,8 +2850,8 @@
 						I = ShowByClassX(ClassUnderlineInput + ' ' + DOM.NoSelect,DOM.input)
 							.attr(DOM.readonly,'')
 							.val(Q)
-							.on(DOM.focus,function(){Active = I})
-							.on(DOM.blur,function()
+							.on(DOM.focus,() => Active = I)
+							.on(DOM.blur,() =>
 							{
 								I === Active && (Active = Util.F)
 								Off(S)
@@ -3043,7 +2860,7 @@
 							}),
 						ZED.reduce((D,V) =>
 						{
-							D.append(ShowByCheckBox(V[0],V[1] & S,function(Q)
+							D.append(ShowByCheckBox(V[0],V[1] & S,Q =>
 							{
 								Q ? S[1] |= V : S[1] &= ~V
 								Off(S)
@@ -3060,7 +2877,7 @@
 					List.push(W = [W,S = [Q,S]])
 					On(S)
 				},
-				Remove = function(Q,F)
+				Remove = (Q,F) =>
 				{
 					Off(Q[ListKeySwitch])
 					Q[ListKeyWrap].detach()
@@ -3076,19 +2893,22 @@
 
 				R.append
 				(
-					ShowByText(ZED.map(function(V)
-					{
-						return Lang[V] ? L(Lang[V]) : V
-					},Command.split('.')).join(' | ')).addClass(ClassShortCutTitle),
+					ShowByText(ZED.map
+					(
+						V => Lang[V] ? L(Lang[V]) : V,
+						Command.split('.')
+					).join(' | ')).addClass(ClassShortCutTitle),
 					$(DOM.div).append
 					(
 						MakeShape(Lang.AddSC,ShapeConfigShortCutAdd).on(DOM.click,Add),
-						ShowByClassX(ClassShortCutButton + ' ' + DOM.NoSelect,DOM.span).text(L(Lang.DefSC)).on(DOM.click,function(F)
-						{
-							for (F = List.length;F;) Remove(List[--F])
-							Build(Default)
-							ShortCut.Remove(Command)
-						})
+						ShowByClassX(ClassShortCutButton + ' ' + DOM.NoSelect,DOM.span)
+							.text(L(Lang.DefSC))
+							.on(DOM.click,F =>
+							{
+								for (F = List.length;F;) Remove(List[--F])
+								Build(Default)
+								ShortCut.Remove(Command)
+							})
 					)
 				)
 				Build(ShortCut.Data(Command) || Default)
@@ -3096,23 +2916,20 @@
 				M.append(R)
 			})
 
-			SC.on('*',Util.F,function(E)
-			{
-				Active &&
-				(
-					Active.val(SC.keyNames()[0]),
-					Util.PrevDef(E)
-				)
-			})
+			SC.on('*',Util.F,E => Active &&
+			(
+				Active.val(SC.keyNames()[0]),
+				Util.PrevDef(E)
+			))
 
 			UShortCut
-				.cmd(ShortCutCommand.PrevTab,function(X)
+				.cmd(ShortCutCommand.PrevTab,X =>
 				{
 					MakeCoverClose()
 					X = UTab.Index() - 1
 					UTab.Index(X < 0 ? YTabCount + X : X)
 				})
-				.cmd(ShortCutCommand.NextTab,function(X)
+				.cmd(ShortCutCommand.NextTab,X =>
 				{
 					MakeCoverClose()
 					X = UTab.Index() + 1
@@ -3126,32 +2943,29 @@
 		}
 	},{
 		Tab : L(Lang.Setting),
-		CSS : function(ID)
-		{
-			return ZED.Replace
-			(
-				'#/R/{padding:/p/px}' +
-				'#/R/ ./I/{width:100%}' +
-				'./O/,./D/{vertical-align:top}' +
-				'./O/{width:/o/px;height:/o/px}' +
-				'#/R/ ./D/{margin-left:4px;width:/d/px}',
-				'/',
-				{
-					I : DOM.Input,
+		CSS : ID => ZED.Replace
+		(
+			'#/R/{padding:/p/px}' +
+			'#/R/ ./I/{width:100%}' +
+			'./O/,./D/{vertical-align:top}' +
+			'./O/{width:/o/px;height:/o/px}' +
+			'#/R/ ./D/{margin-left:4px;width:/d/px}',
+			'/',
+			{
+				I : DOM.Input,
 
-					R : ID,
-					O : ClassSettingDirOpen,
-					o : YSettingOpenSize,
-					D : ClassSettingDir,
-					d : YStageWidthWithoutScroll - 2 * YPadding - YSettingOpenSize - 4,
+				R : ID,
+				O : ClassSettingDirOpen,
+				o : YSettingOpenSize,
+				D : ClassSettingDir,
+				d : YStageWidthWithoutScroll - 2 * YPadding - YSettingOpenSize - 4,
 
-					p : YPadding
-				}
-			)
-		},
+				p : YPadding
+			}
+		),
 		Show : MakeSelectableListShow,
 		BeforeHide : MakeSelectableListHide,
-		Content : function(M)
+		Content : M =>
 		{
 			var
 			Default = ZED.ReduceToObject
@@ -3174,19 +2988,13 @@
 
 			KeyFont = ZED.KeyGen(),
 
-			MakeInput = function(Q,S)
-			{
-				return ZED.Merge({T : 'I',E : {placeholder : Default[Q]}},S)
-			},
+			MakeInput = (Q,S) => ZED.Merge({T : 'I',E : {placeholder : Default[Q]}},S),
 
-			NotiTray = function()
-			{
-				IPCRenderer.send('Tray',Data[KeySetting.Tray])
-			},
-			RefreshStyle = function(S)
-			{
-				S = ('' + Setting.Data(KeySetting.Size)).trim()
-				return ZED.Replace
+			NotiTray = () => IPCRenderer.send('Tray',Data[KeySetting.Tray]),
+			RefreshStyle = S =>
+			(
+				S = ('' + Setting.Data(KeySetting.Size)).trim(),
+				ZED.Replace
 				(
 					'html,input,textarea{font-family:"/F/";font-size:/S/;font-weight:/W/}',
 					'/',
@@ -3196,20 +3004,17 @@
 						W : Setting.Data(KeySetting.Weight)
 					}
 				)
-			},
-			RefreshFont = function()
-			{
-				ZED.CSS(KeyFont,RefreshStyle)
-			},
+			),
+			RefreshFont = () => ZED.CSS(KeyFont,RefreshStyle),
 
 			DirInput,
 			Opening,
-			OpenDir = function()
+			OpenDir = () =>
 			{
 				if (!Opening)
 				{
 					Opening = Util.T
-					Dialog.showOpenDialog({properties : ['openDirectory']},function(Q)
+					Dialog.showOpenDialog({properties : ['openDirectory']},Q =>
 					{
 						Opening = Util.F
 						Q && Q[0] && DirInput.val(Q[0]).trigger(DOM.einput)
@@ -3240,7 +3045,7 @@
 				[
 					[L(Lang.Directory),[MakeInput(KeySetting.Dir)],KeySetting.Dir],
 					[L(Lang.FName),[MakeInput(KeySetting.Name)],KeySetting.Name],
-					[L(Lang.MaxDown),ZED.range(1,11),KeySetting.Max,function()
+					[L(Lang.MaxDown),ZED.range(1,11),KeySetting.Max,() =>
 					{
 						Queue.Max(Data[KeySetting.Max])
 						Queue.Dispatch()
@@ -3254,14 +3059,14 @@
 						KeySetting.Weight,
 						RefreshFont
 					],
-					[L(Lang.RestartT),[MakeInput(KeySetting.Restart,{N : Util.T})],KeySetting.Restart,function()
+					[L(Lang.RestartT),[MakeInput(KeySetting.Restart,{N : Util.T})],KeySetting.Restart,() =>
 					{
 						Queue.Wait(Data[KeySetting.Restart] || Default[KeySetting.Restart])
 					}],
 					[L(Lang.MergeCmd),[{T : 'T',E : {placeholder : Default[KeySetting.Merge],rows : 8}}],KeySetting.Merge],
 					[L(Lang.MergeSuf),[MakeInput(KeySetting.Suffix)],KeySetting.Suffix]
 				],
-				Change : function(){Setting.Save(Data)}
+				Change : () => Setting.Save(Data)
 			})
 			DirInput = M.find('.' + DOM.Input).eq(0).addClass(ClassSettingDir)
 			DirInput.before(MakeShape(Lang.DirSel,ShapeConfigSettingDir,ClassSettingDirOpen,DOM.div).on(DOM.click,OpenDir))
@@ -3279,48 +3084,31 @@
 	RDetail.append(RDetailHead,RDetailInfo,RDetailPart)
 	Bus
 		//Noti
-		.on(EventQueue.First,function()
-		{
-			++MakeDBLoadState < 2 || MakeNoti(MakeDBLoadKey,ReplaceLang(Lang.DBDone,ZED.now() - Started.getTime()),Util.T)
-		})
+		.on(EventQueue.First,() => ++MakeDBLoadState < 2 || MakeNoti
+		(
+			MakeDBLoadKey,
+			ReplaceLang(Lang.DBDone,ZED.now() - Started.getTime()),
+			Util.T
+		))
 		//Queue
-		.on(EventQueue.Info,MakeDetailMake(function()
-		{
-			RDetailInfo.text(L(Lang.GetInfo))
-		}))
+		.on(EventQueue.Info,MakeDetailMake(() => RDetailInfo.text(L(Lang.GetInfo))))
 		.on(EventQueue.InfoGot,MakeDetailMake(MakeDetailSetupInfo))
-		.on(EventQueue.SizeGot,MakeDetailMake(function(Q)
-		{
-			MakeDetailInfoTTS.text(ZED.FormatSize(Q[KeyQueue.Size]))
-		}))
+		.on(EventQueue.SizeGot,MakeDetailMake(Q => MakeDetailInfoTTS.text(ZED.FormatSize(Q[KeyQueue.Size]))))
 		.on(EventQueue.Finish,MakeDetailMake(MakeDetailRefresh))
 		//Download
-		.on(EventDownload.File,MakeDetailMake(function(Q,S,I)
-		{
-			MakeDetailFile[I].text(S)
-		}))
-		.on(EventDownload.Size,MakeDetailMake(function(Q,S,F)
-		{
-			MakeDetailURL[F].text(MakeSizePercentage(S,0))
-		}))
-		.on(EventDownload.Dir,MakeDetailMake(function(Q)
-		{
-			MakeDetailInfoDir.text(Q[KeyQueue.Dir])
-		}))
-		.on(EventDownload.Speed,function(S,Q)
-		{
-			MakeDetailActive === Q[KeyQueue.Unique] && MakeDetailRefresh(Q)
-		})
+		.on(EventDownload.File,MakeDetailMake((Q,S,I) => MakeDetailFile[I].text(S)))
+		.on(EventDownload.Size,MakeDetailMake((Q,S,F) => MakeDetailURL[F].text(MakeSizePercentage(S,0))))
+		.on(EventDownload.Dir,MakeDetailMake(Q => MakeDetailInfoDir.text(Q[KeyQueue.Dir])))
+		.on(EventDownload.Speed,(S,Q) => MakeDetailActive === Q[KeyQueue.Unique] && MakeDetailRefresh(Q))
 	//Merge
 	RMerge.append
 	(
 		RMergeProgress,
 		ZED.reduce((D,V) =>
 		{
-			D.append(ShowByClass(DOM.Button).text(L(V[1])).on(DOM.click,function()
-			{
-				MakeMergeAble && MakeMergeCompose(V)
-			}))
+			D.append(ShowByClass(DOM.Button)
+				.text(L(V[1]))
+				.on(DOM.click,() => MakeMergeAble && MakeMergeCompose(V)))
 			V = V[0]
 		},$(DOM.div),
 		[
@@ -3331,9 +3119,9 @@
 		RMergeText
 	)
 	//StatusBar Icon
-	ZED.each(function(V){RStatusIcon.append(ShowByRock(IDStatusIcon + ZED.chr(65 + V)))},ZED.range(0,2))
+	ZED.each(V => RStatusIcon.append(ShowByRock(IDStatusIcon + ZED.chr(65 + V))),ZED.range(0,2))
 	//Speed & Ping
-	Bus.on(EventDownload.SpeedTotal,function(Q)
+	Bus.on(EventDownload.SpeedTotal,Q =>
 	{
 		Q = ZED.FormatSize(Q) + '/s'
 		RSpeed.text(Q)
@@ -3386,10 +3174,10 @@
 		DebugPool : Util.DebugPool
 	}
 
-	$(function()
+	$(() =>
 	{
 		Rainbow.appendTo('body')
-		setTimeout(function(){MakeNoti(MakeDBLoadKey,L(Lang.DB))},50)
+		setTimeout(() => MakeNoti(MakeDBLoadKey,L(Lang.DB)),50)
 		Queue.Dispatch()
 	})
-}()
+})()
