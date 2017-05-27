@@ -33,7 +33,7 @@ module.exports = Name =>
 		Save : ZED.throttle(Config.Throttle,Q =>
 		{
 			Q && ZED.Merge(true,Latest,Q)
-			FS.writeFile(File,ZED.OTJ(Latest,'\t',{Line : '\r\n'}),ZED.noop)
+			FS.writeFile(File,ZED.OTJ(Latest,'\t',{Line : '\r\n',UTF : true}),ZED.noop)
 		}),
 		Read : Q =>
 		(

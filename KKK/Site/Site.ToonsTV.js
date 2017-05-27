@@ -77,7 +77,7 @@ R = ZED.ReduceToObject
 					S.publicationTime - Q.publicationTime),
 				Say(Util.ReplaceLang(Lang.ToonsNew,Video ? Q.length - Video.length : Q.length)),
 				Say(L(Lang.FileWrite)),
-				Util.writeFile(FrameTool[0],'M=' + ZED.OTJ(Q))
+				Util.writeFile(FrameTool[0],'M=' + ZED.OTJ(Q,{UTF : Util.T}))
 			))
 			.flatMap(() =>
 			(
