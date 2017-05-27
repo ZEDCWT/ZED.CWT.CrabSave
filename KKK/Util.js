@@ -85,7 +85,7 @@ RequestBase = H => Q =>
 	))
 ),
 
-DebugFilter = /getaddrinfo|ETIMEDOUT|ESOCKETTIMEDOUT|ECONNRESET/,
+DebugFilter = /getaddrinfo|ECONNRESET|EHOSTUNREACH|ESOCKETTIMEDOUT|ETIMEDOUT/,
 DebugPool = Pool(),
 
 ML = (Q,S,C,J,T) =>
