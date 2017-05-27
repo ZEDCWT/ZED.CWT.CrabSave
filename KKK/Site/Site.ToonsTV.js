@@ -67,7 +67,7 @@ R = ZED.ReduceToObject
 					V.thumbnails = FitQulity(V.thumbnails)
 				},Q.videos)
 			))
-			.reduce((D,V) => {D.concat(V)})
+			.reduce((D,V) => D.concat(V))
 			.flatMap((Q,M) =>
 			(
 				M = ZED.reduce((D,V) => {D[V.id] = Util.T},{},Q),
