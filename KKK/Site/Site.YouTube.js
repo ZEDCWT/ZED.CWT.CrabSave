@@ -130,7 +130,7 @@ FilterMenuDef = ZED.reduce((D,V) =>
 R = ZED.ReduceToObject
 (
 	KeySite.Name,Name,
-	KeySite.Judge,/\.you\.?tu\.?be\./i,
+	KeySite.Judge,/youtu\.?be/i,
 	KeySite.Frame,Reg =>
 	{
 		STS = Component.Data(Name)
@@ -272,7 +272,7 @@ R = ZED.ReduceToObject
 	),ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Video),
-		KeySite.Judge,[/v=([^&]+)/,/^([_\dA-Za-z-]+)$/],
+		KeySite.Judge,[/v=([^&]+)/,/^([_\dA-Za-z-]+)$/,/\.be\/(.*)/i],
 		KeySite.Page,ID => Util.RequestBody(Cookie.URL(Name,URLVInfo(ID)))
 			.map(Q =>
 			(

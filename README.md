@@ -109,7 +109,7 @@ Examples `b find test something`
 ### YouTube
 Aliases : YTB, Y.
 #### Video ID
-RegExp `/v=([^&]+)/`, `/^([_0-9A-Za-z-]+)$/`  
+RegExp `/v=([^&]+)/`, `/^([_0-9A-Za-z-]+)$/`, `/\.be\/(.*)/i`  
 Examples `y 9bZkp7q19f0`, `y v=9bZkp7q19f0`, `https://www.youtube.com/watch?v=9bZkp7q19f0`
 #### Uploader
 RegExp `/(?:^|[^a-z])user(?:[\s\/]+)??([_0-9A-Za-z-]+)/i`  
