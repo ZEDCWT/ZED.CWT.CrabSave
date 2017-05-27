@@ -75,12 +75,12 @@ Full = () => (CLI.options.skip ? Observable.just(process) :
 	if (Env.Just) return Observable.empty()
 	CLI.info('Uglifing')
 	Q = Path.join(Q[0],'resources','app')
-	return Observable.from([Q,Path.join(Q,'KKK')]).flatMap
+	return Observable.from(['','KKK','KKK/Site']).flatMap
 	(
-		Q => readdir(Q)
+		P => readdir(P = Path.join(Q,P))
 			.flatMap(ZED.identity)
 			.filter(ZED.test(/\.js$/))
-			.map(S => Path.join(Q,S))
+			.map(S => Path.join(P,S))
 	).flatMapOnline(1,Q => readFile(Q)
 		.flatMap(S =>
 		(
