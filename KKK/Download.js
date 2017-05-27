@@ -79,7 +79,9 @@ Start = (Q,I,At,URL,Done,Size) =>
 		Download(Q)
 	}).on('die',E =>
 	{
-		if (Size[I] <= Done[I]) --Done[I]
+		//Set the downloaded size to 0 in case that the files are seems downloaded
+		if (Size[I] <= Done[I]) Done[I] = 0
+
 		if (ZED.isNumber(E))
 		{
 			//Done[I] = 0
