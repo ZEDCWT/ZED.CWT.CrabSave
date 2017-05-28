@@ -26,9 +26,10 @@ It currently supports the following sites
 |BiliBili(嗶哩嗶哩)|[http://www.bilibili.com/](http://www.bilibili.com/)|
 |YouTube|[https://www.youtube.com/](https://www.youtube.com/)|
 |NicoNico(ニコニコ)|[http://www.nicovideo.jp/](http://www.nicovideo.jp/)|
-|ToonsTV|[https://www.toons.tv/](https://www.toons.tv/)|
 |Iwara|[http://www.iwara.tv/](http://www.iwara.tv/)|
 |IwaraEcchi|[http://ecchi.iwara.tv/](http://ecchi.iwara.tv/)|
+|QQ|[https://v.qq.com/](https://v.qq.com/)|
+|ToonsTV|[https://www.toons.tv/](https://www.toons.tv/)|
 
 ![GUI Interface](Screenshot/Introduction.png)
 
@@ -155,19 +156,6 @@ Examples `n fav`
 RegExp `/^(?:find|search)\s+(.*)$/i`  
 Examples `n find けものフレンズ`
 
-### ToonsTV
-Aliases : Toons, T.
-#### Video ID
-RegExp `/channels\/([0-9A-Z_]+\/[0-9A-Z_]+)/i`, `/^([0-9A-Z_]+\/[0-9A-Z_]+)$/i`  
-Examples `t Piggy_Tales_3/6411f1c08a224700`, `https://www.toons.tv/channels/Piggy_Tales_3/6411f1c08a224700`
-#### Channel
-RegExp `/channels\/([0-9A-Z_]+)/i`, `/^([0-9A-Z_]+)$/i`  
-Examples `t Piggy_Tales_3`, `https://www.toons.tv/channels/Piggy_Tales_3`
-#### All
-Require loading component.  
-RegExp `/^$/`  
-Examples `t`
-
 ### Iwara & IwaraEcchi
 Alias : I.
 Ecchi Aliases : IE, EI.
@@ -183,6 +171,24 @@ Examples `i`, `ie`
 #### Search
 RegExp `/^(?:find|search)\s+(.*)$/i`  
 Examples `i find test`, `ie find test`
+
+### QQ
+#### Video ID
+RegExp `/^([0-9a-z]+)$/i`, `/\/x\/page\/([^.]+)/i`  
+Example `QQ h0505s0zxqx`, `http://v.qq.com/x/page/h0505s0zxqx.html`
+
+### ToonsTV
+Aliases : Toons, T.
+#### Video ID
+RegExp `/channels\/([0-9A-Z_]+\/[0-9A-Z_]+)/i`, `/^([0-9A-Z_]+\/[0-9A-Z_]+)$/i`  
+Examples `t Piggy_Tales_3/6411f1c08a224700`, `https://www.toons.tv/channels/Piggy_Tales_3/6411f1c08a224700`
+#### Channel
+RegExp `/channels\/([0-9A-Z_]+)/i`, `/^([0-9A-Z_]+)$/i`  
+Examples `t Piggy_Tales_3`, `https://www.toons.tv/channels/Piggy_Tales_3`
+#### All
+Require loading component.  
+RegExp `/^$/`  
+Examples `t`
 
 ## Cold
 

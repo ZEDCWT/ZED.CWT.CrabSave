@@ -29,9 +29,8 @@ R = ZED.ReduceToObject
 	(
 		KeySite.Name,L(),
 		KeySite.Judge,[],
-		KeySite.Page,(ID,X) =>
-		{
-			return Util.RequestBody().map(() =>
+		KeySite.Page,(ID,X) => Util.RequestBody()
+			.map(() =>
 			{
 				return ZED.ReduceToObject
 				(
@@ -49,11 +48,9 @@ R = ZED.ReduceToObject
 					)]
 				)
 			})
-		}
 	)],
-	KeySite.URL,ID =>
-	{
-		return Util.RequestBody().map(() =>
+	KeySite.URL,ID => Util.RequestBody()
+		.map(() =>
 		{
 			return ZED.ReduceToObject
 			(
@@ -65,8 +62,7 @@ R = ZED.ReduceToObject
 					KeyQueue.Suffix,'.'
 				)]
 			)
-		})
-	},
+		}),
 	KeySite.IDView,ZED.identity,
 	KeySite.IDLink,URLVideo,
 	KeySite.Pack,ZED.identity

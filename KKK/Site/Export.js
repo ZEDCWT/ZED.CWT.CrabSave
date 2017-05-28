@@ -7,18 +7,21 @@ KeySiteName = require('../Key').Site.Name,
 Bilibili = require('./Site.Bilibili'),
 YouTube = require('./Site.YouTube'),
 Niconico = require('./Site.NicoNico'),
-ToonsTV = require('./Site.ToonsTV'),
+
 Iwara = require('./Site.Iwara.Main'),
 IwaraEcchi = require('./Site.Iwara.Ecchi'),
+QQ = require('./Site.QQ'),
+ToonsTV = require('./Site.ToonsTV'),
 
 All =
 [
 	Bilibili,
 	YouTube,
 	Niconico,
-	ToonsTV,
 	Iwara,
-	IwaraEcchi
+	IwaraEcchi,
+	QQ,
+	ToonsTV
 ],
 Map =
 {
