@@ -28,6 +28,7 @@ It currently supports the following sites
 |NicoNico(ニコニコ)|[http://www.nicovideo.jp/](http://www.nicovideo.jp/)|
 |Iwara|[http://www.iwara.tv/](http://www.iwara.tv/)|
 |IwaraEcchi|[http://ecchi.iwara.tv/](http://ecchi.iwara.tv/)|
+|LeTV|[http://www.le.com/](http://www.le.com/)|
 |QQ|[https://v.qq.com/](https://v.qq.com/)|
 |ToonsTV|[https://www.toons.tv/](https://www.toons.tv/)|
 
@@ -171,6 +172,15 @@ Examples `i`, `ie`
 #### Search
 RegExp `/^(?:find|search)\s+(.*)$/i`  
 Examples `i find test`, `ie find test`
+
+### LeTV
+Aliases : Le
+#### Video ID
+RegExp `/^(\d+)$/`, `/ptv\/vplay\/(\d+)/i`  
+Example `le 22472068`, `http://www.le.com/ptv/vplay/22472068.html`
+#### Uploader
+RegExp `/\/u\/(\d+)/i`
+Example `http://chuang.le.com/u/22159724`
 
 ### QQ
 #### Video ID

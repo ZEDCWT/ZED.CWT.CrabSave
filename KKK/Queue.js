@@ -90,6 +90,7 @@ New = (Q,X) =>
 				KeyQueue.Name,T[KeySite.Name],
 				KeyQueue.ID,T[KeySite.ID],
 				KeyQueue.Title,T[KeySite.Title],
+				KeyQueue.Author,T[KeySite.Author],
 				KeyQueue.Created,ZED.now(),
 				KeyQueue.Active,Util.T
 			))
