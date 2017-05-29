@@ -107,7 +107,7 @@ MakeFileName = (Q,PL,UL,Part,F,Fa,I,D,T) =>
 	T =
 	{
 		ID : ZED.SafeFileName(String(Q[KeyQueue.ID])),
-		Author : ZED.SafeFileName(Q[KeyQueue.Author]),
+		Author : ZED.SafeFileName(Q[KeyQueue.Author] || '[Anonymous]'),
 		Date : ZED.DateToString(WordDate,D),
 		Title : ZED.SafeFileName(Q[KeyQueue.Title])
 	}

@@ -30,6 +30,7 @@ It currently supports the following sites
 |IwaraEcchi|[http://ecchi.iwara.tv/](http://ecchi.iwara.tv/)|
 |LeTV|[http://www.le.com/](http://www.le.com/)|
 |QQ|[https://v.qq.com/](https://v.qq.com/)|
+|Sina|[http://video.sina.com.cn/](http://video.sina.com.cn/)|
 |ToonsTV|[https://www.toons.tv/](https://www.toons.tv/)|
 
 ![GUI Interface](Screenshot/Introduction.png)
@@ -186,6 +187,11 @@ Example `http://chuang.le.com/u/22159724`
 #### Video ID
 RegExp `/^([0-9a-z]+)$/i`, `/\/x\/page\/([^.]+)/i`  
 Example `QQ h0505s0zxqx`, `http://v.qq.com/x/page/h0505s0zxqx.html`
+
+### Sina
+#### Video ID
+RegExp `/^(\d+)$/`, `/view\/(\d+)/i`  
+Example `Sina 202755812`, `http://video.sina.com.cn/view/202755812.html`
 
 ### ToonsTV
 Aliases : Toons, T.

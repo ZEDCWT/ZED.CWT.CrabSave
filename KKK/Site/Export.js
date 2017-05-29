@@ -12,6 +12,7 @@ Iwara = require('./Site.Iwara.Main'),
 IwaraEcchi = require('./Site.Iwara.Ecchi'),
 LeTV = require('./Site.LeTV'),
 QQ = require('./Site.QQ'),
+Sina = require('./Site.Sina'),
 ToonsTV = require('./Site.ToonsTV'),
 
 All =
@@ -19,10 +20,12 @@ All =
 	Bilibili,
 	YouTube,
 	Niconico,
+
 	Iwara,
 	IwaraEcchi,
 	LeTV,
 	QQ,
+	Sina,
 	ToonsTV
 ],
 Map =
