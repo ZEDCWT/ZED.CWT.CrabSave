@@ -106,7 +106,6 @@ R = ZED.ReduceToObject
 					KeySite.Total,1,
 					KeySite.Item,[ZED.ReduceToObject
 					(
-						KeySite.Index,0,
 						KeySite.ID,ID,
 						KeySite.Img,FitQulity(V.thumbnails),
 						KeySite.Title,V.title,
@@ -129,16 +128,15 @@ R = ZED.ReduceToObject
 				(
 					KeySite.Pages,1,
 					KeySite.Total,Q.videos.length,
-					KeySite.Item,ZED.Map(Q.videos,(F,V) => ZED.ReduceToObject
+					KeySite.Item,ZED.map(V => ZED.ReduceToObject
 					(
-						KeySite.Index,F,
 						KeySite.ID,Q.id + '/' + V.id,
 						KeySite.Img,FitQulity(V.thumbnails),
 						KeySite.Title,V.title,
 						KeySite.Author,Q.title,
 						KeySite.AuthorLink,URLChannel(Q.id),
 						KeySite.Date,new Date(V.publicationTime)
-					))
+					),Q.videos)
 				)
 			))
 	),ZED.ReduceToObject

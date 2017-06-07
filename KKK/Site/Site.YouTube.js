@@ -63,20 +63,17 @@ MakeReturnBySnippet = (Q,X,T) =>
 	(
 		KeySite.Pages,Math.ceil(T / PageSize),
 		KeySite.Total,T,
-		KeySite.Item,ZED.Map(Q.items,(F,V,I) =>
+		KeySite.PageSize,PageSize,
+		KeySite.Item,ZED.map(V => ZED.ReduceToObject
 		(
-			I = ZED.path(['snippet','position'],V),
-			ZED.ReduceToObject
-			(
-				KeySite.Index,ZED.isNull(I) ? PageSize * (X - 1) + F : I,
-				KeySite.ID,ZED.path(['contentDetails','videoId'],V) || ZED.path(['id','videoId'],V),
-				KeySite.Img,FitQulity(ZED.path(['snippet','thumbnails'],V)).url,
-				KeySite.Title,ZED.path(['snippet','title'],V),
-				KeySite.Author,ZED.path(['snippet','channelTitle'],V),
-				KeySite.AuthorLink,URLChannelPrefix + ZED.path(['snippet','channelId'],V),
-				KeySite.Date,new Date(ZED.path(['snippet','publishedAt'],V))
-			)
-		))
+			KeySite.Index,ZED.path(['snippet','position'],V),
+			KeySite.ID,ZED.path(['contentDetails','videoId'],V) || ZED.path(['id','videoId'],V),
+			KeySite.Img,FitQulity(ZED.path(['snippet','thumbnails'],V)).url,
+			KeySite.Title,ZED.path(['snippet','title'],V),
+			KeySite.Author,ZED.path(['snippet','channelTitle'],V),
+			KeySite.AuthorLink,URLChannelPrefix + ZED.path(['snippet','channelId'],V),
+			KeySite.Date,new Date(ZED.path(['snippet','publishedAt'],V))
+		),Q.items)
 	)
 ),
 MakeListByPlaylist = (ID,X) => Util
@@ -93,9 +90,8 @@ MakeList = (ID,X,U,C) => ZED.has(ID,C) ?
 	)),
 
 SubsActive,
-SubsContent = Q => Util.MA(/shelf-grid[^]+?menu-container/g,Q,(Q,I) => ZED.ReduceToObject
+SubsContent = Q => Util.MA(/shelf-grid[^]+?menu-container/g,Q,Q => ZED.ReduceToObject
 (
-	KeySite.Index,I,
 	KeySite.ID,Util.MF(/v=([^"&]+)/,Q),
 	KeySite.Img,Util.DecodeHTML(Util.MF(/(?:data-thumb|src(?!.*data-thumb))="([^"]+)/,Q).replace(/^\/\//,'http://')),
 	KeySite.Title,Util.DecodeHTML(Util.MF(/-title[^]+?title="([^"]+)/,Q)),
@@ -241,9 +237,8 @@ R = ZED.ReduceToObject
 			(
 				KeySite.Pages,1,
 				KeySite.Total,Util.MF(/-title">[^>]+>(\d+)/,Q),
-				KeySite.Item,Util.MA(/tion-thumb[^]+?<\/div/g,Q,(Q,I) => ZED.ReduceToObject
+				KeySite.Item,Util.MA(/tion-thumb[^]+?<\/div/g,Q,Q => ZED.ReduceToObject
 				(
-					KeySite.Index,I,
 					KeySite.ID,Util.F,
 					KeySite.Img,Util.MF(/data-thumb="([^"]+)/,Q),
 					KeySite.Author,Util.DecodeHTML(Util.MF(/title="([^"]+)/,Q)),
@@ -284,7 +279,6 @@ R = ZED.ReduceToObject
 					KeySite.Total,1,
 					KeySite.Item,[ZED.ReduceToObject
 					(
-						KeySite.Index,0,
 						KeySite.ID,ID,
 						KeySite.Img,FitQulity(Q.thumbnails).url,
 						KeySite.Title,Q.title,

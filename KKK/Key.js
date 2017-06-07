@@ -30,6 +30,7 @@ module.exports =
 		//	Page returns an object
 		Pages : KeyKey(),//number | false for
 		Total : KeyKey(),
+		PageSize : KeyKey(),
 		Item : KeyKey(),//array
 		//		Item
 		Unique : KeyKey(),

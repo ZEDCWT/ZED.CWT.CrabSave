@@ -35,7 +35,6 @@ R = ZED.ReduceToObject
 					KeySite.Total,1,
 					KeySite.Item,[ZED.ReduceToObject
 					(
-						KeySite.Index,0,
 						KeySite.ID,ID,
 						KeySite.Img,Q.image,
 						KeySite.Title,Q.title,

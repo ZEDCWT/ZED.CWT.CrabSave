@@ -217,7 +217,6 @@ R = ZED.ReduceToObject
 					KeySite.Total,1,
 					KeySite.Item,[ZED.ReduceToObject
 					(
-						KeySite.Index,0,
 						KeySite.ID,ID,
 						KeySite.Img,Q.pic,
 						KeySite.Title,Q.title,
@@ -242,9 +241,9 @@ R = ZED.ReduceToObject
 				(
 					KeySite.Pages,Q.pages,
 					KeySite.Total,Q.count,
-					KeySite.Item,ZED.Map(Q.vlist || [],(F,V) => ZED.ReduceToObject
+					KeySite.PageSize,PageSize,
+					KeySite.Item,ZED.map(V => ZED.ReduceToObject
 					(
-						KeySite.Index,PageSize * (X - 1) + F,
 						KeySite.ID,V.aid,
 						KeySite.Img,V.pic,
 						KeySite.Title,V.title,
@@ -252,7 +251,7 @@ R = ZED.ReduceToObject
 						KeySite.AuthorLink,DomainSpace + ID,
 						KeySite.Date,new Date(1000 * V.created),
 						KeySite.Length,V.length
-					))
+					),Q.vlist || [])
 				)
 			))
 	),ZED.ReduceToObject
@@ -272,14 +271,13 @@ R = ZED.ReduceToObject
 			(
 				KeySite.Pages,1,
 				KeySite.Total,Q.seasons.length + Q.episodes.length,
-				KeySite.Item,ZED.Map(Q.seasons,(F,V) => ZED.ReduceToObject
+				KeySite.Item,ZED.map(V => ZED.ReduceToObject
 				(
-					KeySite.Index,F,
 					KeySite.Img,V.cover,
 					KeySite.Title,V.title,
 					KeySite.Author,V.season_id,
 					KeySite.AuthorLink,URLBangumi(V.season_id)
-				)).concat(ZED.map(V => ZED.ReduceToObject
+				),Q.seasons).concat(ZED.map(V => ZED.ReduceToObject
 				(
 					KeySite.Index,V.index,
 					KeySite.ID,V.av_id,
@@ -312,13 +310,12 @@ R = ZED.ReduceToObject
 				(
 					KeySite.Pages,1,
 					KeySite.Total,With.playlist.length,
-					KeySite.Item,ZED.Map(With.playlist,(F,V) => ZED.ReduceToObject
+					KeySite.Item,ZED.map(V => ZED.ReduceToObject
 					(
-						KeySite.Index,F,
 						KeySite.ID,V.aid,
 						KeySite.Title,V.title,
 						KeySite.Date,new Date(1000 * V.pubdate)
-					))
+					),With.playlist)
 				)
 			})
 	),ZED.ReduceToObject
@@ -335,12 +332,12 @@ R = ZED.ReduceToObject
 				(
 					KeySite.Pages,Math.ceil(Q.page.count / Q.page.size),
 					KeySite.Total,Q.page.count,
-					KeySite.Item,ZED.Map(Q.feeds || [],(F,V) =>
+					KeySite.PageSize,PageSize,
+					KeySite.Item,ZED.map(V =>
 					(
 						V = V.addition,
 						ZED.ReduceToObject
 						(
-							KeySite.Index,PageSize * (X - 1) + F,
 							KeySite.ID,V.aid,
 							KeySite.Img,V.pic,
 							KeySite.Title,V.title,
@@ -349,7 +346,7 @@ R = ZED.ReduceToObject
 							KeySite.Date,new Date(V.create),
 							KeySite.Length,V.duration
 						)
-					))
+					),Q.feeds || [])
 				)
 			))
 	),ZED.ReduceToObject
@@ -368,14 +365,14 @@ R = ZED.ReduceToObject
 				(
 					KeySite.Pages,Q.pages,
 					KeySite.Total,Q.results,
-					KeySite.Item,ZED.Map(Q.list,(F,V) => ZED.ReduceToObject
+					KeySite.PageSize,20,
+					KeySite.Item,ZED.map(V => ZED.ReduceToObject
 					(
-						KeySite.Index,20 * (X - 1) + F,
 						KeySite.ID,Util.F,
 						KeySite.Img,V.face,
 						KeySite.Author,V.uname,
 						KeySite.AuthorLink,DomainSpace + V.fid
-					))
+					),Q.list)
 				)
 			)) : Observable.throw(L(Lang.NotSigned))
 		)
@@ -397,9 +394,9 @@ R = ZED.ReduceToObject
 				(
 					KeySite.Pages,Q.numPages,
 					KeySite.Total,Q.numResults,
-					KeySite.Item,Util.MA(/<li[^]+?<\/li/g,Q.html,(Q,I) => ZED.ReduceToObject
+					KeySite.PageSize,PageSize,
+					KeySite.Item,Util.MA(/<li[^]+?<\/li/g,Q.html,Q => ZED.ReduceToObject
 					(
-						KeySite.Index,PageSize * (X - 1) + I,
 						KeySite.ID,Util.MF(/av(\d+)/,Q),
 						KeySite.Img,PadURL(Util.MF(/src="([^"]+)/,Q)),
 						KeySite.Title,Util.DecodeHTML(Util.MF(/title".+?title="([^"]+)/,Q)),
@@ -431,18 +428,13 @@ R = ZED.ReduceToObject
 					Observable.just(R) :
 					Util.RequestBody(URLSearchBangumi(encodeURIComponent(Raw))).map(Q =>
 					(
-						Q = ZED.Map
+						Q = ZED.map(V => ZED.ReduceToObject
 						(
-							ZED.path(['data','items'],ZED.JTO(Q)) || [],
-							(F,V) => ZED.ReduceToObject
-							(
-								KeySite.Index,F,
-								KeySite.Img,V.cover,
-								KeySite.Title,V.title,
-								KeySite.Author,V.param,
-								KeySite.AuthorLink,V.uri
-							)
-						),
+							KeySite.Img,V.cover,
+							KeySite.Title,V.title,
+							KeySite.Author,V.param,
+							KeySite.AuthorLink,V.uri
+						),ZED.path(['data','items'],ZED.JTO(Q)) || []),
 						R[KeySite.Total] += Q.length,
 						R[KeySite.Item] = Q.concat(R[KeySite.Item]),
 						R

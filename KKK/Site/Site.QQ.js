@@ -42,7 +42,6 @@ R = ZED.ReduceToObject
 					KeySite.Total,1,
 					KeySite.Item,[ZED.ReduceToObject
 					(
-						KeySite.Index,0,
 						KeySite.ID,ID,
 						KeySite.Img,Util.MF(/image" content="([^"]+)/,V),
 						KeySite.Title,ZED.path(['vl','vi',0,'ti'],JTO(I)),

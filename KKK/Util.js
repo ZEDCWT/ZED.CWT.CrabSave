@@ -182,7 +182,7 @@ module.exports =
 	MA : (S,Q,C,J,R) =>
 	(
 		R = [],
-		ML(S,Q,Q => (Q = C(Q,R.length)) && R.push(Q),J),
+		ML(S,Q,Q => (Q = C(Q)) && R.push(Q),J),
 		R
 	),
 	DateDirect : Q => new Date

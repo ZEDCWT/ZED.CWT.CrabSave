@@ -44,7 +44,6 @@ module.exports = (Domain,SubName,Judge) =>
 					KeySite.Total,1,
 					KeySite.Item,[ZED.ReduceToObject
 					(
-						KeySite.Index,0,
 						KeySite.ID,ID,
 						KeySite.Img,Util.MF(/poster="([^"]+)/,Q),
 						KeySite.Title,Util.DecodeHTML(Util.MF(/title">([^<]+)/,Q)),
@@ -63,9 +62,9 @@ module.exports = (Domain,SubName,Judge) =>
 				(
 					KeySite.Pages,1 + (Number(Util.MF(/last"[^?]+\?page=(\d+)/,Q)) || 0),
 					KeySite.Total,'~' + PageSize * (1 + X),
-					KeySite.Item,Util.MA(/id="node[^]+?username[^<]+/g,Q,(Q,I) => ZED.ReduceToObject
+					KeySite.PageSize,PageSize,
+					KeySite.Item,Util.MA(/id="node[^]+?username[^<]+/g,Q,Q => ZED.ReduceToObject
 					(
-						KeySite.Index,PageSize * X + I,
 						KeySite.ID,Util.MF(/videos\/([^"]+)/,Q),
 						KeySite.Img,Util.MF(/src="([^"]+)/,Q),
 						KeySite.Title,Util.DecodeHTML(Util.MF(/alt="([^"]+)/,Q)),
@@ -84,9 +83,9 @@ module.exports = (Domain,SubName,Judge) =>
 					(
 						KeySite.Pages,MakePages(Q),
 						KeySite.Total,R.length,
-						KeySite.Item,Util.MA(/"node-[^]+?username[^<]+/g,Q,(Q,I) => ZED.ReduceToObject
+						KeySite.PageSize,36,
+						KeySite.Item,Util.MA(/"node-[^]+?username[^<]+/g,Q,Q => ZED.ReduceToObject
 						(
-							KeySite.Index,36 * X + I,
 							KeySite.ID,Util.MF(/videos\/([^"\/]+)"/,Q),
 							KeySite.Img,Util.MF(/src="([^"]+)/,Q),
 							KeySite.Title,Util.DecodeHTML(Util.MF(/title">[^>]+?>([^<]+)/,Q)),
@@ -118,9 +117,8 @@ module.exports = (Domain,SubName,Judge) =>
 				.map(Q => ZED.ReduceToObject
 				(
 					KeySite.Pages,MakePages(Q),
-					KeySite.Item,Util.MA(/id="node[^<]+<[^"]+"row[^]+?heart/g,Q,(Q,I) => ZED.ReduceToObject
+					KeySite.Item,Util.MA(/id="node[^<]+<[^"]+"row[^]+?heart/g,Q,Q => ZED.ReduceToObject
 					(
-						KeySite.Index,I,
 						KeySite.ID,Util.MF(/videos\/([^"\/]+)"/,Q),
 						KeySite.Img,Util.MF(/src="([^"]+)/,Q),
 						KeySite.Title,Util.DecodeHTML(Util.MF(/title">[^>]+?>([^<]+)/,Q)),

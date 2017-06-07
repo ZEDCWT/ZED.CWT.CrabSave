@@ -1533,6 +1533,13 @@
 			{
 				var Item = Q[KeySite.Item];
 
+				ZED.Each(Item,(F,V) => Util.U === V[KeySite.Index] &&
+				(
+					V[KeySite.Index] = Q[KeySite.PageSize] ?
+						Q[KeySite.PageSize] * (S - 1) + F :
+						F
+				))
+
 				RPref.empty()
 				Q[KeySite.Pref] && ZED.Preference(
 				{

@@ -44,9 +44,9 @@ R = ZED.ReduceToObject
 					(
 						KeySite.Pages,V.totalPage,
 						KeySite.Total,PageSize * V.totalPage,
-						KeySite.Item,ZED.Map(V.list,(F,V) => ZED.ReduceToObject
+						KeySite.PageSize,PageSize,
+						KeySite.Item,ZED.map(V => ZED.ReduceToObject
 						(
-							KeySite.Index,F + PageSize * (X - 1),
 							KeySite.ID,V.vid,
 							KeySite.Img,V.videoPic,
 							KeySite.Title,V.title,
@@ -54,7 +54,7 @@ R = ZED.ReduceToObject
 							KeySite.AuthorLink,URLAuthorLink(ID),
 							KeySite.Date,V.uploadTime,
 							KeySite.Length,V.duration
-						))
+						),V.list)
 					)
 				)))
 	),ZED.ReduceToObject
@@ -73,7 +73,6 @@ R = ZED.ReduceToObject
 							KeySite.Total,1,
 							KeySite.Item,[ZED.ReduceToObject
 							(
-								KeySite.Index,0,
 								KeySite.ID,ID,
 								KeySite.Img,ZED.find(ZED.T,ZED.path(['msgs','playurl','picAll'],I)),
 								KeySite.Title,ZED.path(['msgs','playurl','title'],I),

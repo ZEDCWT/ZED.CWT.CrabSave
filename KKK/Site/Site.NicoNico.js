@@ -18,7 +18,7 @@ URLLoginCheck = 'http://seiga.nicovideo.jp/',
 URLUserPrefix = 'http://www.nicovideo.jp/user/',
 URLUser = ZED.URLBuild(URLUserPrefix,Util.U,'/video?page=',Util.U),
 URLMylist = ZED.URLBuild('http://www.nicovideo.jp/mylist/',Util.U),
-URLRepo = ZED.URLBuild('http://www.nicovideo.jp/my/top/user?innerPage=1&mode=next_page&last_timeline=',Util.U),
+URLRepo = ZED.URLBuild('http://www.nicovideo.jp/api/nicorepo/timeline/my/followingUser?cursor=',Util.U,'&client_app=pc_myrepo'),
 URLFollowing = ZED.URLBuild('http://www.nicovideo.jp/my/fav/user?page=',Util.U),
 URLSearch = ZED.URLBuild('http://www.nicovideo.jp/search/',Util.U,'?page=',Util.U,Util.U),
 URLSearchHint = ZED.URLBuild('http://sug.search.nicovideo.jp/suggestion/complete/',Util.U),
@@ -33,7 +33,7 @@ MaybeError = Q => /<error>/.test(Q) && ZED.Throw(Util.ReplaceLang
 	Util.MF(/tion>([^<]+)/,Q)
 )),
 
-RepoActive,
+RepoCursor,
 FilterMenu,
 FilterMenuDef = {},
 
@@ -68,7 +68,6 @@ R = ZED.ReduceToObject
 					KeySite.Total,1,
 					KeySite.Item,[ZED.ReduceToObject
 					(
-						KeySite.Index,0,
 						KeySite.ID,ID,
 						KeySite.Img,Util.MF(/l_url>([^<]+)/,Q),
 						KeySite.Title,Util.DecodeHTML(Util.MF(/itle>([^<]+)/,Q)),
@@ -96,15 +95,14 @@ R = ZED.ReduceToObject
 				(
 					KeySite.Pages,Math.ceil(T / PageSize) || 0,
 					KeySite.Total,T,
-					KeySite.Item,ZED.Reduce
+					KeySite.PageSize,PageSize,
+					KeySite.Item,ZED.reduce
 					(
-						ZED.match(/outer"(?![^<]+<form)[^]+?<\/p/g,Util.MU(/Body"[^]+?="side/,Q)),
-						(D,F,V,I) =>
+						(D,V,I) =>
 						{
 							I = Util.MF(/sm(\d+)/,V)
 							I && D.push(ZED.ReduceToObject
 							(
-								KeySite.Index,PageSize * (X - 1) + F,
 								KeySite.ID,I,
 								KeySite.Img,Util.MF(/src="([^"]+)/,V),
 								KeySite.Title,Util.DecodeHTML(Util.MF(/h5>[^>]+>([^<]+)/,V)),
@@ -113,7 +111,8 @@ R = ZED.ReduceToObject
 								KeySite.Date,Util.DateDirect(ZED.match(/\d+/g,Util.MF(/posttime">([^<]+)/,V)))
 							))
 						},
-						[]
+						[],
+						ZED.match(/outer"(?![^<]+<form)[^]+?<\/p/g,Util.MU(/Body"[^]+?="side/,Q))
 					)
 				)
 			))
@@ -164,40 +163,33 @@ R = ZED.ReduceToObject
 	),ZED.ReduceToObject
 	(
 		KeySite.Name,'ニコレポ',
-		KeySite.Judge,[/^(?:repo|my|top)?$/i],
+		KeySite.Judge,[/^(?:repo|my|top|ニコレポ)?$/i],
 		KeySite.Page,(_,X) => Util
-			.RequestBody(Cookie.URL(Name,URLRepo(RepoActive && RepoActive[X - 2] || '')))
+			.RequestBody(Cookie.URL(Name,URLRepo(RepoCursor && RepoCursor[X - 2] || '')))
 			.map(Q =>
-			{
-				var M = {},T;
-
-				T = Util.MF(/last_timeline=(\d+)/,Q)
-				if (1 < X) T && (RepoActive[X - 2] = T)
-				else RepoActive = T ? [T] : []
-
-				return ZED.ReduceToObject
+			(
+				Q = ZED.JTO(Q),
+				'ok' === Q.status || ZED.Throw(Util.ReplaceLang(Lang.BadCE,Q.meta.status,Q.status)),
+				Q.meta.minId &&
 				(
-					KeySite.Pages,1 + RepoActive.length,
-					KeySite.Item,Util.MA(/content"[^]+?content --/g,Q,(Q,I) =>
+					1 < X ?
+						RepoCursor[X - 2] = Q.meta.minId :
+						RepoCursor = [Q.meta.minId]
+				),
+				ZED.ReduceToObject
+				(
+					KeySite.Pages,1 + RepoCursor.length,
+					KeySite.Item,ZED.map(V => ZED.ReduceToObject
 					(
-						T = Util.MF(/sm(\d+)/,Q),
-						T && !M[T] &&
-						(
-							M[T] = Util.T,
-							ZED.ReduceToObject
-							(
-								KeySite.Index,I,
-								KeySite.ID,T,
-								KeySite.Img,Util.MF(/original="([^"]+)/,Q),
-								KeySite.Title,Util.DecodeHTML(Util.MF(/info[^]+sm\d+[^>]+>([^<]+)/,Q)).trim(),
-								KeySite.Author,Util.DecodeHTML(Util.MF(/user">([^<]+)/,Q)).trim(),
-								KeySite.AuthorLink,URLUserPrefix + Util.MF(/user\/(\d+)/,Q),
-								KeySite.Date,new Date(Util.MF(/datetime="([^"]+)/,Q))
-							)
-						)
-					))
+						KeySite.ID,V.video.id.substr(2),
+						KeySite.Img,V.video.thumbnailUrl.normal,
+						KeySite.Title,V.video.title,
+						KeySite.Author,V.senderNiconicoUser.nickname,
+						KeySite.AuthorLink,URLUserPrefix + V.senderNiconicoUser.id,
+						KeySite.Date,V.createdAt
+					),ZED.filter(ZED.propEq('topic','nicovideo.user.video.upload'),Q.data))
 				)
-			})
+			))
 	),ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Following),
@@ -207,9 +199,8 @@ R = ZED.ReduceToObject
 			(
 				KeySite.Pages,Util.MF(/>(\d+)<(?![^]*>\d)/,Util.MU(/pager"[^]+?<\/div/,Q)),
 				KeySite.Total,Util.MF(/favUser[^(]+\((\d+)/,Q),
-				KeySite.Item,Util.MA(/thumbCont[^]+?buttonShape/g,Q,(Q,I) => ZED.ReduceToObject
+				KeySite.Item,Util.MA(/thumbCont[^]+?buttonShape/g,Q,Q => ZED.ReduceToObject
 				(
-					KeySite.Index,I,
 					KeySite.ID,Util.F,
 					KeySite.Img,Util.MF(/src="([^"]+)/,Q),
 					KeySite.Author,Util.DecodeHTML(Util.MF(/alt="([^"]+)/,Q)),
@@ -243,10 +234,10 @@ R = ZED.ReduceToObject
 				(
 					KeySite.Pages,ZED.min(Math.ceil(T / 32),50),
 					KeySite.Total,T,
-					KeySite.Item,Util.MA(/video-item[^]+?<\/li/g,Q,(Q,I,ID) => (ID = Util.MF(/sm(\d+)/,Q)) &&
+					KeySite.PageSize,PageSize,
+					KeySite.Item,Util.MA(/video-item[^]+?<\/li/g,Q,(Q,ID) => (ID = Util.MF(/sm(\d+)/,Q)) &&
 						ZED.ReduceToObject
 						(
-							KeySite.Index,PageSize * (X - 1) + I,
 							KeySite.ID,ID,
 							KeySite.Img,Util.MF(/original="([^"]+)/,Q),
 							KeySite.Title,Util.DecodeHTML(Util.MF(/title="([^"]+)/,Q)),
