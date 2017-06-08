@@ -16,6 +16,7 @@ stat = Observable.wrapNode(FS.stat),
 readdir = Observable.wrapNode(FS.readdir),
 readFile = Observable.wrapNode(FS.readFile),
 writeFile = Observable.wrapNode(FS.writeFile),
+unlink = Observable.wrapNode(FS.unlink),
 
 Output = Path.join(__dirname,'Out'),
 Compress = Q => Uglify.minify(Q.toString(),
@@ -70,24 +71,27 @@ Full = () => (CLI.options.skip ? Observable.just(process) :
 	],
 	prune : true,
 	overwrite : true
-})).flatMap(Q =>
-{
-	if (Env.Just) return Observable.empty()
-	CLI.info('Uglifing')
-	Q = Path.join(Q[0],'resources','app')
-	return Observable.from(['','KKK','KKK/Site']).flatMap
+})).flatMap((Q,R) =>
+(
+	Q = Path.join(Q[0],'resources','app'),
+	R = unlink(Path.join(Q,'package-lock.json')),
+	Env.Just ? R :
 	(
-		P => readdir(P = Path.join(Q,P))
-			.flatMap(ZED.identity)
-			.filter(ZED.test(/\.js$/))
-			.map(S => Path.join(P,S))
-	).flatMapOnline(1,Q => readFile(Q)
-		.flatMap(S =>
+		CLI.info('Uglifing'),
+		R.flatMap(() => Observable.from(['','KKK','KKK/Site']).flatMap
 		(
-			CLI.info(Path.relative(Output,Q)),
-			writeFile(Q,Compress(S))
-		)))
-}),
+			P => readdir(P = Path.join(Q,P))
+				.flatMap(ZED.identity)
+				.filter(ZED.test(/\.js$/))
+				.map(S => Path.join(P,S))
+		).flatMapOnline(1,Q => readFile(Q)
+			.flatMap(S =>
+			(
+				CLI.info(Path.relative(Output,Q)),
+				writeFile(Q,Compress(S))
+			))))
+	)
+)),
 Ignore = ZED.test(/^node_modules$/i),
 FastFolder = (Q,S) => readdir(Q)
 	.flatMap(ZED.identity)
