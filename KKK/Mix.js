@@ -2975,10 +2975,12 @@
 		Content : M =>
 		{
 			var
+			DefaultName = '|Author|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?',
+			DefaultNameFull = '|Author|/|YYYY|/' + DefaultName,
 			Default = ZED.ReduceToObject
 			(
 				KeySetting.Dir,Path.join(Config.Root,'Download'),
-				KeySetting.Name,'|Author|/|YYYY|/|Author|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?',
+				KeySetting.Name,DefaultNameFull,
 				KeySetting.Max,5,
 				KeySetting.Font,'Microsoft Yahei',
 				KeySetting.Size,12,
@@ -3051,7 +3053,7 @@
 				Set :
 				[
 					[L(Lang.Directory),[MakeInput(KeySetting.Dir)],KeySetting.Dir],
-					[L(Lang.FName),[MakeInput(KeySetting.Name)],KeySetting.Name],
+					[L(Lang.FName),[DefaultName,DefaultNameFull,MakeInput(KeySetting.Name)],KeySetting.Name],
 					[L(Lang.MaxDown),ZED.range(1,11),KeySetting.Max,() =>
 					{
 						Queue.Max(Data[KeySetting.Max])
