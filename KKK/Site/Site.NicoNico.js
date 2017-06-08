@@ -173,7 +173,7 @@ R = ZED.ReduceToObject
 				Q.meta.minId &&
 				(
 					1 < X ?
-						RepoCursor[X - 2] = Q.meta.minId :
+						RepoCursor[X - 1] = Q.meta.minId :
 						RepoCursor = [Q.meta.minId]
 				),
 				ZED.ReduceToObject
