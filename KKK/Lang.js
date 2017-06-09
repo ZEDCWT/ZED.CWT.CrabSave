@@ -200,5 +200,6 @@ module.exports =
 	RetryT : Lang('Times to retry before moving a task with no response to the end of the queue'),
 	RestartT : Lang('Time(seconds) to wait before restarting a task after error occured or URL expired'),
 	MergeCmd : Lang('Merge command'),
-	MergeSuf : Lang('Merge suffix')
+	MergeSuf : Lang('Merge suffix'),
+	Alias : Lang('Alias')
 }

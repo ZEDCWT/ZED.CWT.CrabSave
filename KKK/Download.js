@@ -101,13 +101,20 @@ Start = (Q,I,At,URL,Done,Size) =>
 	Active[Q[KeyQueue.Unique]] = Down
 },
 
+Alias = {},
 MakeFileName = (Q,PL,UL,Part,F,Fa,I,D,T) =>
 {
 	D = new Date(Q[KeyQueue.Date])
+	T = Q[KeyQueue.Author]
 	T =
 	{
 		ID : ZED.SafeFileName(String(Q[KeyQueue.ID])),
-		Author : ZED.SafeFileName(Q[KeyQueue.Author] || '[Anonymous]'),
+		Author : ZED.SafeFileName
+		(
+			ZED.has(T,Alias) ?
+				Alias[T] :
+				Q[KeyQueue.Author] || '[Anonymous]'
+		),
 		Date : ZED.DateToString(WordDate,D),
 		Title : ZED.SafeFileName(Q[KeyQueue.Title])
 	}
@@ -236,9 +243,8 @@ module.exports =
 		Sizes = Array(URL.length);
 
 		return Util.from(URL)
-			.flatMapOnline(1,(V,F) =>
-			{
-				return Util.RequestHead(Pack(V,Q)).tap(H =>
+			.flatMapOnline(1,(V,F) => Util.RequestHead(Pack(V,Q))
+				.tap(H =>
 				{
 					if (200 <= H.statusCode && H.statusCode < 300)
 					{
@@ -248,8 +254,7 @@ module.exports =
 						Bus.emit(EventDownload.Size,Q,H,F)
 					}
 					else ZED.Throw(Util.OReinfo)
-				})
-			})
+				}))
 			.finish()
 			.map(() => ZED.ReduceToObject
 			(
@@ -258,6 +263,12 @@ module.exports =
 			))
 	},
 
+	Alias : ZED.throttle(Config.Throttle,Q => Alias = ZED.reduce
+	(
+		(D,V) => {D[V[0]] = V[1]},
+		{},
+		ZED.splitEvery(2,ZED.filter(ZED.identity,Q.split('\n')))
+	)),
 	FileName : MakeFileName,
 
 	Play : Play,

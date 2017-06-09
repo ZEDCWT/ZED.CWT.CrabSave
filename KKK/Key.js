@@ -100,6 +100,7 @@ module.exports =
 		Restart : SettingKey(),
 		Merge : SettingKey(),
 		Suffix : SettingKey(),
-		Tray : SettingKey()
+		Tray : SettingKey(),
+		Alias : SettingKey()
 	}
 }

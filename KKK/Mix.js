@@ -3043,6 +3043,7 @@
 			T = Number(Data[KeySetting.Restart])
 			0 < T || (T = Default[KeySetting.Restart])
 			Queue.Wait(Data[KeySetting.Restart] = T)
+			Download.Alias(Data[KeySetting.Alias])
 			NotiTray()
 			RefreshFont()
 
@@ -3073,7 +3074,20 @@
 						Queue.Wait(Data[KeySetting.Restart] || Default[KeySetting.Restart])
 					}],
 					[L(Lang.MergeCmd),[{T : 'T',E : {placeholder : Default[KeySetting.Merge],rows : 8}}],KeySetting.Merge],
-					[L(Lang.MergeSuf),[MakeInput(KeySetting.Suffix)],KeySetting.Suffix]
+					[L(Lang.MergeSuf),[MakeInput(KeySetting.Suffix)],KeySetting.Suffix],
+					[L(Lang.Alias),[
+					{
+						T : 'T',
+						E :
+						{
+							placeholder : 'Original Name 0\n' +
+								'Final Name 0\n' +
+								'Original Name 1\n' +
+								'Final Name 2\n' +
+								'...',
+							rows : 8
+						}
+					}],KeySetting.Alias,() => Download.Alias(Data[KeySetting.Alias])]
 				],
 				Change : () => Setting.Save(Data)
 			})

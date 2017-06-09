@@ -428,6 +428,13 @@ While `["+","|Tail|"]` would output
 If the output path is `/X/F.mkv`, with the default setting, it would generate  
 `mkvmerge --output /X/F.mkv /X/F.0.flv +/X/F.1.flv +/X/F.2.flv`
 
+### Alias
+
+In some situation, for example, when a author's name is too long and wanted to be shorted for file names, to map authors' names is necessary.
+
+Each mapping contains the original name and the mapped name in the next line. While all mappings are 
+separated by line separators.
+
 ## Build
 
 ```bash
