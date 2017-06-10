@@ -197,6 +197,7 @@ module.exports =
 	{
 		return ZED.Replace(L(Q),'/',ZED.isArray(S) ? S : ZED.tail(arguments))
 	},
+	HeaderJoin : Q => ZED.map(ZED.join(': '),ZED.splitEvery(2,Q.rawHeaders)).join('\n'),
 	CookieSolve : Q => ZED.reduce((D,V) =>
 	{
 		V = V.split('; ')[0].match(/^([^=]+)=([^]*)/)

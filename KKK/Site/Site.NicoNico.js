@@ -51,7 +51,13 @@ R = ZED.ReduceToObject
 			password : PW
 		},
 		followRedirect : Util.F
-	}).tap(H => Cookie.Set(Name,Util.MU(/user_session=user_[^;]+/,H.rawHeaders.join('\n')))),
+	}).map((H,R) =>
+	(
+		R = Util.MU(/user_session=(?!deleted)[^;]+/,H = Util.HeaderJoin(H)),
+		R || ZED.Throw(H),
+		Cookie.Set(Name,R),
+		L(Lang.Signed)
+	)),
 	KeySite.Check,() => Util.RequestBody(Cookie.URL(Name,URLLoginCheck))
 		.map(Q => Util.MF(/data-nickname="([^"]+)/,Q)),
 	KeySite.Map,[ZED.ReduceToObject
