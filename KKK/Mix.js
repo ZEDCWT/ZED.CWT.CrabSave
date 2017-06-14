@@ -1075,6 +1075,7 @@
 		(
 			'html,body{margin:0;padding:0;background:#F7F7F7;color:#6C6C6C;overflow:hidden}' +
 			'input,textarea{background:transparent;color:#6C6C6C;outline:0}' +
+			'::placeholder{color:#999}' +
 
 			//Rainbow
 			'#/R/{height:/r/px;background:inherit;word-break:break-word}' +
@@ -2683,7 +2684,7 @@
 					}
 					else
 					{
-						VCodeTarget = Target
+						VCodeTarget =
 						VCodeEnd = Util.F
 						RVCode.hide()
 					}
