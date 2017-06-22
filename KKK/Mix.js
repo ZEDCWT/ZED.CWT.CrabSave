@@ -44,9 +44,11 @@
 	Electron = require('electron'),
 	IPCRenderer = Electron.ipcRenderer,
 	Remote = Electron.remote,
+	WebContent = Remote.getCurrentWebContents(),
 	Dialog = Remote.dialog,
-	ViewReload = () => Remote.getCurrentWebContents().reload(),
-	ViewToggleDev = () => Remote.getCurrentWebContents().toggleDevTools(),
+	ViewReload = () => WebContent.reload(),
+	ViewDevIsOpen = () => WebContent.isDevToolsOpened(),
+	ViewDevToggle = () => WebContent.toggleDevTools(),
 
 
 
@@ -2944,7 +2946,11 @@
 					UTab.Index(X < YTabCount ? X : X - YTabCount)
 				})
 				.cmd(ShortCutCommand.Reload,ViewReload)
-				.cmd(ShortCutCommand.ToggleDev,ViewToggleDev)
+				.cmd(ShortCutCommand.ToggleDev,() =>
+				{
+					MakeNoti(Util.U,L(ViewDevIsOpen() ? Lang.DevClose : Lang.DevOpen),Util.T)
+					ViewDevToggle()
+				})
 				.on('ctrl+a',Util.N,Util.PrevDef,Util.T)
 
 			return MakeScroll(M)

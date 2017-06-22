@@ -129,9 +129,11 @@ module.exports =
 	NoEscape : Lang('No escape'),
 
 	//Noti
+	Close : Lang('Close'),
 	DB : Lang('Loading Databases...'),
 	DBDone : Lang('Databases loaded in /0/ms'),
-	Close : Lang('Close'),
+	DevOpen : Lang('Opening DevTools'),
+	DevClose : Lang('Closing DevTools'),
 
 	//History
 	HiInfo : Lang('/0/, /1/ file/2/'),
