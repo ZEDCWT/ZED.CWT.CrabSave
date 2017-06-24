@@ -206,10 +206,10 @@ R = ZED.ReduceToObject
 			.map(Q =>
 			(
 				Q = ZED.JTO(Q),
-				Q.error && ZED.Throw(Util.ReplaceLang
+				(Q.error || Q.code) && ZED.Throw(Util.ReplaceLang
 				(
 					Lang.BadCE,
-					Q.code || '-',Q.error || '-'
+					Q.code,String(Q.error || Q.message)
 				)),
 				ZED.ReduceToObject
 				(
