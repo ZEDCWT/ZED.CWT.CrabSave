@@ -3155,15 +3155,7 @@
 	{
 		Q = ZED.FormatSize(Q) + '/s'
 		RSpeed.text(Q)
-		IPCRenderer.send('Ping',ZED.Replace
-		(
-			'[|Count|] |Speed|',
-			'|',
-			{
-				Count : Queue.Online.length,
-				Speed : Q
-			}
-		))
+		IPCRenderer.send('Ping',`[${Queue.Online.length}] ${Q}`)
 	})
 
 	Rainbow.append

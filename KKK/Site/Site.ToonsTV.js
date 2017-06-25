@@ -58,7 +58,7 @@ R = ZED.ReduceToObject
 			.map((Q,F) =>
 			(
 				Q = Q.activeChannel,
-				Say(ZED.Replace('/0/ // /1/, /2/','/',[Util.PadTo(Len,F),Len,Q.title])),
+				Say(`${Util.PadTo(Len,F)} / ${Len}, ${Q.title}`),
 				ZED.each(V =>
 				{
 					ZED.delete_('contentType',V)
