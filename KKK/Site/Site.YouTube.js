@@ -150,11 +150,12 @@ R = ZED.ReduceToObject
 			Q = ZED.JTO(Util.MF(/assets"[^}]+js":("[^"]+")/,Q)),
 			ZED.isString(Q) || ZED.Throw(L(Lang.Bad)),
 			Say(Util.ReplaceLang(Lang.LoadScr,L(Lang.Assets))),
-			Util.ajax(URLJoin(URLMain,Q)).flatMap(Q =>
+			Util.ajax(URLJoin(URLMain,Q)).flatMap((Q,T) =>
 			(
 				Q = Q.replace(/=[^=]+...split\(""\S+ ..join\(""/,'=SIGN$&'),
+				T = STS,
 				STS = Util.MF(/sts:(\d+)/,Q),
-				Say('STS : ' + STS),
+				Say('STS : ' + (T ? `${T} → ${STS}` : STS)),
 				Say(L(Lang.FileWrite)),
 				Util.writeFile(FrameTool[0],Q)
 			)).flatMap(() =>
