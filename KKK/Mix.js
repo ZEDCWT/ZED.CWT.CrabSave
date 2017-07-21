@@ -112,7 +112,6 @@
 	YPadding = 10,
 	YPaddingHalf = 5,
 	YScrollWidth = 16,
-	YScrollWidthHalf = YScrollWidth / 2,
 	YShadowSize = 10,
 	YShadowColor = 'rgba(0,0,0,.4)',
 	//		ToolBar
@@ -126,8 +125,6 @@
 	YListSVG = 20,
 	YCardWidthMin = 160,
 	YCardWidthMax = 200,
-	//		Noti
-	YNotiMargin = 4,
 	//		StatusBar
 	YStatusBarHeight = 40,
 	//		Tab
@@ -170,11 +167,6 @@
 	ClassDetailLabel = ZED.KeyGen(),
 	IDDetailPart = ZED.KeyGen(),
 	IDMerge = ZED.KeyGen(),
-	//		Noti
-	IDNoti = ZED.KeyGen(),
-	ClassNotiTransition = ZED.KeyGen(),
-	ClassNotiEnd = ZED.KeyGen(),
-	ClassNotiClose = ZED.KeyGen(),
 	//		StatusBar
 	IDStatusBar = ZED.KeyGen(),
 	IDStatusBarWrap = ZED.KeyGen(),
@@ -258,8 +250,6 @@
 	RMergeProgress = $(DOM.div),
 	RMergeText = ShowByClassX(DOM.Input,DOM.textarea),
 	RMergeChildren = $(ZED.flatten([RMergeProgress])),
-	//	Noti
-	RNoti = ShowByRock(IDNoti),
 	//	StatusBar
 	RStatusBar = ShowByRock(IDStatusBar),
 	RStatus = ShowByRock(IDStatus),
@@ -396,16 +386,6 @@
 	),
 	RColdCount = MakeCount(Lang.Cold),
 	RHotCount = MakeCount(Lang.Hot),
-
-	//	Save scroll state
-	MakeScroll = (M,S) =>
-	(
-		S = 0,
-		{
-			Show : () => M.scrollTop(S),
-			Hide : () => S = M.scrollTop()
-		}
-	),
 
 	//	Selectable list
 	MakeSelectableList =
@@ -950,63 +930,7 @@
 	},
 
 	//	Noti
-	MakeNotiProcessing,
-	MakeNotiPool = {},
-	MakeNotiQueue = [],
-	MakeNotiAppend = (Q,H) =>
-	{
-		MakeNotiProcessing = Util.T
-		RNoti.append(Q)
-		H = YNotiMargin + Q.outerHeight()
-		RNoti.removeAttr(DOM.cls).css(DOM.bottom,-H)
-		setTimeout(() => RNoti.attr(DOM.cls,ClassNotiTransition).removeAttr(DOM.style),50)
-	},
-	MakeNotiEnd = (S,R) =>
-	{
-		ZED.delete_(S,MakeNotiPool)
-		R.addClass(ClassNotiEnd)
-	},
-	MakeNotiNew = (S,Q,J) =>
-	{
-		var
-		Text = ShowByClass(ClassSingleLine).text(Q),
-		Close = ShowByClass(DOM.Button).text(L(Lang.Close)),
-		R = $(DOM.div);
-
-		Close.on(DOM.click,() =>
-		{
-			ZED.delete_(S,MakeNotiPool)
-			R.remove()
-			RNoti.removeAttr(DOM.cls)
-			MakeNotiTransitionEnd()
-		})
-		R.on(DOM.aniend,() => R.remove())
-		R.append(Text,Close)
-
-		if (MakeNotiProcessing) MakeNotiQueue.push(R)
-		else MakeNotiAppend(R)
-
-		J && MakeNotiEnd(S,R)
-		return (Q,J) =>
-		{
-			Text.text(Q)
-			J && MakeNotiEnd(S,R)
-		}
-	},
-	MakeNoti = (S,Q,J) =>
-	{
-		if (MakeNotiPool[S]) MakeNotiPool[S](Q,J)
-		else
-		{
-			Q = MakeNotiNew(S,Q,J)
-			J || (MakeNotiPool[S] = Q)
-		}
-	},
-	MakeNotiTransitionEnd = () =>
-	{
-		MakeNotiProcessing = Util.F
-		MakeNotiQueue.length && MakeNotiAppend(MakeNotiQueue.shift())
-	},
+	MakeNoti = ZED.Noti({Parent : RStage,Close : L(Lang.Close)}),
 	//		DB Load
 	MakeDBLoadKey = ZED.KeyGen(),
 	MakeDBLoadState = 0,
@@ -1156,14 +1080,6 @@
 			'#/MG/>div{margin-bottom:/p/px;font-size:1.2rem}' +
 			'#/MG/ ./BT/{display:inline-block;margin:0 /p/px;padding:1px 3px;font-size:1rem}' +
 			'#/MG/ textarea{min-width:100%;max-width:100%;min-height:80%}' +
-			//		Noti
-			'#/NI/{position:absolute;left:15%;bottom:0;margin-left:-/sh/px;width:70%;z-index:4000}' +
-			'./NT/{transition:bottom .2s linear}' +
-			'#/NI/>div{margin-bottom:/nm/px;padding-left:8px;background:#F0F0F0;box-shadow:0 0 /p/px rgba(0,0,0,.4)}' +
-			'./NE/{animation:/no/ 6s linear}' +
-			'#/NI/>div>*{padding:6px;vertical-align:top}' +
-			'#/NI/ ./SL/{display:inline-block}' +
-			'#/NI/ ./BT/{border-radius:0;float:right}' +
 
 			//StatusBar
 			'#/S/{padding:0 /p/px;height:/s/px}' +
@@ -1200,7 +1116,6 @@
 			'#/T/ ./B/{left:0;bottom:-/b/px;width:100%;height:/b/px;box-shadow:inset 0 /b/px /b/px -/b/px /a/;z-index:8000}' +
 			//	Navi
 			'#/N/ ./B/{right:0;top:0;width:/b/px;height:100%;box-shadow:inset -/b/px 0 /b/px -/b/px /a/}' +
-			//	Noti
 			//	StatusBar
 			'#/S/ ./B/{left:0;top:-/b/px;width:100%;height:/b/px;box-shadow:inset 0 -/b/px /b/px -/b/px /a/}' +
 
@@ -1261,13 +1176,6 @@
 				DL : ClassDetailLabel,
 				DP : IDDetailPart,
 				MG : IDMerge,
-				NI : IDNoti,
-				NT : ClassNotiTransition,
-				sh : YScrollWidthHalf,
-				NE : ClassNotiEnd,
-				nm : YNotiMargin,
-				no : ReKeyGen(),
-				NC : ClassNotiClose,
 
 				S : IDStatusBar,
 				s : YStatusBarHeight,
@@ -1298,12 +1206,7 @@
 
 				p : YPadding,
 
-				e : ZED.CSSKeyframe(ReKeyGen(Util.T),
-				{
-					'60%' : {opacity : 1},
-					to : {opacity : 0}
-				}) +
-					ZED.CSSKeyframe(ReKeyGen(Util.T),{'50%' : {transform : 'translateY(-4px)'}}) +
+				e : ZED.CSSKeyframe(ReKeyGen(Util.T),{'50%' : {transform : 'translateY(-4px)'}}) +
 					ZED.CSSKeyframe(ReKeyGen(Util.T),{to : {transform : 'rotate(360deg)'}}) +
 					ZED.CSSKeyframe(ReKeyGen(Util.T),{to : {transform : 'rotate(405deg)'}})
 			}
@@ -1428,8 +1331,6 @@
 				}
 			)
 		),
-		Show : MakeSelectableListShow,
-		BeforeHide : MakeSelectableListHide,
 		Content : (M,X) =>
 		{
 			var
@@ -1787,8 +1688,6 @@
 				.cmd(ShortCutCommand.PagePrev,MakeIndex(X,MakeClick(T[1])))
 				.cmd(ShortCutCommand.PageNext,MakeIndex(X,MakeClick(T[T.length - 2])))
 				.cmd(ShortCutCommand.PageTail,MakeIndex(X,MakeClick(ZED.last(T))))
-
-			return MakeScroll(M)
 		}
 	},{
 		Tab : RColdCount(),
@@ -2451,8 +2350,6 @@
 				p : YPadding
 			}
 		),
-		Show : MakeSelectableListShow,
-		BeforeHide : MakeSelectableListHide,
 		Content : (M,X) =>
 		{
 			var
@@ -2566,8 +2463,6 @@
 					RInfo
 				)
 			)
-
-			return MakeScroll(M)
 		}
 	},{
 		Tab : L(Lang.SignIn),
@@ -2617,8 +2512,6 @@
 				p : YPadding
 			}
 		),
-		Show : MakeSelectableListShow,
-		BeforeHide : MakeSelectableListHide,
 		Content : (M,X) =>
 		{
 			var
@@ -2757,8 +2650,6 @@
 			)
 
 			Bus.on(Event.Cookie.Change,RefreshCookie)
-
-			return MakeScroll(M)
 		}
 	},{
 		Tab : L(Lang.Shortcut),
@@ -2791,8 +2682,6 @@
 				p : YPadding
 			}
 		),
-		Show : MakeSelectableListShow,
-		BeforeHide : MakeSelectableListHide,
 		Content : M =>
 		{
 			var
@@ -2952,8 +2841,6 @@
 					ViewDevToggle()
 				})
 				.on('ctrl+a',Util.N,Util.PrevDef,Util.T)
-
-			return MakeScroll(M)
 		}
 	},{
 		Tab : L(Lang.Setting),
@@ -2977,8 +2864,6 @@
 				p : YPadding
 			}
 		),
-		Show : MakeSelectableListShow,
-		BeforeHide : MakeSelectableListHide,
 		Content : M =>
 		{
 			var
@@ -3100,8 +2985,6 @@
 			})
 			DirInput = M.find('.' + DOM.Input).eq(0).addClass(ClassSettingDir)
 			DirInput.before(MakeShape(Lang.DirSel,ShapeConfigSettingDir,ClassSettingDirOpen,DOM.div).on(DOM.click,OpenDir))
-
-			return MakeScroll(M)
 		}
 	})
 
@@ -3172,10 +3055,7 @@
 			(
 				RNavi.append(ShowByClass(ClassShadowBar))
 			),
-			RStage.append
-			(
-				RNoti.on(DOM.trsend,MakeNotiTransitionEnd)
-			)
+			RStage
 		),
 		RStatusBar.append
 		(

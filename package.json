@@ -9,18 +9,18 @@
     "build": "node Build"
   },
   "devDependencies": {
-    "electron": "^1.7.2",
-    "electron-packager": "^8.7.1",
-    "uglify-es": "^3.0.15"
+    "cli": "^1.0.1",
+    "electron": "^1.7.5",
+    "electron-packager": "^8.7.2",
+    "prompt": "^1.0.0",
+    "uglify-es": "^3.0.25"
   },
   "dependencies": {
-    "@zed.cwt/downloader": "^0.1.6",
+    "@zed.cwt/downloader": "^0.1.7",
     "@zed.cwt/jquery": "^0.0.3",
-    "@zed.cwt/zedquery": "^0.4.8",
-    "cli": "^1.0.1",
+    "@zed.cwt/zedquery": "^0.4.9",
     "graceful-fs": "^4.1.11",
     "nedb": "^1.8.0",
-    "prompt": "^1.0.0",
     "request": "^2.81.0"
   }
 }
