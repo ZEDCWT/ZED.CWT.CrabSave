@@ -1,4 +1,4 @@
-'use strict'
+﻿'use strict'
 var
 ZED = require('@zed.cwt/zedquery'),
 Observable = ZED.Observable,
@@ -137,7 +137,7 @@ R = ZED.ReduceToObject
 			W =>
 			{
 				Sign = W.SIGN
-				TrySign(Name) ? FrameRepeater.finish() : FrameRepeater.error(L(Lang.Bad))
+				TrySign(ZED.Code.MD5(Name)) ? FrameRepeater.finish() : FrameRepeater.error(L(Lang.Bad))
 			},
 			STS
 		)
@@ -167,7 +167,7 @@ R = ZED.ReduceToObject
 			))
 		))
 	),
-	KeySite.ComCheck,() => TrySign(Name) ?
+	KeySite.ComCheck,() => TrySign(ZED.Code.MD5(Name)) ?
 		Observable.empty() :
 		Observable.throw(L(Lang.ComNot)),
 	KeySite.Require,['Cookie SID','Cookie SSID'],
