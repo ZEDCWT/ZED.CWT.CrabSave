@@ -53,6 +53,7 @@ RequestPool = Pool(),
 RequestWrap = (Q,H) =>
 (
 	ZED.isObject(Q) || (Q = {url : Q}),
+	Q.forever = True,
 	Q.gzip = True,
 	H = Q.headers || (Q.headers = {}),
 	H.Accept = '*/*',
