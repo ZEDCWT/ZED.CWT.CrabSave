@@ -63,16 +63,20 @@ RequestWrap = (Q,H) =>
 RequestHead = Q =>
 (
 	RequestPool.Push(Q),
+	Q = RequestWrap(Q),
 	Observable.create((O,X) =>
 	(
-		X = Request(RequestWrap(Q)).on('error',E => O.error(E))
+		X = Request(Q).on('error',E => O.error(E))
 			.on('response',H =>
 			{
 				X.abort()
 				O.data(H).finish()
 			}),
 		() => X.abort()
-	))
+	)).retryWhen(E => E.tap(E =>
+		Q.forever ?
+			Q.forever = False :
+			ZED.Throw(E)))
 ),
 RequestBase = H => Q =>
 (
@@ -83,7 +87,10 @@ RequestBase = H => Q =>
 			O.error(E) :
 			O.data(H ? [I,R] : R).finish()),
 		() => X.abort()
-	))
+	)).retryWhen(E => E.tap(E =>
+		Q.forever ?
+			Q.forever = False :
+			ZED.Throw(E)))
 ),
 
 DebugFilter = /getaddrinfo|hang up|ECONN|EHOST|ESOCKET|ETIMEDOUT/,
