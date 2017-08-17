@@ -109,15 +109,12 @@ R = ZED.ReduceToObject
 		},W =>
 		{
 			Bishi = W.BISHI
-			try
+			if (BishiSign = Bishi.R)
 			{
-				//Sign
-				BishiSign = Bishi.R(BishiID)[BishiMethod]
-					('r',Util.N,'number number number number string string number'.split(' '))
 				FilterMenu = W.filterMenu
 				FrameRepeater.finish()
 			}
-			catch(e){FrameRepeater.error(e)}
+			else FrameRepeater.error('Failed to load sign function')
 		},BishiID && BishiMethod)
 	},
 	KeySite.Component,Say =>
@@ -131,14 +128,15 @@ R = ZED.ReduceToObject
 				//Remove initial loading
 				/(\(global\)\s*{)(?:[a-z.=]*__webpack_require__\(\d+\);)+/,'$1',
 				//Exports loader,
-				/function ([a-z]+)[^}]*?MODULE_NOT_FOUND/,'BISHI.R=$1;$&',
+				///function ([a-z]+)[^}]*?MODULE_NOT_FOUND/,'BISHI.R=$1;$&',
+				//Export call
+				/(?=[^=]+\("r",null,"(?:number )+)/,'BISHI.R=',
 				//Export url
 				/\$\.ajax\({url:([a-z.]+\([a-z]\))/,'return BISHI.U($1);$&'
 			),
 
-			BishiID = Number(Util.MF(/}],(\d+):\[func[^{]+{[^{]+{ try {/,ScriptPlayer)),
-			BishiMethod = Util.MF(/([^.])\("r",null,"(?:number )+/,ScriptPlayer),
-			Say(BishiID + ' ' + BishiMethod),
+			//BishiID = Number(Util.MF(/}],(\d+):\[func[^{]+{[^{]+{ try {/,ScriptPlayer)),
+			//BishiMethod = Util.MF(/([^.]+)\("r",null,"(?:number )+/,ScriptPlayer),
 
 			Say(Util.ReplaceLang(Lang.LoadScr,L(Lang.Search))),
 			Util.ajax(URLSearchMain).flatMap(Q =>
