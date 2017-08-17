@@ -81,9 +81,10 @@ RequestHead = Q =>
 RequestBase = H => Q =>
 (
 	RequestPool.Push(Q),
+	Q = RequestWrap(Q),
 	Observable.create((O,X) =>
 	(
-		X = Request(RequestWrap(Q),(E,I,R) => E ?
+		X = Request(Q,(E,I,R) => E ?
 			O.error(E) :
 			O.data(H ? [I,R] : R).finish()),
 		() => X.abort()
