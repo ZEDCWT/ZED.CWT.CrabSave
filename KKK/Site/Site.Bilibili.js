@@ -62,8 +62,8 @@ URLPlayer = 'http://static.hdslb.com/player/js/bilibiliPlayer.min.js',
 
 FrameTool,
 FrameRepeater = ZED.Repeater(),
-BishiID,
-BishiMethod,
+//BishiID,
+//BishiMethod,
 BishiSign,
 BishiReturned,
 BishiCall = Q => BishiReturned = Q,
@@ -95,9 +95,9 @@ R = ZED.ReduceToObject
 	KeySite.Judge,/\.bilibili\.|^av\d+$|^bilibili:\/\//i,
 	KeySite.Frame,Reg =>
 	{
-		BishiMethod = Component.Data(Name) || []
-		BishiID = BishiMethod[0]
-		BishiMethod = BishiMethod[1]
+		//BishiMethod = Component.Data(Name) || []
+		//BishiID = BishiMethod[0]
+		//BishiMethod = BishiMethod[1]
 		FrameTool = Reg(W =>
 		{
 			W.$ = W.jQuery = ZED.Merge(() => ({data : ZED.noop}),ZED.jQuery)
@@ -108,14 +108,14 @@ R = ZED.ReduceToObject
 			W.BISHI = {U : ZED.noop}
 		},W =>
 		{
-			Bishi = W.BISHI
+			Bishi = W.BISHI || {}
 			if (BishiSign = Bishi.R)
 			{
 				FilterMenu = W.filterMenu
 				FrameRepeater.finish()
 			}
 			else FrameRepeater.error('Failed to load sign function')
-		},BishiID && BishiMethod)
+		},Component.Data(Name))
 	},
 	KeySite.Component,Say =>
 	(
@@ -130,7 +130,7 @@ R = ZED.ReduceToObject
 				//Exports loader,
 				///function ([a-z]+)[^}]*?MODULE_NOT_FOUND/,'BISHI.R=$1;$&',
 				//Export call
-				/(?=[^=]+\("r",null,"(?:number )+)/,'BISHI.R=',
+				/[\w.]+\("r",null,"(?:number )+/,'BISHI.R=$&',
 				//Export url
 				/\$\.ajax\({url:([a-z.]+\([a-z]\))/,'return BISHI.U($1);$&'
 			),
@@ -150,7 +150,7 @@ R = ZED.ReduceToObject
 			))
 		)).flatMap(() =>
 		(
-			Component.Save(ZED.objOf(Name,[BishiID,BishiMethod])),
+			Component.Save(ZED.objOf(Name,9)),
 			FrameRepeater = ZED.Repeater(),
 			FrameTool[1](),
 			FrameRepeater
