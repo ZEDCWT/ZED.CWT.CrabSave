@@ -74,7 +74,7 @@ TryBishi = (Q,B) =>
 	{
 		BishiReturned = Util.F
 		Bishi.U = BishiCall
-		B ? BishiSign(1,1,Q,4,'','module=bangumi',0) : BishiSign(0,1,Q,4,'',Util.N,0)
+		B ? BishiSign(1,1,Q,4,'','module=bangumi',0) : BishiSign(0,1,Q,0,'',Util.N,0)
 	}
 	catch(e){}
 	return BishiReturned
@@ -481,12 +481,10 @@ R = ZED.ReduceToObject
 					D || ZED.Throw(L(Lang.Bad))
 					ZED.isArray(D) || (D = [D])
 					Sizes.push(ZED.pluck('size',D))
-					B = B.format
-					;/hdflv/.test(B) && (B = 'flv')
 					Part.push(D = ZED.ReduceToObject
 					(
 						KeyQueue.URL,ZED.pluck('url',D),
-						KeyQueue.Suffix,'.' + B.replace(/^hd/,'')
+						KeyQueue.Suffix,'.' + B.format.replace(/hd|720/,'')
 					))
 					V.part && Q.title !== V.part && (D[KeyQueue.Title] = V.part)
 				})
