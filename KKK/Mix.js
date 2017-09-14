@@ -1362,9 +1362,9 @@
 				InfoKeyAt,InfoKeyPages,InfoKeyPagesS
 			]),
 
-			GoError = function(Q)
+			GoError = (Q,...A) =>
 			{
-				Q = ZED.isNumber(Q) ? ReplaceLang(Q,ZED.tail(arguments)) : Q
+				Q = ZED.isNumber(Q) ? ReplaceLang(Q,A) : Q
 				RInfo.append(ShowByClass(ClassError).text(Q))
 				MakeStatus(X,Q,ClassStatusError)
 			},

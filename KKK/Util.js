@@ -156,9 +156,8 @@ module.exports =
 	writeFile : Observable.wrapNode(FS.writeFile),
 
 	//No dependencies
-	Debug : function(A)
+	Debug : (...A) =>
 	{
-		A = ZED.Arrayify(arguments)
 		A[0] = Path.basename(A[0]).replace(/\.js$/,'')
 		if (2 < A.length || !A[1] || !DebugFilter.test(A[1].message))
 		{
@@ -202,10 +201,7 @@ module.exports =
 		Q[3],Q[4],Q[5] || 0
 	),
 	PadTo : (S,Q) => ZED.FillLeft(Q,(S - 1 + '').length),
-	ReplaceLang : function(Q,S)
-	{
-		return ZED.Replace(L(Q),'/',ZED.isArray(S) ? S : ZED.tail(arguments))
-	},
+	ReplaceLang : (Q,...S) => ZED.Replace(L(Q),'/',ZED.isArray(S[0]) ? S[0] : S),
 	HeaderJoin : Q => ZED.map(ZED.join(': '),ZED.splitEvery(2,Q.rawHeaders)).join('\n'),
 	CookieSolve : Q => ZED.reduce((D,V) =>
 	{
