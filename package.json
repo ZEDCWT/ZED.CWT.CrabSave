@@ -10,7 +10,7 @@
   },
   "devDependencies": {
     "cli": "^1.0.1",
-    "electron": "^1.8.0",
+    "electron": "^1.7.7",
     "electron-packager": "^8.7.2",
     "prompt": "^1.0.0",
     "uglify-es": "^3.1.0"
