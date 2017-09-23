@@ -200,7 +200,7 @@ module.exports =
 		Q[2],
 		Q[3],Q[4],Q[5] || 0
 	),
-	PadTo : (S,Q) => ZED.FillLeft(Q,(S - 1 + '').length),
+	PadTo : (S,Q) => ZED.FillLeft(Q,0,(S - 1 + '').length),
 	ReplaceLang : (Q,...S) => ZED.Replace(L(Q),'/',ZED.isArray(S[0]) ? S[0] : S),
 	HeaderJoin : Q => ZED.map(ZED.join(': '),ZED.splitEvery(2,Q.rawHeaders)).join('\n'),
 	CookieSolve : Q => ZED.reduce((D,V) =>

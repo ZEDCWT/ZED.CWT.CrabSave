@@ -482,6 +482,7 @@ R = ZED.ReduceToObject
 			ZED.ReduceToObject
 			(
 				R,
+				KeyQueue.Title,Q.title + (ID[1] ? '.' + Util.PadTo(Q.list.length,ID[1]) : ''),
 				KeyQueue.Author,Q.author,
 				KeyQueue.Date,1000 * Q.created
 			)
