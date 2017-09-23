@@ -1681,7 +1681,7 @@
 			))
 			M.append(RList)
 			PagerBotton = ZED.Pager({Parent : M,Offset : 1},Jump)
-			UShortCut.cmd(ShortCutCommand.FocusURL,() => RURL.select())
+			UShortCut.cmd(ShortCutCommand.FocusURL,() => (RURL.focus(),RURL.select()))
 				.cmd(ShortCutCommand.SelAll,MakeIndex(X,Cold.SelAll))
 				.cmd(ShortCutCommand.UnAll,MakeIndex(X,Cold.UnAll))
 				.cmd(ShortCutCommand.PageHead,MakeIndex(X,MakeClick(T[0])))
