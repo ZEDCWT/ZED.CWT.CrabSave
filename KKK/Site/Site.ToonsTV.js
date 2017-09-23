@@ -111,7 +111,7 @@ R = ZED.ReduceToObject
 						KeySite.Title,V.title,
 						KeySite.Author,Q.title,
 						KeySite.AuthorLink,URLChannel(ID.split('/')[0]),
-						KeySite.Date,new Date(FindDate(Q,V))
+						KeySite.Date,FindDate(Q,V)
 					)]
 				)
 			))
@@ -135,7 +135,7 @@ R = ZED.ReduceToObject
 						KeySite.Title,V.title,
 						KeySite.Author,Q.title,
 						KeySite.AuthorLink,URLChannel(Q.id),
-						KeySite.Date,new Date(V.publicationTime)
+						KeySite.Date,V.publicationTime
 					),Q.videos)
 				)
 			))
@@ -164,7 +164,7 @@ R = ZED.ReduceToObject
 						KeySite.Title,O.title,
 						KeySite.Author,O.c,
 						KeySite.AuthorLink,URLChannel(O.id.split('/')[0]),
-						KeySite.Date,new Date(O.publicationTime)
+						KeySite.Date,O.publicationTime
 					))
 				}
 				return Observable.just(ZED.ReduceToObject
