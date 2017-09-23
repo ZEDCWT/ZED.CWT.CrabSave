@@ -80,6 +80,7 @@ TryBishi = (Q,B) =>
 	return BishiReturned
 },
 BishiURL = (Q,B) => TryBishi(Q,B) || URLVInfoURL(Q),
+CachedVideo = {},
 FilterMenu,
 
 Overspeed = ZED.Mark(),
@@ -200,8 +201,9 @@ R = ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Video),
 		KeySite.Judge,[/^(\d+)$/,Util.MakeLabelNumber('av')],
-		KeySite.Page,ID => Util.RequestBody(Cookie.URL(Name,URLVInfo(ID)))
-			.map(Q =>
+		KeySite.Page,(ID,X) => (1 < X && CachedVideo[ID] ?
+			Observable.just(CachedVideo[ID]) :
+			Util.RequestBody(Cookie.URL(Name,URLVInfo(ID))).map(Q =>
 			(
 				Q = ZED.JTO(Q),
 				(Q.error || Q.code) && ZED.Throw(Util.ReplaceLang
@@ -209,19 +211,34 @@ R = ZED.ReduceToObject
 					Lang.BadCE,
 					Q.code,String(Q.error || Q.message)
 				)),
+				CachedVideo[ID] = Q
+			))).map((Q,R) =>
+			(
+				R = (1 < X ? [] : [ZED.ReduceToObject
+				(
+					KeySite.ID,ID,
+					KeySite.Img,Q.pic,
+					KeySite.Title,Q.title,
+					KeySite.Author,Q.author,
+					KeySite.AuthorLink,DomainSpace + Q.mid,
+					KeySite.Date,1000 * Q.created
+				)]).concat
+				(
+					1 < Q.pages ?
+						ZED.map(V => ZED.ReduceToObject
+						(
+							KeySite.ID,ID + '#' + (V.page - 1),
+							KeySite.Index,V.page,
+							KeySite.Img,Q.pic,
+							KeySite.Title,V.part
+						),Q.list.slice(R = PageSize * (X - 1),R + PageSize)) :
+						[]
+				),
 				ZED.ReduceToObject
 				(
-					KeySite.Pages,1,
-					KeySite.Total,1,
-					KeySite.Item,[ZED.ReduceToObject
-					(
-						KeySite.ID,ID,
-						KeySite.Img,Q.pic,
-						KeySite.Title,Q.title,
-						KeySite.Author,Q.author,
-						KeySite.AuthorLink,DomainSpace + Q.mid,
-						KeySite.Date,new Date(1000 * Q.created)
-					)]
+					KeySite.Pages,Math.ceil(Q.pages / PageSize),
+					KeySite.Total,1 < Q.pages ? 1 + Q.pages : 1,
+					KeySite.Item,R
 				)
 			))
 	),ZED.ReduceToObject
@@ -247,7 +264,7 @@ R = ZED.ReduceToObject
 						KeySite.Title,V.title,
 						KeySite.Author,V.author,
 						KeySite.AuthorLink,DomainSpace + ID,
-						KeySite.Date,new Date(1000 * V.created),
+						KeySite.Date,1000 * V.created,
 						KeySite.Length,V.length
 					),Q.vlist || [])
 				)
@@ -281,7 +298,7 @@ R = ZED.ReduceToObject
 					KeySite.ID,V.av_id,
 					KeySite.Img,V.cover,
 					KeySite.Title,V.index_title,
-					KeySite.Date,new Date(V.update_time)
+					KeySite.Date,V.update_time
 				),Q.episodes))
 			)
 		))
@@ -312,7 +329,7 @@ R = ZED.ReduceToObject
 					(
 						KeySite.ID,V.aid,
 						KeySite.Title,V.title,
-						KeySite.Date,new Date(1000 * V.pubdate)
+						KeySite.Date,1000 * V.pubdate
 					),With.playlist)
 				)
 			})
@@ -341,7 +358,7 @@ R = ZED.ReduceToObject
 							KeySite.Title,V.title,
 							KeySite.Author,V.author,
 							KeySite.AuthorLink,DomainSpace + V.mid,
-							KeySite.Date,new Date(V.create),
+							KeySite.Date,V.create,
 							KeySite.Length,V.duration
 						)
 					),Q.feeds || [])
@@ -447,7 +464,7 @@ R = ZED.ReduceToObject
 				return R
 			})
 	)],
-	KeySite.URL,ID => Util.RequestBody(Cookie.URL(Name,URLVInfo(ID)))
+	KeySite.URL,ID => Util.RequestBody(Cookie.URL(Name,URLVInfo((ID = ID.split('#'))[0])))
 		.flatMap(Q =>
 		{
 			var
@@ -469,10 +486,10 @@ R = ZED.ReduceToObject
 				KeyQueue.Date,1000 * Q.created
 			)
 
-			return Util.from(Q.list)
+			return (ID[1] ? Observable.just(Q.list[ID[1]]) : Util.from(Q.list))
 				.flatMapOnline(1,V => Util.RequestBody(Cookie.URL(Name,BishiURL(V.cid,Q.bangumi),
 				{
-					Referer : 'http://www.bilibili.com/video/av' + ID
+					Referer : 'http://www.bilibili.com/video/av' + ID[0]
 				})).tap((B,D) =>
 				{
 					B = ZED.JTO(B)
@@ -487,8 +504,7 @@ R = ZED.ReduceToObject
 						KeyQueue.Suffix,'.' + B.format.replace(/hd|720/,'')
 					))
 					V.part && Q.title !== V.part && (D[KeyQueue.Title] = V.part)
-				})
-				.retryWhen(OverspeedRetry))
+				}).retryWhen(OverspeedRetry))
 				.finish()
 				.map(() =>
 				(
