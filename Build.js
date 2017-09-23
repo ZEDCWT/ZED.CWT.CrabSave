@@ -19,7 +19,7 @@ writeFile = Observable.wrapNode(FS.writeFile),
 unlink = Observable.wrapNode(FS.unlink),
 
 Output = Path.join(__dirname,'Out'),
-Compress = Q => Uglify.minify(Q.toString(),
+Compress = Q => CLI.options.nocompress ? Q : Uglify.minify(Q.toString(),
 {
 	parse :
 	{
@@ -130,7 +130,8 @@ CLI.setApp('Build','0.0.0')
 CLI.parse(
 {
 	skip : ['k','Skip choosing platform and arch'],
-	fast : ['f','Fast build (only copy project files if files of last built exist)']
+	fast : ['f','Fast build (only copy project files if files of last built exist)'],
+	nocompress : ['n','Prevent minify the codes']
 })
 ;(CLI.options.fast ? Fast : Full()).start(null,E =>
 {
