@@ -45,7 +45,7 @@ URLSpace = ZED.URLBuild(DomainSpace,'ajax/member/getSubmitVideos?mid=',Util.U,'&
 URLBangumi = ZED.URLBuild('http://bangumi.bilibili.com/jsonp/seasoninfo/',Util.U,'.ver'),
 URLMylist = ZED.URLBuild('http://www.bilibili.com/mylist/mylist-',Util.U,'.js'),
 URLDynamic = ZED.URLBuild('http://api.bilibili.com/x/feed/pull?type=0&ps=',PageSize,'&pn=',Util.U),
-URLFollowing = ZED.URLBuild('https://space.bilibili.com/ajax/friend/GetAttentionList?mid=',Util.U,'&page=',Util.U),
+URLFollowing = ZED.URLBuild('http://api.bilibili.com/x/relation/followings?vmid=',Util.U,'&pn=',Util.U),
 URLSearchMain = 'http://search.bilibili.com/all',
 URLSearch = ZED.URLBuild('http://search.bilibili.com/ajax_api/video?keyword=',Util.U,'&page=',Util.U,Util.U),
 URLSearchBangumi = ZED.URLBuild('https://app.bilibili.com/x/v2/search/type?keyword=',Util.U,'&type=1'),
@@ -374,20 +374,19 @@ R = ZED.ReduceToObject
 			Q ? Util.RequestBody(URLFollowing(Q,X)).map(Q =>
 			(
 				Q = ZED.JTO(Q),
-				Q.status || ZED.Throw(Util.ReplaceLang(Lang.BadE,Q.data)),
-				Q = Q.data,
+				Q.code && ZED.Throw(Util.ReplaceLang(Lang.BadCE,Q.code,Q.message)),
+				Q = Q.data.list,
 				ZED.ReduceToObject
 				(
-					KeySite.Pages,Q.pages,
-					KeySite.Total,Q.results,
-					KeySite.PageSize,20,
+					KeySite.Pages,1,
+					KeySite.Total,Q.length,
 					KeySite.Item,ZED.map(V => ZED.ReduceToObject
 					(
 						KeySite.ID,Util.F,
 						KeySite.Img,V.face,
 						KeySite.Author,V.uname,
-						KeySite.AuthorLink,DomainSpace + V.fid
-					),Q.list)
+						KeySite.AuthorLink,DomainSpace + V.mid
+					),Q)
 				)
 			)) : Observable.throw(L(Lang.NotSigned))
 		)
@@ -464,7 +463,7 @@ R = ZED.ReduceToObject
 				return R
 			})
 	)],
-	KeySite.URL,ID => Util.RequestBody(Cookie.URL(Name,URLVInfo((ID = ID.split('#'))[0])))
+	KeySite.URL,ID => Util.RequestBody(Cookie.URL(Name,URLVInfo((ID = ('' + ID).split('#'))[0])))
 		.flatMap(Q =>
 		{
 			var
