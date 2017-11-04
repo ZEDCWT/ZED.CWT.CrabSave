@@ -55,6 +55,7 @@ RequestWrap = (Q,H) =>
 	ZED.isObject(Q) || (Q = {url : Q}),
 	Q.forever = True,
 	Q.gzip = True,
+	Q.rejectUnauthorized = False,
 	H = Q.headers || (Q.headers = {}),
 	H.Accept = '*/*',
 	H['User-Agent'] = H['User-Agent'] || Config.UA,
