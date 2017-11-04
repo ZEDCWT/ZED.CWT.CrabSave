@@ -95,7 +95,7 @@ SubsContent = Q => Util.MA(/shelf-grid[^]+?menu-container/g,Q,Q => ZED.ReduceToO
 	KeySite.ID,Util.MF(/v=([^"&]+)/,Q),
 	KeySite.Img,Util.DecodeHTML(Util.MF(/(?:data-thumb|src(?!.*data-thumb))="([^"]+)/,Q).replace(/^\/\//,'http://')),
 	KeySite.Title,Util.DecodeHTML(Util.MF(/-title[^]+?title="([^"]+)/,Q)),
-	KeySite.Author,Util.DecodeHTML(Util.MF(/ytid[^>]+>([^<]+)/,Q)),
+	KeySite.Author,Util.DecodeHTML(Util.MF(/\/(?:user|channel)\/[^>]+>([^<]+)/,Q)),
 	KeySite.AuthorLink,URLMain + Util.MF(/\/((?:user|channel)\/[^"]+)/,Q),
 	KeySite.Date,Util.MF(/meta-info.*?<\/li.*?<li.*?>([^<]+)/,Q),
 	KeySite.Length,Util.MF(/-time"[^>]+>([^<]+)/,Q)
