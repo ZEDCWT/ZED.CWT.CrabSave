@@ -69,7 +69,7 @@ R = ZED.ReduceToObject
 	KeySite.Map,[ZED.ReduceToObject
 	(
 		KeySite.Name,'Tweet',
-		KeySite.Judge,[/status(?:es)?\/(\d+)/,Util.MakeLabelNumber('tweet')],
+		KeySite.Judge,[/^(\d+)$/,/status(?:es)?\/(\d+)/,Util.MakeLabelNumber('tweet')],
 		KeySite.Page,ID => Util.RequestBody(URLTweet(ID))
 			.map(Q =>
 			(
