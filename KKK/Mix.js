@@ -1492,7 +1492,7 @@
 						(
 							D,V[KeySite.Unique],
 							ShowByClassX(DOM.NoSelect,DOM.img)
-								.attr(DOM.src,V[KeySite.Img])
+								.attr(DOM.src,V[KeySite.Img].replace(/^(?=\/\/)/,'http:'))
 								.attr(DOM.title,V[KeySite.Title])
 						)
 					) : D.append
