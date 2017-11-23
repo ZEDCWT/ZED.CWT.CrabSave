@@ -41,6 +41,7 @@ module.exports =
 	load : 'load',
 	error : 'error',
 	mouseover : 'mouseover',
+	mousemove : 'mousemove',
 	mouseout : 'mouseout',
 	mousedown : 'mousedown',
 	mouseup : 'mouseup',

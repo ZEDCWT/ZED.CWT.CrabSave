@@ -108,6 +108,8 @@
 	//Config
 	//	Misc
 	YTabCount = 8,
+	YMousePosX,
+	YMousePosY,
 	//	Global
 	YPadding = 10,
 	YPaddingHalf = 5,
@@ -976,6 +978,7 @@
 
 
 	//Util
+	HoverTrigger = () => $(document.elementFromPoint(YMousePosX,YMousePosY)).trigger(DOM.mouseover),
 	UShortCut = ZED.ShortCut(),
 	MakeIndex = ZED.curry((X,Q,S) => !MakeCoverActive && X === UTab.Index() && Q(S),3),
 	UTab = ZED.Tab(
@@ -1331,6 +1334,8 @@
 				}
 			)
 		),
+		BeforeHide : (_,D) => D[0](),
+		Show : (_,D) => D[1](),
 		Content : (M,X) =>
 		{
 			var
@@ -1430,9 +1435,15 @@
 					}
 				}
 			},
+			Hovering,
 			Hover = (C,I,Q) => Q.on(DOM.click,() => Cold.Click(I))
-				.on(DOM.mouseover,() => C.attr(DOM.cls,ClassBrowserHover))
-				.on(DOM.mouseout,() => C.removeAttr(DOM.cls)),
+				.on(DOM.mouseover,() =>
+				(
+					HoverClear(),
+					Hovering = C.attr(DOM.cls,ClassBrowserHover)
+				))
+				.on(DOM.mouseout,HoverClear),
+			HoverClear = () => Hovering && Hovering.removeAttr(DOM.cls),
 			Render = (Q,S) =>
 			{
 				var Item = Q[KeySite.Item];
@@ -1688,6 +1699,8 @@
 				.cmd(ShortCutCommand.PagePrev,MakeIndex(X,MakeClick(T[1])))
 				.cmd(ShortCutCommand.PageNext,MakeIndex(X,MakeClick(T[T.length - 2])))
 				.cmd(ShortCutCommand.PageTail,MakeIndex(X,MakeClick(ZED.last(T))))
+
+			return [HoverClear,HoverTrigger]
 		}
 	},{
 		Tab : RColdCount(),
@@ -3069,6 +3082,12 @@
 		),
 		RHidden
 	)
+
+	$(global).on(DOM.mousemove,E =>
+	{
+		YMousePosX = E.pageX
+		YMousePosY = E.pageY
+	})
 
 	global.Debug =
 	{
