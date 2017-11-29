@@ -229,10 +229,11 @@ R = ZED.ReduceToObject
 						Util.MA(/<li[^>]*>[^]+?<\/li>/g,Q,Q =>
 						[
 							Q.replace(/<[^>]+>/g,''),
-							Util.MF(/\?[^=]+=([^&]+(?:&order=.)?)/,Q.replace(/&amp;/g,'&'))
+							Util.MF(/\?[^=]+=([^&"]+(?:&order=.)?)/,Q.replace(/&amp;/g,'&'))
 						]),
 						Util.MF(/\?([^=]+)/,Q)
 					],
+					ZED.last(Q[1])[1] || Q[1].pop(),
 					FilterMenuDef[Q[2]] = '',
 					Q
 				)),
