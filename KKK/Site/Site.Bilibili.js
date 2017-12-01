@@ -93,7 +93,7 @@ OverspeedRetry = Q => Q.tap(E => Overspeed === E || ZED.Throw(E)).delay(2000),
 R = ZED.ReduceToObject
 (
 	KeySite.Name,Name,
-	KeySite.Judge,/\.bilibili\.|^av\d+$|^bilibili:\/\//i,
+	KeySite.Judge,/^(?!.*\/t\.bilibili).*\.bilibili\.|^av\d+$|^bilibili:\/\//i,
 	KeySite.Frame,Reg =>
 	{
 		//BishiMethod = Component.Data(Name) || []

@@ -5,6 +5,7 @@ ZED = require('@zed.cwt/zedquery'),
 KeySiteName = require('../Key').Site.Name,
 
 Bilibili = require('./Site.Bilibili'),
+BilibiliDynamic = require('./Site.Bilibili.Dynamic'),
 YouTube = require('./Site.YouTube'),
 Niconico = require('./Site.NicoNico'),
 
@@ -21,6 +22,7 @@ Twitter = require('./Site.Twitter'),
 All =
 [
 	Bilibili,
+	BilibiliDynamic,
 	YouTube,
 	Niconico,
 
@@ -38,6 +40,7 @@ Map =
 {
 	bili : Bilibili,
 	b : Bilibili,
+	bd : BilibiliDynamic,
 
 	ytb : YouTube,
 	y : YouTube,
