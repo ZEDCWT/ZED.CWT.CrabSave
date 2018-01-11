@@ -81,7 +81,7 @@ TryBishi = (Q,B) =>
 		BishiReturned = Util.F
 		Bishi.U = BishiCall
 		B ?
-			BishiSign(BishiDomain[1],true,Q,4,'',`module=bangumi&season_type=${B}&qn=0`,0) :
+			BishiSign(BishiDomain[1],true,Q,4,'',`module=bangumi&season_type=${B}&qn=112`,0) :
 			BishiSign(BishiDomain[0],true,Q,0,'',Util.N,0)
 	}
 	catch(e){}
