@@ -68,13 +68,21 @@ BishiSign,
 BishiReturned,
 BishiCall = Q => BishiReturned = Q,
 Bishi,
+BishiDomain =
+[
+	'interface.bilibili.com/playurl?',
+	'bangumi.bilibili.com/player/web_api/v2/playurl?',
+	'bangumi.bilibili.com/player/web_api/playurl?'
+],
 TryBishi = (Q,B) =>
 {
 	if (BishiSign) try
 	{
 		BishiReturned = Util.F
 		Bishi.U = BishiCall
-		B ? BishiSign(1,1,Q,4,'','module=bangumi',0) : BishiSign(0,1,Q,0,'',Util.N,0)
+		B ?
+			BishiSign(BishiDomain[1],true,Q,4,'',`module=bangumi&season_type=${B}&qn=0`,0) :
+			BishiSign(BishiDomain[0],true,Q,0,'',Util.N,0)
 	}
 	catch(e){}
 	return BishiReturned
@@ -131,9 +139,9 @@ R = ZED.ReduceToObject
 				//Exports loader,
 				///function ([a-z]+)[^}]*?MODULE_NOT_FOUND/,'BISHI.R=$1;$&',
 				//Export call
-				/[\w.]+\("r",null,"(?:number )+/,'BISHI.R=$&',
+				/[\w.]+\("r",null,"(?:number|string)+/,'BISHI.R=$&',
 				//Export url
-				/\$\.ajax\({url:([a-z.]+\([a-z]\))/,'return BISHI.U($1);$&'
+				/\$\.ajax\({url:([a-z.]+\([a-z]\))/i,'return BISHI.U($1);$&'
 			),
 
 			//BishiID = Number(Util.MF(/}],(\d+):\[func[^{]+{[^{]+{ try {/,ScriptPlayer)),
@@ -486,31 +494,36 @@ R = ZED.ReduceToObject
 				KeyQueue.Date,1000 * Q.created
 			)
 
-			return (ID[1] ? Observable.just(Q.list[ID[1]]) : Util.from(Q.list))
-				.flatMapOnline(1,V => Util.RequestBody(Cookie.URL(Name,BishiURL(V.cid,Q.bangumi),
-				{
-					Referer : 'http://www.bilibili.com/video/av' + ID[0]
-				})).tap((B,D) =>
-				{
-					B = ZED.JTO(B)
-					MaybeOverspeed(B)
-					D = B.durl
-					D || ZED.Throw(L(Lang.Bad))
-					ZED.isArray(D) || (D = [D])
-					Sizes.push(ZED.pluck('size',D))
-					Part.push(D = ZED.ReduceToObject
-					(
-						KeyQueue.URL,ZED.pluck('url',D),
-						KeyQueue.Suffix,'.' + B.format.replace(/hd|720/,'')
-					))
-					V.part && Q.title !== V.part && (D[KeyQueue.Title] = V.part)
-				}).retryWhen(OverspeedRetry))
-				.finish()
-				.map(() =>
+			return Util.RequestBody(Cookie.URL(Name,URLVideo(ID[0])))
+				.flatMap(Season =>
 				(
-					R[KeyQueue.Part] = Part,
-					R[KeyQueue.Sizes] = ZED.flatten(Sizes),
-					R
+					Season = Util.MF(/season_type":(\d+)/,Season),
+					(ID[1] ? Observable.just(Q.list[ID[1]]) : Util.from(Q.list))
+					.flatMapOnline(1,V => Util.RequestBody(Cookie.URL(Name,BishiURL(V.cid,Season),
+					{
+						Referer : 'http://www.bilibili.com/video/av' + ID[0]
+					})).tap((B,D) =>
+					{
+						B = ZED.JTO(B)
+						MaybeOverspeed(B)
+						D = B.durl
+						D || ZED.Throw(L(Lang.Bad))
+						ZED.isArray(D) || (D = [D])
+						Sizes.push(ZED.pluck('size',D))
+						Part.push(D = ZED.ReduceToObject
+						(
+							KeyQueue.URL,ZED.pluck('url',D),
+							KeyQueue.Suffix,'.' + B.format.replace(/hd|720/,'')
+						))
+						V.part && Q.title !== V.part && (D[KeyQueue.Title] = V.part)
+					}).retryWhen(OverspeedRetry))
+					.finish()
+					.map(() =>
+					(
+						R[KeyQueue.Part] = Part,
+						R[KeyQueue.Sizes] = ZED.flatten(Sizes),
+						R
+					))
 				))
 		})
 		.retryWhen(OverspeedRetry),
