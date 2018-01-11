@@ -513,7 +513,7 @@ R = ZED.ReduceToObject
 						Part.push(D = ZED.ReduceToObject
 						(
 							KeyQueue.URL,ZED.pluck('url',D),
-							KeyQueue.Suffix,'.' + B.format.replace(/hd|720/,'')
+							KeyQueue.Suffix,'.' + B.format.replace(/hd/,'').replace(/flv\d+/,'flv')
 						))
 						V.part && Q.title !== V.part && (D[KeyQueue.Title] = V.part)
 					}).retryWhen(OverspeedRetry))
