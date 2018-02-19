@@ -47,7 +47,7 @@ URLMylist = ZED.URLBuild('http://www.bilibili.com/mylist/mylist-',Util.U,'.js'),
 URLDynamic = ZED.URLBuild('http://api.bilibili.com/x/feed/pull?type=0&ps=',PageSize,'&pn=',Util.U),
 URLFollowing = ZED.URLBuild('http://api.bilibili.com/x/relation/followings?vmid=',Util.U,'&pn=',Util.U),
 URLSearchMain = 'http://search.bilibili.com/all',
-URLSearch = ZED.URLBuild('http://search.bilibili.com/ajax_api/video?keyword=',Util.U,'&page=',Util.U,Util.U),
+URLSearch = ZED.URLBuild('http://search.bilibili.com/api/search?search_type=all&keyword=',Util.U,'&page=',Util.U,Util.U),
 URLSearchBangumi = ZED.URLBuild('https://app.bilibili.com/x/v2/search/type?keyword=',Util.U,'&type=1'),
 URLSearchHint = ZED.URLBuild('http://s.search.bilibili.com/main/suggest?func=suggest&sub_type=tag&tag_num=10&term=',Util.U),
 URLVInfo = ZED.URLBuild('http://api.bilibili.com/view?id=',Util.U,'&batch=1&appkey=',Appkey,'&type=json'),
@@ -66,7 +66,7 @@ FrameRepeater = ZED.Repeater(),
 //BishiMethod,
 BishiSign,
 BishiReturned,
-BishiCall = Q => BishiReturned = Q,
+// BishiCall = Q => BishiReturned = Q,
 Bishi,
 BishiDomain =
 [
@@ -79,7 +79,7 @@ TryBishi = (Q,B) =>
 	if (BishiSign) try
 	{
 		BishiReturned = Util.F
-		Bishi.U = BishiCall
+		// Bishi.U = BishiCall
 		B ?
 			BishiSign(BishiDomain[1],true,Q,4,'',`module=bangumi&season_type=${B}&qn=112`,0) :
 			BishiSign(BishiDomain[0],true,Q,0,'',Util.N,0)
@@ -104,23 +104,24 @@ R = ZED.ReduceToObject
 	KeySite.Judge,/^(?!.*\/t\.bilibili).*\.bilibili\.|^av\d+$|^bilibili:\/\//i,
 	KeySite.Frame,Reg =>
 	{
-		//BishiMethod = Component.Data(Name) || []
-		//BishiID = BishiMethod[0]
-		//BishiMethod = BishiMethod[1]
+		// BishiMethod = Component.Data(Name) || []
+		// BishiID = BishiMethod[0]
+		// BishiMethod = BishiMethod[1]
 		FrameTool = Reg(W =>
 		{
-			W.$ = W.jQuery = ZED.Merge(() => ({data : ZED.noop}),ZED.jQuery)
+			W.$ = W.jQuery = ZED.Merge(() => ({data : ZED.noop}),{ajax : Q => BishiReturned = Q && Q.url},ZED.jQuery)
 			W.setTimeout = Q => Q()
 			ZED.delete_('localStorage',W)
 			W.JSON.parse = ZED.JTO
 			Object.defineProperty(W.document,'cookie',{value : ''})
 			W.BISHI = {U : ZED.noop}
+			W.console = {log : ZED.noop}
 		},W =>
 		{
 			Bishi = W.BISHI || {}
 			if (BishiSign = Bishi.R)
 			{
-				FilterMenu = W.filterMenu
+				FilterMenu = Bishi.S
 				FrameRepeater.finish()
 			}
 			else FrameRepeater.error('Failed to load sign function')
@@ -134,29 +135,30 @@ R = ZED.ReduceToObject
 			ScriptPlayer = ZED.ReplaceList
 			(
 				ScriptPlayer,
-				//Remove initial loading
+				// Remove initial loading
 				/(\(global\)\s*{)(?:[a-z.=]*__webpack_require__\(\d+\);)+/,'$1',
-				//Exports loader,
-				///function ([a-z]+)[^}]*?MODULE_NOT_FOUND/,'BISHI.R=$1;$&',
-				//Export call
+				// Exports loader,
+				// /function ([a-z]+)[^}]*?MODULE_NOT_FOUND/,'BISHI.R=$1;$&',
+				// Export call
 				/[\w.]+\("r",null,"(?:number|string)+/,'BISHI.R=$&',
-				//Export url
-				/\$\.ajax\({url:([a-z.]+\([a-z]\))/i,'return BISHI.U($1);$&'
+				// Export url
+				// /\$\.ajax\({url:([a-z.]+\([a-z]\))/i,'return BISHI.U($1);$&'
 			),
 
-			//BishiID = Number(Util.MF(/}],(\d+):\[func[^{]+{[^{]+{ try {/,ScriptPlayer)),
-			//BishiMethod = Util.MF(/([^.]+)\("r",null,"(?:number )+/,ScriptPlayer),
+			// BishiID = Number(Util.MF(/}],(\d+):\[func[^{]+{[^{]+{ try {/,ScriptPlayer)),
+			// BishiMethod = Util.MF(/([^.]+)\("r",null,"(?:number )+/,ScriptPlayer),
 
 			Say(Util.ReplaceLang(Lang.LoadScr,L(Lang.Search))),
-			Util.ajax(URLSearchMain).flatMap(Q =>
-			(
-				Q = Util.MF(/"([^"]+search[^"]+\.js)/,Q),
-				Q ? Util.ajax(PadURL(Q)) : Observable.just('')
-			)).flatMap(Q =>
-			(
-				Say(L(Lang.FileWrite)),
-				Util.writeFile(FrameTool[0],ScriptPlayer + ZED.UTF(Q))
-			))
+			Util.ajax(URLSearchMain)
+				.flatMap(Q =>
+					(Q = Util.MU(/\/\/[^>]+search\.[^>]+\.js/,Q)) ?
+						Util.ajax(PadURL(Q)).map(V => '\n;BISHI.S=' + Util.MF(/{menus:(\[.*?\]),/,V)) :
+						Observable.just(''))
+				.flatMap(Q =>
+				(
+					Say(L(Lang.FileWrite)),
+					Util.writeFile(FrameTool[0],ScriptPlayer + ZED.UTF(Q))
+				))
 		)).flatMap(() =>
 		(
 			Component.Save(ZED.objOf(Name,9)),
@@ -403,7 +405,7 @@ R = ZED.ReduceToObject
 		KeySite.Name,L(Lang.Search),
 		KeySite.Judge,Util.RSearch,
 		KeySite.Page,(Raw,X,O) => Util.RequestBody(Util.MakeSearch(URLSearch,Raw,X,O))
-			.flatMap((Q,R) =>
+			.map((Q,R) =>
 			{
 				Q = ZED.JTO(Q)
 				Q.code && ZED.Throw(Util.ReplaceLang
@@ -411,22 +413,32 @@ R = ZED.ReduceToObject
 					Lang.BadCE,
 					Q.code,Q.text
 				))
-				Q.html || ZED.Throw(L(Lang.Bad))
+				Q.result || ZED.Throw(L(Lang.Bad))
 				R = ZED.ReduceToObject
 				(
 					KeySite.Pages,Q.numPages,
 					KeySite.Total,Q.numResults,
-					KeySite.PageSize,PageSize,
-					KeySite.Item,Util.MA(/<li[^]+?<\/li/g,Q.html,Q => ZED.ReduceToObject
+					KeySite.PageSize,Q.pagesize,
+					KeySite.Item,ZED.concat
 					(
-						KeySite.ID,Util.MF(/av(\d+)/,Q),
-						KeySite.Img,PadURL(Util.MF(/src="([^"]+)/,Q)),
-						KeySite.Title,Util.DecodeHTML(Util.MF(/title".+?title="([^"]+)/,Q)),
-						KeySite.Author,Util.DecodeHTML(Util.MF(/up-name[^>]+>([^<]+)/,Q)),
-						KeySite.AuthorLink,DomainSpace + Util.MF(/space\.[^\/]+\/(\d+)/,Q),
-						KeySite.Date,Util.MF(/-date.+?i>([^<]+)/,Q).trim(),
-						KeySite.Length,Util.MF(/_rb">([^<]+)/,Q).trim()
-					))
+						1 < X ? [] : ZED.map(V => ZED.ReduceToObject
+						(
+							KeySite.Img,PadURL(V.cover),
+							KeySite.Title,V.title,
+							KeySite.AuthorLink,V.typeurl,
+							KeySite.Date,1E3 * V.pubdate
+						),Q.result.bangumi),
+						ZED.map(V => ZED.ReduceToObject
+						(
+							KeySite.ID,V.aid,
+							KeySite.Img,PadURL(V.pic),
+							KeySite.Title,V.title,
+							KeySite.Author,V.author,
+							KeySite.AuthorLink,DomainSpace + V.mid,
+							KeySite.Date,1E3 * V.pubdate,
+							KeySite.Length,V.duration
+						),Q.result.video)
+					)
 				)
 				if (FilterMenu)
 				{
@@ -435,7 +447,7 @@ R = ZED.ReduceToObject
 					{
 						D.push(
 						[
-							V.alias,
+							V.alias = V.alias.replace(/_1/,''),
 							R = ZED.reduce((D,V) =>
 							{
 								D.push([V.name,V.val])
@@ -445,22 +457,7 @@ R = ZED.ReduceToObject
 					},[],FilterMenu)
 					R[KeySite.PrefDef] = Q
 				}
-
-				return 1 < X ?
-					Observable.just(R) :
-					Util.RequestBody(URLSearchBangumi(encodeURIComponent(Raw))).map(Q =>
-					(
-						Q = ZED.map(V => ZED.ReduceToObject
-						(
-							KeySite.Img,V.cover,
-							KeySite.Title,V.title,
-							KeySite.Author,V.param,
-							KeySite.AuthorLink,V.uri
-						),ZED.path(['data','items'],ZED.JTO(Q)) || []),
-						R[KeySite.Total] += Q.length,
-						R[KeySite.Item] = Q.concat(R[KeySite.Item]),
-						R
-					))
+				return R
 			}),
 		KeySite.Hint,Q => Util.RequestBody(URLSearchHint(encodeURIComponent(Q)))
 			.map(Q =>
