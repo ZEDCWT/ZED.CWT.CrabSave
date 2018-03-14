@@ -48,7 +48,7 @@ URLDynamic = ZED.URLBuild('http://api.bilibili.com/x/feed/pull?type=0&ps=',PageS
 URLFollowing = ZED.URLBuild('http://api.bilibili.com/x/relation/followings?vmid=',Util.U,'&pn=',Util.U),
 URLSearchMain = 'http://search.bilibili.com/all',
 URLSearch = ZED.URLBuild('http://search.bilibili.com/api/search?search_type=all&keyword=',Util.U,'&page=',Util.U,Util.U),
-URLSearchBangumi = ZED.URLBuild('https://app.bilibili.com/x/v2/search/type?keyword=',Util.U,'&type=1'),
+// URLSearchBangumi = ZED.URLBuild('https://app.bilibili.com/x/v2/search/type?keyword=',Util.U,'&type=1'),
 URLSearchHint = ZED.URLBuild('http://s.search.bilibili.com/main/suggest?func=suggest&sub_type=tag&tag_num=10&term=',Util.U),
 URLVInfo = ZED.URLBuild('http://api.bilibili.com/view?id=',Util.U,'&batch=1&appkey=',Appkey,'&type=json'),
 URLVInfoURL = Q => 'http://interface.bilibili.com/playurl?' + URLParam(
@@ -140,7 +140,7 @@ R = ZED.ReduceToObject
 				// Exports loader,
 				// /function ([a-z]+)[^}]*?MODULE_NOT_FOUND/,'BISHI.R=$1;$&',
 				// Export call
-				/[\w.]+\("r",null,"(?:number|string)+/,'BISHI.R=$&',
+				/[\w.]+\("r",null,"(?:number|string)+/,'BISHI.R=$&'
 				// Export url
 				// /\$\.ajax\({url:([a-z.]+\([a-z]\))/i,'return BISHI.U($1);$&'
 			),
