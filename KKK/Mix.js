@@ -2443,9 +2443,9 @@
 							'<script>' +
 							"top.$1$('$0$',window)" +
 							'</script>' +
-							'<script src="file:///$2$"></script>' +
 							'</head>' +
-							'<body>',
+							'<body>' +
+							'<script src="file:///$2$"></script>',
 							[V[KeySite.Name],SafeScript,JSPath.replace(/\\/g,'/')]
 						)),
 						Refresh = () => Frame.attr(DOM.src,URL);
