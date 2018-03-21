@@ -10,10 +10,10 @@
   },
   "devDependencies": {
     "cli": "^1.0.1",
-    "electron": "^1.7.11",
+    "electron": "^1.8.4",
     "electron-packager": "^8.7.2",
     "prompt": "^1.0.0",
-    "uglify-es": "^3.3.5"
+    "uglify-es": "^3.3.10"
   },
   "dependencies": {
     "@zed.cwt/downloader": "^0.1.10",
@@ -21,6 +21,6 @@
     "@zed.cwt/zedquery": "^0.4.11",
     "graceful-fs": "^4.1.11",
     "nedb": "^1.8.0",
-    "request": "^2.83.0"
+    "request": "^2.85.0"
   }
 }
