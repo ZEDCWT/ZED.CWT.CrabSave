@@ -17,6 +17,7 @@ MapDate = {},
 URLTweet = ZED.URLBuild('https://twitter.com/statuses/',Util.U),
 URLVideoDownloader = 'http://www.downloadtwittervideo.com/',
 URLVideo = ZED.URLBuild('http://server',Util.U,'.downloadtwittervideo.com/online/PreDownload.php?url=',Util.U,'&format=MP4&quality=hd&speed=',Util.U),
+URLSongLink = ZED.URLBuild('http://',Util.U,'.downloadtwittervideo.com/online/mp3.php?id=',Util.U,'&mp3=Rainbow.mp4&quality=hd&token1=',Util.U,'&token2=',Util.U),
 
 FrameTool,
 FrameRepeater = ZED.Repeater(),
@@ -93,18 +94,23 @@ R = ZED.ReduceToObject
 	{
 		url : URLVideo(ZED.Rnd(1,23),encodeURIComponent(MapCanonicalURL[ID]),SHA(MapCanonicalURL[ID])),
 		headers : {Origin : URLVideoDownloader}
-	}).map(Q => ZED.ReduceToObject
+	}).map(Q =>
 	(
-		KeyQueue.Date,MapDate[ID],
-		KeyQueue.Part,[ZED.ReduceToObject
+		Q = ZED.JTO(Q),
+		Q.Error && ZED.Throw(Q.Error),
+		ZED.ReduceToObject
 		(
-			KeyQueue.URL,[ZED.JTO(Q).FlvUrl],
-			KeyQueue.Suffix,'.mp4'
-		)]
-	)),
+			KeyQueue.Date,MapDate[ID],
+			KeyQueue.Part,[ZED.ReduceToObject
+			(
+				KeyQueue.URL,[URLSongLink(Q.Dummy,Q.Id,Q.token1,Q.token2)],
+				KeyQueue.Suffix,'.mp4'
+			)]
+		))
+	),
 	KeySite.IDView,ZED.identity,
 	KeySite.IDLink,ID => MapCanonicalURL[ID] || URLTweet(ID),
-	KeySite.Pack,ZED.identity
+	KeySite.Pack,Q => ({url : Q,forcerange : Util.F})
 );
 
 module.exports = R

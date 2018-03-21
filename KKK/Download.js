@@ -42,7 +42,7 @@ Start = (Q,I,At,URL,Done,Size) =>
 		thread : 1,
 		force : !Done[I],
 		interval : Config.Speed,
-		forcerange : Util.T,
+		forcerange : ZED.defaultTo(Util.T,URL.forcerange),
 		only200 : Util.T
 	}).on('connected',() =>
 		Dirty = Begin = Down.Info.Saved
