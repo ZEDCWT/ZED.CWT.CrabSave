@@ -113,7 +113,7 @@
 	//	Global
 	YPadding = 10,
 	YPaddingHalf = 5,
-	YScrollWidth = 16,
+	YScrollWidth = 20,
 	YShadowSize = 10,
 	YShadowColor = 'rgba(0,0,0,.4)',
 	//		ToolBar
@@ -3097,6 +3097,11 @@
 
 	$(() =>
 	{
+		var Outer = $(DOM.div),Inner = $(DOM.div);
+		Outer.css({width : 50,overflow : 'scroll'})
+		Outer.append(Inner).appendTo('body')
+		YScrollWidth = Outer.outerWidth() - Inner.outerWidth()
+		Outer.remove()
 		Rainbow.appendTo('body')
 		setTimeout(() => MakeNoti(MakeDBLoadKey,L(Lang.DB)),50)
 		Queue.Dispatch()
