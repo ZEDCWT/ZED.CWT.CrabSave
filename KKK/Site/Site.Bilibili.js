@@ -39,7 +39,7 @@ URLParam = (Q,R) =>
 URLCaptcha = 'https://passport.bilibili.com/captcha',
 URLLoginKey = 'https://passport.bilibili.com/login?act=getkey',
 URLLogin = 'https://passport.bilibili.com/login/dologin',
-URLLoginCheck = 'http://space.bilibili.com/ajax/member/MyInfo',
+URLLoginCheck = 'https://api.bilibili.com/x/web-interface/nav',
 DomainSpace = 'http://space.bilibili.com/',
 URLSpace = ZED.URLBuild(DomainSpace,'ajax/member/getSubmitVideos?mid=',Util.U,'&pagesize=',PageSize,'&page=',Util.U),
 URLBangumi = ZED.URLBuild('http://bangumi.bilibili.com/jsonp/seasoninfo/',Util.U,'.ver?callback=seasonListCallback&jsonp=jsonp'),
