@@ -433,7 +433,8 @@ R = ZED.ReduceToObject
 						(
 							KeySite.Img,PadURL(V.cover),
 							KeySite.Title,V.title,
-							KeySite.AuthorLink,V.typeurl,
+							KeySite.Author,V.season_id,
+							KeySite.AuthorLink,V.goto_url,
 							KeySite.Date,1E3 * V.pubdate
 						),Q.result.media_bangumi),
 						ZED.map(V => ZED.ReduceToObject
