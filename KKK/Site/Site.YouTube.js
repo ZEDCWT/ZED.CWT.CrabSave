@@ -28,7 +28,7 @@ URLSearch = ZED.URLBuild('https://www.googleapis.com/youtube/v3/search?part=snip
 URLSearchHint = ZED.URLBuild('https://clients1.google.com/complete/search?client=youtube&ds=yt&q=',Util.U,'&callback=_'),
 URLVInfo = ZED.URLBuild('https://www.googleapis.com/youtube/v3/videos?id=',Util.U,'&part=snippet,statistics,recordingDetails&key=',GoogleAPIKey),
 URLWatch = ZED.URLBuild('https://www.youtube.com/watch?v=',Util.U),
-URLVInfoURL = ZED.URLBuild('https://www.youtube.com/get_video_info?video_id=',Util.U,'&eurl=',Util.U,'&sts=',Util.U),
+URLVInfoURL = ZED.URLBuild('https://www.youtube.com/get_video_info?video_id=',Util.U,'&eurl=',Util.U,'&el=detailpage&sts=',Util.U),
 URLVideo = ZED.URLBuild('https://www.youtube.com/watch?v=',Util.U),
 
 FitQulity = ZED.prop('medium'),
