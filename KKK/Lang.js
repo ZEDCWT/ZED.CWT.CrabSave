@@ -72,6 +72,10 @@ module.exports =
 	BadCE : Lang('Bad response, code : /0/, message : /1/'),
 	EmptyList : Lang('No content'),
 
+	//	General.M3U
+	BadM3U : Lang('Response is not supported m3u format'),
+	NoAuthor : Lang('[No Author]'),
+
 	//Cold
 	Select : Lang('Select'),
 	AddCold : Lang('Append to cold list'),

@@ -32,7 +32,6 @@ URLVInfoURL = ZED.URLBuild('https://www.youtube.com/get_video_info?video_id=',Ut
 URLVideo = ZED.URLBuild('https://www.youtube.com/watch?v=',Util.U),
 
 FitQulity = ZED.prop('medium'),
-URLJoin = (Q,S) => Q + ('/' === S.charAt() ? S.substr(1) : S),
 
 FrameTool,
 FrameRepeater = ZED.Repeater(),
@@ -150,7 +149,7 @@ R = ZED.ReduceToObject
 			Q = ZED.JTO(Util.MF(/assets"[^}]+js":("[^"]+")/,Q)),
 			ZED.isString(Q) || ZED.Throw(L(Lang.Bad)),
 			Say(Util.ReplaceLang(Lang.LoadScr,L(Lang.Assets))),
-			Util.ajax(URLJoin(URLMain,Q)).flatMap((Q,T) =>
+			Util.ajax(Util.URLJoin(URLMain,Q)).flatMap((Q,T) =>
 			(
 				Q = Q.replace(/=[^=]+...split\(""\S+ ..join\(""/,'=SIGN$&'),
 				T = STS,
@@ -202,7 +201,7 @@ R = ZED.ReduceToObject
 		KeySite.Name,L(Lang.Subs),
 		KeySite.Judge,[/^(?:sub(?:scri(?:be|ptions?))?)?$/i],
 		KeySite.Page,(_,X) =>  1 < X && SubsActive && SubsActive[X - 2] ?
-			Util.RequestBody(Cookie.URL(Name,URLJoin(URLMain,SubsActive[X - 2]))).map((Q,R) =>
+			Util.RequestBody(Cookie.URL(Name,Util.URLJoin(URLMain,SubsActive[X - 2]))).map((Q,R) =>
 			(
 				Q = ZED.JTO(Q),
 				(Q && Q.content_html) || ZED.Throw(L(Lang.EmptyList)),

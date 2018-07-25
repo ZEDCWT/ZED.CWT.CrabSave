@@ -14,6 +14,7 @@ Lang = require('./Lang'),
 L = Lang.L,
 
 Path = require('path'),
+URL = require('url'),
 
 FS = require('graceful-fs'),
 Request = require('request').defaults({timeout : 10E3}),
@@ -203,6 +204,9 @@ module.exports =
 	),
 	PadTo : (S,Q) => ZED.FillLeft(Q,0,(S - 1 + '').length),
 	ReplaceLang : (Q,...S) => ZED.Replace(L(Q),'/',ZED.isArray(S[0]) ? S[0] : S),
+	URLExt : Q => Path.extname(Q.replace(/\?.*$/,'')),
+	URLFileName : Q => Path.basename(Q.replace(/\?.*$/,'')),
+	URLJoin : (Q,S) => URL.resolve(Q,S).replace(/^\/\//,'http://'),
 	HeaderJoin : Q => ZED.map(ZED.join(': '),ZED.splitEvery(2,Q.rawHeaders)).join('\n'),
 	CookieSolve : Q => ZED.reduce((D,V) =>
 	{
