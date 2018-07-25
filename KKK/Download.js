@@ -243,7 +243,8 @@ module.exports =
 		Sizes = Array(URL.length);
 
 		return Util.from(URL)
-			.flatMapOnline(1,(V,F) => Util.RequestHead(Pack(V,Q))
+			.flatMapOnline(1,(V,F) => ((V = Pack(V,Q)).start ? V : Observable.just(V))
+				.flatMap(Util.RequestHead)
 				.tap(H =>
 				{
 					if (200 <= H.statusCode && H.statusCode < 300)
