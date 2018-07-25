@@ -274,8 +274,8 @@ R = ZED.ReduceToObject
 					(
 						KeyQueue.URL,[U],
 						KeyQueue.Suffix,'.' + Util.MF(/e_type>([^<]+)/,Q)
-					)],
-					KeyQueue.Sizes,[Number(Util.MF(/high>([^<]+)/,Q))]
+					)]
+					// KeyQueue.Sizes,[Number(Util.MF(/high>([^<]+)/,Q))]
 				)
 			))
 		)),
