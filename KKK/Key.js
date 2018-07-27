@@ -101,6 +101,8 @@ module.exports =
 		Merge : SettingKey(),
 		Suffix : SettingKey(),
 		Tray : SettingKey(),
-		Alias : SettingKey()
+		Alias : SettingKey(),
+		Proxy : SettingKey(),
+		ProxyURL : SettingKey()
 	}
 }

@@ -2905,6 +2905,8 @@
 			MakeInput = (Q,S) => ZED.Merge({T : 'I',E : {placeholder : Default[Q]}},S),
 
 			NotiTray = () => IPCRenderer.send('Tray',Data[KeySetting.Tray]),
+			NotiProxy = ZED.debounce(1000,() =>
+				IPCRenderer.send('Proxy',Util.Proxy(Data[KeySetting.Proxy] ? Data[KeySetting.ProxyURL] : ''))),
 			RefreshStyle = S =>
 			(
 				S = ('' + Setting.Data(KeySetting.Size)).trim(),
@@ -2942,14 +2944,16 @@
 			Data = Setting.Data()
 			Setting.Default(Default)
 			Data[KeySetting.Tray] = !!Data[KeySetting.Tray]
+			Data[KeySetting.Proxy] = !!Data[KeySetting.Proxy]
 			T = Number(Data[KeySetting.Max])
 			;(0 < T && T < 11) || (T = Default[KeySetting.Max])
 			Queue.Max(Data[KeySetting.Max] = T)
 			T = Number(Data[KeySetting.Restart])
 			0 < T || (T = Default[KeySetting.Restart])
 			Queue.Wait(Data[KeySetting.Restart] = T)
-			Download.Alias(Data[KeySetting.Alias])
+			Data[KeySetting.Alias] && Download.Alias(Data[KeySetting.Alias])
 			NotiTray()
+			NotiProxy()
 			RefreshFont()
 
 			ZED.Preference(
@@ -2966,6 +2970,8 @@
 						Queue.Dispatch()
 					}],
 					[L(Lang.TTray),[[L(Lang.Yes),Util.F],[L(Lang.No),Util.T]],KeySetting.Tray,NotiTray],
+					[L(Lang.Proxy),[[L(Lang.Enabled),Util.T],[L(Lang.Disabled),Util.F]],KeySetting.Proxy,NotiProxy],
+					[L(Lang.ProxyURL),[{T : 'I',E : {placeholder : L(Lang.ProxyURLHint)}}],KeySetting.ProxyURL,NotiProxy],
 					[L(Lang.Font),[MakeInput(KeySetting.Font)],KeySetting.Font,RefreshFont],
 					[L(Lang.Size),[MakeInput(KeySetting.Size)],KeySetting.Size,RefreshFont],
 					[
@@ -2975,9 +2981,7 @@
 						RefreshFont
 					],
 					[L(Lang.RestartT),[MakeInput(KeySetting.Restart,{N : Util.T})],KeySetting.Restart,() =>
-					{
-						Queue.Wait(Data[KeySetting.Restart] || Default[KeySetting.Restart])
-					}],
+						Queue.Wait(Data[KeySetting.Restart] || Default[KeySetting.Restart])],
 					[L(Lang.MergeCmd),[{T : 'T',E : {placeholder : Default[KeySetting.Merge],rows : 8}}],KeySetting.Merge],
 					[L(Lang.MergeSuf),[MakeInput(KeySetting.Suffix)],KeySetting.Suffix],
 					[L(Lang.Alias),[

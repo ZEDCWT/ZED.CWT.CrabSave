@@ -31,11 +31,11 @@ Start = (Q,I,At,URL,Done,Size) =>
 	ZED.isObject(URL) || (URL = {url : URL})
 	Down = Downloader(
 	{
-		request : ZED.Merge(Util.F,Util.T,
+		request : Util.ProxyPack(ZED.Merge(Util.F,Util.T,
 		{
 			forever : Util.T,
 			headers : {'User-Agent' : Config.UA}
-		},URL),
+		},URL)),
 		newreq : Util.T,
 		path : At,
 		last : Q[KeyQueue.File][I] && Path.join(Q[KeyQueue.Dir],Q[KeyQueue.File][I]),

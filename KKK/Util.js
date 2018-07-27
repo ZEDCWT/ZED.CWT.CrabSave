@@ -51,12 +51,14 @@ Pool = () =>
 
 
 RequestPool = Pool(),
+Proxy = '',
 RequestWrap = (Q,H) =>
 (
 	ZED.isObject(Q) || (Q = {url : Q}),
 	Q.forever = True,
 	Q.gzip = True,
 	Q.rejectUnauthorized = False,
+	Proxy && (Q.proxy = Proxy),
 	H = Q.headers || (Q.headers = {}),
 	H.Accept = '*/*',
 	H['User-Agent'] = H['User-Agent'] || Config.UA,
@@ -135,6 +137,8 @@ module.exports =
 	//Observable
 	from : Q => Observable.from(Q,Scheduler.async),
 
+	Proxy : Q => (Proxy = 'http://' + Q,Q),
+	ProxyPack : Q => (Proxy && (Q.proxy = Proxy),Q),
 	RequestPool : RequestPool,
 	RequestHead : RequestHead,
 	RequestBody : RequestBase(False),

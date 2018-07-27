@@ -85,6 +85,13 @@ Create = () =>
 	{
 		DontCloseToTray = Q
 		Q ? TrayDestory() : TrayMake()
+	}).on('Proxy',(E,Q) =>
+	{
+		Window.webContents.session.setProxy(
+		{
+			proxyRules : Q,
+			proxyBypassRules : Q ? '<local>' : '*'
+		},ZED.noop)
 	}).on('Ping',(E,Q) => TrayIcon && TrayIcon.setToolTip(Q))
 	Window.on('close',E =>
 	{
