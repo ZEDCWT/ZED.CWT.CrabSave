@@ -137,7 +137,7 @@ module.exports =
 	//Observable
 	from : Q => Observable.from(Q,Scheduler.async),
 
-	Proxy : Q => (Proxy = 'http://' + Q,Q),
+	Proxy : Q => (Proxy = Q && 'http://' + Q,Q),
 	ProxyPack : Q => (Proxy && (Q.proxy = Proxy),Q),
 	RequestPool : RequestPool,
 	RequestHead : RequestHead,
