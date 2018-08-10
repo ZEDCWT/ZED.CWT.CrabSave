@@ -3102,9 +3102,9 @@
 	$(() =>
 	{
 		var Outer = $(DOM.div),Inner = $(DOM.div);
-		Outer.css({width : 50,overflow : 'scroll'})
+		Outer.css({width : 500,overflow : 'scroll'})
 		Outer.append(Inner).appendTo('body')
-		YScrollWidth = Outer.outerWidth() - Inner.outerWidth()
+		YScrollWidth = 1 + Outer.outerWidth() - Inner.outerWidth()
 		Outer.remove()
 		Rainbow.appendTo('body')
 		setTimeout(() => MakeNoti(MakeDBLoadKey,L(Lang.DB)),50)
