@@ -7,9 +7,10 @@ Path = require('path'),
 Env = process.env,
 
 CLI = require('cli'),
-Prompt = require('prompt'),
 FS = require('graceful-fs'),
 Uglify = require('uglify-es'),
+Packager = Observable.wrapPromise(require('electron-packager')),
+Prompt = Observable.wrapPromise(require('inquirer').prompt),
 
 exists = Observable.wrapCallback(FS.exists),
 stat = Observable.wrapNode(FS.stat),
@@ -42,18 +43,14 @@ Compress = Q => CLI.options.nocompress ? Q : Uglify.minify(Q.toString(),
 	ie8 : true
 }).code,
 
-Full = () => (CLI.options.skip ? Observable.just(process) :
-(
-	Prompt.start(),
-	Observable.wrapNode(Prompt.get,Prompt)([
-	{
-		name : 'platform',
-		default : process.platform
-	},{
-		name : 'arch',
-		default : process.arch
-	}])
-)).flatMap(Q => Observable.wrapNode(require('electron-packager'))(
+Full = () => (CLI.options.skip ? Observable.just(process) : Prompt([
+{
+	name : 'platform',
+	default : process.platform
+},{
+	name : 'arch',
+	default : process.arch
+}])).flatMap(Q => Packager(
 {
 	dir : __dirname,
 	platform : Q.platform,
@@ -62,11 +59,10 @@ Full = () => (CLI.options.skip ? Observable.just(process) :
 	ignore :
 	[
 		'/\\.vscode',
-		'/Declare',
+		'/\\.git',
 		'/KKK/Site/Template\\.js',
 		'/Old',
 		'/Build',
-		'/\\.git',
 		'/jsconfig'
 	],
 	prune : true,
@@ -77,7 +73,7 @@ Full = () => (CLI.options.skip ? Observable.just(process) :
 	R = unlink(Path.join(Q,'package-lock.json')),
 	Env.Just ? R :
 	(
-		CLI.info('Uglifing'),
+		console.log('Uglifing'),
 		R.flatMap(() => Observable.from(['','KKK','KKK/Site']).flatMap
 		(
 			P => readdir(P = Path.join(Q,P))
@@ -87,7 +83,7 @@ Full = () => (CLI.options.skip ? Observable.just(process) :
 		).flatMapOnline(1,Q => readFile(Q)
 			.flatMap(S =>
 			(
-				CLI.info(Path.relative(Output,Q)),
+				console.log(Path.relative(Output,Q)),
 				writeFile(Q,Compress(S))
 			))))
 	)
@@ -108,7 +104,7 @@ FastFolder = (Q,S) => readdir(Q)
 						FastFolder(CQ,CS) :
 						readFile(CS).flatMap(Content =>
 						(
-							CLI.info(Path.relative(Output,CQ)),
+							console.log(Path.relative(Output,CQ)),
 							writeFile(CQ,/\.js$/.test(C) ? Compress(Content) : Content)
 						))
 				) :
@@ -122,7 +118,7 @@ Fast = readdir(Output)
 	.flatMapOnline(1,Q => Observable.just()
 		.flatMap(() =>
 		(
-			CLI.info(Q),
+			console.log(Q),
 			FastFolder(Path.join(Output,Q,'resources/app'),__dirname)
 		)));
 
@@ -133,8 +129,4 @@ CLI.parse(
 	fast : ['f','Fast build (only copy project files if files of last built exist)'],
 	nocompress : ['n','Prevent minify the codes']
 })
-;(CLI.options.fast ? Fast : Full()).start(null,E =>
-{
-	console.log('Error occured')
-	console.log(E)
-},() => console.log('Done'))
+;(CLI.options.fast ? Fast : Full()).start(null,E => console.error('Error occured',E),() => console.log('Done'))
