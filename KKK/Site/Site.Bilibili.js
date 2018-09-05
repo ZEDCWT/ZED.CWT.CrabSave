@@ -44,7 +44,8 @@ DomainSpace = 'http://space.bilibili.com/',
 URLSpace = ZED.URLBuild(DomainSpace,'ajax/member/getSubmitVideos?mid=',Util.U,'&pagesize=',PageSize,'&page=',Util.U),
 URLBangumi = ZED.URLBuild('http://bangumi.bilibili.com/jsonp/seasoninfo/',Util.U,'.ver?callback=seasonListCallback&jsonp=jsonp'),
 URLMylist = ZED.URLBuild('http://www.bilibili.com/mylist/mylist-',Util.U,'.js'),
-URLDynamic = ZED.URLBuild('http://api.bilibili.com/x/feed/pull?type=0&ps=',PageSize,'&pn=',Util.U),
+URLDynamicNew = ZED.URLBuild('https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/dynamic_new?uid=',Util.U,'&type_list=8,512'),
+URLDynamicHistory = ZED.URLBuild('https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/dynamic_history?uid=',Util.U,'&type_list=8,512&offset_dynamic_id=',Util.U),
 URLFollowing = ZED.URLBuild('http://api.bilibili.com/x/relation/followings?vmid=',Util.U,'&pn=',Util.U),
 URLSearchMain = 'http://search.bilibili.com/all',
 URLSearch = ZED.URLBuild('http://search.bilibili.com/api/search?search_type=all&keyword=',Util.U,'&page=',Util.U,Util.U),
@@ -89,6 +90,7 @@ TryBishi = (Q,B,Quality) =>
 	return BishiReturned
 },
 BishiURL = (Q,B,Quality) => TryBishi(Q,B,Quality) || URLVInfoURL(Q),
+DynamicOffset = [],
 CachedVideo = {},
 FilterMenu,
 
@@ -355,33 +357,42 @@ R = ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Dynamic),
 		KeySite.Judge,[/^(?:dynamic)?$/i],
-		KeySite.Page,(_,X) => Util.RequestBody(Cookie.URL(Name,URLDynamic(X)))
-			.map(Q =>
+		KeySite.Page,(Q,X) =>
+		(
+			Q = Util.CookieTo(Cookie.Read(Name)).DedeUserID,
+			Q ? Util.RequestBody(Cookie.URL
+			(
+				Name,
+				1 < X && DynamicOffset[X - 2] ?
+					URLDynamicHistory(Q,DynamicOffset[X - 2]) :
+					URLDynamicNew(Q)
+			)).map(Q =>
 			(
 				Q = ZED.JTO(Q),
-				Q.data || ZED.Throw(Util.ReplaceLang(Lang.BadC,Q.code)),
-				Q = Q.data,
+				Q.code && ZED.Throw(Util.ReplaceLang(Lang.BadC,Q.code)),
+				Q = Q.data.cards,
+				Q.length && (DynamicOffset[X - 1] = ZED.last(Q).desc.dynamic_id),
 				ZED.ReduceToObject
 				(
-					KeySite.Pages,Math.ceil(Q.page.count / Q.page.size),
-					KeySite.Total,Q.page.count,
-					KeySite.PageSize,PageSize,
+					KeySite.Pages,1 + DynamicOffset.length,
+					KeySite.Total,Q.length,
 					KeySite.Item,ZED.map(V =>
 					(
-						V = V.addition,
+						V = ZED.JTO(V.card),
 						ZED.ReduceToObject
 						(
 							KeySite.ID,V.aid,
 							KeySite.Img,V.pic,
 							KeySite.Title,V.title,
-							KeySite.Author,V.author,
-							KeySite.AuthorLink,DomainSpace + V.mid,
-							KeySite.Date,V.create,
+							KeySite.Author,V.owner.name,
+							KeySite.AuthorLink,DomainSpace + V.owner.mid,
+							KeySite.Date,V.ctime,
 							KeySite.Length,V.duration
 						)
-					),Q.feeds || [])
+					),Q)
 				)
-			))
+			)) : Observable.Throw(L(Lang.NotSigned))
+		)
 	),ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Following),
