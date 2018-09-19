@@ -113,7 +113,8 @@ ML = (Q,S,C,J,T) =>
 	}
 },
 
-DecodeHTML = $('<div>');
+HTMLVirtualDoc = document.implementation.createHTMLDocument(),
+HTMLDiv = $('<div>');
 
 setInterval(F =>
 {
@@ -188,6 +189,7 @@ module.exports =
 	),
 	PrevDef : E => E.preventDefault(),
 	StopProp : E => E.stopPropagation(),
+	Prop : (O,K,V) => Object.defineProperty(O,K,{value : V}),
 
 	//Global dependencies
 	MU : (S,Q) => ZED.match(S,Q)[0] || '',
@@ -231,9 +233,10 @@ module.exports =
 	//Misc
 	DecodeHTML : Q =>
 	(
-		DecodeHTML.html(Q),
-		Q = DecodeHTML.text(),
-		DecodeHTML.text(''),
+		HTMLDiv.html(Q),
+		Q = HTMLDiv.text(),
+		HTMLDiv.text(''),
 		Q
-	)
+	),
+	ParseHTML : Q => $('<div>').append($(Q,HTMLVirtualDoc))
 }

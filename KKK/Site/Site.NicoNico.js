@@ -23,8 +23,9 @@ URLFollowing = ZED.URLBuild('http://www.nicovideo.jp/my/fav/user?page=',Util.U),
 URLSearch = ZED.URLBuild('http://www.nicovideo.jp/search/',Util.U,'?page=',Util.U,Util.U),
 URLSearchHint = ZED.URLBuild('http://sug.search.nicovideo.jp/suggestion/complete/',Util.U),
 URLVInfo = ZED.URLBuild('http://ext.nicovideo.jp/api/getthumbinfo/sm',Util.U),
-URLVInfoURL = ZED.URLBuild('http://flapi.nicovideo.jp/api/getflv?v=sm',Util.U),
 URLVideo = ZED.URLBuild('http://www.nicovideo.jp/watch/sm',Util.U),
+URLVideoInfo = ZED.URLBuild('http://www.nicovideo.jp/watch/sm',Util.U,'?mode=pc_html5&playlist_token=',Util.U),
+URLVIdeoSourceDMC = 'https://api.dmc.nico/api/sessions?_format=json',
 
 MaybeError = Q => /<error>/.test(Q) && ZED.Throw(Util.ReplaceLang
 (
@@ -32,6 +33,8 @@ MaybeError = Q => /<error>/.test(Q) && ZED.Throw(Util.ReplaceLang
 	Util.MF(/code>([^<]+)/,Q),
 	Util.MF(/tion>([^<]+)/,Q)
 )),
+
+BestQuality = ZED.pipe(ZED.filter(V => V.available),Util.Best('bitrate')),
 
 RepoCursor,
 FilterMenu,
@@ -257,36 +260,90 @@ R = ZED.ReduceToObject
 		KeySite.Hint,Q => Util.RequestBody(URLSearchHint(encodeURIComponent(Q)))
 			.map(Q => ZED.JTO(Q).candidates || [])
 	)],
-	KeySite.URL,ID => Util.RequestBody(Cookie.URL(Name,URLVInfo(ID)))
-		.flatMap(Q =>
+	KeySite.URL,ID => Util.RequestBody(Cookie.URL(Name,URLVideo(ID)))
+		.flatMap(Q => Util.RequestBody(Cookie.URL(Name,URLVideoInfo(ID,Util.MF(/playlistToken&quot;:&quot;([^&]+)/,Q)))))
+		.flatMap((Q,O,S) =>
 		(
-			MaybeError(Q),
-			Util.RequestBody(Cookie.URL(Name,URLVInfoURL(ID))).map(U =>
+			Q = ZED.JTO(Q),
+			O = Q.video.dmcInfo,
+			S = O.session_api,
+			Util.RequestBody(
+			{
+				url : URLVIdeoSourceDMC,
+				method : 'post',
+				form : ZED.OTJ(
+				{
+					session :
+					{
+						recipe_id : S.recipe_id,
+						content_id : S.content_id,
+						content_type : 'movie',
+						content_src_id_sets : [
+						{
+							content_src_ids : [
+							{
+								src_id_to_mux :
+								{
+									video_src_ids : [BestQuality(O.quality.videos).id],
+									audio_src_ids : [BestQuality(O.quality.audios).id]
+								}
+							}]
+						}],
+						timing_constraint : 'unlimited',
+						keep_method : {heartbeat : {lifetime : S.heartbeat_lifetime}},
+						protocol :
+						{
+							name : 'http',
+							parameters :
+							{
+								http_parameters :
+								{
+									parameters :
+									{
+										http_output_download_parameters :
+										{
+											file_extension : 'flv',
+											use_well_known_port : 'no'
+										}
+									}
+								}
+							}
+						},
+						content_uri : '',
+						session_operation_auth :
+						{
+							session_operation_auth_by_signature :
+							{
+								token : S.token,
+								signature : S.signature
+							}
+						},
+						content_auth :
+						{
+							auth_type : S.auth_types.hls,
+							content_key_timeout : S.content_key_timeout,
+							service_id : ZED.JTO(S.token).service_id,
+							service_user_id : S.service_user_id
+						},
+						client_info : {player_id : S.player_id},
+						priority : S.priority
+					}
+				})
+			}).map(U => ZED.ReduceToObject
 			(
-				U = ZED.QueryString(U).url,
-				U || ZED.Throw(Util.ReplaceLang(ZED.BadE,Q.error)),
-				ZED.ReduceToObject
+				KeyQueue.Title,Q.video.title,
+				KeyQueue.Author,Q.owner.nickname,
+				KeyQueue.Date,Q.video.postedDateTime,
+				KeyQueue.Part,[ZED.ReduceToObject
 				(
-					KeyQueue.Title,Util.DecodeHTML(Util.MF(/itle>([^<]+)/,Q)),
-					KeyQueue.Author,Util.DecodeHTML(Util.MF(/name>([^<]+)/,Q)),
-					KeyQueue.Date,Util.MF(/ieve>([^<]+)/,Q),
-					KeyQueue.Part,[ZED.ReduceToObject
-					(
-						KeyQueue.URL,[U],
-						KeyQueue.Suffix,'.' + Util.MF(/e_type>([^<]+)/,Q)
-					)]
-					// KeyQueue.Sizes,[Number(Util.MF(/high>([^<]+)/,Q))]
-				)
+					KeyQueue.URL,[ZED.JTO(U).data.session.content_uri],
+					KeyQueue.Suffix,'.flv'
+				)]
 			))
 		)),
 	KeySite.IDView,ZED.add('sm'),
 	KeySite.IDLink,URLVideo,
-	KeySite.Pack,(S,Q) => Util.RequestHead(Cookie.URL(Name,URLVideo(Q[KeyQueue.ID])))
-		.map(H =>
-		(
-			Cookie.Save(Name,H),
-			Cookie.URL(Name,S)
-		)).delay(1000)
+	KeySite.Pack,ZED.identity
 );
 
 module.exports = R

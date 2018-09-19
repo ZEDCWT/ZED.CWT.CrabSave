@@ -123,7 +123,7 @@ R = ZED.ReduceToObject
 			W.setTimeout = Q => Q()
 			ZED.delete_('localStorage',W)
 			W.JSON.parse = ZED.JTO
-			Object.defineProperty(W.document,'cookie',{value : ''})
+			Util.Prop(W.document,'cookie','')
 			W.BISHI = {U : ZED.noop}
 			W.console = {log : ZED.noop}
 		},W =>
