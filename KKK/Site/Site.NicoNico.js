@@ -1,6 +1,7 @@
 'use strict'
 var
 ZED = require('@zed.cwt/zedquery'),
+Observable = ZED.Observable,
 
 Util = require('../Util'),
 Key = require('../Key'),
@@ -261,89 +262,92 @@ R = ZED.ReduceToObject
 			.map(Q => ZED.JTO(Q).candidates || [])
 	)],
 	KeySite.URL,ID => Util.RequestBody(Cookie.URL(Name,URLVideo(ID)))
-		.flatMap(Q => Util.RequestBody(Cookie.URL(Name,URLVideoInfo(ID,Util.MF(/playlistToken&quot;:&quot;([^&]+)/,Q)))))
+		.flatMap(Q => Util.RequestFull(Cookie.URL(Name,URLVideoInfo(ID,Util.MF(/playlistToken&quot;:&quot;([^&]+)/,Q)))))
 		.flatMap((Q,O,S) =>
 		(
-			Q = ZED.JTO(Q),
-			O = Q.video.dmcInfo,
-			S = O.session_api,
-			Util.RequestBody(
-			{
-				url : URLVIdeoSourceDMC,
-				method : 'post',
-				form : ZED.OTJ(
+			Cookie.Save(Name,Q[0]),
+			Q = ZED.JTO(Q[1]),
+			((O = Q.video.dmcInfo) ?
+			(
+				S = O.session_api,
+				Util.RequestBody(
 				{
-					session :
+					url : URLVIdeoSourceDMC,
+					method : 'post',
+					form : ZED.OTJ(
 					{
-						recipe_id : S.recipe_id,
-						content_id : S.content_id,
-						content_type : 'movie',
-						content_src_id_sets : [
+						session :
 						{
-							content_src_ids : [
+							recipe_id : S.recipe_id,
+							content_id : S.content_id,
+							content_type : 'movie',
+							content_src_id_sets : [
 							{
-								src_id_to_mux :
+								content_src_ids : [
 								{
-									video_src_ids : [BestQuality(O.quality.videos).id],
-									audio_src_ids : [BestQuality(O.quality.audios).id]
-								}
-							}]
-						}],
-						timing_constraint : 'unlimited',
-						keep_method : {heartbeat : {lifetime : S.heartbeat_lifetime}},
-						protocol :
-						{
-							name : 'http',
-							parameters :
-							{
-								http_parameters :
-								{
-									parameters :
+									src_id_to_mux :
 									{
-										http_output_download_parameters :
+										video_src_ids : [BestQuality(O.quality.videos).id],
+										audio_src_ids : [BestQuality(O.quality.audios).id]
+									}
+								}]
+							}],
+							timing_constraint : 'unlimited',
+							keep_method : {heartbeat : {lifetime : S.heartbeat_lifetime}},
+							protocol :
+							{
+								name : 'http',
+								parameters :
+								{
+									http_parameters :
+									{
+										parameters :
 										{
-											file_extension : 'flv',
-											use_well_known_port : 'no'
+											http_output_download_parameters :
+											{
+												file_extension : 'flv',
+												use_well_known_port : 'no'
+											}
 										}
 									}
 								}
-							}
-						},
-						content_uri : '',
-						session_operation_auth :
-						{
-							session_operation_auth_by_signature :
+							},
+							content_uri : '',
+							session_operation_auth :
 							{
-								token : S.token,
-								signature : S.signature
-							}
-						},
-						content_auth :
-						{
-							auth_type : S.auth_types.hls,
-							content_key_timeout : S.content_key_timeout,
-							service_id : ZED.JTO(S.token).service_id,
-							service_user_id : S.service_user_id
-						},
-						client_info : {player_id : S.player_id},
-						priority : S.priority
-					}
-				})
-			}).map(U => ZED.ReduceToObject
+								session_operation_auth_by_signature :
+								{
+									token : S.token,
+									signature : S.signature
+								}
+							},
+							content_auth :
+							{
+								auth_type : S.auth_types.hls,
+								content_key_timeout : S.content_key_timeout,
+								service_id : ZED.JTO(S.token).service_id,
+								service_user_id : S.service_user_id
+							},
+							client_info : {player_id : S.player_id},
+							priority : S.priority
+						}
+					})
+				}).map(U => ZED.JTO(U).data.session.content_uri)
+			) : Observable.just(Q.video.smileInfo.url)).map(U => ZED.ReduceToObject
 			(
 				KeyQueue.Title,Q.video.title,
 				KeyQueue.Author,Q.owner.nickname,
 				KeyQueue.Date,Q.video.postedDateTime,
 				KeyQueue.Part,[ZED.ReduceToObject
 				(
-					KeyQueue.URL,[ZED.JTO(U).data.session.content_uri],
+					KeyQueue.URL,[U],
 					KeyQueue.Suffix,'.flv'
 				)]
 			))
 		)),
 	KeySite.IDView,ZED.add('sm'),
 	KeySite.IDLink,URLVideo,
-	KeySite.Pack,ZED.identity
+	KeySite.Pack,Q => Cookie.URL(Name,Q)
 );
 
 module.exports = R
