@@ -108,8 +108,8 @@
 	//Config
 	//	Misc
 	YTabCount = 8,
-	YMousePosX,
-	YMousePosY,
+	YMousePosX = 0,
+	YMousePosY = 0,
 	//	Global
 	YPadding = 10,
 	YPaddingHalf = 5,
