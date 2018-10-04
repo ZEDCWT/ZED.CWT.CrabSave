@@ -26,7 +26,7 @@ Active = {},
 
 Start = (Q,I,At,URL,Done,Size) =>
 {
-	var Begin,Down,Dirty,LowSpeedCount = 0;
+	var Begin,Down,Dirty;
 
 	ZED.isObject(URL) || (URL = {url : URL})
 	Down = Downloader(
@@ -64,37 +64,19 @@ Start = (Q,I,At,URL,Done,Size) =>
 		Done[I] = R.Saved
 		Q[KeyQueue.DoneSum] = ZED.Sum(Done)
 		Dirty || (Begin < R.Saved && (Down.Dirty = Dirty = Util.T))
-		if (URL.timeout)
-		{
-			R.Speed < 2 ? ++LowSpeedCount : LowSpeedCount = 0
-			LowSpeedCount < URL.timeout / Config.Speed ||
-			(
-				Down.Stop(),
-				Down.emit('die','Low speed')
-			)
-		}
 	}).on('done',() =>
 	{
 		Down.Dirty = Util.T
 		Download(Q)
 	}).on('die',E =>
 	{
-		//Set the downloaded size to 0 in case that the files are seems downloaded
+		//Set the downloaded size to 0 in case that the files are seemed downloaded
 		if (Size[I] <= Done[I]) Done[I] = 0
-
-		if (ZED.isNumber(E))
-		{
-			//Done[I] = 0
-			//Q[KeyQueue.File][I] = Path.basename(At)
-			Bus.emit(EventDownload.Reinfo,Q)
-		}
-		else if (0 <= Begin && Begin < Down.Info.Saved)
-		{
-			//Util.Debug(__filename,'Auto restart',Q[KeyQueue.Unique])
-			Start(Q,I,At,URL,Done,Size)
-		}
-		else
-			Bus.emit(EventDownload.Error,Q,E)
+		ZED.isNumber(E) ?
+			Bus.emit(EventDownload.Reinfo,Q) :
+			0 <= Begin && Begin < Down.Info.Saved ?
+				Start(Q,I,At,URL,Done,Size) :
+				Bus.emit(EventDownload.Error,Q,E)
 	})
 	Down.Q = Q
 	Down.D = () => 0 <= Begin && Begin < Down.Info.Saved
