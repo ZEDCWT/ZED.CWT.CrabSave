@@ -44,10 +44,6 @@ TrySign = (Q,R) =>
 	return R
 },
 
-TypeMap =
-{
-	'3gpp' : '3gp'
-},
 
 MakeReturnBySnippet = (Q,X,T) =>
 (
@@ -121,6 +117,13 @@ FilterMenuDef = ZED.reduce((D,V) =>
 		V[0] = ZED.toLower(V[0].substr(5))
 	}
 },{},FilterMenu),
+
+BestQulity = Util.Best('bitrate'),
+SolveURL = (Q,S) => ZED.ReduceToObject
+(
+	KeyQueue.URL,[(S = Q.s || Q.sig) ? Q.url + '&signature=' + TrySign(S) : Q.url],
+	KeyQueue.Suffix,'.' + Util.MF(/\/(\w+)/,Q.type)
+),
 
 R = ZED.ReduceToObject
 (
@@ -294,32 +297,38 @@ R = ZED.ReduceToObject
 		(
 			Info = ZED.path(['items',0,'snippet'],ZED.JTO(Info)),
 			Info || ZED.Throw(L(Lang.Bad)),
-			Util.RequestBody(Cookie.URL(Name,URLVInfoURL(ID,URLWatch(ID),STS))).map((URL,S) =>
-			{
-				URL = ZED.QueryString(URL).url_encoded_fmt_stream_map
-				URL || ZED.Throw(L(Lang.Bad))
-				URL = ZED.map(ZED.QueryString,URL.split(','))[0]
-				URL || ZED.Throw(L(Lang.Bad))
-				S = URL.s || URL.sig
-				if (S)
-				{
-					S = TrySign(S)
-					URL.url += '&signature=' + S
-				}
-				S = Util.MF(/video\/([^;]+)/,URL.type) || 'mp4'
-				TypeMap[S] && (S = TypeMap[S])
-
-				return ZED.ReduceToObject
+			Util.RequestBody(Cookie.URL(Name,URLVInfoURL(ID,URLWatch(ID),STS))).map(Q =>
+			(
+				Q = ZED.QueryString(Q),
+				Q.adaptive_fmts ?
 				(
-					KeyQueue.Author,Info.channelTitle,
-					KeyQueue.Date,ZED.now(new Date(Info.publishedAt)),
-					KeyQueue.Part,[ZED.ReduceToObject
+					Q = ZED.map(ZED.QueryString,Q.adaptive_fmts.split(',')),
+					Q =
+					[
+						BestQulity(Q.filter(V => /^video/.test(V.type))),
+						BestQulity(Q.filter(V => /^audio/.test(V.type)))
+					],
+					Q = ZED.ReduceToObject
 					(
-						KeyQueue.URL,[URL.url],
-						KeyQueue.Suffix,'.' + S
-					)]
+						KeyQueue.Part,[SolveURL(Q[0]),SolveURL(Q[1])],
+						KeyQueue.Sizes,[+Q[0].clen,+Q[1].clen]
+					)
+				) : (
+					Q = Q.url_encoded_fmt_stream_map,
+					Q || ZED.Throw(L(Lang.Bad)),
+					Q = ZED.map(ZED.QueryString,URL.split(',')),
+					Q = ZED.ReduceToObject
+					(
+						KeyQueue.Part,[SolveURL(Q[0])]
+					)
+				),
+				ZED.ReduceToObject
+				(
+					Q,
+					KeyQueue.Author,Info.channelTitle,
+					KeyQueue.Date,ZED.now(new Date(Info.publishedAt))
 				)
-			})
+			))
 		)),
 	KeySite.IDView,ZED.identity,
 	KeySite.IDLink,URLVideo,

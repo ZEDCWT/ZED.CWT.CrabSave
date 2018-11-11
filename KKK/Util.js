@@ -228,7 +228,7 @@ module.exports =
 		V = V.match(/^([^=]+)=([^]*)/)
 		V && (D[V[1]] = V[2])
 	},{},Q.split('; ')),
-	Best : Q => ZED.reduce(ZED.maxBy(ZED.prop(Q)),ZED.objOf(Q,-Infinity)),
+	Best : Q => ZED.reduce(ZED.maxBy(V => parseFloat(V[Q])),ZED.objOf(Q,-Infinity)),
 
 	//Misc
 	DecodeHTML : Q =>
