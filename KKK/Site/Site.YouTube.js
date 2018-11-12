@@ -119,10 +119,10 @@ FilterMenuDef = ZED.reduce((D,V) =>
 },{},FilterMenu),
 
 BestQulity = Util.Best('bitrate'),
-SolveURL = (Q,S) => ZED.ReduceToObject
+SolveURL = (Q,S,T) => ZED.ReduceToObject
 (
-	KeyQueue.URL,[(S = Q.s || Q.sig) ? Q.url + '&signature=' + TrySign(S) : Q.url],
-	KeyQueue.Suffix,'.' + Util.MF(/\/(\w+)/,Q.type)
+	KeyQueue.URL,[(T = Q.s || Q.sig) ? Q.url + '&signature=' + TrySign(T) : Q.url],
+	KeyQueue.Suffix,'.' + Util.MF(/\/(\w+)/,Q.type) + (S || '')
 ),
 
 R = ZED.ReduceToObject
@@ -310,13 +310,13 @@ R = ZED.ReduceToObject
 					],
 					Q = ZED.ReduceToObject
 					(
-						KeyQueue.Part,[SolveURL(Q[0]),SolveURL(Q[1])],
+						KeyQueue.Part,[SolveURL(Q[0]),SolveURL(Q[1],'.mp3')],
 						KeyQueue.Sizes,[+Q[0].clen,+Q[1].clen]
 					)
 				) : (
 					Q = Q.url_encoded_fmt_stream_map,
 					Q || ZED.Throw(L(Lang.Bad)),
-					Q = ZED.map(ZED.QueryString,URL.split(',')),
+					Q = ZED.map(ZED.QueryString,Q.split(',')),
 					Q = ZED.ReduceToObject
 					(
 						KeyQueue.Part,[SolveURL(Q[0])]

@@ -98,7 +98,7 @@ RequestBase = H => Q =>
 			ZED.Throw(E)))
 ),
 
-DebugFilter = /getaddrinfo|hang up|ECONN|EHOST|ESOCKET|ETIMEDOUT/,
+DebugFilter = /getaddrinfo|hang up|ECONN|EHOST|ESOCKET|ETIMEDOUT|TLS connection|Bad response/,
 DebugPool = Pool(),
 
 ML = (Q,S,C,J,T) =>
@@ -166,7 +166,7 @@ module.exports =
 	Debug : (...A) =>
 	{
 		A[0] = Path.basename(A[0]).replace(/\.js$/,'')
-		if (2 < A.length || !A[1] || !DebugFilter.test(A[1].message))
+		if (2 < A.length || !A[1] || !DebugFilter.test(A[1].message || A[1]))
 		{
 			ZED.isObject(A[1]) && DebugPool.Push(A[1])
 			A.unshift('DEBUG')
