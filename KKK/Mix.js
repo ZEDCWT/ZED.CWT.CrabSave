@@ -2946,7 +2946,7 @@
 			Data[KeySetting.Tray] = !!Data[KeySetting.Tray]
 			Data[KeySetting.Proxy] = !!Data[KeySetting.Proxy]
 			T = Number(Data[KeySetting.Max])
-			;(0 < T && T < 11) || (T = Default[KeySetting.Max])
+			;(0 < T && T < 25) || (T = Default[KeySetting.Max])
 			Queue.Max(Data[KeySetting.Max] = T)
 			T = Number(Data[KeySetting.Restart])
 			0 < T || (T = Default[KeySetting.Restart])
@@ -2964,7 +2964,7 @@
 				[
 					[L(Lang.Directory),[MakeInput(KeySetting.Dir)],KeySetting.Dir],
 					[L(Lang.FName),[DefaultName,DefaultNameFull,MakeInput(KeySetting.Name)],KeySetting.Name],
-					[L(Lang.MaxDown),ZED.range(1,11),KeySetting.Max,() =>
+					[L(Lang.MaxDown),ZED.range(1,25),KeySetting.Max,() =>
 					{
 						Queue.Max(Data[KeySetting.Max])
 						Queue.Dispatch()
