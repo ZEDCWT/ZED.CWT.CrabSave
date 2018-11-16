@@ -695,6 +695,7 @@ module.exports =
 	Wait : Q => Util.U === Q ? Wait : Wait = 1000 * (WaitDisplay = Number(Q)),
 
 	Dispatch : Dispatch,
+	Current : () => Current,
 
 	//Hot
 	IsInfo : (Q,J) => InfoNow === Q && (J ^ !DispatchInfoRefreshLast),

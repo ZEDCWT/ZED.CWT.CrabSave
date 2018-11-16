@@ -3054,8 +3054,8 @@
 	Bus.on(EventDownload.SpeedTotal,Q =>
 	{
 		Q = ZED.FormatSize(Q) + '/s'
-		RSpeed.text(Q)
-		IPCRenderer.send('Ping',`[${Queue.Online.length}] ${Q}`)
+		RSpeed.text(`[${Queue.Current()}] ${Q}`)
+		IPCRenderer.send('Ping',`[${Queue.Current()} / ${Queue.Online.length}] ${Q}`)
 	})
 
 	Rainbow.append
