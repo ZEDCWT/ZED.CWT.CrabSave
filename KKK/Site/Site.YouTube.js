@@ -305,9 +305,10 @@ R = ZED.ReduceToObject
 					Q = ZED.map(ZED.QueryString,Q.adaptive_fmts.split(',')),
 					Q =
 					[
-						BestQulity(Q.filter(V => /^video/.test(V.type))),
-						BestQulity(Q.filter(V => /^audio/.test(V.type)))
+						BestQulity(Q.filter(V => /^video/.test(V.type) && +V.clen)),
+						BestQulity(Q.filter(V => /^audio/.test(V.type) && +V.clen))
 					],
+					Q[0].clen && Q[1].clen || ZED.Throw(L(Lang.Bad)),
 					Q = ZED.ReduceToObject
 					(
 						KeyQueue.Part,[SolveURL(Q[0]),SolveURL(Q[1],'.mp3')],
