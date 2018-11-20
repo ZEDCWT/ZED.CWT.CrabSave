@@ -48,7 +48,7 @@ URLDynamicNew = ZED.URLBuild('https://api.vc.bilibili.com/dynamic_svr/v1/dynamic
 URLDynamicHistory = ZED.URLBuild('https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/dynamic_history?uid=',Util.U,'&type_list=8,512&offset_dynamic_id=',Util.U),
 URLFollowing = ZED.URLBuild('http://api.bilibili.com/x/relation/followings?vmid=',Util.U,'&pn=',Util.U),
 URLSearchMain = 'http://search.bilibili.com/all',
-URLSearch = ZED.URLBuild('http://search.bilibili.com/api/search?search_type=all&keyword=',Util.U,'&page=',Util.U,Util.U),
+URLSearch = ZED.URLBuild('http://api.bilibili.com/x/web-interface/search/all?keyword=',Util.U,'&page=',Util.U),
 // URLSearchBangumi = ZED.URLBuild('https://app.bilibili.com/x/v2/search/type?keyword=',Util.U,'&type=1'),
 URLSearchHint = ZED.URLBuild('http://s.search.bilibili.com/main/suggest?func=suggest&sub_type=tag&tag_num=10&term=',Util.U),
 URLVInfo = ZED.URLBuild('http://api.bilibili.com/view?id=',Util.U,'&batch=1&appkey=',Appkey,'&type=json'),
@@ -430,8 +430,9 @@ R = ZED.ReduceToObject
 				Q.code && ZED.Throw(Util.ReplaceLang
 				(
 					Lang.BadCE,
-					Q.code,Q.text
+					Q.code,Q.text || Q.message
 				))
+				Q = Q.data
 				Q.result || ZED.Throw(L(Lang.Bad))
 				R = ZED.ReduceToObject
 				(
