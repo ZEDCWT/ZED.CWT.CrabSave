@@ -1004,6 +1004,7 @@
 		(
 			'html,body{margin:0;padding:0;background:#F7F7F7;color:#6C6C6C;overflow:hidden}' +
 			'input,textarea{background:transparent;color:#6C6C6C;outline:0}' +
+			'textarea{min-width:100%;max-width:100%}' +
 			'::placeholder{color:#999}' +
 
 			//Rainbow
