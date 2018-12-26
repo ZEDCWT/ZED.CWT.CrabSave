@@ -105,26 +105,11 @@ Create = () =>
 		'file://' + Path.join(__dirname,'KKK/Base.htm'),
 		{userAgent : Config.UA}
 	)
-},
-
-
-
-Roll = Q =>
-{
-	if (2 < Q.length)
-	{
-
-	}
 };
 
-if (App.makeSingleInstance(Roll)) App.quit()
-else
-{
-	App.setPath('userData',Path.join(Config.Root,'UserData'))
+App.requestSingleInstanceLock() ?
 	App.on('ready',Create)
 		.on('activate',() => Created || Create())
 		.on('window-all-closed',() => 'darwin' === process.platform || App.quit())
-		//.on('browser-window-created',(E,W) => W.setMenu(null))
-
-	Roll(process.argv)
-}
+		.setPath('userData',Path.join(Config.Root,'UserData')) :
+	App.quit()
