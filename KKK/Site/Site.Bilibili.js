@@ -42,14 +42,13 @@ URLLogin = 'https://passport.bilibili.com/login/dologin',
 URLLoginCheck = 'https://api.bilibili.com/x/web-interface/nav',
 DomainSpace = 'http://space.bilibili.com/',
 URLSpace = ZED.URLBuild(DomainSpace,'ajax/member/getSubmitVideos?mid=',Util.U,'&pagesize=',PageSize,'&page=',Util.U),
-URLBangumi = ZED.URLBuild('http://bangumi.bilibili.com/jsonp/seasoninfo/',Util.U,'.ver?callback=seasonListCallback&jsonp=jsonp'),
+URLBangumi = ZED.URLBuild('https://api.bilibili.com/pgc/web/season/section?season_id=',Util.U),
 URLMylist = ZED.URLBuild('http://www.bilibili.com/mylist/mylist-',Util.U,'.js'),
 URLDynamicNew = ZED.URLBuild('https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/dynamic_new?uid=',Util.U,'&type_list=8,512'),
 URLDynamicHistory = ZED.URLBuild('https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/dynamic_history?uid=',Util.U,'&type_list=8,512&offset_dynamic_id=',Util.U),
 URLFollowing = ZED.URLBuild('http://api.bilibili.com/x/relation/followings?vmid=',Util.U,'&pn=',Util.U),
 URLSearchMain = 'http://search.bilibili.com/all',
 URLSearch = ZED.URLBuild('http://api.bilibili.com/x/web-interface/search/all?keyword=',Util.U,'&page=',Util.U),
-// URLSearchBangumi = ZED.URLBuild('https://app.bilibili.com/x/v2/search/type?keyword=',Util.U,'&type=1'),
 URLSearchHint = ZED.URLBuild('http://s.search.bilibili.com/main/suggest?func=suggest&sub_type=tag&tag_num=10&term=',Util.U),
 URLVInfo = ZED.URLBuild('http://api.bilibili.com/view?id=',Util.U,'&batch=1&appkey=',Appkey,'&type=json'),
 URLVInfoURL = Q => 'http://interface.bilibili.com/playurl?' + URLParam(
@@ -301,25 +300,17 @@ R = ZED.ReduceToObject
 				Lang.BadCE,
 				Q.code,Q.message
 			)),
-			Q = Q.result,
+			Q = Q.result.main_section,
 			ZED.ReduceToObject
 			(
 				KeySite.Pages,1,
-				KeySite.Total,Q.seasons.length + Q.episodes.length,
+				KeySite.Total,Q.episodes.length,
 				KeySite.Item,ZED.map(V => ZED.ReduceToObject
 				(
+					KeySite.ID,V.aid,
 					KeySite.Img,V.cover,
-					KeySite.Title,V.title,
-					KeySite.Author,V.season_id,
-					KeySite.AuthorLink,URLBangumi(V.season_id)
-				),Q.seasons).concat(ZED.map(V => ZED.ReduceToObject
-				(
-					KeySite.Index,V.index,
-					KeySite.ID,V.av_id,
-					KeySite.Img,V.cover,
-					KeySite.Title,V.index_title,
-					KeySite.Date,V.update_time
-				),Q.episodes))
+					KeySite.Title,V.title + ' | ' + V.long_title
+				),Q.episodes)
 			)
 		))
 	),ZED.ReduceToObject
