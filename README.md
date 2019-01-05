@@ -441,10 +441,3 @@ separated by line separators.
 npm i --dev
 npm run build
 ```
-
-I only tested it in a `Windows 7, x86` system, so errors may occur in other platforms.
-
-## Known issues
-
-- **Out of memory?** Running about 3~4 hours with an average speed around 5 MB /s, the app may crash to white screen.
-- **Bad file descriptor.** 3 times in 2250 downloads, it throws an error about bad file descriptor and crash the certain task.

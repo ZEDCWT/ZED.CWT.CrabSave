@@ -292,6 +292,8 @@ R = ZED.ReduceToObject
 				)
 			))
 	)],
+	// WARN The current resolver cannot handle the following videos
+	// 8l7IF4LW0zc kTG9wfFgv18
 	KeySite.URL,ID => Util.RequestBody(Cookie.URL(Name,URLVInfo(ID)))
 		.flatMap(Info =>
 		(
