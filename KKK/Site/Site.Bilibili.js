@@ -18,23 +18,6 @@ PageSize = 30,
 PadURL = ZED.replace(/^\/\//,'http://'),
 
 Appkey = '20bee1f7a18a425c',
-APPAppkey = '1d8b6e7d45233436',
-APPSecretKey = '560c52ccd288fed045859ed18bffd973',
-APPAccessKey = 'd83e170b84ddd7c0bb1fa5510087f13d',
-URLParam = (Q,R) =>
-(
-	Q = ZED.Merge(
-	{
-		access_key : APPAccessKey,
-		appkey : APPAppkey
-	},Q),
-	R = ZED.Reduce(Q,(D,F,V) =>
-	{
-		D.push(F + '=' + V)
-	},[]).sort(),
-	R = R.join('&'),
-	R + '&sign=' + ZED.Code.MD5(R + APPSecretKey).toLowerCase()
-),
 
 URLCaptcha = 'https://passport.bilibili.com/captcha',
 URLLoginKey = 'https://passport.bilibili.com/login?act=getkey',
@@ -48,58 +31,42 @@ URLDynamicNew = ZED.URLBuild('https://api.vc.bilibili.com/dynamic_svr/v1/dynamic
 URLDynamicHistory = ZED.URLBuild('https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/dynamic_history?uid=',Util.U,'&type_list=8,512&offset_dynamic_id=',Util.U),
 URLFollowing = ZED.URLBuild('http://api.bilibili.com/x/relation/followings?vmid=',Util.U,'&pn=',Util.U),
 URLSearchMain = 'http://search.bilibili.com/all',
-URLSearch = ZED.URLBuild('http://api.bilibili.com/x/web-interface/search/all?keyword=',Util.U,'&page=',Util.U),
+URLSearchAll = ZED.URLBuild('http://api.bilibili.com/x/web-interface/search/all?keyword=',Util.U,'&page=',Util.U,Util.U),
+URLSearchVideo = ZED.URLBuild('http://api.bilibili.com/x/web-interface/search/type?search_type=video&keyword=',Util.U,'&page=',Util.U,Util.U),
 URLSearchHint = ZED.URLBuild('http://s.search.bilibili.com/main/suggest?func=suggest&sub_type=tag&tag_num=10&term=',Util.U),
 URLVInfo = ZED.URLBuild('http://api.bilibili.com/view?id=',Util.U,'&batch=1&appkey=',Appkey,'&type=json'),
-URLVInfoURL = Q => 'http://interface.bilibili.com/playurl?' + URLParam(
-{
-	cid : Q,
-	quality : 4,
-	otype : 'json'
-}),
-URLVInfoUToken = ZED.URLBuild('https://api.bilibili.com/x/player/playurl/token?aid=',Util.U,'&cid=',Util.U,'&jsonp=jsonp'),
 URLVideo = ZED.URLBuild('http://www.bilibili.com/video/av',Util.U),
-URLPlayer = 'http://static.hdslb.com/player/js/bilibiliPlayer.min.js',
 
 FrameTool,
 FrameRepeater = ZED.Repeater(),
-//BishiID,
-//BishiMethod,
-BishiSign,
-BishiReturned,
-// BishiCall = Q => BishiReturned = Q,
 Bishi,
-BishiDomain =
-[
-	'interface.bilibili.com/v2/playurl?',
-	'bangumi.bilibili.com/player/web_api/v2/playurl?',
-	'bangumi.bilibili.com/player/web_api/playurl?'
-],
-TryBishi = (Q,B,Quality) =>
-{
-	if (BishiSign) try
-	{
-		BishiReturned = Util.F
-		// Bishi.U = BishiCall
-		B ?
-			BishiSign(BishiDomain[1],true,Q,4,'',`module=bangumi&season_type=${B}&qn=${Quality || 112}`,0) :
-			BishiSign(BishiDomain[0],true,Q,Quality || 112,'','qn=' + (Quality || 112),0)
-	}
-	catch(e){}
-	return BishiReturned
-},
-BishiURL = (Q,B,Quality) => TryBishi(Q,B,Quality) || URLVInfoURL(Q),
 DynamicOffset = [],
 CachedVideo = {},
 FilterMenu,
 
-MakeURL = (ID,CID,Season,Token,Quality) => Util.RequestBody(Cookie.URL
+MakeURL = (ID,CID,Season,Quality) => Util.RequestBody(Cookie.URL
 (
 	Name,
-	BishiURL(CID,Season,Quality) + (!Season && Token ? '&utoken=' + encodeURIComponent(Token) : ''),
-	{Referer : 'http://www.bilibili.com/video/av' + ID}
-)).map(ZED.JTO),
-
+	`https://api.bilibili.com/${Season ? 'pgc/player/web' : 'x/player'}/playurl?` + ZED.URLParam(
+	{
+		avid : ID,
+		cid : CID,
+		ep_id : Season,
+		qn : Quality || 112,
+		type : '',
+		otype : 'json',
+		fnver : 0,
+		fnval : 16,
+		session : 'Pegasus'
+	}),
+	{Referer : 'https://www.bilibili.com'}
+)).map(Q =>
+(
+	Q = ZED.JTO(Q),
+	MaybeOverspeed(Q),
+	Q.code && ZED.Throw(Util.ReplaceLang(Lang.BadCE,Q.code,Q.message)),
+	Q.data || Q.result
+)),
 Overspeed = ZED.Mark(),
 MaybeOverspeed = Q => -503 === Q.code &&
 (
@@ -107,15 +74,14 @@ MaybeOverspeed = Q => -503 === Q.code &&
 	ZED.Throw(Overspeed)
 ),
 OverspeedRetry = Q => Q.tap(E => Overspeed === E || ZED.Throw(E)).delay(2000),
+BestQuality = Util.Best('bandwidth'),
+
 R = ZED.ReduceToObject
 (
 	KeySite.Name,Name,
 	KeySite.Judge,/^(?!.*\/t\.bilibili).*\.bilibili\.|^av\d+$|^bilibili:\/\//i,
 	KeySite.Frame,Reg =>
 	{
-		// BishiMethod = Component.Data(Name) || []
-		// BishiID = BishiMethod[0]
-		// BishiMethod = BishiMethod[1]
 		FrameTool = Reg(W =>
 		{
 			W.$ = W.jQuery = ZED.Merge(() => ({data : ZED.noop}),{ajax : Q => BishiReturned = Q && Q.url},ZED.jQuery)
@@ -128,57 +94,31 @@ R = ZED.ReduceToObject
 		},W =>
 		{
 			Bishi = W.BISHI || {}
-			if (BishiSign = Bishi.R)
-			{
-				FilterMenu = Bishi.S
-				FrameRepeater.finish()
-			}
-			else FrameRepeater.error('Failed to load sign function')
+			if (FilterMenu = Bishi.S) FrameRepeater.finish()
+			else FrameRepeater.error('Failed to filter menu')
 		},Component.Data(Name))
 	},
 	KeySite.Component,Say =>
 	(
-		Say(Util.ReplaceLang(Lang.LoadScr,L(Lang.Player))),
-		Util.ajax(URLPlayer).flatMap(ScriptPlayer =>
-		(
-			ScriptPlayer = ZED.ReplaceList
+		Say(Util.ReplaceLang(Lang.LoadScr,L(Lang.Search))),
+		Util.ajax(URLSearchMain)
+			.flatMap(Q =>
+				(Q = Util.MU(/\/\/[^>]+\/search\.[^>]+\.js/,Q)) ?
+					Util.ajax(PadURL(Q)).map(V => 'BISHI.S=' + Util.Best('length')(V.match(/(?<==)\[{alias.*?](?=,.=)/g))) :
+					Observable.just(''))
+			.flatMap(Q =>
 			(
-				ScriptPlayer,
-				// Remove initial loading
-				/(\(global\)\s*{)(?:[a-z.=]*__webpack_require__\(\d+\);)+/,'$1',
-				// Exports loader,
-				// /function ([a-z]+)[^}]*?MODULE_NOT_FOUND/,'BISHI.R=$1;$&',
-				// Export call
-				/[\w.]+\("r",null,"(?:number|string)+/,'BISHI.R=$&'
-				// Export url
-				// /\$\.ajax\({url:([a-z.]+\([a-z]\))/i,'return BISHI.U($1);$&'
-			),
-
-			// BishiID = Number(Util.MF(/}],(\d+):\[func[^{]+{[^{]+{ try {/,ScriptPlayer)),
-			// BishiMethod = Util.MF(/([^.]+)\("r",null,"(?:number )+/,ScriptPlayer),
-
-			Say(Util.ReplaceLang(Lang.LoadScr,L(Lang.Search))),
-			Util.ajax(URLSearchMain)
-				.flatMap(Q =>
-					(Q = Util.MU(/\/\/[^>]+search\.[^>]+\.js/,Q)) ?
-						Util.ajax(PadURL(Q)).map(V => '\n;BISHI.S=' + Util.MF(/{menus:(\[.*?\]),/,V)) :
-						Observable.just(''))
-				.flatMap(Q =>
-				(
-					Say(L(Lang.FileWrite)),
-					Util.writeFile(FrameTool[0],ScriptPlayer + ZED.UTF(Q))
-				))
-		)).flatMap(() =>
-		(
-			Component.Save(ZED.objOf(Name,9)),
-			FrameRepeater = ZED.Repeater(),
-			FrameTool[1](),
-			FrameRepeater
-		))
+				Say(L(Lang.FileWrite)),
+				Util.writeFile(FrameTool[0],Q,'utf8')
+			)).flatMap(() =>
+			(
+				Component.Save(ZED.objOf(Name,9)),
+				FrameRepeater = ZED.Repeater(),
+				FrameTool[1](),
+				FrameRepeater
+			))
 	),
-	KeySite.ComCheck,() => TryBishi(0) ?
-		Observable.empty() :
-		Observable.throw(L(Lang.ComNot)),
+	KeySite.ComCheck,() => Observable.empty(),
 	KeySite.VCode,() => Util.RequestFull(
 	{
 		url : URLCaptcha,
@@ -414,7 +354,7 @@ R = ZED.ReduceToObject
 	(
 		KeySite.Name,L(Lang.Search),
 		KeySite.Judge,Util.RSearch,
-		KeySite.Page,(Raw,X,O) => Util.RequestBody(Util.MakeSearch(URLSearch,Raw,X,O))
+		KeySite.Page,(Raw,X,O) => Util.RequestBody(Util.MakeSearch(O.order ? URLSearchVideo : URLSearchAll,Raw,X,O))
 			.map((Q,R) =>
 			{
 				Q = ZED.JTO(Q)
@@ -439,7 +379,7 @@ R = ZED.ReduceToObject
 							KeySite.Author,V.season_id,
 							KeySite.AuthorLink,V.goto_url,
 							KeySite.Date,1E3 * V.pubdate
-						),Q.result.media_bangumi),
+						),Q.result.media_bangumi || []),
 						ZED.map(V => ZED.ReduceToObject
 						(
 							KeySite.ID,V.aid,
@@ -449,7 +389,7 @@ R = ZED.ReduceToObject
 							KeySite.AuthorLink,DomainSpace + V.mid,
 							KeySite.Date,1E3 * V.pubdate,
 							KeySite.Length,V.duration
-						),Q.result.video)
+						),Q.result.video || Q.result)
 					)
 				)
 				if (FilterMenu)
@@ -462,7 +402,7 @@ R = ZED.ReduceToObject
 							V.alias = V.alias.replace(/_1/,''),
 							R = ZED.reduce((D,V) =>
 							{
-								D.push([V.name,V.val])
+								D.push([V.name,D.length ? V.val : ''])
 							},[],V.cell)
 						])
 						Q[V.alias] = R[0][1]
@@ -506,33 +446,41 @@ R = ZED.ReduceToObject
 			return Util.RequestBody(Cookie.URL(Name,URLVideo(ID[0])))
 				.flatMap(Season =>
 				(
-					Season = Util.MF(/season_type":(\d+)/,Season),
+					Season = Util.MF(/ep_id":(\d+)/,Season),
 					(ID[1] ? Observable.just(Q.list[ID[1]]) : Util.from(Q.list))
-						.flatMapOnline(1,V => Util.RequestBody(Cookie.URL(Name,URLVInfoUToken(ID[0],V.cid)))
-							.flatMap(Token =>
+						.flatMapOnline(1,V => MakeURL(ID[0],V.cid,Season)
+							.flatMap((B,T) =>
 							(
-								Token = ZED.path(['data','token'],ZED.JTO(Token)),
-								MakeURL(ID[0],V.cid,Season,Token)
-									.flatMap((B,T) =>
-									(
-										T = B.accept_quality && Math.max(...B.accept_quality),
-										T && B.quality < T ?
-											MakeURL(ID[0],V.cid,Season,Token,T) :
-											Observable.just(B)
-									))
+								T = B.accept_quality && Math.max(...B.accept_quality),
+								T && B.quality < T ?
+									MakeURL(ID[0],V.cid,Season,T) :
+									Observable.just(B)
 							))
 							.tap((B,D) =>
 							{
-								MaybeOverspeed(B)
-								D = B.durl
-								D || ZED.Throw(L(Lang.Bad))
-								ZED.isArray(D) || (D = [D])
-								Sizes.push(ZED.pluck('size',D))
-								Part.push(D = ZED.ReduceToObject
-								(
-									KeyQueue.URL,ZED.pluck('url',D),
-									KeyQueue.Suffix,'.' + B.format.replace(/hd/,'').replace(/^flv.+/,'flv')
-								))
+								if (D = B.durl)
+								{
+									ZED.isArray(D) || (D = [D])
+									Sizes.push(ZED.pluck('size',D))
+									Part.push(D = ZED.ReduceToObject
+									(
+										KeyQueue.URL,ZED.pluck('url',D),
+										KeyQueue.Suffix,'.' + B.format.replace(/hd/,'').replace(/^flv.+/,'flv')
+									))
+								}
+								else if (D = B.dash)
+								{
+									Part.push(ZED.ReduceToObject
+									(
+										KeyQueue.URL,[BestQuality(D.video).baseUrl],
+										KeyQueue.Suffix,'.mp4'
+									),ZED.ReduceToObject
+									(
+										KeyQueue.URL,[BestQuality(D.audio).baseUrl],
+										KeyQueue.Suffix,'.mp3'
+									))
+								}
+								else ZED.Throw(L(Lang.Bad))
 								V.part && Q.title !== V.part && (D[KeyQueue.Title] = V.part)
 							}).retryWhen(OverspeedRetry))
 					.finish()
