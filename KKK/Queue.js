@@ -345,6 +345,7 @@ Finish = (Q,T,F) =>
 	{
 		Q[KeyQueue.IDHis] = Q[KeyQueue.Unique] + '.' + ZED.now() + '.' + ZED.Code.MD5(Math.random()).substr(0,8)
 		Q[KeyQueue.Finished] = ZED.now()
+		Q[KeyQueue.Size] = ZED.Sum(Q[KeyQueue.Sizes])
 		ZED.delete_(KeyQueue.Active,Q)
 		ZED.delete_(KeyQueue.Format,Q)
 		ZED.delete_(KeyQueue.Root,Q)
