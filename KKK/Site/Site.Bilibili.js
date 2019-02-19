@@ -82,16 +82,7 @@ R = ZED.ReduceToObject
 	KeySite.Judge,/^(?!.*\/t\.bilibili).*\.bilibili\.|^av\d+$|^bilibili:\/\//i,
 	KeySite.Frame,Reg =>
 	{
-		FrameTool = Reg(W =>
-		{
-			W.$ = W.jQuery = ZED.Merge(() => ({data : ZED.noop}),{ajax : Q => BishiReturned = Q && Q.url},ZED.jQuery)
-			W.setTimeout = Q => Q()
-			ZED.delete_('localStorage',W)
-			W.JSON.parse = ZED.JTO
-			Util.Prop(W.document,'cookie','')
-			W.BISHI = {U : ZED.noop}
-			W.console = {log : ZED.noop}
-		},W =>
+		FrameTool = Reg(ZED.noop,W =>
 		{
 			Bishi = W.BISHI || {}
 			if (FilterMenu = Bishi.S) FrameRepeater.finish()
@@ -487,7 +478,7 @@ R = ZED.ReduceToObject
 					.map(() =>
 					(
 						R[KeyQueue.Part] = Part,
-						R[KeyQueue.Sizes] = ZED.flatten(Sizes),
+						Sizes.length && (R[KeyQueue.Sizes] = ZED.flatten(Sizes)),
 						R
 					))
 				))
