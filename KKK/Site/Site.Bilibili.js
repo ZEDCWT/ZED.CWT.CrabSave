@@ -82,9 +82,8 @@ R = ZED.ReduceToObject
 	KeySite.Judge,/^(?!.*\/t\.bilibili).*\.bilibili\.|^av\d+$|^bilibili:\/\//i,
 	KeySite.Frame,Reg =>
 	{
-		FrameTool = Reg(ZED.noop,W =>
+		FrameTool = Reg(W => Bishi = W.BISHI = {},() =>
 		{
-			Bishi = W.BISHI || {}
 			if (FilterMenu = Bishi.S) FrameRepeater.finish()
 			else FrameRepeater.error('Failed to filter menu')
 		},Component.Data(Name))
@@ -461,14 +460,10 @@ R = ZED.ReduceToObject
 								}
 								else if (D = B.dash)
 								{
-									Part.push(ZED.ReduceToObject
+									Part.push(D = ZED.ReduceToObject
 									(
-										KeyQueue.URL,[BestQuality(D.video).baseUrl],
-										KeyQueue.Suffix,'.mp4'
-									),ZED.ReduceToObject
-									(
-										KeyQueue.URL,[BestQuality(D.audio).baseUrl],
-										KeyQueue.Suffix,'.mp3'
+										KeyQueue.URL,[BestQuality(D.video).baseUrl,BestQuality(D.audio).baseUrl],
+										KeyQueue.Suffix,['.mp4','.mp3']
 									))
 								}
 								else ZED.Throw(L(Lang.Bad))

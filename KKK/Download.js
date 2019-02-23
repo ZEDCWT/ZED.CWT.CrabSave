@@ -118,7 +118,7 @@ MakeFileName = (Q,PL,UL,Part,F,Fa,I,D,T) =>
 		),
 		'|',
 		T
-	) + Part[KeyQueue.Suffix]
+	) + (ZED.isString(Part[KeyQueue.Suffix]) ? Part[KeyQueue.Suffix] : Part[KeyQueue.Suffix][Fa])
 	if (!Q[KeyQueue.Root]) Q[KeyQueue.Root] = Setting.Data(KeySetting.Dir)
 	T = Path.join(Q[KeyQueue.Root],T)
 	if (!Q[KeyQueue.Dir])
