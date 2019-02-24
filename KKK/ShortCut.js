@@ -13,6 +13,7 @@ Command =
 	PrevTab : 'Global.PrevTab',
 	NextTab : 'Global.NextTab',
 	CloseCover : 'Global.CloseCover',
+	ToggleProxy : 'Global.ToggleProxy',
 	ToggleDev : 'Global.ToggleDev',
 	Reload : 'Global.Reload',
 
@@ -40,6 +41,7 @@ DefaultMap = ZED.ReduceToObject
 	Command.NextTab,[[']',SwitchDown]],
 	Command.CloseCover,'esc',
 	Command.Reload,'ctrl+r',
+	Command.ToggleProxy,['alt+p'],
 	Command.ToggleDev,['shift+alt+d','f12'],
 
 	Command.FocusURL,[['f1',SwitchDown]],

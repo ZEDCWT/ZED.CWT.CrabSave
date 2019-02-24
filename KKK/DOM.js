@@ -61,6 +61,7 @@ module.exports =
 	Tab : Prefix + 'TabTab',
 	TabOn : Prefix + 'TabOn',
 	Pager : Prefix + 'Pager',
+	PreferenceContent : Prefix + 'PreferenceContent',
 	ListView : Prefix + 'ListView',
 	ListViewParent : Prefix + 'ListViewParent',
 	ListViewItem : Prefix + 'ListViewItem',

@@ -136,6 +136,8 @@ module.exports =
 	Close : Lang('Close'),
 	DB : Lang('Loading Databases...'),
 	DBDone : Lang('Databases loaded in /0/ms'),
+	ProxyEnabled : Lang('Proxy enabled'),
+	ProxyDisabled : Lang('Proxy disabled'),
 	DevOpen : Lang('Opening DevTools'),
 	DevClose : Lang('Closing DevTools'),
 
@@ -185,6 +187,7 @@ module.exports =
 	NextTab : Lang('Navigate to the next tab'),
 	CloseCover : Lang('Close covering pages (Detail or Merge page)'),
 	Reload : Lang('Reload'),
+	ToggleProxy : Lang('Toggle proxxy'),
 	ToggleDev : Lang('Toggle developer tools'),
 	SelClear : Lang('Clear selection'),
 	PageHead : Lang('Navigate to the first page'),

@@ -2906,6 +2906,7 @@
 			MakeInput = (Q,S) => ZED.Merge({T : 'I',E : {placeholder : Default[Q]}},S),
 
 			NotiTray = () => IPCRenderer.send('Tray',Data[KeySetting.Tray]),
+			RProxy,
 			NotiProxy = ZED.debounce(1000,() =>
 				IPCRenderer.send('Proxy',Util.Proxy(Data[KeySetting.Proxy] ? Data[KeySetting.ProxyURL] : ''))),
 			RefreshStyle = S =>
@@ -3003,6 +3004,12 @@
 			})
 			DirInput = M.find('.' + DOM.Input).eq(0).addClass(ClassSettingDir)
 			DirInput.before(MakeShape(Lang.DirSel,ShapeConfigSettingDir,ClassSettingDirOpen,DOM.div).on(DOM.click,OpenDir))
+			RProxy = M.find('.' + DOM.PreferenceContent).eq(4).children()
+			UShortCut.cmd(ShortCutCommand.ToggleProxy,() =>
+			{
+				RProxy.eq(Data[KeySetting.Proxy] ? 1 : 0).click()
+				MakeNoti(Util.U,L(Data[KeySetting.Proxy] ? Lang.ProxyEnabled : Lang.ProxyDisabled),Util.T)
+			})
 		}
 	})
 
