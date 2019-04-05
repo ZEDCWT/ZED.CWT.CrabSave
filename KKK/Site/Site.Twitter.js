@@ -110,7 +110,7 @@ R = ZED.ReduceToObject
 	),
 	KeySite.IDView,ZED.identity,
 	KeySite.IDLink,ID => MapCanonicalURL[ID] || URLTweet(ID),
-	KeySite.Pack,Q => ({url : Q,forcerange : Util.F})
+	KeySite.Pack,Q => ({url : Q,ForceRange : Util.F})
 );
 
 module.exports = R

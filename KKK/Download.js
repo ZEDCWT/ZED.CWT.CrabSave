@@ -31,26 +31,23 @@ Start = (Q,I,At,URL,Done,Size) =>
 	ZED.isObject(URL) || (URL = {url : URL})
 	Down = Downloader(
 	{
-		request : Util.ProxyPack(ZED.Merge(Util.F,Util.T,
+		Req : Util.ProxyPack(ZED.Merge(Util.F,Util.T,
 		{
 			forever : Util.T,
 			headers : {'User-Agent' : Config.UA}
 		},URL)),
-		newreq : Util.T,
-		path : At,
-		last : Q[KeyQueue.File][I] && Path.join(Q[KeyQueue.Dir],Q[KeyQueue.File][I]),
-		thread : 1,
-		force : !Done[I],
-		interval : Config.Speed,
-		forcerange : ZED.defaultTo(Util.T,URL.forcerange),
-		only200 : Util.T
-	}).on('connected',() =>
+		Path : Q[KeyQueue.File][I] ? Path.join(Q[KeyQueue.Dir],Q[KeyQueue.File][I]) : At,
+		Fresh : !Done[I],
+		Only200 : Util.T,
+		ForceRange : ZED.defaultTo(Util.T,URL.ForceRange),
+		Interval : Config.Speed
+	}).on('Connected',() =>
 		Dirty = Begin = Down.Info.Saved
-	).on('size',Q =>
+	).on('Size',Q =>
 	{
 		Size[I] = Q
 		Down.Dirty = Util.T
-	}).on('path',S =>
+	}).on('Path',S =>
 	{
 		S = Path.basename(S)
 		Q[KeyQueue.File][I] === S ||
@@ -59,16 +56,16 @@ Start = (Q,I,At,URL,Done,Size) =>
 			Bus.emit(EventDownload.File,Q,S,I),
 			Down.Dirty = Util.T
 		)
-	}).on('data',R =>
+	}).on('Data',R =>
 	{
 		Done[I] = R.Saved
 		Q[KeyQueue.DoneSum] = ZED.Sum(Done)
 		Dirty || (Begin < R.Saved && (Down.Dirty = Dirty = Util.T))
-	}).on('done',() =>
+	}).on('Done',() =>
 	{
 		Down.Dirty = Util.T
 		Download(Q)
-	}).on('die',E =>
+	}).on('Die',E =>
 	{
 		//Set the downloaded size to 0 in case that the files are seemed downloaded
 		if (Size[I] <= Done[I]) Done[I] = 0
