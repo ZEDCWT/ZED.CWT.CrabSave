@@ -36,7 +36,8 @@ Start = (Q,I,At,URL,Done,Size) =>
 			forever : Util.T,
 			headers : {'User-Agent' : Config.UA}
 		},URL)),
-		Path : Q[KeyQueue.File][I] ? Path.join(Q[KeyQueue.Dir],Q[KeyQueue.File][I]) : At,
+		Path : At,
+		Last : Q[KeyQueue.File][I] ? Path.join(Q[KeyQueue.Dir],Q[KeyQueue.File][I]) : At,
 		Fresh : !Done[I],
 		Only200 : Util.T,
 		ForceRange : ZED.defaultTo(Util.T,URL.ForceRange),
@@ -69,7 +70,7 @@ Start = (Q,I,At,URL,Done,Size) =>
 	{
 		//Set the downloaded size to 0 in case that the files are seemed downloaded
 		if (Size[I] <= Done[I]) Done[I] = 0
-		ZED.isNumber(E) ?
+		;/Status not satisfied/.test(E) ?
 			Bus.emit(EventDownload.Reinfo,Q) :
 			0 <= Begin && Begin < Down.Info.Saved ?
 				Start(Q,I,At,URL,Done,Size) :
