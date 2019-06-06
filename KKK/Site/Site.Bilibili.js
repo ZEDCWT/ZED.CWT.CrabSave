@@ -436,7 +436,7 @@ R = ZED.ReduceToObject
 			return Util.RequestBody(Cookie.URL(Name,URLVideo(ID[0])))
 				.flatMap(Season =>
 				(
-					Season = Util.MF(/ep_id":(\d+)/,Season),
+					Season = Util.MF(/"epInfo":{[^{]+"id":(\d+)/,Season),
 					(ID[1] ? Observable.just(Q.list[ID[1]]) : Util.from(Q.list))
 						.flatMapOnline(1,V => MakeURL(ID[0],V.cid,Season)
 							.flatMap((B,T) =>
