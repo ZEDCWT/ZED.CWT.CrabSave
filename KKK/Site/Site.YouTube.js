@@ -121,7 +121,7 @@ FilterMenuDef = ZED.reduce((D,V) =>
 BestQulity = Util.Best('bitrate'),
 SolveURL = (Q,S,T) => ZED.ReduceToObject
 (
-	KeyQueue.URL,[(T = Q.s || Q.sig) ? Q.url + '&signature=' + TrySign(T) : Q.url],
+	KeyQueue.URL,[(T = Q.s || Q.sig) ? Q.url + '&sig=' + TrySign(T) : Q.url],
 	KeyQueue.Suffix,'.' + Util.MF(/\/(\w+)/,Q.type) + (S || '')
 ),
 
@@ -293,7 +293,7 @@ R = ZED.ReduceToObject
 			))
 	)],
 	// WARN The current resolver cannot handle the following videos
-	// 8l7IF4LW0zc kTG9wfFgv18
+	// kTG9wfFgv18
 	KeySite.URL,ID => Util.RequestBody(Cookie.URL(Name,URLVInfo(ID)))
 		.flatMap(Info =>
 		(
