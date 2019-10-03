@@ -16,7 +16,7 @@ MapDate = {},
 
 URLTweet = ZED.URLBuild('https://twitter.com/statuses/',Util.U),
 URLVideoDownloader = 'http://www.downloadtwittervideo.com/',
-URLVideo = ZED.URLBuild('http://server',Util.U,'.downloadtwittervideo.com/online/PreDownload.php?url=',Util.U,'&format=MP4&quality=hd&speed=',Util.U),
+URLVideo = ZED.URLBuild('http://server',Util.U,'.workerserverbl.com/online/PreDownload.php?url=',Util.U,'&format=MP4&quality=hd&speed=',Util.U),
 URLSongLink = ZED.URLBuild('http://',Util.U,'.downloadtwittervideo.com/online/mp3.php?id=',Util.U,'&mp3=Rainbow.mp4&quality=hd&token1=',Util.U,'&token2=',Util.U),
 
 FrameTool,
@@ -82,7 +82,7 @@ R = ZED.ReduceToObject
 					KeySite.Item,[ZED.ReduceToObject
 					(
 						KeySite.ID,ID,
-						KeySite.Title,Util.DecodeHTML(Util.MF(/tweet-text[^-\w][^>]+>([^]+?)<\/p/,Q)),
+						KeySite.Title,Util.DecodeHTML(Util.MF(/tweet-text[^-\w][^>]+>([^]+?)<\/p/,Q)).slice(0,200),
 						KeySite.Img,Util.MF(/og:image" content="([^"]+)/,Q),
 						KeySite.Author,Util.MF(/erCard-nameL[^>]+>([^<]+)/,Q),
 						KeySite.Date,MapDate[ID] = Number(Util.MF(/data-time-ms="(\d+)/,Q))
@@ -103,7 +103,7 @@ R = ZED.ReduceToObject
 			KeyQueue.Date,MapDate[ID],
 			KeyQueue.Part,[ZED.ReduceToObject
 			(
-				KeyQueue.URL,[URLSongLink(Q.Dummy,Q.Id,Q.token1,Q.token2)],
+				KeyQueue.URL,['Direct' === Q.Dummy ? Q.FlvUrl : URLSongLink(Q.Dummy,Q.Id,Q.token1,Q.token2)],
 				KeyQueue.Suffix,'.mp4'
 			)]
 		))
