@@ -1,0 +1,20 @@
+{
+	"name" : "crabsave",
+	"version" : "1.0.0",
+	"description" : "Yet Another Video Downloader With GUI",
+	"main" : "CrabSave",
+	"repository" :
+	{
+		"type" : "git",
+		"url" : "git+https://github.com/ZEDCWT/ZED.CWT.CrabSave"
+	},
+	"author" : "ZED.CWT",
+	"license" : "MIT",
+	"dependencies" :
+	{
+		"@zed.cwt/wish" : "^0.0.7",
+		"request" : "^2.88.0",
+		"sqlite3" : "^4.1.0",
+		"ws" : "^7.1.2"
+	}
+}
