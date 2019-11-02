@@ -11,11 +11,16 @@
 	Top = Wish.Top,
 	WebSocket = Top.WebSocket,
 
+	ActionWebShortCut = 'SC',
 	ActionWebError = 'Err',
 	ActionAuthHello = 'Hell',
 	ActionAuthToken = 'Toke',
+	ActionAuthCookie = 'Coke',
+	ActionAuthShortCut = 'SC',
+	ActionAuthSetting = 'Set',
 	ActionAuthApi = 'Api',
 
+	Padding = 20,
 	SizeHeader = 40,
 	SizeFooter = 40,
 	Timeout = 1E4,
@@ -26,6 +31,7 @@
 
 	ClassTitleSplit = WW.Key(),
 	ClassMargin = WW.Key(),
+	ClassPadding = WW.Key(),
 
 	CrabSave = Top.CrabSave,
 
@@ -35,7 +41,25 @@
 	Noti = WV.Noti({Top : RMain[0]}),
 	NotiAuth = Noti.O(),
 	NotiNewToken = Noti.O(),
-	ShortCut = WB.SC(),
+	ShortCut = WW.Bus(),
+	ShortCutGlobalTabPrev = 'Global.TabPrev',
+	ShortCutGlobalTabNext = 'Global.TabNext',
+	ShortCutGlobalProxy = 'Global.Proxy',
+	ShortCutBrowseFocus = 'Browse.Focus',
+	ShortCutBrowseSelAll = 'Browse.SelAll',
+	ShortCutBrowseSelClear = 'Browse.SelClear',
+	ShortCutBrowseHead = 'Browse.Head',
+	ShortCutBrowsePrev = 'Browse.Prev',
+	ShortCutBrowseNext = 'Browse.Next',
+	ShortCutBrowseLast = 'Browse.Last',
+	ShortCutColdCommit = 'Cold.Commit',
+	ShortCutColdCommitAll = 'Cold.CommitAll',
+	ShortCutListSelAll = 'List.SelAll',
+	ShortCutListSelClear = 'List.SelClear',
+	ShortCutOnPage = function(K,Q,S)
+	{
+		ShortCut.On(Q,function(){RTab.Is(K) && S()})
+	},
 
 	Online,
 	WebSocketRetry = 0,
@@ -56,34 +80,52 @@
 		Suicide = function(){Client.close()};
 		Client.onmessage = function(Q)
 		{
+			var
+			K,O;
 			Q = Q.data
 			if (!Q.charCodeAt(0))
 			{
 				Q = WC.JTOO(WC.U16S(Decipher.D(WC.B91P(Q))))
 				if (!WW.IsArr(Q) || !WW.IsArr(Q = Q[1])) return Suicide()
+				K = Q[1]
+				O = Q[2]
 				switch (Q[0])
 				{
 					case ActionAuthHello :
 						NotiAuth('Authorized!')
 						NotiAuth(false)
+						WebSocketNotAuthedNoti(false)
 						break
+
 					case ActionAuthToken :
-						NotiNewToken(Q[1])
+						NotiNewToken(K)
 						NotiNewToken(false)
+						break
+					case ActionAuthCookie :
+						WSOnCookie(K,O)
+						break
+
+					case ActionAuthSetting :
+						WSOnSetting(K)
 						break
 
 					case ActionAuthApi :
-						WR.Has(Q[1],WSOnApi) && WSOnApi[Q[1]](Q)
+						WR.Has(K,WSOnApi) && WSOnApi[K](Q)
 						break
 				}
 				return
 			}
 			Q = WC.JTOO(Q)
+			K = Q[1]
+			O = Q[2]
 			switch (Q[0])
 			{
-				case ActionWebError :
-					Noti.S(['Error | ',Q[1],' | ',Q[2]])
+				case ActionWebShortCut :
+					WSOnSC(K)
 					break
+
+				case ActionWebError :
+					Noti.S(['Error | ',K,' | ',O])
 			}
 		}
 		Client.onopen = function()
@@ -125,11 +167,15 @@
 	},
 	WSOnApi = {},
 	WSOnOffline = WW.BusS(),
+	WSOnCookie,
+	WSOnSC,
+	WSOnSetting,
 
 	SiteAll = [],
 	SiteMap = {},
 	SiteBegin,SiteCount = 0,SiteTotal,
 	SiteNoti = Noti.O(),
+	SiteOnLoad = WW.BusS(),
 	SiteOnNoti = function()
 	{
 		WW.Now() - SiteBegin < 1000 ||
@@ -137,8 +183,14 @@
 		SiteCount < SiteTotal ||
 		(
 			WR.Del('Site',CrabSave),
+			SiteOnLoad.D(),
 			SiteNoti(false)
 		)
+	},
+	SiteSolveName = function(Q)
+	{
+		Q = SiteMap[Q]
+		return Q ? Q.Name || Q.ID : '[Unknown]'
 	};
 
 	WV.ClsA(RMain[1],WV.NoSel)
@@ -159,7 +211,8 @@
 		'#`T`{min-width:100px;text-align:center;line-height:`h`px;font-weight:bold}' +
 		'#`C`{position:relative}' +
 		'.`S`{position:absolute;left:-2px;top:10%;width:2px;height:80%;background:#BBB}' +
-		'.`G`{margin:20px 0}' +
+		'.`G`{margin:`p`px 0}' +
+		'.`P`{padding:`p`px}' +
 		'',
 		{
 			h : SizeHeader,
@@ -171,17 +224,18 @@
 			T : WV.ID(RMain[1]),
 			C : WV.ID(RMain[2]),
 			S : ClassTitleSplit,
-			G : ClassMargin
+			G : ClassMargin,
+			P : ClassPadding,
+
+			p : Padding
 		}
 	))
 
 	RTab.Add(
 	[
-		['Browse',function(V)
+		['Browse',function(V,_,K)
 		{
 			var
-			Padding = 10,
-
 			ClassBrief = WW.Key(),
 			ClassList = WW.Key(),
 			ClassCard = WW.Key(),
@@ -197,7 +251,7 @@
 				Right : WV.But({X : '\u2192',The : WV.TheP,U : WV.StopProp,C : Go}).R,
 				Ent : Go
 			}),
-			BriefW = WV.Rock(ClassBrief),
+			BriefW = WV.Rock(ClassBrief + ' ' + ClassMargin),
 			Brief = WV.Rock(),
 			List = WV.Rock(ClassList),
 			PagerT = WV.Page(),
@@ -205,18 +259,19 @@
 
 			WV.Ap(Brief,BriefW)
 			WV.ApR([PagerT,PagerB],List)
-			WV.ApR([Keyword,BriefW,List],V)
+			WV.ApR([Keyword,BriefW,List],WV.ClsA(V,ClassPadding))
+
+			ShortCutOnPage(K,ShortCutBrowseFocus,function(){Keyword.Foc(true)})
 
 			return {
 				CSS : function(ID)
 				{
 					return WW.Fmt
 					(
-						'#`R`>.`I`{margin:`p`px 0;padding:0 `p`px;line-height:34px}' +
+						'#`R`>.`I`{line-height:34px}' +
 						'#`R`>.`I` input{padding-left:6px}' +
 						'#`R`>.`I` .`B`{padding:0;min-width:60px}' +
-						'.`E`{position:relative;margin:`p`px;padding:`p`px;`e`}' +
-						'.`L`{margin:`p`px}',
+						'.`E`{position:relative;padding:`p`px;`e`}',
 						{
 							R : ID,
 							I : WV.InpW,
@@ -252,7 +307,7 @@
 		['Auth',function(V,_,TabKey)
 		{
 			var
-			RToken = WV.Rock(WV.S6 + ' ' + ClassMargin),
+			RToken = WV.Rock(WV.S6),
 			Token = WV.Inp(
 			{
 				Hint : 'Token',
@@ -285,7 +340,55 @@
 						NotiNewToken('Saving new token')
 					}
 				}
-			});
+			}),
+			CookieMap = {},
+			Site = WV.Inp(
+			{
+				Hint : '<Select A Site>',
+				Stat : true,
+				Inp : function(V)
+				{
+					Site.Stat(SiteMap[V] && WW.IsArr(SiteMap[V].Min) ? SiteMap[V].Min : '')
+					CookieMin.On()
+					Cookie.On()
+						.V(CookieMap[V] || '')
+						.Fresh()
+					CookieSave.On()
+				}
+			}).Off(),
+			CookieMin = WV.Cho(
+			{
+				Mul : true,
+				Blk : true,
+				Set : [['Y','Save with minimum required cookie entries']]
+			}).V(['Y']).Off(),
+			Cookie = WV.Inp(
+			{
+				Hint : 'Cookie',
+				Row : 6,
+				The : WV.TheS,
+				Stat : true,
+				Inp : function(){Cookie.Stat(undefined,Cookie.V().length)},
+				Ent : function(_,K){K.ctrlKey && CookieSave.C()}
+			}).Off().Stat('',0),
+			CookieSaving,
+			CookieSave = WV.But(
+			{
+				X : 'Save The Cookie',
+				Blk : true,
+				C : function(T)
+				{
+					CookieSaving = Site.V()
+					T = Cookie.V()
+					if (CookieMin.V().length && SiteMap[CookieSaving].Min)
+					{
+						T = WW.IsFunc(SiteMap[CookieSaving].Min) ?
+							SiteMap[CookieSaving].Min(T) :
+							WC.CokeS(WR.Pick(SiteMap[CookieSaving].Min,WC.CokeP(T)))
+					}
+					WebSocketSendAuth([ActionAuthCookie,CookieSaving,T])
+				}
+			}).Off();
 			WebSocketNotAuthed = function()
 			{
 				WebSocketNotAuthedNoti(['Unable to perform when unauthorized',WV.But(
@@ -294,7 +397,6 @@
 					The : WV.TheP,
 					C : function()
 					{
-						WebSocketNotAuthedNoti(false)
 						RTab.At(TabKey)
 						Token.Foc(true)
 					}
@@ -317,39 +419,280 @@
 					C : TokenNew.Ent
 				})
 			],RToken)
-			WV.Ap(RToken,V)
+			SiteOnLoad.R(function()
+			{
+				Site.On().Drop(WR.Map(function(V)
+				{
+					return [V.ID,V.ID + (V.Name ? ' ' + V.Name : '')]
+				},WR.Where(function(V){return V.Sign},SiteAll)))
+			})
+			WSOnCookie = function(K,O)
+			{
+				if (CookieSaving && CookieSaving === K && SiteMap[K])
+				{
+					CookieSaving = false
+					SiteMap[K].Sign().Now(function(Q)
+					{
+						if (Q && WW.IsStr(Q))
+							Noti.S('Signed in as ' + Q + '@' + SiteSolveName(K))
+						else Noti.S('Not Signed in @' + SiteSolveName(K))
+					},function(E)
+					{
+						Noti.S('Not signed in @' + SiteSolveName(K))
+						console.error(E)
+					})
+				}
+				if (WW.IsObj(K))
+				{
+					CookieMap = K
+					O = CookieMap[K = Site.V()]
+				}
+				Site.V() && K === Site.V() && Cookie.V(O || '')
+			}
+			WV.ApR(
+			[
+				RToken,
+				Site,
+				CookieMin,
+				Cookie,
+				CookieSave
+			],WV.ClsA(V,ClassPadding))
 			return {
 				CSS : function(ID)
 				{
 					return WW.Fmt
 					(
-						'#`R`{text-align:center}' +
-						'#`R`>div{margin-left:auto;margin-right:auto;padding:20px;max-width:26em}' +
-						'#`R` .`I`{margin:20px 0}',
+						'#`R`>.`S`{margin:auto;padding:`p`px;max-width:26em}' +
+						'#`R` .`I`{margin:`p`px 0}',
 						{
 							R : ID,
+							S : WV.S6,
 							I : WV.InpW,
-							T : WV.TabT,
-							M : WV.FmtW
+
+							p : Padding
 						}
 					)
 				},
 				Hide : function(){Token.V('').Fresh(),TokenNew.V('').Fresh()}
 			}
 		}],
-		['ShortCut',function()
+		['ShortCut',function(V)
 		{
-
+			var
+			ClassTitle = WW.Key(),
+			SC = WB.SC(),
+			SCC = {},
+			SCM = {},
+			Mask = [[WB.SCD,'KeyDown'],[WB.SCU,'KeyUp'],[WB.SCI,'Focusing TextInput']];
+			WR.EachU(function(B)
+			{
+				var
+				Key = B[0],
+				On = function(E)
+				{
+					WV.PrevDef(E)
+					ShortCut.Emit(Key)
+				},
+				Current = [],
+				List = WV.Rock(),
+				Make = function(K,M)
+				{
+					var
+					U = WV.Rock(),
+					Set = function(Q,S)
+					{
+						I.V(Q || '',true)
+						N.V(WR.Map(WR.Head,WR.Where(function(V){return V[0] === (V[0] & S)},Mask)),true)
+						K = Q
+						M = S
+					},
+					Update = function()
+					{
+						K && SC.Off(K,On)
+						K = I.V()
+						M = WR.Reduce(WR.BOr,0,N.V())
+						K && SC.On(K,On,M)
+						Refresh()
+					},
+					Remove = function(T)
+					{
+						K && SC.Off(K,On)
+						T = WR.Index(R,Current)
+						~T && Current.splice(T,1)
+						WV.Del(U)
+						Refresh()
+					},
+					I = WV.Inp(
+					{
+						Hint : 'Set a shortcut',
+						Blk : false,
+						RO : true,
+						InpU : Update
+					}),
+					N = WV.Cho(
+					{
+						Mul : true,
+						Set : Mask,
+						Blk : false,
+						Inp : Update
+					}),
+					S = WB.SC(
+					{
+						Win : I.I,
+						Top : I.I
+					}),
+					R =
+					{
+						R : U,
+						S : Set,
+						G : function(Q){K && Q.push([K,M])},
+						D : Remove
+					};
+					Current.push(R)
+					WV.ApR(
+					[
+						WV.But(
+						{
+							X : 'REMOVE',
+							The : WV.TheP,
+							C : Remove
+						}),
+						I,N
+					],U)
+					WV.Ap(U,List)
+					Set(K,M)
+					S.On('',function(E)
+					{
+						WV.PrevDef(E)
+						WV.StopProp(E)
+					},WB.SCY).On('',function()
+					{
+						I.V(S.Name().join('+'))
+					},WB.SCH | WB.SCI)
+					return R
+				},
+				Refresh = function()
+				{
+					if (WR.Eq(SCM[Key] = WR.Reduce(function(D,V){V.G(D)},[],Current),B))
+						SCM[Key] = undefined
+					WebSocketSendAuth([ActionAuthShortCut,WR.Where(WR.Id,SCM)])
+				};
+				B = [B.slice(1)]
+				SCM[Key] = false
+				;(SCC[Key] = function(Q)
+				{
+					if (!WR.Eq(SCM[Key],Q))
+					{
+						WR.Each(function(V){SC.Off(V[0],On)},SCM[Key] || B)
+						SCM[Key] = Q
+						WR.EachU(function(V,F)
+						{
+							SC.On(V[0],On,V[1])
+							Current[F] ?
+								Current[F].S(V[0],V[1]) :
+								Make(V[0],V[1])
+						},Q = Q || B)
+						for (;Q.length < Current.length;) WV.Del(Current.pop().R)
+					}
+				})()
+				WV.ApR(
+				[
+					WV.T(WV.Rock(ClassTitle),Key),
+					WV.But(
+					{
+						X : 'ADD',
+						The : WV.TheP,
+						C : function(){Make('',WB.SCD)}
+					}),
+					WV.But(
+					{
+						X : 'RESTORE',
+						The : WV.TheP,
+						C : function()
+						{
+							SCC[Key]()
+							Refresh()
+						}
+					}),
+					List
+				],V)
+			},[
+			[
+				ShortCutGlobalTabPrev,
+				'[',WB.SCD
+			],[
+				ShortCutGlobalTabNext,
+				']',WB.SCD
+			],[
+				ShortCutGlobalProxy,
+				'Alt+p',WB.SCD | WB.SCI
+			],[
+				ShortCutBrowseFocus,
+				'Alt+F1',WB.SCD | WB.SCI
+			],[
+				ShortCutBrowseSelAll,
+				'Ctrl+a',WB.SCD
+			],[
+				ShortCutBrowseSelClear,
+				'Ctrl+Shift+a',WB.SCD
+			],[
+				ShortCutBrowseHead,
+				'h',WB.SCD
+			],[
+				ShortCutBrowsePrev,
+				'j',WB.SCD
+			],[
+				ShortCutBrowseNext,
+				'k',WB.SCD
+			],[
+				ShortCutBrowseLast,
+				'l',WB.SCD
+			],[
+				ShortCutColdCommit,
+				'Enter',WB.SCD
+			],[
+				ShortCutColdCommitAll,
+				'Enter+Ctrl',WB.SCD
+			],[
+				ShortCutListSelAll,
+				'Ctrl+a',WB.SCD
+			],[
+				ShortCutListSelClear,
+				'Esc',WB.SCD
+			]])
+			WSOnSC = function(Q)
+			{
+				WR.EachU(function(V,F){V(Q[F])},SCC)
+			}
+			return {
+				CSS : function(ID)
+				{
+					return WW.Fmt
+					(
+						'#`R` .`I`{width:10em}' +
+						'#`R` .`H`{margin-left:`p`px}' +
+						'.`T`{padding:4px `p`px;background:#EBEBEB;font-weight:bold}',
+						{
+							R : ID,
+							I : WV.InpW,
+							H : WV.ChoW,
+							T : ClassTitle,
+							p : Padding
+						}
+					)
+				}
+			}
 		}],
-		['Setting',function()
+		['Setting',function(V)
 		{
+			WSOnSetting = function(Q)
+			{
 
+			}
 		}]
 	])
 	RTab.At(0)
-
-	ShortCut.On('[',RTab.Prev)
-		.On(']',RTab.Next)
+	ShortCut.On(ShortCutGlobalTabPrev,RTab.Prev).On(ShortCutGlobalTabNext,RTab.Next)
 
 	WV.Ready(function()
 	{
@@ -392,8 +735,12 @@
 						}
 					})
 				}
-			})
-			WR.Each(function(B){SiteMap[WR.Up(B)] = V},[V.Name].concat(V.Alias || []))
+			},WW,WC,WR,WX);
+			V.Cookie || V.Sign && (V.Cookie = V.ID)
+			WW.IsStr(V.Min) && (V.Min = V.Min.split(' '))
+			WR.Each(function(B){SiteMap[WR.Up(B)] = SiteMap[B] = V},
+				[V.ID].concat(V.Name || [],V.Alias ? V.Alias.split(' ') : []))
+			SiteAll.push(V)
 			SiteOnNoti(++SiteCount)
 		}
 		SiteBegin = WW.Now()

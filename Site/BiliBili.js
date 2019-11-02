@@ -1,11 +1,23 @@
 'use strict'
-CrabSave.Site(function(O)
+CrabSave.Site(function(O,WW,WC)
 {
+	var
+	BiliBili = 'https://www.bilibili.com/',
+	BiliBiliApi = 'https://api.bilibili.com/',
+	BiliBiliApiNav = BiliBiliApi + 'x/web-interface/nav';
 	return {
-		Name : '嗶哩嗶哩',
-		Alias : ['BiliBili','B'],
+		ID : 'BiliBili',
+		Name : '\u55F6\u54E9\u55F6\u54E9',
+		Alias : 'B',
 		Judge : /av\d+/g,
-		Cookie : 'BiliBili',
+		Min : 'SESSDATA',
+		Sign : function()
+		{
+			return O.Req(BiliBiliApiNav).Map(function(B)
+			{
+				return WC.JTO(B).data.uname
+			})
+		},
 		Map : [
 		{
 			Name : 'Video',

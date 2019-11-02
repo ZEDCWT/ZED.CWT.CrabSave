@@ -1,5 +1,6 @@
 'use strict'
-var
-All = require('./=');
 
-All
+module.exports =
+{
+	ID : 'BiliBili',
+}

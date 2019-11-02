@@ -2,12 +2,17 @@
 var
 WW = require('@zed.cwt/wish'),
 {R : WR,X : WX,C : WC,N : WN} = WW,
+Site = require('./Site/_'),
 HTTP = require('http'),
 Request = require('request'),
 
+ActionWebShortCut = 'SC',
 ActionWebError = 'Err',
 ActionAuthHello = 'Hell',
 ActionAuthToken = 'Toke',
+ActionAuthCookie = 'Coke',
+ActionAuthShortCut = 'SC',
+ActionAuthSetting = 'Set',
 ActionAuthApi = 'Api';
 
 module.exports = Option =>
@@ -18,11 +23,16 @@ module.exports = Option =>
 
 	PathWeb = WN.JoinP(__dirname,'Web'),
 	FileToken = WN.JoinP(PathData,'Key'),
-	FileCookie = WN.JSON(WN.JoinP(PathData,'Cookie')),
+	DataCookie = WN.JSON(WN.JoinP(PathData,'Cookie')),
+	CookieMap,
+	DataSetting = WN.JSON(WN.JoinP(PathData,'Setting')),
+	DataShortCut = WN.JSON(WN.JoinP(PathData,'ShortCut')),
 
 	WebToken,
 	TokenStepA = Q => WC.HSHA512(Q,'j!ui+Ju8?j'),
 	TokenStepB = Q => WC.HSHA512('!(|[.:O9;~',Q),
+	CookieE = Q => WC.B91S(WC.AESE(WebToken.slice(0,32),WebToken.slice(-16),Q)),
+	CookieD = Q => WC.U16S(WC.AESD(WebToken.slice(0,32),WebToken.slice(-16),WC.B91P(Q))),
 
 	RequestDefault =
 	{
@@ -49,7 +59,7 @@ module.exports = Option =>
 	{
 		var U = Q.url.replace(/\?.*/,'');
 		if (WebServerProxy(Q.url,S))
-			(WR.Has(U,WebServerMap) ? WN.UR(WebServerMap[U]) :
+			(WR.Has(U,WebServerMap) ? WN.UR(U = WebServerMap[U]) :
 				/^\/Site\/\w+\.js$/.test(U) ? WN.UR(WN.JoinP(__dirname,U)) :
 				WX.Throw())
 				.Now(V =>
@@ -104,7 +114,8 @@ module.exports = Option =>
 		S.on('message',Q =>
 		{
 			var
-			Err = S => Send([ActionWebError,Q[0],S]);
+			Err = S => Send([ActionWebError,Q[0],S]),
+			K,O;
 			if (!WW.IsStr(Q)) return Suicide()
 			if (!Q.charCodeAt())
 			{
@@ -114,6 +125,8 @@ module.exports = Option =>
 					Send([ActionWebError,'Auth','Authorization Failed'])
 					return Suicide()
 				}
+				K = Q[1]
+				O = Q[2]
 				switch (Q[0])
 				{
 					case ActionAuthHello :
@@ -123,39 +136,51 @@ module.exports = Option =>
 						break
 
 					case ActionAuthToken :
-						if (WC.HEXS(TokenStepB(WC.B91P(Q[1]))) === WC.HEXS(WebToken))
-							WN.UW(FileToken,WC.B91S(TokenStepB(WC.B91P(Q[2]))))
+						if (WC.HEXS(TokenStepB(WC.B91P(K))) === WC.HEXS(WebToken))
+							WN.UW(FileToken,WC.B91S(TokenStepB(WC.B91P(O))))
 								.FMap(() => WN.UR(FileToken))
 								.Now(Q =>
 								{
 									WebToken = WC.B91P(Q)
+									DataCookie.O(WR.Map(CookieE,CookieMap))
 									SendAuth([ActionAuthToken,'New token saved! Connect again'])
 									Suicide()
 								},() => Err(ActionAuthToken,'Failed to save the new token'))
 						else Err('Original token is incorrect')
 						break
+					case ActionAuthCookie :
+						if (Site.H(K))
+						{
+							O = String(O || '')
+							DataCookie.D(K,CookieE(CookieMap[K] = O))
+							WebSocketSendAuth([ActionAuthCookie,K,O],true)
+						}
+						else Err('Unknown site ' + K)
+						break
+
+					case ActionAuthShortCut :
+						WebSocketSend([ActionWebShortCut,DataShortCut.O(WR.Where(WR.Id,K))])
+						break
 
 					case ActionAuthApi :
-						if (false === Q[2] && ApiPool.has(Q[1]))
+						if (false === O && ApiPool.has(K))
 						{
-							ApiPool.get(Q[1]).abort()
-							ApiPool.delete(Q[1])
+							ApiPool.get(K).abort()
+							ApiPool.delete(K)
 						}
-						else if (!Q[1] || !WW.IsStr(Q[1]) || ApiPool.has(Q[1]))
-							Err('Bad token ' + Q[1])
-						else if (!WW.IsObj(Q[2]))
-							Err('Bad request ' + WC.OTJ(Q[2]))
+						else if (!K || !WW.IsStr(K) || ApiPool.has(K))
+							Err('Bad token ' + K)
+						else if (!WW.IsObj(O))
+							Err('Bad request ' + WC.OTJ(O))
 						else
 						{
-							if (!/^\w+:\/\//.test(Q[2].url)) Q[2].url = 'http://' + Q[2].url
-							if (Q[2].Cookie)
+							if (!/^\w+:\/\//.test(O.url)) O.url = 'http://' + O.url
+							if (O.Cookie)
+								(O.headers || (O.headers = {})).Cookie = CookieMap[O.Cookie]
+							ApiPool.set(K,RequestMake(O,(E,I,R) =>
 							{
-
-							}
-							ApiPool.set(Q[1],RequestMake(Q[2],(E,I,R) =>
-							{
-								ApiPool.delete(Q[1])
-								SendAuth([ActionAuthApi,Q[1],!E && I.statusCode,R,I && I.headers])
+								ApiPool.delete(K)
+								SendAuth([ActionAuthApi,K,!E && I.statusCode,R,I && I.headers])
 							}))
 						}
 						break
@@ -163,6 +188,8 @@ module.exports = Option =>
 				return
 			}
 			Q = WC.JTOO(Q)
+			K = Q[1]
+			O = Q[2]
 			switch (Q[0])
 			{
 			}
@@ -189,6 +216,10 @@ module.exports = Option =>
 			.Map(Q => WebToken = WC.B91P(Q.split(/\s/)[0]))
 			.Now(() =>
 			{
+				CookieMap = WR.Map(CookieD,DataCookie.O())
+				WebSocketSendAuth([ActionAuthCookie,CookieMap])
+				WebSocketSend([ActionWebShortCut,DataShortCut.O()])
+				WebSocketSendAuth([ActionAuthSetting,DataSetting.O()])
 				WW.IsNum(PortWeb) && new (require('ws')).Server({server : WebServer.listen(PortWeb)}).on('connection',OnSocket)
 			}),
 		Exp : X => (X = X || require('express').Router())

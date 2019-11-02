@@ -2,10 +2,13 @@ declare module CrabSaveNS
 {
 	interface SiteView
 	{
-		Name : string
-		Alias? : string[]
+		ID : string
+		Name? : string
+		Alias? : string
 		Judge? : RegExp
-		Cookie? : boolean
+		Cookie? : string
+		Min? : string | string[] | ((Q : string) => string)
+		Sign?() : WishNS.Provider<string>
 		Map : SiteMap[]
 		Hint?(Q : string) : WishNS.Provider<WishNS.EleContent[]>
 		IDView?(Q : string) : WishNS.EleContent
@@ -41,6 +44,7 @@ declare module CrabSaveNS
 
 	interface SiteO
 	{
+		ID : string
 		URL(ID : string) : WishNS.Provider<SiteURL>
 		Pack?(Q : string) : string | WishNS.RequestOption
 	}
