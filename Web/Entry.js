@@ -42,10 +42,10 @@
 	NotiAuth = Noti.O(),
 	NotiNewToken = Noti.O(),
 	ShortCut = WW.Bus(),
-	ShortCutGlobalTabPrev = 'Global.TabPrev',
-	ShortCutGlobalTabNext = 'Global.TabNext',
-	ShortCutGlobalProxy = 'Global.Proxy',
-	ShortCutBrowseFocus = 'Browse.Focus',
+	ShortCutGeneralTabPrev = 'General.TabPrev',
+	ShortCutGeneralTabNext = 'General.TabNext',
+	ShortCutGeneralProxy = 'General.Proxy',
+	ShortCutBrowseFocus = 'Browse.FocusKeyword',
 	ShortCutBrowseSelAll = 'Browse.SelAll',
 	ShortCutBrowseSelClear = 'Browse.SelClear',
 	ShortCutBrowseHead = 'Browse.Head',
@@ -60,6 +60,7 @@
 	{
 		ShortCut.On(Q,function(){RTab.Is(K) && S()})
 	},
+	Setting = {},
 
 	Online,
 	WebSocketRetry = 0,
@@ -248,6 +249,7 @@
 
 			Keyword = WV.Inp(
 			{
+				Hint : 'Keyword',
 				Right : WV.But({X : '\u2192',The : WV.TheP,U : WV.StopProp,C : Go}).R,
 				Ent : Go
 			}),
@@ -268,7 +270,7 @@
 				{
 					return WW.Fmt
 					(
-						'#`R`>.`I`{line-height:34px}' +
+						'#`R`>.`I`{line-height:34px;font-weight:bold}' +
 						'#`R`>.`I` input{padding-left:6px}' +
 						'#`R`>.`I` .`B`{padding:0;min-width:60px}' +
 						'.`E`{position:relative;padding:`p`px;`e`}',
@@ -348,7 +350,7 @@
 				Stat : true,
 				Inp : function(V)
 				{
-					Site.Stat(SiteMap[V] && WW.IsArr(SiteMap[V].Min) ? SiteMap[V].Min : '')
+					Site.Stat(SiteMap[V] && WW.IsArr(SiteMap[V].Min) ? SiteMap[V].Min.join(', ') : '')
 					CookieMin.On()
 					Cookie.On()
 						.V(CookieMap[V] || '')
@@ -365,13 +367,14 @@
 			Cookie = WV.Inp(
 			{
 				Hint : 'Cookie',
-				Row : 6,
+				Row : 8,
 				The : WV.TheS,
 				Stat : true,
 				Inp : function(){Cookie.Stat(undefined,Cookie.V().length)},
 				Ent : function(_,K){K.ctrlKey && CookieSave.C()}
 			}).Off().Stat('',0),
 			CookieSaving,
+			CookieCheckNoti = Noti.O(),
 			CookieSave = WV.But(
 			{
 				X : 'Save The Cookie',
@@ -384,7 +387,7 @@
 					{
 						T = WW.IsFunc(SiteMap[CookieSaving].Min) ?
 							SiteMap[CookieSaving].Min(T) :
-							WC.CokeS(WR.Pick(SiteMap[CookieSaving].Min,WC.CokeP(T)))
+							WC.CokeS(WR.Pick(SiteMap[CookieSaving].Min,WC.CokeP(T,WR.Id)),WR.Id)
 					}
 					WebSocketSendAuth([ActionAuthCookie,CookieSaving,T])
 				}
@@ -431,15 +434,17 @@
 				if (CookieSaving && CookieSaving === K && SiteMap[K])
 				{
 					CookieSaving = false
+					CookieCheckNoti('Checking if signed in @' + SiteSolveName(K))
 					SiteMap[K].Sign().Now(function(Q)
 					{
 						if (Q && WW.IsStr(Q))
-							Noti.S('Signed in as ' + Q + '@' + SiteSolveName(K))
-						else Noti.S('Not Signed in @' + SiteSolveName(K))
-					},function(E)
+							CookieCheckNoti('Signed in as ' + Q + '@' + SiteSolveName(K))
+						else CookieCheckNoti('Not Signed in @' + SiteSolveName(K))
+						CookieCheckNoti(false)
+					},function()
 					{
-						Noti.S('Not signed in @' + SiteSolveName(K))
-						console.error(E)
+						CookieCheckNoti('Not signed in @' + SiteSolveName(K))
+						CookieCheckNoti(false)
 					})
 				}
 				if (WW.IsObj(K))
@@ -527,7 +532,8 @@
 						Hint : 'Set a shortcut',
 						Blk : false,
 						RO : true,
-						InpU : Update
+						InpU : Update,
+						Esc : false
 					}),
 					N = WV.Cho(
 					{
@@ -567,7 +573,7 @@
 						WV.StopProp(E)
 					},WB.SCY).On('',function()
 					{
-						I.V(S.Name().join('+'))
+						I.In() && I.V(S.Name().join('+'))
 					},WB.SCH | WB.SCI)
 					return R
 				},
@@ -618,13 +624,13 @@
 				],V)
 			},[
 			[
-				ShortCutGlobalTabPrev,
+				ShortCutGeneralTabPrev,
 				'[',WB.SCD
 			],[
-				ShortCutGlobalTabNext,
+				ShortCutGeneralTabNext,
 				']',WB.SCD
 			],[
-				ShortCutGlobalProxy,
+				ShortCutGeneralProxy,
 				'Alt+p',WB.SCD | WB.SCI
 			],[
 				ShortCutBrowseFocus,
@@ -685,14 +691,133 @@
 		}],
 		['Setting',function(V)
 		{
+			var
+			SetD = {},SetC = {},
+			PC,
+			Key = function(Q){return PC = Pref.C(Q),Q},
+			Pref = WV.Pref(
+			{
+				O : Setting,
+				C : function()
+				{
+					WebSocketSendAuth([ActionAuthSetting,WR.WhereU(function(V,F){return V !== SetD[F]},Setting)])
+				}
+			}),
+			OptionProxy;
+			WR.Each(function(V)
+			{
+				var
+				Key = V[1],
+				Default = WR.Default('',V[3]);
+				Pref.S([[V[0],V[2]]])
+				'' === Default || V[2].V(Setting[Key] = SetD[Key] = Default,true)
+				SetC[Key] = function(Q)
+				{
+					if (Setting[Key] !== (Q = undefined === Q ? Default : Q))
+					{
+						V[2].V(Setting[Key] = Q,true)
+					}
+				}
+			},[
+			[
+				'Download destination',
+				Key('Dir'),
+				WV.Inp(
+				{
+					Hint : 'Full path of the directory to save downloaded files',
+					InpU : PC
+				})
+			],[
+				'File name format',
+				Key('Fmt'),
+				WV.Inp(
+				{
+					InpU : PC
+				})
+			],[
+				'Downloader proxy',
+				Key('Proxy'),
+				OptionProxy = WV.Cho(
+				{
+					Set : [[false,'Disabled'],[true,'Enabled']],
+					Inp : PC
+				}),
+				false
+			],[
+				'Proxy URL',
+				Key('ProxyURL'),
+				WV.Inp(
+				{
+					Hint : 'Host:Port',
+					InpU : PC
+				})
+			],[
+				'Browse proxy',
+				Key('ProxyView'),
+				WV.Cho(
+				{
+					Set : [['','Disabled'],[true,'Follow downloader proxy']],
+					Inp : PC
+				})
+			],[
+				'Retry delay after download error (in seconds)',
+				Key('Delay'),
+				WV.Inp(
+				{
+					Yep : WV.InpYZ,
+					InpU : PC
+				}),
+				20
+			],[
+				'Merge command',
+				Key('Merge'),
+				WV.Inp(
+				{
+					Row : 6,
+					InpU : PC
+				}),
+				''
+			],[
+				'Alias',
+				Key('Alias'),
+				WV.Inp(
+				{
+					Row : 8,
+					Hint : '[Original Author Name A]\n' +
+						'[Replacement For Author Name A]\n' +
+						'[Original Author Name B]\n' +
+						'[Replacement For Author Name B]\n' +
+						'...',
+					InpU : PC
+				})
+			]])
+			WV.Ap(Pref.R,V)
 			WSOnSetting = function(Q)
 			{
-
+				WR.EachU(function(V,F){V(Q[F])},SetC)
+			}
+			ShortCut.On(ShortCutGeneralProxy,function(V)
+			{
+				OptionProxy.V(V = !OptionProxy.V())
+				Noti.S(V ? 'Proxy enabled' : 'Proxy disabled')
+			})
+			return {
+				CSS : function(ID)
+				{
+					return WW.Fmt
+					(
+						'#`R`{padding:0 `p`px}',
+						{
+							R : ID,
+							p : Padding
+						}
+					)
+				}
 			}
 		}]
 	])
 	RTab.At(0)
-	ShortCut.On(ShortCutGlobalTabPrev,RTab.Prev).On(ShortCutGlobalTabNext,RTab.Next)
+	ShortCut.On(ShortCutGeneralTabPrev,RTab.Prev).On(ShortCutGeneralTabNext,RTab.Next)
 
 	WV.Ready(function()
 	{
@@ -736,20 +861,24 @@
 					})
 				}
 			},WW,WC,WR,WX);
+			if (!WW.IsNum(SiteMap[V.ID])) return
 			V.Cookie || V.Sign && (V.Cookie = V.ID)
 			WW.IsStr(V.Min) && (V.Min = V.Min.split(' '))
+			SiteAll[SiteMap[V.ID]] = V
 			WR.Each(function(B){SiteMap[WR.Up(B)] = SiteMap[B] = V},
 				[V.ID].concat(V.Name || [],V.Alias ? V.Alias.split(' ') : []))
-			SiteAll.push(V)
 			SiteOnNoti(++SiteCount)
 		}
 		SiteBegin = WW.Now()
 		WW.To(1E3,function(){SiteCount < SiteTotal && SiteOnNoti()})
-		SiteTotal = WR.Each(function(V)
+		SiteTotal = WR.EachU(function(V,F)
 		{
 			WV.Ap(WV.Attr(WV.A('script'),'src',URLSite + V + '.js'),WV.Head)
+			SiteMap[V] = F
 		},[
-			'BiliBili'
+			'BiliBili',
+			'YouTube',
+			'NicoNico'
 		]).length
 		SiteOnNoti()
 	})

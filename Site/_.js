@@ -6,13 +6,15 @@ WW = require('@zed.cwt/wish'),
 SiteAll = [],
 SiteMap = {};
 
-WR.Each(V =>
+WR.Each((V,S) =>
 {
-	V = require(`./${V}=`)
-	SiteAll.push(V)
-	SiteMap[V.ID] = V
+	S = require(`./${V}=`)
+	SiteAll.push(S)
+	SiteMap[S.ID = V] = S
 },[
 	'BiliBili',
+	'YouTube',
+	'NicoNico',
 ])
 
 module.exports =

@@ -44,7 +44,7 @@ declare module CrabSaveNS
 
 	interface SiteO
 	{
-		ID : string
+		ID? : string
 		URL(ID : string) : WishNS.Provider<SiteURL>
 		Pack?(Q : string) : string | WishNS.RequestOption
 	}

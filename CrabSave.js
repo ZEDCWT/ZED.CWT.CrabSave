@@ -46,6 +46,8 @@ module.exports = Option =>
 	{
 		Q = WW.Merge(false,true,WW.IsObj(Q) ? Q : {url : Q},RequestDefault)
 		WR.Has('User-Agent',Q.headers) || (Q.headers['User-Agent'] = WW.Key())
+		DataSetting.D('Proxy') && WW.IsStr(DataSetting.D('ProxyURL')) &&
+			(Q.proxy = DataSetting.D('ProxyURL').replace(/^(?!\w+:\/\/)/,'http://'))
 		return Request(Q,S)
 	},
 
@@ -88,6 +90,7 @@ module.exports = Option =>
 		WebSocketPool.forEach(V => V(Q))
 	},
 	WebSocketPoolAuth = new Set,
+	WebSocketPoolAuthSuicide = new Set,
 	WebSocketLastAuth = {},
 	WebSocketSendAuth = (Q,S) =>
 	{
@@ -133,6 +136,7 @@ module.exports = Option =>
 						SendAuth([ActionAuthHello])
 						WR.Each(SendAuth,WebSocketLastAuth)
 						WebSocketPoolAuth.add(SendAuth)
+						WebSocketPoolAuthSuicide.add(Suicide)
 						break
 
 					case ActionAuthToken :
@@ -144,7 +148,7 @@ module.exports = Option =>
 									WebToken = WC.B91P(Q)
 									DataCookie.O(WR.Map(CookieE,CookieMap))
 									SendAuth([ActionAuthToken,'New token saved! Connect again'])
-									Suicide()
+									WebSocketPoolAuthSuicide.forEach(V => V())
 								},() => Err(ActionAuthToken,'Failed to save the new token'))
 						else Err('Original token is incorrect')
 						break
@@ -161,12 +165,18 @@ module.exports = Option =>
 					case ActionAuthShortCut :
 						WebSocketSend([ActionWebShortCut,DataShortCut.O(WR.Where(WR.Id,K))])
 						break
+					case ActionAuthSetting :
+						WebSocketSendAuth([ActionAuthSetting,DataSetting.O(WR.Where(WR.Id,K))])
+						break
 
 					case ActionAuthApi :
-						if (false === O && ApiPool.has(K))
+						if (false === O)
 						{
-							ApiPool.get(K).abort()
-							ApiPool.delete(K)
+							if (ApiPool.has(K))
+							{
+								ApiPool.get(K).abort()
+								ApiPool.delete(K)
+							}
 						}
 						else if (!K || !WW.IsStr(K) || ApiPool.has(K))
 							Err('Bad token ' + K)
@@ -197,6 +207,7 @@ module.exports = Option =>
 		{
 			WebSocketPool.delete(Send)
 			WebSocketPoolAuth.delete(SendAuth)
+			WebSocketPoolAuthSuicide.delete(Suicide)
 			ApiPool.forEach(V => V.abort())
 		})
 
