@@ -10,22 +10,22 @@ declare module CrabSaveNS
 		Min? : string | string[] | ((Q : string) => string)
 		Sign?() : WishNS.Provider<string>
 		Map : SiteMap[]
-		Hint?(Q : string) : WishNS.Provider<WishNS.EleContent[]>
 		IDView?(Q : string) : WishNS.EleContent
 		IDURL?(Q : string) : string
 	}
 	interface SiteMap
 	{
 		Name : string
-		Judge? : RegExp
+		Judge? : RegExp | RegExp[]
 		View(ID : string,Page : number,Pref? : object) : WishNS.Provider<SitePage>
+		Hint?(Q : string) : WishNS.Provider<WishNS.EleContent[]>
 	}
 	interface SitePage
 	{
 		At? : number
-		Page? : number
-		Total? : number
-		PageSize? : number
+		Max? : number
+		Len? : number
+		Size? : number
 		Item : SiteItem[]
 		Pref? : WishNS.PrefU<object>
 	}
@@ -33,6 +33,7 @@ declare module CrabSaveNS
 	{
 		Index? : number
 		ID : string
+		URL? : string
 		Img? : string
 		Title? : string
 		UP? : string
@@ -40,6 +41,7 @@ declare module CrabSaveNS
 		Date? : string
 		Len? : number | string
 		Desc? : string
+		More? : string
 	}
 
 	interface SiteO
