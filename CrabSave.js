@@ -77,10 +77,16 @@ module.exports = Option =>
 	WebServerProxy = (Q,S) =>
 	{
 		if (!WR.StartW('/Api/',Q)) return 9
-		RequestMake(decodeURIComponent(Q.slice(5)))
-			.on('data',D => S.write(D))
-			.on('complete',() => S.end())
-			.on('error',() => S.destory())
+		try
+		{
+			Q = decodeURIComponent(Q.slice(5))
+			'{' === Q[0] && (Q = WC.JTOO(Q))
+			RequestMake(Q)
+				.on('data',D => S.write(D))
+				.on('complete',() => S.end())
+				.on('error',() => S.destroy())
+		}
+		catch(_){S.destroy()}
 	},
 	WebSocketPool = new Set,
 	WebSocketLast = {},

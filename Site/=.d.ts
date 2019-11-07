@@ -18,7 +18,7 @@ declare module CrabSaveNS
 		Name : string
 		Judge? : RegExp | RegExp[]
 		View(ID : string,Page : number,Pref? : object) : WishNS.Provider<SitePage>
-		Hint?(Q : string) : WishNS.Provider<WishNS.EleContent[]>
+		Hint?(Q : string) : SiteHint
 	}
 	interface SitePage
 	{
@@ -31,8 +31,10 @@ declare module CrabSaveNS
 	}
 	interface SiteItem
 	{
+		Non? : boolean
 		Index? : number
 		ID : string
+		View? : WishNS.EleContent
 		URL? : string
 		Img? : string
 		Title? : string
@@ -42,6 +44,11 @@ declare module CrabSaveNS
 		Len? : number | string
 		Desc? : string
 		More? : string
+	}
+	interface SiteHint
+	{
+		Item : WishNS.EleValView<string>[]
+		Desc? : string
 	}
 
 	interface SiteO

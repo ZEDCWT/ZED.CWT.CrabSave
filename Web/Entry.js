@@ -39,6 +39,7 @@
 	ClassTitleSplit = WW.Key(),
 	ClassMargin = WW.Key(),
 	ClassPadding = WW.Key(),
+	ClassHighLight = WW.Key(),
 
 	CrabSave = Top.CrabSave,
 
@@ -53,7 +54,7 @@
 	ShortCutGeneralTabPrev = 'General.TabPrev',
 	ShortCutGeneralTabNext = 'General.TabNext',
 	ShortCutGeneralProxy = 'General.Proxy',
-	ShortCutBrowseFocus = 'Browse.FocusKeyword',
+	ShortCutGeneralFocus = 'General.FocusKeywordInput',
 	ShortCutBrowseSelAll = 'Browse.SelAll',
 	ShortCutBrowseSelClear = 'Browse.SelClear',
 	ShortCutBrowseHead = 'Browse.Head',
@@ -222,10 +223,13 @@
 		'.`S`{position:absolute;left:-2px;top:10%;width:2px;height:80%;background:#BBB}' +
 		'.`G`{margin:`p`px 0}' +
 		'.`P`{padding:`p`px}' +
+		'.`H`{color:#2672EC}' +
+		'.`F`>.`H`{color:inherit}' +
 		'',
 		{
 			h : SizeHeader,
 
+			F : WV.Foc,
 			N : WV.NotiW,
 			B : WV.ButW,
 
@@ -235,6 +239,7 @@
 			S : ClassTitleSplit,
 			G : ClassMargin,
 			P : ClassPadding,
+			H : ClassHighLight,
 
 			p : Padding
 		}
@@ -292,7 +297,7 @@
 					},V.Judge)
 				},Site.Map)
 				return Action ?
-					[Site,Action,ID,Q.slice(0,-T.length)] :
+					[Site,Action,ID,Q.slice(0,-ID.length)] :
 					'Unable to resolve `' + T + '` in site `' + SiteSolveName(Site) + '`'
 			},
 
@@ -312,19 +317,21 @@
 						S.Size = S.Size || PageSize
 						WR.EachU(function(V,F)
 						{
+							var
+							IDView = V.Non ? V.View || V.ID : GoSite.IDView(V.ID),
+							URL = V.URL || false !== V.URL && GoSite.IDURL && GoSite.IDURL(V.ID),
+							Img;
 							WV.Ap(WV.Con(WV.Rock(ClassCard + ' ' + WV.S4,'fieldset'),
 							[
 								WV.Con(WV.A('legend'),
 								[
 									V.Index = WR.Default(S.Size * Q + F,V.Index),
 									' | ',
-									false === V.URL || !GoSite.IDURL ?
-										GoSite.IDView(V.ID) :
-										WV.Ah(GoSite.IDView(V.ID),V.URL || GoSite.IDURL(V.ID),V.Title)
+									URL ? WV.Ah(IDView,URL,V.Title) : IDView
 								]),
 								V.Img && WV.Attr
 								(
-									WV.A('img'),
+									Img = WV.A('img'),
 									'src',
 									Setting.ProxyView ?
 										URLApi + V.Img :
@@ -332,14 +339,22 @@
 								),
 								WW.IsNum(V.Len) ?
 									WV.X(WW.StrS(V.Len)) :
-									WV.X(V.Len),
-								V.Title && WV.X(V.Title),
-								V.UPURL ?
+									WW.IsStr(V.Len) &&
+										WV.X(/^\d+(:\d+){1,2}$/.test(V.Len) ?
+											WW.StrS(WR.Reduce(function(D,V){return 60 * D - -V},0,V.Len.split(':'))) :
+											V.Len),
+								!!V.Title && WV.X(V.Title),
+								WV.X(V.UPURL ?
 									WV.Ah(V.UP,V.UPURL) :
-									V.UP,
-								V.Date && WV.X(WW.IsStr(V.Date) ? V.Date : DTS(V.Date)),
-								V.More && WV.Con(WV.Rock(),V.More)
+									V.UP),
+								!!V.Date && WV.X(WW.IsStr(V.Date) ? V.Date : DTS(V.Date)),
+								!!V.More && WV.Con(WV.Rock(),V.More)
 							]),List)
+							V.Non && Img && URL && WV.On('click',function()
+							{
+								Keyword.V(URL)
+								Go()
+							},Img)
 						},S.Item)
 						BriefKeyword.U(WW.Fmt
 						(
@@ -348,9 +363,9 @@
 								F : S.Item.length && S.Item[0].Index,
 								T : S.Item.length && WR.Last(S.Item).Index,
 								L : S.Item.length,
-								U : WR.Default(S.Item.length,S.Len),
+								U : S.Len = WR.Default(S.Item.length,S.Len),
 								A : S.At = WR.Default(Q,S.At),
-								P : S.Max = WR.Default(1,S.Max),
+								P : S.Max = WR.Default(Math.ceil(S.Len / (S.Size || PageSize)) || 1,S.Max),
 								M : WR.ToFix(3,(WW.Now() - N) / 1E3)
 							}
 						))
@@ -364,11 +379,68 @@
 				return false
 			},
 
+			KeywordCache = WW.Key(),
+			KeywordHintLoad = WV.Fmt('Loading suggestions for `K`\n`E`'),
+			KeywordHint = WV.Fmt('Suggestions for `K`\n[`M`ms `T`] `D`'),
+			HintErr,HintCurrent,
+			Hint = function(S)
+			{
+				var K,B,C;
+				HintErr = false
+				if (WW.IsArr(S = GoSolve(S)) && S[1].Hint)
+				{
+					C = HintCurrent = WW.Key()
+					K = SiteSolveName(S[0]) + ' ' + S[1].Name + ' ' + S[2]
+					B = WW.Now()
+					KeywordHintLoad.K(K).E('')
+					Keyword.Hint(undefined,KeywordHintLoad.R)
+						.Drop()
+					;(S[1][KeywordCache] || (S[1][KeywordCache] = WX.CacheM(S[1].Hint)))
+						(WR.Trim(S[2]))
+						.Now(function(V)
+						{
+							if (HintCurrent === C)
+							{
+								KeywordHint.K(K).T(V.Item.length)
+									.M(WW.Now() - B)
+									.D(V.Desc || '')
+								Keyword.Hint(undefined,KeywordHint.R)
+									.Drop(WR.Map(function(V)
+									{
+										return WW.IsArr(V) ?
+											[S[3] + V[0],V[1],0] :
+											[S[3] + V,V,0]
+									},V.Item),false)
+							}
+						},function(E)
+						{
+							if (HintCurrent === C)
+							{
+								HintErr = true
+								KeywordHintLoad.E(ErrorS(E))
+							}
+						})
+				}
+				else
+				{
+					HintCurrent = false
+					Keyword.Hint(undefined,null)
+						.Drop()
+				}
+			},
 			Keyword = WV.Inp(
 			{
 				Hint : 'Keyword',
 				Right : WV.But({X : '\u2192',The : WV.TheP,U : WV.StopProp,C : Go}).R,
-				Ent : Go
+				Any : true,
+				Non : true,
+				Ent : Go,
+				EntD : Go,
+				Inp : Hint,
+				Foc : function()
+				{
+					HintErr && Hint(Keyword.V())
+				}
 			}),
 			Brief = WV.Rock(ClassBrief + ' ' + ClassMargin),
 			BriefKeywordOn,
@@ -395,7 +467,11 @@
 
 			WV.ApR([Keyword,Brief,PagerT,List,PagerB],WV.ClsA(V,ClassPadding))
 
-			ShortCutOnPage(K,ShortCutBrowseFocus,function(){Keyword.Foc(true)})
+			ShortCut.On(ShortCutGeneralFocus,function()
+			{
+				RTab.At(K)
+				Keyword.Foc(true)
+			})
 			ShortCutOnPage(K,ShortCutBrowseHead,PagerT.Head)
 			ShortCutOnPage(K,ShortCutBrowsePrev,PagerT.Prev)
 			ShortCutOnPage(K,ShortCutBrowseNext,PagerT.Next)
@@ -407,6 +483,7 @@
 					return WW.Fmt
 					(
 						'#`R`>.`I`{line-height:34px;font-weight:bold}' +
+						'#`R`>.`I` .`D`{line-height:normal}' +
 						'#`R`>.`I` input{padding-left:6px}' +
 						'#`R`>.`I` .`B`{padding:0;min-width:60px}' +
 						'.`E`{padding:`h`px;`e`}' +
@@ -422,10 +499,11 @@
 							'word-break:break-all' +
 						'}' +
 						'.`C` legend{font-weight:bold}' +
-						'.`C` img{width:100%;max-height:`m`px}',
+						'.`C` img{width:100%;max-height:`m`px;cursor:pointer}',
 						{
 							R : ID,
 							I : WV.InpW,
+							D : WV.InpD,
 							B : WV.ButW,
 
 							p : Padding,
@@ -786,8 +864,8 @@
 				ShortCutGeneralProxy,
 				'Alt+p',WB.SCD | WB.SCI
 			],[
-				ShortCutBrowseFocus,
-				'Alt+F1',WB.SCD | WB.SCI
+				ShortCutGeneralFocus,
+				'`',WB.SCD
 			],[
 				ShortCutBrowseSelAll,
 				'Ctrl+a',WB.SCD
@@ -1016,9 +1094,13 @@
 				},
 				Api : function(Q)
 				{
-					return WW.IsObj(Q) ?
-						(Q.url = URLApi + Q.url,Q) :
-						URLApi + Q
+					return WB.ReqB(URLApi + WC.UE(WW.IsObj(Q) ? WC.OTJ(Q) : Q))
+				},
+				Head : function(Q,K,V)
+				{
+					Q = WW.IsObj(Q) ? Q : {url : Q}
+					;(Q.headers || (Q.headers = {}))[K] = V
+					return Q
 				},
 				Coke : function()
 				{
@@ -1036,6 +1118,8 @@
 				{
 					return RegExp('\\b(?:' + Q + ')[\\s/=]+([^&?#\\s]+)','i')
 				},
+				TL : /\b(?:Dynamic|Sub|Subscri(?:be|ption)|Timeline|TL)\b|^$/i,
+				UP : /\b(?:Up|Uploader|Fo|Follow|Following)\b/i,
 				Find : /^(?:\?|Find|Search)\s+(?!\s)(.+)$/i,
 				Size : PageSize,
 				Less : function(Q)
@@ -1094,8 +1178,12 @@
 							})
 					}
 				},
-				DTS : DTS
-			},WW,WC,WR,WX,WB);
+				DTS : DTS,
+				High : function(V)
+				{
+					return WV.T(WV.Rock(ClassHighLight,'span'),V)
+				}
+			},WW,WC,WR,WX,WV);
 			if (!WW.IsNum(SiteMap[V.ID])) return
 			V.Judge || (V.Judge = /(?!)/)
 			V.Cookie || V.Sign && (V.Cookie = V.ID)
