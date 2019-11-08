@@ -256,7 +256,7 @@
 
 			GoKeyWord,
 			GoSite,GoAction,GoID,
-			GoPref,
+			GoPref,GoPrefAction,
 			Go = function()
 			{
 				var
@@ -265,7 +265,8 @@
 				if (WW.IsArr(S))
 				{
 					GoKeyWord = Q
-					if (GoSite !== (GoSite = S[0]) | GoAction !== (GoAction = S[1])) GoPref = {}
+					if (GoSite !== (GoSite = S[0]) | GoAction !== (GoAction = S[1]))
+						GoPref = undefined
 					GoID = S[2]
 					Jump(0)
 					Keyword.Foc()
@@ -343,7 +344,9 @@
 										WV.X(/^\d+(:\d+){1,2}$/.test(V.Len) ?
 											WW.StrS(WR.Reduce(function(D,V){return 60 * D - -V},0,V.Len.split(':'))) :
 											V.Len),
-								!!V.Title && WV.X(V.Title),
+								V.TitleView ?
+									WV.Con(WV.Rock(WV.FmtW),V.TitleView) :
+									!!V.Title && WV.T(WV.Rock(WV.FmtW),V.Title),
 								WV.X(V.UPURL ?
 									WV.Ah(V.UP,V.UPURL) :
 									V.UP),
@@ -371,6 +374,24 @@
 						))
 						PagerT.At(S.At,S.Max)
 						PagerB.At(S.At,S.Max)
+						if (S.Pref)
+						{
+							if (GoPrefAction !== GoAction)
+							{
+								GoPrefAction = GoAction
+								N = S.Pref(function()
+								{
+									Jump(PagerT.At())
+								})
+								WV.Con(Pref,N.R)
+								GoPref = N.O
+							}
+						}
+						else
+						{
+							GoPrefAction = null
+							WV.Clear(Pref)
+						}
 					},function(E)
 					{
 						BriefKeyword.U(ErrorS(E))
@@ -451,6 +472,7 @@
 				'|U|',
 				null,null,'|'
 			),
+			Pref = WV.Rock(),
 			List = WV.Rock(ClassList + ' ' + ClassMargin),
 			PagerT = WV.Page({Inp : Jump}),
 			PagerB = WV.Page({Inp : Jump});
@@ -465,7 +487,7 @@
 				}
 			},List)
 
-			WV.ApR([Keyword,Brief,PagerT,List,PagerB],WV.ClsA(V,ClassPadding))
+			WV.ApR([Keyword,Brief,PagerT,Pref,List,PagerB],WV.ClsA(V,ClassPadding))
 
 			ShortCut.On(ShortCutGeneralFocus,function()
 			{
@@ -1101,6 +1123,10 @@
 					Q = WW.IsObj(Q) ? Q : {url : Q}
 					;(Q.headers || (Q.headers = {}))[K] = V
 					return Q
+				},
+				Auth : function()
+				{
+					return !!Cipher
 				},
 				Coke : function()
 				{

@@ -18,6 +18,7 @@ declare module CrabSaveNS
 		Req(Q : string | WishNS.RequestOption,H : true) : WishNS.Provider<[number | false,string,WishNS.RequestHeader]>
 		Api(Q : string | WishNS.RequestOption) : WishNS.Provider<string>
 		Head(Q : string | WishNS.RequestOption,K : string,V : string) : WishNS.RequestOption
+		Auth() : boolean
 		Coke() : string
 		Bad(Code? : any,Message : any) : never
 		Num(Q : string) : RegExp

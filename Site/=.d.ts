@@ -27,7 +27,7 @@ declare module CrabSaveNS
 		Len? : number
 		Size? : number
 		Item : SiteItem[]
-		Pref? : WishNS.PrefU<object>
+		Pref?(OnInput : Function) : WishNS.PrefU<object>
 	}
 	interface SiteItem
 	{
@@ -38,6 +38,7 @@ declare module CrabSaveNS
 		URL? : string
 		Img? : string
 		Title? : string
+		TitleView? : WishNS.EleContent
 		UP? : string
 		UPURL? : string
 		Date? : string

@@ -45,7 +45,7 @@ module.exports = Option =>
 	RequestMake = (Q,S) =>
 	{
 		Q = WW.Merge(false,true,WW.IsObj(Q) ? Q : {url : Q},RequestDefault)
-		WR.Has('User-Agent',Q.headers) || (Q.headers['User-Agent'] = WW.Key())
+		WR.Has(WW.UA,Q.headers) || (Q.headers[WW.UA] = WW.Key())
 		DataSetting.D('Proxy') && WW.IsStr(DataSetting.D('ProxyURL')) &&
 			(Q.proxy = DataSetting.D('ProxyURL').replace(/^(?!\w+:\/\/)/,'http://'))
 		return Request(Q,S)
