@@ -319,7 +319,7 @@
 						WR.EachU(function(V,F)
 						{
 							var
-							IDView = V.Non ? V.View || V.ID : GoSite.IDView(V.ID),
+							IDView = V.View || (V.Non ? V.ID : GoSite.IDView(V.ID)),
 							URL = V.URL || false !== V.URL && GoSite.IDURL && GoSite.IDURL(V.ID),
 							Img;
 							WV.Ap(WV.Con(WV.Rock(ClassCard + ' ' + WV.S4,'fieldset'),
@@ -351,7 +351,7 @@
 									WV.Ah(V.UP,V.UPURL) :
 									V.UP),
 								!!V.Date && WV.X(WW.IsStr(V.Date) ? V.Date : DTS(V.Date)),
-								!!V.More && WV.Con(WV.Rock(),V.More)
+								!!V.More && WV.Con(WV.Rock(WV.FmtW),V.More)
 							]),List)
 							V.Non && Img && URL && WV.On('click',function()
 							{
@@ -1208,6 +1208,10 @@
 				High : function(V)
 				{
 					return WV.T(WV.Rock(ClassHighLight,'span'),V)
+				},
+				Ah : function(Q,S)
+				{
+					return WV.X(WV.Ah(Q,S))
 				}
 			},WW,WC,WR,WX,WV);
 			if (!WW.IsNum(SiteMap[V.ID])) return

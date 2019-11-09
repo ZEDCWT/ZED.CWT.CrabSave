@@ -12,6 +12,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliApiWeb = BiliBiliApi + 'x/web-interface/',
 	BiliBiliApiWebNav = BiliBiliApiWeb + 'nav',
 	BiliBiliApiWebView = WW.Tmpl(BiliBiliApiWeb,'view?aid=',undefined),
+	BiliBiliApiPlayerSo = WW.Tmpl(BiliBiliApi,'x/player.so?aid=',undefined,'&id=cid:',undefined),
+	BiliBiliApiSteinNode = WW.Tmpl(BiliBiliApi,'x/stein/nodeinfo?aid=',undefined,'&graph_version=',undefined,'&node_id=',undefined),
 	BiliBiliApiFo = WW.Tmpl(BiliBiliApi,'x/relation/followings?vmid=',undefined,'&ps=',O.Size,'&pn=',undefined),
 	BiliBiliApiSearchTypeVideo = 'video',
 	BiliBiliApiSearchTypeBgm = 'media_bangumi',
@@ -31,7 +33,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	// Appkey = '20bee1f7a18a425c',
 	Common = function(V)
 	{
-		V = WW.IsObj(V) ? V:  WC.JTO(V)
+		V = WW.IsObj(V) ? V : WC.JTO(V)
 		V.code && O.Bad(V.code,V.msg || V.message)
 		false === V.status && O.Bad(V.data)
 		return V.data || V.result
@@ -50,8 +52,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			More :
 			[
 				null != V.ctime && 'CTime ' + O.DTS(1E3 * V.ctime),
-				V.redirect_url && WV.X(WV.Ah(E = WW.MU(/ep\d+/,V.redirect_url),BiliBiliBgmEP(E.slice(2))))
-			]
+				V.stein_guide_cid &&
+					O.Ah('Stein ' + V.stein_guide_cid + ' (' + V.videos + ')',
+						BiliBiliVideo(V.aid) + '#Stein'),
+				V.redirect_url && O.Ah(E = WW.MU(/ep\d+/,V.redirect_url),BiliBiliBgmEP(E = E.slice(2)))
+			],
+			EP : E
 		}
 	},
 	SolveHighLightRaw,
@@ -82,19 +88,28 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			return -403 === V.code && O.Auth() ?
 				O.Req(BiliBiliApiWebView(ID)) :
 				WX.Just(V)
-		}).Map(function(V)
+		}).FMap(function(V,R)
 		{
 			V = Common(V)
-			return [SolveAV(V)].concat(WR.Map(function(B)
+			R = [SolveAV(V)].concat(WR.Map(function(B)
 			{
 				return {
 					Index : B.page,
-					ID : V.aid + '?p=' + B.page,
+					ID : V.aid + '#' + B.cid,
+					View : 'av' + V.aid + '?p=' + B.page,
+					URL : BiliBiliVideo(V.aid + '?p=' + B.page),
 					Img : V.pic,
 					Title : B.part,
-					Len : B.duration
+					Len : B.duration,
+					More : 'cid' + V.cid,
+					CID : V.cid
 				}
 			},V.pages))
+			return (R[0].EP ? EP2AV(R[0].EP).Tap(function(Q)
+			{
+				R[0].More.push(O.Ah('ss' + Q[1],BiliBiliBgmSS(Q[1])))
+			}) : WX.Just())
+				.Map(WR.Const(R))
 		})
 	},
 	Menu;
@@ -235,6 +250,59 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				})
 			}
 		},{
+			Name : 'Stein',
+			Judge : /AV(\d+)\W+Stein/i,
+			View : O.Less(WX.CacheM(function(ID)
+			{
+				return AV(ID).FMap(function(R)
+				{
+					var CID = R[1].CID;
+					R.pop()
+					return O.Api(O.Head(BiliBiliApiPlayerSo(ID,CID),'Referer',BiliBili)).FMap(function(B)
+					{
+						var Graph = WW.MF(/graph_version":(\d+)/,B)
+						Graph || O.Bad('Unable to acquire GraphVersion')
+						R[0].More.push('Graph ' + Graph)
+						return WX.Exp(function(Node)
+						{
+							return O.Api(BiliBiliApiSteinNode(ID,Graph,Node[0])).Map(function(V)
+							{
+								V = Common(V)
+								R.push(
+								{
+									ID : ID + '#' + Node[1],
+									URL : BiliBiliVideo(ID),
+									Img : V.story_list[0].cover.replace(CID,Node[1]),
+									Title : '[' + V.node_id + '] ' + V.title,
+									More : V.edges && V.edges.choices,
+									Node : V.node_id
+								})
+								return V.edges && WR.Map(function(B)
+								{
+									return [B.node_id,B.cid]
+								},V.edges.choices)
+							})
+						},['',CID],true)
+					}).Map(function(C)
+					{
+						R.sort(function(Q,S)
+						{
+							return !Q.Len - !S.Len ||
+								Q.Node - S.Node
+						})
+						C = WR.ReduceU(function(D,V,F){D[V.Node] = F},{},R)
+						WR.EachU(function(V,F)
+						{
+							F && V.More && (V.More = WR.Map(function(B)
+							{
+								return '[' + C[B.node_id] + ':' + B.node_id + '] ' + B.option
+							},V.More).join('\n'))
+						},R)
+						return R
+					})
+				})
+			}))
+		},{
 			Name : 'Video',
 			Judge : [/^\d+$/,O.Num('Video|AID|AV')],
 			View : O.Less(AV)
@@ -317,11 +385,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			{
 				return EP2AV(ID).FMap(function(Q)
 				{
-					return AV(Q[0]).Map(function(B)
-					{
-						B[0].More.push(WV.X(WV.Ah('ss' + Q[1],BiliBiliBgmSS(Q[1]))))
-						return B
-					})
+					return AV(Q[0])
 				})
 			})
 		},{
@@ -348,11 +412,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					{
 						return {
 							Index : F,
-							ID : V.aid,
+							ID : V.aid + '#' + V.cid,
+							URL : BiliBiliBgmEP(V.id),
 							Img : V.pic,
 							Title : WR.Trim(V.title + ' ' + V.long_title),
 							UP : 'ep' + V.id,
-							UPURL : BiliBiliBgmEP(V.id)
+							UPURL : BiliBiliBgmEP(V.id),
+							More : 'cid' + V.cid
 						}
 					},B.episodes))
 				})

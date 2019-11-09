@@ -32,6 +32,7 @@ declare module CrabSaveNS
 		More<U,N>(Q : (ID : string) => WishNS.Provider<[U[],N]>,S : (ID : string,Page : number,O : U[]) => WishNS.Provider<N>,M : (Q : N) => SitePage) : WishNS.Provider<SitePage>
 		DTS(Q : string | number) : string
 		High(Q : string) : WishNS.EleContent
+		Ah(Title : string,URL : string) : WishNS.Ele
 	}
 
 	interface Setting
