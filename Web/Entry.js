@@ -26,7 +26,6 @@
 	SizeHeader = 40,
 	SizeFooter = 40,
 	SizeCardWidth = 200,
-	Timeout = 1E4,
 	PageSize = 30,
 
 	Href = location.href.replace(/[?#].*/,'').replace(/^http/,'ws'),
@@ -70,6 +69,7 @@
 		ShortCut.On(Q,function(){RTab.Is(K) && S()})
 	},
 	Setting = {},
+	BrowserOnProgress,
 
 	Online,
 	WebSocketRetry = 0,
@@ -264,11 +264,7 @@
 				S = GoSolve(Q);
 				if (WW.IsArr(S))
 				{
-					GoKeyWord = Q
-					if (GoSite !== (GoSite = S[0]) | GoAction !== (GoAction = S[1]))
-						GoPref = undefined
-					GoID = S[2]
-					Jump(0)
+					Jump(0,S[0],S[1],S[2],Q)
 					Keyword.Foc()
 				}
 				else Noti.S(S)
@@ -298,29 +294,38 @@
 					},V.Judge)
 				},Site.Map)
 				return Action ?
-					[Site,Action,ID,Q.slice(0,-ID.length)] :
+					[Site,Action,WR.Trim(ID),Q.slice(0,-ID.length)] :
 					'Unable to resolve `' + T + '` in site `' + SiteSolveName(Site) + '`'
 			},
 
 			JumpEnd = WX.EndL(),
-			Jump = function(Q)
+			Jump = function(Q,Site,Action,ID,Key)
 			{
 				var N = WW.Now();
-				if (GoAction)
+				if (!Key)
+				{
+					Site = GoSite
+					Action = GoAction
+					ID = GoID
+					Key = GoKeyWord
+				}
+				if (Action)
 				{
 					if (!BriefKeywordOn) BriefKeywordOn = WV.Con(Brief,BriefKeyword.R)
-					BriefKeyword.K(GoKeyWord)
-						.S(SiteSolveName(GoSite)).A(GoAction.Name).I(GoID)
+					BriefKeyword.K(Key)
+						.S(SiteSolveName(Site))
+						.A(Action.Name)
+						.I(ID)
 						.U('Loading...')
-					JumpEnd(GoAction.View(GoID,Q,GoPref).Now(function(/**@type {CrabSaveNS.SitePage}*/S)
+					JumpEnd(Action.View(ID,Q,Action === GoPrefAction ? GoPref : undefined).Now(function(/**@type {CrabSaveNS.SitePage}*/S)
 					{
 						WV.Clear(List)
 						S.Size = S.Size || PageSize
 						WR.EachU(function(V,F)
 						{
 							var
-							IDView = V.View || (V.Non ? V.ID : GoSite.IDView(V.ID)),
-							URL = V.URL || false !== V.URL && GoSite.IDURL && GoSite.IDURL(V.ID),
+							IDView = V.View || (V.Non ? V.ID : Site.IDView(V.ID)),
+							URL = V.URL || false !== V.URL && Site.IDURL && Site.IDURL(V.ID),
 							Img;
 							WV.Ap(WV.Con(WV.Rock(ClassCard + ' ' + WV.S4,'fieldset'),
 							[
@@ -374,11 +379,15 @@
 						))
 						PagerT.At(S.At,S.Max)
 						PagerB.At(S.At,S.Max)
+						GoSite = Site
+						GoAction = Action
+						GoID = ID
+						GoKeyWord = Key
 						if (S.Pref)
 						{
-							if (GoPrefAction !== GoAction)
+							if (GoPrefAction !== Action)
 							{
-								GoPrefAction = GoAction
+								GoPrefAction = Action
 								N = S.Pref(function()
 								{
 									Jump(PagerT.At())
@@ -390,6 +399,7 @@
 						else
 						{
 							GoPrefAction = null
+							GoPref = null
 							WV.Clear(Pref)
 						}
 					},function(E)
@@ -417,7 +427,7 @@
 					Keyword.Hint(undefined,KeywordHintLoad.R)
 						.Drop()
 					;(S[1][KeywordCache] || (S[1][KeywordCache] = WX.CacheM(S[1].Hint)))
-						(WR.Trim(S[2]))
+						(S[2])
 						.Now(function(V)
 						{
 							if (HintCurrent === C)
@@ -498,6 +508,11 @@
 			ShortCutOnPage(K,ShortCutBrowsePrev,PagerT.Prev)
 			ShortCutOnPage(K,ShortCutBrowseNext,PagerT.Next)
 			ShortCutOnPage(K,ShortCutBrowseLast,PagerT.Last)
+
+			BrowserOnProgress = function(Q)
+			{
+				BriefKeyword.U('Loading... ' + Q)
+			}
 
 			return {
 				CSS : function(ID)
@@ -1089,7 +1104,7 @@
 					Q.Cookie = V.Cookie
 					return WX.Provider(function(O)
 					{
-						var T = WW.Key(),U;
+						var T = WW.Key();
 						if (WebSocketSendAuth([ActionAuthApi,T,Q]))
 						{
 							WSOnApi[T] = function(B)
@@ -1100,17 +1115,11 @@
 								else if (B[2] && /^2/.test(B[2])) O.D(B[3]).F()
 								else O.E(B.slice(2))
 							}
-							U = WW.To(Timeout,function()
-							{
-								WR.Del(T,WSOnApi)
-								O.E('Timeout')
-							})
 						}
 						else T = WW.Throw(Online ? 'Unauthorized' : 'Offline')
 						return function()
 						{
 							T && WebSocketSendAuth([ActionAuthApi,T,false])
-							U && U.F()
 						}
 					})
 				},
@@ -1136,6 +1145,10 @@
 				{
 					WW.Throw(null == S ? Q : '[' + Q + '] ' + S)
 				},
+				BadR : function(Q)
+				{
+					WW.Throw('Bad response ' + (WW.IsObj(Q) ? WC.OTJ(Q) : Q))
+				},
 				Num : function(Q)
 				{
 					return RegExp('\\b(?:' + Q + ')(?![A-Z])\\D*(\\d+)','i')
@@ -1144,10 +1157,22 @@
 				{
 					return RegExp('\\b(?:' + Q + ')[\\s/=]+([^&?#\\s]+)','i')
 				},
-				TL : /\b(?:Dynamic|Sub|Subscri(?:be|ption)|Timeline|TL)\b|^$/i,
+				TL :
+				[
+					/^$/,
+					/\b(?:Dynamic|Sub|Subscri(?:be|ption)|Timeline|TL)\b/i,
+					/\b(?:Top|Repo)\b/i
+				],
 				UP : /\b(?:Up|Uploader|Fo|Follow|Following)\b/i,
 				Find : /^(?:\?|Find|Search)\s+(?!\s)(.+)$/i,
 				Size : PageSize,
+				Pascal : function(Q)
+				{
+					return Q.replace(/[A-Z]?[a-z]+/g,function(V)
+					{
+						return V.charAt(0).toUpperCase() + V.slice(1)
+					})
+				},
 				Less : function(Q)
 				{
 					/**@type {CrabSaveNS.SiteItem[]}*/
@@ -1186,7 +1211,7 @@
 					return function(ID,Page)
 					{
 						return Cache && Page ?
-							S(ID,Page,Cache).Map(function(V)
+							S(Cache,Page,ID).Map(function(V)
 							{
 								V = M(V)
 								Len += V.Item.length - (0 | Count[Page])
@@ -1204,6 +1229,14 @@
 							})
 					}
 				},
+				SolU : function(Q,S)
+				{
+					if (WR.StartW('//',Q))
+						Q = 'http:' + Q
+					if (WR.StartW('/',Q))
+						Q = WW.MU(/^[^/]+\/\/[^/]+/,S) + Q
+					return Q
+				},
 				DTS : DTS,
 				High : function(V)
 				{
@@ -1212,7 +1245,8 @@
 				Ah : function(Q,S)
 				{
 					return WV.X(WV.Ah(Q,S))
-				}
+				},
+				Progress : BrowserOnProgress
 			},WW,WC,WR,WX,WV);
 			if (!WW.IsNum(SiteMap[V.ID])) return
 			V.Judge || (V.Judge = /(?!)/)

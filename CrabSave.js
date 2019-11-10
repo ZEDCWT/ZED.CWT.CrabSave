@@ -196,7 +196,13 @@ module.exports = Option =>
 							ApiPool.set(K,RequestMake(O,(E,I,R) =>
 							{
 								ApiPool.delete(K)
-								SendAuth([ActionAuthApi,K,!E && I.statusCode,R,I && I.headers])
+								SendAuth(
+								[
+									ActionAuthApi,K,
+									!E && I.statusCode,
+									E ? (WW.IsObj(E) && E.stack || E) : R,
+									I && I.headers
+								])
 							}))
 						}
 						break
