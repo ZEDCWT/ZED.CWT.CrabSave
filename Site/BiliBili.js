@@ -91,15 +91,19 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		}).FMap(function(V,R)
 		{
 			V = Common(V)
-			R = [SolveAV(V)].concat(WR.Map(function(B)
+			R = SolveAV(V)
+			R = [R].concat(WR.MapU(function(B,F)
 			{
 				return {
 					Index : B.page,
 					ID : V.aid + '#' + B.cid,
 					View : 'av' + V.aid + '?p=' + B.page,
 					URL : BiliBiliVideo(V.aid + '?p=' + B.page),
-					Img : V.pic,
-					Title : B.part,
+					Img : R.Img,
+					Title : R.Title + '.' + WR.PadU(F,~-V.pages.length) + (B.part ? '.' + B.part : ''),
+					TitleView : B.part,
+					UP : R.UP,
+					UPURL : R.UPURL,
 					Len : B.duration,
 					More : 'cid' + V.cid,
 					CID : V.cid
@@ -429,7 +433,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							Index : F,
 							ID : V.aid + '#' + V.cid,
 							URL : BiliBiliBgmEP(V.id),
-							Img : V.pic,
+							Img : V.cover,
 							Title : WR.Trim(V.title + ' ' + V.long_title),
 							UP : 'ep' + V.id,
 							UPURL : BiliBiliBgmEP(V.id),

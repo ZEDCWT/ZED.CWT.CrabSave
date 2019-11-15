@@ -39,6 +39,15 @@
 	ClassMargin = WW.Key(),
 	ClassPadding = WW.Key(),
 	ClassHighLight = WW.Key(),
+	ClassSingle = WW.Key(),
+	MakeHigh = function(V)
+	{
+		return WV.T(WV.Rock(ClassHighLight,'span'),V)
+	},
+	MakeSingle = function()
+	{
+		return WV.T(WV.Rock(ClassSingle),'\xA0')
+	},
 
 	CrabSave = Top.CrabSave,
 
@@ -70,6 +79,17 @@
 	},
 	Setting = {},
 	BrowserOnProgress,
+
+	IDCombine = function(Site,ID)
+	{
+		return Site.ID + '|' + ID
+	},
+	IsCold,
+	BrowserUpdate,
+	ColdAdd,
+	ColdDel,
+	IsHot,
+	IsHistory,
 
 	Online,
 	WebSocketRetry = 0,
@@ -225,6 +245,7 @@
 		'.`P`{padding:`p`px}' +
 		'.`H`{color:#2672EC}' +
 		'.`F`>.`H`{color:inherit}' +
+		'.`I`{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}' +
 		'',
 		{
 			h : SizeHeader,
@@ -240,6 +261,7 @@
 			G : ClassMargin,
 			P : ClassPadding,
 			H : ClassHighLight,
+			I : ClassSingle,
 
 			p : Padding
 		}
@@ -253,6 +275,8 @@
 			ClassBrief = WW.Key(),
 			ClassList = WW.Key(),
 			ClassCard = WW.Key(),
+			ClassCardClick = WW.Key(),
+			ClassCardBar = WW.Key(),
 
 			GoKeyWord,
 			GoSite,GoAction,GoID,
@@ -298,6 +322,79 @@
 					'Unable to resolve `' + T + '` in site `' + SiteSolveName(Site) + '`'
 			},
 
+			Bar = [],
+			BarMap = {},
+			BarNone = 0,
+			BarCold = 1,
+			BarHot = 2,
+			BarHistory = 3,
+			MakeBar = function(Site,Q,V)
+			{
+				var
+				ID = IDCombine(Site,Q.ID),
+				B = WV.Rock(ClassCardBar),
+				State,
+				Reload = function()
+				{
+					var
+					Next = IsHot(ID) ? BarHot :
+						IsCold(ID) ? BarCold :
+						IsHistory(ID) ? BarHistory :
+						BarNone;
+					if (Next !== State)
+					{
+						WV.ClsR(V,WV.Foc)
+						WV.ClsR(V,WV.Alt)
+						State = Next
+						if (BarNone === State)
+						{
+							WV.T(B,'Add')
+						}
+						else if (BarCold === State)
+						{
+							WV.T(B,'Cold')
+							WV.ClsA(V,WV.Foc)
+						}
+						else if (BarHot === State)
+						{
+							WV.T(B,'Hot')
+							WV.ClsA(V,WV.Foc)
+						}
+						else if (BarHistory === State)
+						{
+							WV.T(B,'History')
+							WV.ClsA(V,WV.Alt)
+						}
+					}
+				},
+				Add = function()
+				{
+					ColdAdd(ID,Site,Q)
+				},
+				Del = function()
+				{
+					ColdDel(ID)
+				};
+				WV.Pre(B,V)
+				WV.On('click',function()
+				{
+					if (BarNone === State || BarHistory === State)
+						Add()
+					else if (BarCold === State)
+						Del()
+				},V)
+				Reload()
+				Bar.push(
+				{
+					R : Reload,
+					A : Add,
+					D : Del
+				})
+				BarMap[ID] ?
+					BarMap[ID].push(WR.Last(Bar)) :
+					BarMap[ID] = [WR.Last(Bar)]
+			},
+
 			JumpEnd = WX.EndL(),
 			Jump = function(Q,Site,Action,ID,Key)
 			{
@@ -320,12 +417,15 @@
 					JumpEnd(Action.View(ID,Q,Action === GoPrefAction ? GoPref : undefined).Now(function(/**@type {CrabSaveNS.SitePage}*/S)
 					{
 						WV.Clear(List)
+						Bar.length = 0
+						BarMap = {}
 						S.Size = S.Size || PageSize
 						WR.EachU(function(V,F)
 						{
 							var
 							IDView = V.View || (V.Non ? V.ID : Site.IDView(V.ID)),
 							URL = V.URL || false !== V.URL && Site.IDURL && Site.IDURL(V.ID),
+							Click = WV.Rock(ClassCardClick),
 							Img;
 							WV.Ap(WV.Con(WV.Rock(ClassCard + ' ' + WV.S4,'fieldset'),
 							[
@@ -335,14 +435,17 @@
 									' | ',
 									URL ? WV.Ah(IDView,URL,V.Title) : IDView
 								]),
-								V.Img && WV.Attr
-								(
-									Img = WV.A('img'),
-									'src',
-									Setting.ProxyView ?
-										URLApi + V.Img :
-										V.Img
-								),
+								WV.Con(Click,
+								[
+									V.Img && WV.Attr
+									(
+										Img = WV.A('img'),
+										'src',
+										Setting.ProxyView ?
+											URLApi + V.Img :
+											V.Img
+									)
+								]),
 								WW.IsNum(V.Len) ?
 									WV.X(WW.StrS(V.Len)) :
 									WW.IsStr(V.Len) &&
@@ -358,6 +461,7 @@
 								!!V.Date && WV.X(WW.IsStr(V.Date) ? V.Date : DTS(V.Date)),
 								!!V.More && WV.Con(WV.Rock(WV.FmtW),V.More)
 							]),List)
+							V.Non || MakeBar(Site,V,Click)
 							V.Non && Img && URL && WV.On('click',function()
 							{
 								Keyword.V(URL)
@@ -504,11 +608,27 @@
 				RTab.At(K)
 				Keyword.Foc(true)
 			})
+			ShortCutOnPage(K,ShortCutBrowseSelAll,function()
+			{
+				WR.Each(function(V){V.A()},Bar)
+			})
+			ShortCutOnPage(K,ShortCutBrowseSelClear,function()
+			{
+				WR.Each(function(V){V.D()},Bar)
+			})
 			ShortCutOnPage(K,ShortCutBrowseHead,PagerT.Head)
 			ShortCutOnPage(K,ShortCutBrowsePrev,PagerT.Prev)
 			ShortCutOnPage(K,ShortCutBrowseNext,PagerT.Next)
 			ShortCutOnPage(K,ShortCutBrowseLast,PagerT.Last)
 
+			BrowserUpdate = function(Q)
+			{
+				WR.Each(function(V)
+				{
+					WR.Has(V,BarMap) &&
+						WR.Each(function(B){B.R()},BarMap[V])
+				},Q)
+			}
 			BrowserOnProgress = function(Q)
 			{
 				BriefKeyword.U('Loading... ' + Q)
@@ -536,12 +656,18 @@
 							'word-break:break-all' +
 						'}' +
 						'.`C` legend{font-weight:bold}' +
-						'.`C` img{width:100%;max-height:`m`px;cursor:pointer}',
+						'.`K`{cursor:pointer}' +
+						'.`S`{color:#F7F7F7;font-weight:bold;text-align:center}' +
+						'.`K`:hover .`S`,.`S`.`A`{background:rgba(102,175,224,.7)}' +
+						'.`K`.`O` .`S`{background:#66AFE0}' +
+						'.`C` img{width:100%;max-height:`m`px}',
 						{
 							R : ID,
 							I : WV.InpW,
 							D : WV.InpD,
 							B : WV.ButW,
+							A : WV.Alt,
+							O : WV.Foc,
 
 							p : Padding,
 							h : PaddingHalf,
@@ -551,6 +677,8 @@
 							e : WV.Exp('box-shadow','inset 0 0 3px 2px rgba(0,0,0,.2)'),
 							L : ClassList,
 							C : ClassCard,
+							K : ClassCardClick,
+							S : ClassCardBar,
 							c : SizeCardWidth,
 							m : 2 * SizeCardWidth
 						}
@@ -558,17 +686,146 @@
 				}
 			}
 		}],
-		['Cold',function()
+		['Cold',function(V,_,K)
 		{
+			var
+			Cold = [],
+			ColdMap = {},
+			FillSingle = function(Q,W,A)
+			{
+				WV.Con(Q,A ?
+					[W,MakeHigh(' @ '),A] :
+					W)
+				WV.Ti(Q,A ? W + ' @ ' + A : W)
+			},
+			List = WV.List(
+			{
+				Data : Cold,
+				Pan : V,
+				Sel : true,
+				Make : function(V,S)
+				{
+					var
+					ID = MakeSingle(),
+					Title = MakeSingle();
+					WV.ApA([ID,Title],V)
+					return {
+						U : function(V)
+						{
+							FillSingle(ID,V.I,V.S)
+							FillSingle(Title,V.T,V.U)
+						}
+					}
+				}
+			});
 
+			ShortCutOnPage(K,ShortCutListSelAll,List.SelAll)
+			ShortCutOnPage(K,ShortCutListSelClear,List.SelClr)
+
+			IsCold = function(ID){return WR.Has(ID,ColdMap)}
+			ColdAdd = function(ID,Site,/**@type {CrabSaveNS.SiteItem}*/Q)
+			{
+				if (!IsCold(ID))
+				{
+					List.Push(ColdMap[ID] =
+					{
+						S : Site.ID,
+						I : Q.ID,
+						T : Q.Title,
+						U : Q.UP
+					})
+					BrowserUpdate([ID])
+				}
+			}
+			ColdDel = function(ID,T)
+			{
+				if (IsCold(ID))
+				{
+					T = Cold.indexOf(ColdMap[ID])
+					WR.Del(ID,ColdMap)
+					~T && List.Splice(T,1)
+					BrowserUpdate([ID])
+				}
+			}
+			return {
+				CSS : function(ID)
+				{
+					return WW.Fmt
+					(
+						'#`R` .`I`{padding:`h`px}',
+						{
+							R : ID,
+							I : WV.ListI,
+
+							h : PaddingHalf
+						}
+					)
+				},
+				Show : List.In,
+				HideP : List.Out
+			}
 		}],
-		['Hot',function()
+		['Hot',function(V,_,K)
 		{
+			var
+			Hot = [],
+			HotMap = {},
+			List = WV.List(
+			{
+				Data : Hot,
+				Pan : V,
+				Sel : true,
+				Make : function(V,S)
+				{
+					return {
+						U : function(V)
+						{
 
+						}
+					}
+				}
+			});
+
+			ShortCutOnPage(K,ShortCutListSelAll,List.SelAll)
+			ShortCutOnPage(K,ShortCutListSelClear,List.SelClr)
+
+			IsHot = function(ID){return WR.Has(ID,HotMap)}
+
+			return {
+				Show : List.In,
+				HideP : List.Out
+			}
 		}],
-		['History',function()
+		['History',function(V,_,K)
 		{
+			var
+			History = [],
+			HistoryMap = {},
+			List = WV.List(
+			{
+				Data : History,
+				Pan : V,
+				Sel : true,
+				Make : function(V,S)
+				{
+					return {
+						U : function(V)
+						{
 
+						}
+					}
+				}
+			});
+
+			ShortCutOnPage(K,ShortCutListSelAll,List.SelAll)
+			ShortCutOnPage(K,ShortCutListSelClear,List.SelClr)
+
+			IsHistory = function(ID){return WR.Has(ID,HistoryMap)}
+
+			return {
+				Show : List.In,
+				HideP : List.Out
+			}
 		}],
 		['Component',function()
 		{
@@ -1238,10 +1495,7 @@
 					return Q
 				},
 				DTS : DTS,
-				High : function(V)
-				{
-					return WV.T(WV.Rock(ClassHighLight,'span'),V)
-				},
+				High : MakeHigh,
 				Ah : function(Q,S)
 				{
 					return WV.X(WV.Ah(Q,S))

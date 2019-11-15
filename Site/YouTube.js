@@ -47,8 +47,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					Date : new Date(V.snippet.publishedAt),
 					Len : WW.PTP(V.contentDetails.duration),
 					Desc : V.snippet.description,
-					More : WR.Up(V.contentDetails.dimension + ' ' + V.contentDetails.definition) + '\n' +
-						'Caption ' + (V.contentDetails.caption ? 'on' : 'off')
+					More : WR.Up(V.contentDetails.dimension + ' ' + V.contentDetails.definition) +
+						('true' === V.contentDetails.caption ? '\nCaption On' : '')
 				}
 			},B.items)
 		}
