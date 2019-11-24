@@ -9,12 +9,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliBgmEP = WW.Tmpl(BiliBili,'bangumi/play/ep',undefined),
 	BiliBiliMyList = WW.Tmpl(BiliBili,'mylist/mylist-',undefined,'.js'),
 	BiliBiliApi = 'https://api.bilibili.com/',
+	BiliBiliApiFav = WW.Tmpl(BiliBiliApi,'medialist/gateway/base/spaceDetail?media_id=',undefined,'&pn=',undefined,'&ps=20'),
 	BiliBiliApiWeb = BiliBiliApi + 'x/web-interface/',
 	BiliBiliApiWebNav = BiliBiliApiWeb + 'nav',
 	BiliBiliApiWebView = WW.Tmpl(BiliBiliApiWeb,'view?aid=',undefined),
 	BiliBiliApiPlayerSo = WW.Tmpl(BiliBiliApi,'x/player.so?aid=',undefined,'&id=cid:',undefined),
 	BiliBiliApiSteinNode = WW.Tmpl(BiliBiliApi,'x/stein/nodeinfo?aid=',undefined,'&graph_version=',undefined,'&node_id=',undefined),
 	BiliBiliApiFo = WW.Tmpl(BiliBiliApi,'x/relation/followings?vmid=',undefined,'&ps=',O.Size,'&pn=',undefined),
+	BiliBiliApiChannel = WW.Tmpl(BiliBiliApi,'x/space/channel/video?mid=',undefined,'&cid=',undefined,'&pn=',undefined,'&ps=',O.Size),
 	BiliBiliApiSearchTypeVideo = 'video',
 	BiliBiliApiSearchTypeBgm = 'media_bangumi',
 	BiliBiliApiSearchTypeFilm = 'media_ft',
@@ -325,6 +327,47 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Name : 'Video',
 			Judge : [/^\d+$/,O.Num('Video|AID|AV')],
 			View : O.Less(AV)
+		},{
+			Name : 'Fav',
+			Judge : O.Num('Fav|FID'),
+			View : function(ID,Page)
+			{
+				return O.Api(BiliBiliApiFav(ID,-~Page)).Map(function(B)
+				{
+					B = Common(B)
+					return {
+						Len : B.info.media_count,
+						Size : 20,
+						Item : WR.Map(function(V)
+						{
+							return {
+								ID : V.id,
+								Img : V.cover,
+								Title : V.title,
+								UP : V.upper.name,
+								UPURL : BiliBiliSpace + V.upper.mid,
+								Date : 1E3 * V.pubtime,
+								Desc : V.intro
+							}
+						},B.medias)
+					}
+				})
+			}
+		},{
+			Name : 'Channel',
+			Judge : [/(\d+).*\bChannel\b.*?CID=(\d+)/i,/\bChannel\b\W+(\d+)#(\d+)/i],
+			View : function(ID,Page)
+			{
+				ID = WR.Match(/\d+/g,ID)
+				return O.Api(BiliBiliApiChannel(ID[0],ID[1],-~Page)).Map(function(B)
+				{
+					B = Common(B).list
+					return {
+						Len : B.count,
+						Item : WR.Map(SolveAV,B.archives)
+					}
+				})
+			}
 		},{
 			Name : 'User',
 			Judge : O.Num('Space|User'),

@@ -6,6 +6,12 @@ Site = require('./Site/_'),
 HTTP = require('http'),
 Request = require('request'),
 
+ActionWebTaskNew = 'TaskN',
+ActionWebTaskOverview = 'TaskO',
+ActionWebTaskPlay = 'TaskP',
+ActionWebTaskPause = 'TaskU',
+ActionWebTaskRemove = 'TaskD',
+ActionWebTaskHist = 'TaskH',
 ActionWebShortCut = 'SC',
 ActionWebError = 'Err',
 ActionAuthHello = 'Hell',
@@ -13,7 +19,12 @@ ActionAuthToken = 'Toke',
 ActionAuthCookie = 'Coke',
 ActionAuthShortCut = 'SC',
 ActionAuthSetting = 'Set',
-ActionAuthApi = 'Api';
+ActionAuthApi = 'Api',
+ActionAuthTaskNew = 'TaskN',
+ActionAuthTaskInfo = 'TaskI',
+ActionAuthTaskPlay = 'TaskP',
+ActionAuthTaskPause = 'TaskU',
+ActionAuthTaskRemove = 'TaskD';
 
 module.exports = Option =>
 {
@@ -27,6 +38,15 @@ module.exports = Option =>
 	CookieMap,
 	DataSetting = WN.JSON(WN.JoinP(PathData,'Setting')),
 	DataShortCut = WN.JSON(WN.JoinP(PathData,'ShortCut')),
+
+	ErrorS = E => WW.IsObj(E) && E.stack || E,
+	NumberZip = WC.Rad(WR.Map(WR.CHR,WR.Range(33,127))),
+
+	DB = require('./DB.SQLite')(
+	{
+		PathData
+	}),
+	DBVersion = 114514,
 
 	WebToken,
 	TokenStepA = Q => WC.HSHA512(Q,'j!ui+Ju8?j'),
@@ -60,7 +80,8 @@ module.exports = Option =>
 	WebServer = HTTP.createServer((Q,S) =>
 	{
 		var U = Q.url.replace(/\?.*/,'');
-		if (WebServerProxy(Q.url,S))
+		WebServerProxy(Q.url,S,Q.headers) &&
+			WebServerDataBase(Q.url,S) &&
 			(WR.Has(U,WebServerMap) ? WN.UR(U = WebServerMap[U]) :
 				/^\/Site\/\w+\.js$/.test(U) ? WN.UR(WN.JoinP(__dirname,U)) :
 				WX.Throw())
@@ -74,19 +95,67 @@ module.exports = Option =>
 					S.end(`Unable to resolve //${Q.headers.host || ''}${Q.url}`)
 				})
 	}),
-	WebServerProxy = (Q,S) =>
+	WebServerProxyOmit = new Set(
+	[
+		'host',
+		'cookie',
+		'set-cookie',
+		'referer',
+		'user-agent'
+	]),
+	WebServerProxy = (Q,S,H) =>
 	{
 		if (!WR.StartW('/Api/',Q)) return 9
 		try
 		{
 			Q = decodeURIComponent(Q.slice(5))
-			'{' === Q[0] && (Q = WC.JTOO(Q))
+			WR.StartW('~',Q) ?
+				Q = Q.slice(1) :
+				H = false
+			WR.StartW('{',Q) && (Q = WC.JTOO(Q))
 			RequestMake(Q)
+				.on('request',O =>
+				{
+					H && WR.EachU(function(V,F)
+					{
+						WebServerProxyOmit.has(WR.Low(F)) ||
+							O.setHeader(F,V)
+					},H)
+				})
+				.on('response',O =>
+				{
+					H && WR.EachU(function(V,F)
+					{
+						WebServerProxyOmit.has(WR.Low(F)) ||
+							S.setHeader(F,V)
+					},O.headers)
+				})
 				.on('data',D => S.write(D))
 				.on('complete',() => S.end())
 				.on('error',() => S.destroy())
 		}
 		catch(_){S.destroy()}
+	},
+	WebServerDataBase = (Q,S) =>
+	{
+		var
+		Each = WR.StartW('/Hot',Q) ? DB.Hot :
+			WR.StartW('/Hist',Q) ? DB.Hist :
+			null;
+		if (!Each) return 9
+		if (String(DBVersion) === Q.replace(/\D/g,'')) return S.end()
+		S.write(DBVersion + '\n')
+		Each(V =>
+		{
+			S.write
+			(
+				NumberZip.S(V.Row) + '\n' +
+				V.Site + '\n' +
+				V.ID + '\n' +
+				(null == V.Size ? '' : NumberZip.S(V.Size)) + '\n' +
+				(null == V.Done ? '' : NumberZip.S(V.Done) + '\n')
+			)
+		},E => E ? S.destroy() : S.end('~'))
 	},
 	WebSocketPool = new Set,
 	WebSocketLast = {},
@@ -124,6 +193,12 @@ module.exports = Option =>
 		{
 			var
 			Err = S => Send([ActionWebError,Q[0],S]),
+			DBMulti = (Q,S) => WW.IsArr(Q) ?
+				WX.From(Q)
+					.FMapO(1,V => S(V).FinErr())
+					.Reduce(WR.Or)
+					.Now(B => B && Err(ErrorS(B[0]))) :
+				Err('Bad request data'),
 			K,O;
 			if (!WW.IsStr(Q)) return Suicide()
 			if (!Q.charCodeAt())
@@ -200,11 +275,41 @@ module.exports = Option =>
 								[
 									ActionAuthApi,K,
 									!E && I.statusCode,
-									E ? (WW.IsObj(E) && E.stack || E) : R,
+									E ? ErrorS(E) : R,
 									I && I.headers
 								])
 							}))
 						}
+						break
+
+					case ActionAuthTaskNew :
+						DBMulti(K,V =>
+							DB.New(
+							{
+								Birth : WW.Now(),
+								Site : V.S,
+								ID : V.I,
+								Title : V.T,
+								UP : V.U
+							}).Map(B =>
+								WebSocketSend([ActionWebTaskNew,++DBVersion,B],true)))
+						break
+					case ActionAuthTaskInfo :
+						DB.Full(K).Now
+						(
+							V => Send([Q[0],K,V]),
+							E => Send([Q[0],K,ErrorS(E)]),
+						)
+						break
+					case ActionAuthTaskPlay :
+						DBMulti(K,V =>
+							DB.Play(V).Map(() =>
+								WebSocketSend([ActionWebTaskPlay,++DBVersion,V],true)))
+						break
+					case ActionAuthTaskPause :
+						DBMulti(K,V =>
+							DB.Pause(V).Map(() =>
+								WebSocketSend([ActionWebTaskPause,++DBVersion,V],true)))
 						break
 				}
 				return
@@ -214,6 +319,13 @@ module.exports = Option =>
 			O = Q[2]
 			switch (Q[0])
 			{
+				case ActionWebTaskOverview :
+					DB.Over(K).Now
+					(
+						V => Send([Q[0],K,V]),
+						E => Send([Q[0],K,ErrorS(E)])
+					)
+					break
 			}
 		}).on('close',() =>
 		{
@@ -237,6 +349,7 @@ module.exports = Option =>
 						.FMap(() => WN.UR(FileToken))
 				)))
 			.Map(Q => WebToken = WC.B91P(Q.split(/\s/)[0]))
+			.FMap(() => DB.Init)
 			.Now(() =>
 			{
 				CookieMap = WR.Map(CookieD,DataCookie.O())
@@ -247,8 +360,8 @@ module.exports = Option =>
 			}),
 		Exp : X => (X = X || require('express').Router())
 			.use((Q,S,N) => '/' === Q.path && !/\/(\?.*)?$/.test(Q.originalUrl) ? S.redirect(302,Q.baseUrl + Q.url) : N())
-			.use(X.json())
-			.use((Q,S,N) => WebServerProxy(Q.path,S) &&
+			.use((Q,S,N) => WebServerProxy(Q.path,S,Q.headers) &&
+				WebServerDataBase(Q.originalUrl,S) &&
 				((Q = WebServerMap[Q.path]) ? S.sendFile(Q) :
 					/^\/Site\/\w+\.js$/.test(Q.path) ? S.sendFile(WN.JoinP(__dirname,Q.path)) :
 					N())),

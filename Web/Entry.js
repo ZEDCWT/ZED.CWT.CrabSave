@@ -12,6 +12,12 @@
 	WebSocket = Top.WebSocket,
 	RegExp = Top.RegExp,
 
+	ActionWebTaskNew = 'TaskN',
+	ActionWebTaskOverview = 'TaskO',
+	ActionWebTaskPlay = 'TaskP',
+	ActionWebTaskPause = 'TaskU',
+	ActionWebTaskRemove = 'TaskD',
+	ActionWebTaskHist = 'TaskH',
 	ActionWebShortCut = 'SC',
 	ActionWebError = 'Err',
 	ActionAuthHello = 'Hell',
@@ -20,13 +26,22 @@
 	ActionAuthShortCut = 'SC',
 	ActionAuthSetting = 'Set',
 	ActionAuthApi = 'Api',
+	ActionAuthTaskNew = 'TaskN',
+	ActionAuthTaskInfo = 'TaskI',
+	ActionAuthTaskPlay = 'TaskP',
+	ActionAuthTaskPause = 'TaskU',
+	ActionAuthTaskRemove = 'TaskD',
 
+	Retry = 1E4,
 	Padding = 20,
 	PaddingHalf = Padding / 2,
+	PaddingQuarter = PaddingHalf / 2,
 	SizeHeader = 40,
 	SizeFooter = 40,
 	SizeCardWidth = 200,
 	PageSize = 30,
+	TaskButtonSize = 80,
+	CacheLimit = 128,
 
 	Href = location.href.replace(/[?#].*/,'').replace(/^http/,'ws'),
 	URLSite = 'Site/',
@@ -34,12 +49,15 @@
 
 	ErrorS = function(E){return '{Error} ' + (WW.IsObj(E) && E.stack || E)},
 	DTS = function(Q){return WW.StrDate(Q,WW.DateColS)},
+	NumberZip = WC.Rad(WR.Map(WR.CHR,WR.Range(33,127))),
 
 	ClassTitleSplit = WW.Key(),
+	ClassCount = WW.Key(),
 	ClassMargin = WW.Key(),
 	ClassPadding = WW.Key(),
 	ClassHighLight = WW.Key(),
 	ClassSingle = WW.Key(),
+	ClassTask = WW.Key(),
 	MakeHigh = function(V)
 	{
 		return WV.T(WV.Rock(ClassHighLight,'span'),V)
@@ -47,6 +65,17 @@
 	MakeSingle = function()
 	{
 		return WV.T(WV.Rock(ClassSingle),'\xA0')
+	},
+	MakeCount = function()
+	{
+		var R = WV.Rock(ClassCount,'span');
+		return {
+			R : R,
+			D : function(Q)
+			{
+				WV.T(R,Q.length ? '[' + Q.length + ']' : '')
+			}
+		}
 	},
 
 	CrabSave = Top.CrabSave,
@@ -82,12 +111,14 @@
 
 	IDCombine = function(Site,ID)
 	{
-		return Site.ID + '|' + ID
+		return (WW.IsObj(Site) ? Site.ID : Site) + '|' + ID
 	},
-	IsCold,
 	BrowserUpdate,
+	ColdCount = MakeCount(),
+	IsCold,
 	ColdAdd,
 	ColdDel,
+	HotCount = MakeCount(),
 	IsHot,
 	IsHistory,
 
@@ -98,6 +129,10 @@
 	WebSocketNotAuthed,WebSocketNotAuthedNoti = Noti.O(),
 	WebSocketSend = WebSocketNotConnected,
 	WebSocketSendAuth = WebSocketNotConnected,
+	WebSocketSendAuthPrecheck = function()
+	{
+		return Cipher || WebSocketNotAuthed()
+	},
 	WebSocketNoti = Noti.O(),
 	TokenStepA = function(Q){return WC.HSHA512(Q,'j!ui+Ju8?j')},
 	TokenStepB = function(Q){return WC.HSHA512('!(|[.:O9;~',Q)},
@@ -142,6 +177,10 @@
 					case ActionAuthApi :
 						WR.Has(K,WSOnApi) && WSOnApi[K](Q)
 						break
+
+					case ActionAuthTaskInfo :
+						TaskFullInfoUpdate(K,O)
+						break
 				}
 				return
 			}
@@ -152,6 +191,19 @@
 			{
 				case ActionWebShortCut :
 					WSOnSC(K)
+					break
+
+				case ActionWebTaskNew :
+				case ActionWebTaskPlay :
+				case ActionWebTaskPause :
+					WSOnDiffHot.D(Q)
+					break
+				case ActionWebTaskOverview :
+					TaskOverviewUpdate(K,O)
+					break
+				case ActionWebTaskRemove :
+					WSOnDiffHot.D(Q)
+					WSOnDiffHist.D(Q)
 					break
 
 				case ActionWebError :
@@ -182,6 +234,7 @@
 				}
 				WebSocketNotAuthed()
 			}
+			WSOnOnline.D()
 		}
 		Client.onclose = function()
 		{
@@ -189,17 +242,46 @@
 			WebSocketSendAuth = WebSocketNotConnected
 			Cipher = Decipher = false
 			WebSocketNoti(['Offline. Since : ',WW.StrDate(WebSocketSince),', Tried : ',WebSocketRetry++])
-			Online ? MakeWebSocket(Online = false) : setTimeout(MakeWebSocket,1E4)
+			Online ?
+				MakeWebSocket(Online = false) :
+				WW.To(Retry,MakeWebSocket)
 			WSOnOffline.D()
 		}
 		WebSocketSince = WebSocketRetry ? WebSocketSince : WW.Now()
 		First || WebSocketNoti(['Connecting...',WebSocketRetry ? ' Retry : ' + WebSocketRetry : ''])
 	},
 	WSOnApi = {},
+	WSOnOnline = WW.BusS(),
 	WSOnOffline = WW.BusS(),
+	WSOnDiffHot,
+	WSOnDiffHist,
 	WSOnCookie,
 	WSOnSC,
 	WSOnSetting,
+
+	MultiMap = function()
+	{
+		var
+		D = {};
+		return {
+			H : function(Q){return WR.Has(Q,D)},
+			G : function(Q){return D[Q]},
+			C : function(){D = {}},
+			D : function(S,Q)
+			{
+				WW.SetAdd(D[S] || (D[S] = WW.Set()),Q)
+				return Q
+			},
+			E : function(S,Q,T)
+			{
+				if (T = D[S])
+				{
+					WW.SetDel(T,Q)
+					WW.Size(T) || WR.Del(S,D)
+				}
+			}
+		}
+	},
 
 	SiteAll = [],
 	SiteMap = {},
@@ -221,6 +303,136 @@
 	{
 		Q = WW.IsObj(Q) ? Q : SiteMap[Q]
 		return Q ? Q.Name || Q.ID : '[Unknown]'
+	},
+
+	TaskBriefRetry = function(H)
+	{
+		return function(E)
+		{
+			return Online ?
+				E.Map(function(E,F)
+				{
+					Noti.S(['Error occured while reading ',H,' list. Tried ',++F,' times. ',ErrorS(E)])
+				}).Delay(Retry).Map(function()
+				{
+					Noti.S('Retry to read ',H,' list')
+				}) :
+				WX.Empty
+		}
+	},
+	TaskBriefSolve = function(S,Q,P,H,N)
+	{
+		var V = [],F = 0,G;
+		F = Q.indexOf('\n')
+		if (!Q) return
+		G = +Q.slice(0,F)
+		if (G !== G) return
+		P(G)
+		for (G = 0;++F < Q.length;)
+		{
+			V[G] = Q.slice(F,~(F = Q.indexOf('\n',F)) ? F : F = Q.length)
+			if (++G === S)
+			{
+				H(V)
+				G = 0
+			}
+		}
+		N()
+	},
+	TaskDiff = function(H)
+	{
+		var
+		State,
+		Queue = [];
+		WSOnOffline.R(function()
+		{
+			State =
+			Queue.length = 0
+		})
+		return {
+			S : function(V)
+			{
+				State = V
+				for (V = 0;V < Queue.length;V += 3)
+					State < Queue[V] && H(State = Queue[V],Queue[-~V],Queue[2 + V])
+				Queue.length = 0
+			},
+			D : function(Q)
+			{
+				State ?
+					State < Q[1] && H(State = Q[1],Q[0],Q[2]) :
+					Queue.push(Q[1],Q[0],Q[2])
+			}
+		}
+	},
+	TaskOverviewCache = {},
+	TaskOverviewList = [],
+	TaskOverviewRequiring = {},
+	TaskOverviewLoad = function(Row)
+	{
+		return WR.Has(Row,TaskOverviewCache) ?
+			WX.Just(TaskOverviewCache[Row],WX.Sync) :
+			WX.Provider(function(O)
+			{
+				WR.Has(Row,TaskOverviewRequiring) &&
+					TaskOverviewRequiring[Row].E('Requested the same task twice #' + Row)
+				if (WebSocketSend([ActionWebTaskOverview,Row]))
+				{
+					TaskOverviewRequiring[Row] = O
+				}
+				else O.E('Not ready')
+				return function()
+				{
+					WR.Del(Row,TaskOverviewRequiring)
+				}
+			})
+	},
+	TaskOverviewUpdate = function(Row,Q)
+	{
+		if (WW.IsObj(Q))
+		{
+			TaskOverviewList.push(Row)
+			if (CacheLimit < TaskOverviewList.length)
+				WR.Del(TaskOverviewList.shift(),TaskOverviewCache)
+			TaskOverviewCache[Row] = Q
+			if (WR.Has(Row,TaskOverviewRequiring))
+				TaskOverviewRequiring[Row].D(Q).F()
+		}
+		else
+			if (WR.Has(Row,TaskOverviewRequiring))
+				TaskOverviewRequiring[Row].E(Q)
+	},
+	TaskFullInfoRow,
+	TaskFullInfoO,
+	TaskFullInfoLoad = function(Row)
+	{
+		return WX.Provider(function(O)
+		{
+			TaskFullInfoO && TaskFullInfoO.E('Cancelled by other requests')
+			TaskFullInfoO = false
+			if (WebSocketSendAuth([ActionAuthTaskInfo,Row]))
+			{
+				TaskFullInfoRow = Row
+				TaskFullInfoO = O
+			}
+			else O.E('Not ready')
+		})
+	},
+	TaskFullInfoUpdate = function(Row,Q)
+	{
+		if (TaskFullInfoRow === Row && TaskFullInfoO)
+		{
+			if (WW.IsObj(Q))
+				TaskFullInfoO.D(Q).F()
+			else
+				TaskFullInfoO.E(Q)
+			TaskFullInfoO = false
+		}
+	},
+	TaskResolvingMap = {},
+	TaskResolving = function(Row)
+	{
+		return WR.Has(Row,TaskResolvingMap)
 	};
 
 	WV.ClsA(RMain[1],WV.NoSel)
@@ -235,35 +447,49 @@
 	WV.Style(WW.Fmt
 	(
 		'body{height:100%;font-size:14px;overflow:hidden}' +
-		'.`N` .`B`{padding-top:0;padding-bottom:0;vertical-align:top}' +
+		'.`N` .`B`{padding-top:0;padding-bottom:0}' +
 
 		'#`M`{position:relative;overflow:hidden}' +
-		'#`T`{min-width:100px;text-align:center;line-height:`h`px;font-weight:bold}' +
+		'#`T`{min-width:110px;text-align:center;line-height:`e`px;font-weight:bold}' +
 		'#`C`{position:relative}' +
+		'#`O` .`A`{display:inline-block;width:100%}' +
 		'.`S`{position:absolute;left:-2px;top:10%;width:2px;height:80%;background:#BBB}' +
+		'.`U`{float:right}' +
 		'.`G`{margin:`p`px 0}' +
 		'.`P`{padding:`p`px}' +
 		'.`H`{color:#2672EC}' +
 		'.`F`>.`H`{color:inherit}' +
 		'.`I`{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}' +
+
+		'.`K`{line-height:1.4}' +
+		'.`K` .`I`.`L`{padding:`h`px 0 0 `h`px}' +
+		'.`K` .`I`{padding:0 0 `h`px `h`px}' +
+		'.`K` .`B`{padding:`q`px}' +
 		'',
 		{
-			h : SizeHeader,
-
 			F : WV.Foc,
+			L : WV.Alt,
 			N : WV.NotiW,
+			D : WV.DivC,
+			A : WV.TabB,
 			B : WV.ButW,
 
 			M : WV.ID(RMain[0]),
 			T : WV.ID(RMain[1]),
 			C : WV.ID(RMain[2]),
+			O : WV.ID(RMain[3]),
 			S : ClassTitleSplit,
+			U : ClassCount,
 			G : ClassMargin,
 			P : ClassPadding,
 			H : ClassHighLight,
 			I : ClassSingle,
+			K : ClassTask,
 
-			p : Padding
+			p : Padding,
+			h : PaddingHalf,
+			q : PaddingQuarter,
+			e : SizeHeader
 		}
 	))
 
@@ -313,7 +539,7 @@
 					return WR.Any(function(B)
 					{
 						B = B.exec(T)
-						ID = B && B[1 in B ? 1 : 0]
+						ID = B && (2 in B ? B.slice(1).join('#') : B[1 in B ? 1 : 0])
 						return B
 					},V.Judge)
 				},Site.Map)
@@ -323,7 +549,7 @@
 			},
 
 			Bar = [],
-			BarMap = {},
+			BarMap = MultiMap(),
 			BarNone = 0,
 			BarCold = 1,
 			BarHot = 2,
@@ -384,15 +610,18 @@
 						Del()
 				},V)
 				Reload()
-				Bar.push(
+				Bar.push(BarMap.D(ID,
 				{
 					R : Reload,
-					A : Add,
-					D : Del
-				})
-				BarMap[ID] ?
-					BarMap[ID].push(WR.Last(Bar)) :
-					BarMap[ID] = [WR.Last(Bar)]
+					A : function()
+					{
+						BarNone === State && Add()
+					},
+					D : function()
+					{
+						BarCold === State && Del()
+					}
+				}))
 			},
 
 			JumpEnd = WX.EndL(),
@@ -418,7 +647,7 @@
 					{
 						WV.Clear(List)
 						Bar.length = 0
-						BarMap = {}
+						BarMap.C()
 						S.Size = S.Size || PageSize
 						WR.EachU(function(V,F)
 						{
@@ -442,7 +671,7 @@
 										Img = WV.A('img'),
 										'src',
 										Setting.ProxyView ?
-											URLApi + V.Img :
+											URLApi + '~' + V.Img :
 											V.Img
 									)
 								]),
@@ -575,6 +804,7 @@
 				Foc : function()
 				{
 					HintErr && Hint(Keyword.V())
+					Keyword.I.select()
 				}
 			}),
 			Brief = WV.Rock(ClassBrief + ' ' + ClassMargin),
@@ -623,11 +853,13 @@
 
 			BrowserUpdate = function(Q)
 			{
-				WR.Each(function(V)
-				{
-					WR.Has(V,BarMap) &&
-						WR.Each(function(B){B.R()},BarMap[V])
-				},Q)
+				Q ?
+					WR.Each(function(V)
+					{
+						BarMap.H(V) &&
+							WR.Each(function(B){B.R()},BarMap.G(V))
+					},Q) :
+					WR.Each(function(B){B.R()},Bar)
 			}
 			BrowserOnProgress = function(Q)
 			{
@@ -658,7 +890,7 @@
 						'.`C` legend{font-weight:bold}' +
 						'.`K`{cursor:pointer}' +
 						'.`S`{color:#F7F7F7;font-weight:bold;text-align:center}' +
-						'.`K`:hover .`S`,.`S`.`A`{background:rgba(102,175,224,.7)}' +
+						'.`K`:hover .`S`,.`K`.`A` .`S`{background:rgba(102,175,224,.7)}' +
 						'.`K`.`O` .`S`{background:#66AFE0}' +
 						'.`C` img{width:100%;max-height:`m`px}',
 						{
@@ -686,7 +918,7 @@
 				}
 			}
 		}],
-		['Cold',function(V,_,K)
+		[['Cold',ColdCount.R],function(V,_,K)
 		{
 			var
 			Cold = [],
@@ -706,9 +938,36 @@
 				Make : function(V,S)
 				{
 					var
+					R = WV.Div(2,['',TaskButtonSize]),
 					ID = MakeSingle(),
-					Title = MakeSingle();
-					WV.ApA([ID,Title],V)
+					Title = MakeSingle(),
+					Commit = WV.But(
+					{
+						X : 'Commit',
+						The : WV.TheP,
+						Blk : true,
+						C : function()
+						{
+							S[0] && WebSocketSendAuth([ActionAuthTaskNew,S])
+						}
+					}),
+					Remove = WV.But(
+					{
+						X : 'Remove',
+						The : WV.TheP,
+						Blk : true,
+						C : function()
+						{
+							S[0] && ColdDel(S[0].O)
+						}
+					});
+					WV.ClsA(ID,WV.Alt)
+					WV.ApA([ID,Title],R[1])
+					WV.On('click',WV.StopProp,Commit.R)
+					WV.On('click',WV.StopProp,Remove.R)
+					WV.ApR([Commit,Remove],R[2])
+					WV.Ap(R[0],V)
+					WV.ClsA(V,ClassTask)
 					return {
 						U : function(V)
 						{
@@ -721,20 +980,41 @@
 
 			ShortCutOnPage(K,ShortCutListSelAll,List.SelAll)
 			ShortCutOnPage(K,ShortCutListSelClear,List.SelClr)
+			ShortCutOnPage(K,ShortCutColdCommit,function()
+			{
+				WebSocketSendAuthPrecheck() && WebSocketSendAuth(
+				[
+					ActionAuthTaskNew,
+					WR.Map(function(V)
+					{
+						return Cold[V]
+					},List.SelL())
+				])
+			})
+			ShortCutOnPage(K,ShortCutColdCommitAll,function()
+			{
+				WebSocketSendAuthPrecheck() && WebSocketSendAuth(
+				[
+					ActionAuthTaskNew,
+					Cold
+				])
+			})
 
 			IsCold = function(ID){return WR.Has(ID,ColdMap)}
 			ColdAdd = function(ID,Site,/**@type {CrabSaveNS.SiteItem}*/Q)
 			{
-				if (!IsCold(ID))
+				if (!IsCold(ID) && !IsHot(ID))
 				{
 					List.Push(ColdMap[ID] =
 					{
+						O : ID,
 						S : Site.ID,
 						I : Q.ID,
 						T : Q.Title,
 						U : Q.UP
 					})
 					BrowserUpdate([ID])
+					ColdCount.D(Cold)
 				}
 			}
 			ColdDel = function(ID,T)
@@ -745,31 +1025,25 @@
 					WR.Del(ID,ColdMap)
 					~T && List.Splice(T,1)
 					BrowserUpdate([ID])
+					ColdCount.D(Cold)
 				}
 			}
 			return {
-				CSS : function(ID)
-				{
-					return WW.Fmt
-					(
-						'#`R` .`I`{padding:`h`px}',
-						{
-							R : ID,
-							I : WV.ListI,
-
-							h : PaddingHalf
-						}
-					)
-				},
 				Show : List.In,
 				HideP : List.Out
 			}
 		}],
-		['Hot',function(V,_,K)
+		[['Hot',HotCount.R],function(V,_,K)
 		{
 			var
+			ClassBar = WW.Key(),
+
 			Hot = [],
-			HotMap = {},
+			HotMap = MultiMap(),
+			HotRowMap = {},
+			HotVersion = '',
+			HotRead = WX.EndL(),
+			HowShown = {},
 			List = WV.List(
 			{
 				Data : Hot,
@@ -777,10 +1051,117 @@
 				Sel : true,
 				Make : function(V,S)
 				{
+					var
+					Row,
+					R = WV.Div(2,['',TaskButtonSize]),
+					Title = MakeSingle(),
+					Status = MakeSingle(),
+					PlayCurrent = 9,
+					Play = WV.But(
+					{
+						The : WV.TheP,
+						C : function()
+						{
+							S[0] && WebSocketSendAuth(
+							[
+								PlayCurrent ? ActionAuthTaskPause : ActionAuthTaskPlay,
+								[S[0].O]
+							])
+						}
+					}),
+					OnState = function(V)
+					{
+						if (PlayCurrent = V)
+						{
+							Play.X('Pause')
+							WV.ClsA(Bar,WV.Foc)
+						}
+						else
+						{
+							Play.X('Restart')
+							WV.ClsR(Bar,WV.Foc)
+						}
+					},
+					Pending = WV.A('span'),
+					Running = WV.Fmt('[`F`] `P`% `H` / `S`',null,WV.A('span')),
+					More = WV.But(
+					{
+						X : 'Detail',
+						The : WV.TheP,
+						Blk : true
+					}),
+					Remove = WV.But(
+					{
+						X : 'Remove',
+						The : WV.TheP,
+						Blk : true,
+						C : function()
+						{
+							S[0] && WebSocketSendAuth(
+							[
+								ActionAuthTaskRemove,
+								[S[0].O]
+							])
+						}
+					}),
+					Bar = WV.Rock(ClassBar),
+					LoadO = WX.EndL();
+					WV.ClsA(Title,WV.Alt)
+					WV.On('click',WV.StopProp,Play.R)
+					WV.Con(Status,[Play.R,Pending])
+					WV.ApR([Title,Status],R[1])
+					WV.On('click',WV.StopProp,More.R)
+					WV.On('click',WV.StopProp,Remove.R)
+					WV.ApR([More,Remove],R[2])
+					WV.ApR([R[0],Bar],V)
+					WV.ClsA(V,ClassTask)
 					return {
 						U : function(V)
 						{
-
+							Play.X('').Off()
+							WV.T(Title,'#' + V.O + ' ' + V.S + ' ' + V.I)
+							WV.T(Pending,'Loading infomation...')
+							LoadO(TaskOverviewLoad(V.O).Now(function(B)
+							{
+								WV.T(Title,B.Title)
+								WV.Con(Pending,
+									TaskResolving(V.O) ? 'Resolving infomation...' :
+									null == B.Size ? 'Ready to resolve infomation' :
+									Running)
+								if (null != B.Size)
+								{
+									Running
+										.F(WR.Sum(B.Part))
+								}
+								Play.On()
+								OnState(B.State)
+							},function(E)
+							{
+								WV.T(Pending,'Failed to load. ' + ErrorS(E))
+							}))
+							if (Row)
+							{
+								WR.Del(Row,HowShown)
+								Row = false
+							}
+							HowShown[Row = V.O] =
+							{
+								S : function(Q)
+								{
+									return undefined === Q ?
+										PlayCurrent :
+										OnState(Q)
+								}
+							}
+						},
+						E : function()
+						{
+							LoadO()
+							if (Row)
+							{
+								WR.Del(Row,HowShown)
+								Row = false
+							}
 						}
 					}
 				}
@@ -789,9 +1170,104 @@
 			ShortCutOnPage(K,ShortCutListSelAll,List.SelAll)
 			ShortCutOnPage(K,ShortCutListSelClear,List.SelClr)
 
-			IsHot = function(ID){return WR.Has(ID,HotMap)}
+			IsHot = HotMap.H
+			WSOnDiffHot = TaskDiff(function(H,Q,S)
+			{
+				var T;
+				HotVersion = H
+				switch (Q)
+				{
+					case ActionWebTaskNew :
+						if (!WR.Has(S.Row,HotRowMap))
+						{
+							List.Push(HotRowMap[S.Row] = HotMap.D(T = IDCombine(S.Site,S.ID),
+							{
+								O : S.Row,
+								S : S.Site,
+								I : S.ID,
+								Z : S.Size
+							}))
+							ColdDel(T)
+							HotCount.D(Hot)
+							BrowserUpdate([T])
+						}
+						break
+					case ActionWebTaskPlay :
+						WR.Has(S,HowShown) &&
+							HowShown[S].S(true)
+						break
+					case ActionWebTaskPause :
+						WR.Has(S,HowShown) &&
+							HowShown[S].S(false)
+						break
+					case ActionWebTaskRemove :
+						if (WR.Has(S.Row,HotRowMap))
+						{
+							H = HotRowMap[S.Row]
+							T = WW.BSL(Hot,S.Row,function(Q,S){return Q.O < S})
+							Hot[T] && Hot[T].O === S.Row &&
+								List.Splice(T,1)
+							WR.Del(S.Row,HotRowMap)
+							HotMap.E(T = IDCombine(H.S,H.I),H)
+							BrowserUpdate([T])
+						}
+						break
+				}
+			})
+
+			WSOnOnline.R(function()
+			{
+				HotRead(WB.ReqB('Hot?' + HotVersion)
+					.RetryWhen(TaskBriefRetry('Hot'))
+					.Now(function(B)
+					{
+						TaskBriefSolve(4,B,function(V)
+						{
+							Hot.length = 0
+							HotMap.C()
+							HotRowMap = {}
+							HotVersion = V
+						},function(V)
+						{
+							V[0] = NumberZip.P(V[0])
+							Hot.push(HotRowMap[V[0]] = HotMap.D(IDCombine(V[1],V[2]),
+							{
+								O : V[0],
+								S : V[1],
+								I : V[2],
+								Z : V[3] ? NumberZip.P(V[3]) : null
+							}))
+						},function()
+						{
+							HotCount.D(Hot)
+							WSOnDiffHot.S(HotVersion)
+							BrowserUpdate()
+							List.Re()
+						})
+					},WW.O,WW.O))
+			})
 
 			return {
+				CSS : function(ID)
+				{
+					return WW.Fmt
+					(
+						'#`R` .`L` .`B`{margin-right:`q`px;padding:0;min-width:0}' +
+						'.`P`{position:absolute;left:0;bottom:0;width:0;height:3px;background:#979797;`t`}' +
+						'.`P`.`O`{background:#69A0D7}',
+						{
+							R : ID,
+							B : WV.ButW,
+							L : ClassSingle,
+							P : ClassBar,
+							O : WV.Foc,
+
+							t : WV.Exp('transition','.2s linear'),
+
+							q : PaddingQuarter
+						}
+					)
+				},
 				Show : List.In,
 				HideP : List.Out
 			}
@@ -800,7 +1276,10 @@
 		{
 			var
 			History = [],
-			HistoryMap = {},
+			HistoryMap = MultiMap(),
+			HistoryRowMap = {},
+			HistoryVersion = '',
+			HistoryRead = WX.EndL(),
 			List = WV.List(
 			{
 				Data : History,
@@ -808,10 +1287,51 @@
 				Sel : true,
 				Make : function(V,S)
 				{
+					var
+					R = WV.Div(2,['',TaskButtonSize]),
+					Title = MakeSingle(),
+					Status = MakeSingle(),
+					Done = WV.E(),
+					Pending = WV.A('span'),
+					Size = WV.Fmt('[`F`] `S`',null,WV.A('span')),
+					More = WV.But(
+					{
+						X : 'Detail',
+						The : WV.TheP,
+						Blk : true
+					}),
+					Remove = WV.But(
+					{
+						X : 'Remove',
+						The : WV.TheP,
+						Blk : true
+					}),
+					LoadO = WX.EndL();
+					WV.ClsA(Title,WV.Alt)
+					WV.Con(Status,[Done,Pending])
+					WV.ApR([Title,Status],R[1])
+					WV.On('click',WV.StopProp,More.R)
+					WV.On('click',WV.StopProp,Remove.R)
+					WV.ApR([More,Remove],R[2])
+					WV.Ap(R[0],V)
+					WV.ClsA(V,ClassTask)
 					return {
 						U : function(V)
 						{
-
+							WV.Con(Title,'#' + V.O + ' ' + V.S + ' ' + V.I)
+							WV.T(Done,WW.StrDate(V.E) + ' ')
+							WV.T(Pending,'Loading infomation...')
+							LoadO(TaskOverviewLoad(V.O).Now(function(B)
+							{
+								WV.T(Title,B.Title)
+								WV.Con(Pending,Size.R)
+								Size
+									.F(WR.Sum(B.Part))
+									.S(WR.ToSize(B.Size))
+							},function(E)
+							{
+								WV.T(Status,'Failed to load. ' + ErrorS(E))
+							}))
 						}
 					}
 				}
@@ -820,7 +1340,73 @@
 			ShortCutOnPage(K,ShortCutListSelAll,List.SelAll)
 			ShortCutOnPage(K,ShortCutListSelClear,List.SelClr)
 
-			IsHistory = function(ID){return WR.Has(ID,HistoryMap)}
+			IsHistory = HistoryMap.H
+			WSOnDiffHist = TaskDiff(function(H,Q,S)
+			{
+				var T;
+				HistoryVersion = H
+				switch (Q)
+				{
+					case ActionWebTaskHist :
+						if (!WR.Has(S.Row,HistoryRowMap))
+						{
+							List.Unshift(HistoryRowMap[S.Row] = HistoryMap.D(T = IDCombine(S.Site,S.ID),
+							{
+								O : S.Row,
+								S : S.Site,
+								I : S.ID,
+								Z : S.Size,
+								E : S.Done
+							}))
+							BrowserUpdate([T])
+						}
+						break
+					case ActionWebTaskRemove :
+						if (WR.Has(S.Row,HistoryRowMap))
+						{
+							H = HistoryRowMap[S.Row]
+							T = WW.BSL(History,S.Done,function(Q,S){return Q.E > S})
+							History[T] && History[T].O === S.Row &&
+								List.Splice(T,1)
+							WR.Del(S.Row,HistoryRowMap)
+							HistoryMap.E(T = IDCombine(H,S,H.I),H)
+							BrowserUpdate([T])
+						}
+						break
+				}
+			})
+
+			WSOnOnline.R(function()
+			{
+				HistoryRead(WB.ReqB('Hist?' + HistoryVersion)
+					.RetryWhen(TaskBriefRetry('History'))
+					.Now(function(B)
+					{
+						TaskBriefSolve(5,B,function(V)
+						{
+							History.length = 0
+							HistoryMap.C()
+							HistoryRowMap = {}
+							HistoryVersion = V
+						},function(V)
+						{
+							V[0] = NumberZip.P(V[0])
+							History.push(HistoryRowMap[V[0]] = HistoryMap.D(IDCombine(V[1],V[2]),
+							{
+								O : V[0],
+								S : V[1],
+								I : V[2],
+								Z : NumberZip.P(V[3]),
+								E : NumberZip.P(V[4])
+							}))
+						},function()
+						{
+							WSOnDiffHist.S(HistoryVersion)
+							BrowserUpdate()
+							List.Re()
+						})
+					}))
+			})
 
 			return {
 				Show : List.In,
@@ -1010,6 +1596,7 @@
 		{
 			var
 			ClassTitle = WW.Key(),
+			ClassAction = WW.Key(),
 			SC = WB.SC(),
 			SCC = {},
 			SCM = {},
@@ -1028,7 +1615,7 @@
 				Make = function(K,M)
 				{
 					var
-					U = WV.Rock(),
+					U = WV.Rock(ClassAction),
 					Set = function(Q,S)
 					{
 						I.V(Q || '',true)
@@ -1200,6 +1787,7 @@
 				{
 					return WW.Fmt
 					(
+						'#`R` .`A`>*{vertical-align:middle}' +
 						'#`R` .`I`{width:10em}' +
 						'#`R` .`H`{margin-left:`p`px}' +
 						'.`T`{padding:4px `p`px;background:#EBEBEB;font-weight:bold}',
@@ -1208,6 +1796,7 @@
 							I : WV.InpW,
 							H : WV.ChoW,
 							T : ClassTitle,
+							A : ClassAction,
 							p : Padding
 						}
 					)
