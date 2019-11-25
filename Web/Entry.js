@@ -50,6 +50,14 @@
 	ErrorS = function(E){return '{Error} ' + (WW.IsObj(E) && E.stack || E)},
 	DTS = function(Q){return WW.StrDate(Q,WW.DateColS)},
 	NumberZip = WC.Rad(WR.Map(WR.CHR,WR.Range(33,127))),
+	SolveURL = function(Q,S)
+	{
+		if (WR.StartW('//',Q))
+			Q = 'http:' + Q
+		if (S && WR.StartW('/',Q))
+			Q = WW.MU(/^[^/]+\/\/[^/]+/,S) + Q
+		return Q
+	},
 
 	ClassTitleSplit = WW.Key(),
 	ClassCount = WW.Key(),
@@ -58,6 +66,9 @@
 	ClassHighLight = WW.Key(),
 	ClassSingle = WW.Key(),
 	ClassTask = WW.Key(),
+	ClassOverlay = WW.Key(),
+	ClassHeader = WW.Key(),
+	ClassDetail = WW.Key(),
 	MakeHigh = function(V)
 	{
 		return WV.T(WV.Rock(ClassHighLight,'span'),V)
@@ -65,6 +76,13 @@
 	MakeSingle = function()
 	{
 		return WV.T(WV.Rock(ClassSingle),'\xA0')
+	},
+	SingleFill = function(Q,W,A)
+	{
+		WV.Con(Q,A ?
+			[W,MakeHigh(' @ '),A] :
+			W)
+		WV.Ti(Q,A ? W + ' @ ' + A : W)
 	},
 	MakeCount = function()
 	{
@@ -83,6 +101,7 @@
 	Rainbow = WV.Div(2,1,null,[0,SizeFooter]),
 	RMain = WV.Div(2,2,['10%'],[SizeHeader,'100%'],true),
 	RTab = WV.Split({Pan : [null,RMain[3],RMain[4]],Main : true}),
+	ROverlay = WV.Rock(ClassOverlay),
 	Noti = WV.Noti({Top : RMain[0]}),
 	NotiAuth = Noti.O(),
 	NotiNewToken = Noti.O(),
@@ -102,9 +121,21 @@
 	ShortCutColdCommitAll = 'Cold.CommitAll',
 	ShortCutListSelAll = 'List.SelAll',
 	ShortCutListSelClear = 'List.SelClear',
+	ShortCutOverlayClose = 'Overlay.Close',
 	ShortCutOnPage = function(K,Q,S)
 	{
-		ShortCut.On(Q,function(){RTab.Is(K) && S()})
+		ShortCut.On(Q,function()
+		{
+			OverlayOn ||
+				RTab.Is(K) && S()
+		})
+	},
+	ShortCutOnOverlay = function(Q,S)
+	{
+		ShortCut.On(Q,function()
+		{
+			OverlayOn && S()
+		})
 	},
 	Setting = {},
 	BrowserOnProgress,
@@ -125,7 +156,8 @@
 	Online,
 	WebSocketRetry = 0,
 	WebSocketSince = 0,
-	WebSocketNotConnected = function(){Noti.S('Unable to perform when offline')},
+	WebSocketNotConnectedNoti = Noti.O(),
+	WebSocketNotConnected = function(){WebSocketNotConnectedNoti('Unable to perform when offline')},
 	WebSocketNotAuthed,WebSocketNotAuthedNoti = Noti.O(),
 	WebSocketSend = WebSocketNotConnected,
 	WebSocketSendAuth = WebSocketNotConnected,
@@ -235,6 +267,7 @@
 				WebSocketNotAuthed()
 			}
 			WSOnOnline.D()
+			WebSocketNotConnectedNoti(false)
 		}
 		Client.onclose = function()
 		{
@@ -433,6 +466,144 @@
 	TaskResolving = function(Row)
 	{
 		return WR.Has(Row,TaskResolvingMap)
+	},
+
+	OverlayOn,
+	OverlayEvent = WX.EndL(),
+	OverlayEnd = WX.EndL(),
+	MakeOverlay = function(H)
+	{
+		var T = WV.Rock();
+		OverlayOn = true
+		WV.TI(T)
+		WV.On('click',WV.StopProp,T)
+		OverlayEnd(H(T))
+		OverlayEvent(WV.On('click',OverlayRelease,RMain[3]))
+		WV.Ap(T,ROverlay)
+		WV.Ap(ROverlay,RMain[4])
+	},
+	OverlayRelease = function()
+	{
+		if (OverlayOn)
+		{
+			OverlayOn = false
+			WV.Del(ROverlay)
+			OverlayEvent()
+			OverlayEnd()
+			WV.Clr(ROverlay)
+		}
+	},
+
+	MakeProgress = function(Size,Has)
+	{
+		return WW.Fmt('[`0`%] `1` / `2`',
+		[
+			null == Has ?
+				'-' :
+				Has < Size ?
+					WR.ToFix(2,100 * Has / Size) :
+					100,
+			null == Has ?
+				'-' :
+				WR.ToSize(Has),
+			WR.ToSize(Size)
+		])
+	},
+	MakeDetail = function(Q,S)
+	{
+		MakeOverlay(function(Y)
+		{
+			var
+			Site = SiteMap[Q.S],
+			Header = WV.Rock(ClassHeader),
+			Title = WV.Rock(),
+			SiteID = WV.X(
+			[
+				SiteSolveName(Site),' ',
+				Site.IDView ?
+					Site.IDView(Q.I) :
+					Q.I
+			]),
+			Detail = WV.Rock(),
+			Part = WV.Rock(),
+			Err = WV.Rock(WV.FmtW),
+			Line =
+			[
+				['Row ID',WR.Const(Q.O)],
+				['Created date',function(S)
+				{
+					return null != S.Birth &&
+						WW.StrDate(S.Birth)
+				}],
+				['Uploader',function(S)
+				{
+					return S.UP
+				}],
+				['Uploaded date',function(S)
+				{
+					return null != S.UPAt &&
+						WW.StrDate(S.UPAt)
+				}],
+				['Part count',function(S)
+				{
+					return S.Part.length
+				}],
+				['File count',function(S)
+				{
+					return WR.Sum(S.Part)
+				}],
+				['Download destination',function(S)
+				{
+					return S.Root
+				}],
+				['Progress',function(S)
+				{
+					return null == S.Size ?
+						'Pending to resolve infomation' :
+						MakeProgress(S.Size,S.Down && WR.Reduce(function(D,V){return D + V.Has},0,S.Down))
+				}],
+				['Completed date',function(S)
+				{
+					return null != S.Done &&
+						WW.StrDate(S.Done)
+				}]
+			],
+			Update = function(S)
+			{
+				S = S || {}
+				WR.Each(function(V,T)
+				{
+					if (!V[2])
+					{
+						V[0] = WV.Con(WV.Rock(),
+						[
+							MakeHigh(V[0]),
+							' ',
+							V[2] = WV.E()
+						])
+					}
+					T = V[1](S)
+					if (null == T || false == T)
+						WV.Del(V[0])
+					else
+					{
+						WV.T(V[2],T)
+						WV.Ap(V[0],Detail)
+					}
+				},Line)
+			};
+			WV.ApA([Title,SiteID],Header)
+			Update(S)
+			WV.ApA([Header,Detail,Part,Err],Y)
+			WV.ClsA(Y,ClassDetail)
+			return TaskFullInfoLoad(Q.O).Now(function(S)
+			{
+				Update(S)
+			},function(E)
+			{
+				WV.T(Err,'Failed to load infomation\n' + ErrorS(E))
+			})
+		})
 	};
 
 	WV.ClsA(RMain[1],WV.NoSel)
@@ -465,6 +636,20 @@
 		'.`K` .`I`.`L`{padding:`h`px 0 0 `h`px}' +
 		'.`K` .`I`{padding:0 0 `h`px `h`px}' +
 		'.`K` .`B`{padding:`q`px}' +
+
+		'.`Y`' +
+		'{' +
+			'position:absolute;' +
+			'left:0;right:0;top:0;bottom:0;' +
+			'padding:`p`px;' +
+			'background:rgba(0,0,0,.45)' +
+		'}' +
+		'.`Y`>div{width:100%;height:100%;background:#F7F7F7;overflow:auto}' +
+		'.`Y`>div>div{padding:`h`px `p`px}' +
+
+		'.`R`{background:#F3EBFA}' +
+
+		'.`E` .`H`{margin-right:`h`px}' +
 		'',
 		{
 			F : WV.Foc,
@@ -485,6 +670,9 @@
 			H : ClassHighLight,
 			I : ClassSingle,
 			K : ClassTask,
+			Y : ClassOverlay,
+			R : ClassHeader,
+			E : ClassDetail,
 
 			p : Padding,
 			h : PaddingHalf,
@@ -671,8 +859,8 @@
 										Img = WV.A('img'),
 										'src',
 										Setting.ProxyView ?
-											URLApi + '~' + V.Img :
-											V.Img
+											URLApi + '~' + SolveURL(V.Img) :
+											SolveURL(V.Img)
 									)
 								]),
 								WW.IsNum(V.Len) ?
@@ -688,6 +876,22 @@
 									WV.Ah(V.UP,V.UPURL) :
 									V.UP),
 								!!V.Date && WV.X(WW.IsStr(V.Date) ? V.Date : DTS(V.Date)),
+								!!V.Desc && WV.But(
+								{
+									X : 'Description',
+									The : WV.TheP,
+									C : function()
+									{
+										MakeOverlay(function(Y)
+										{
+											WV.Con(Y,
+											[
+												WV.T(WV.Rock(ClassHeader),SiteSolveName(Site) + ' ' + IDView),
+												WV.T(WV.Rock(WV.FmtW),V.Desc)
+											])
+										})
+									}
+								}).R,
 								!!V.More && WV.Con(WV.Rock(WV.FmtW),V.More)
 							]),List)
 							V.Non || MakeBar(Site,V,Click)
@@ -804,7 +1008,6 @@
 				Foc : function()
 				{
 					HintErr && Hint(Keyword.V())
-					Keyword.I.select()
 				}
 			}),
 			Brief = WV.Rock(ClassBrief + ' ' + ClassMargin),
@@ -835,7 +1038,9 @@
 
 			ShortCut.On(ShortCutGeneralFocus,function()
 			{
+				OverlayRelease()
 				RTab.At(K)
+				Keyword.I.select()
 				Keyword.Foc(true)
 			})
 			ShortCutOnPage(K,ShortCutBrowseSelAll,function()
@@ -892,7 +1097,8 @@
 						'.`S`{color:#F7F7F7;font-weight:bold;text-align:center}' +
 						'.`K`:hover .`S`,.`K`.`A` .`S`{background:rgba(102,175,224,.7)}' +
 						'.`K`.`O` .`S`{background:#66AFE0}' +
-						'.`C` img{width:100%;max-height:`m`px}',
+						'.`C` img{width:100%;max-height:`m`px}' +
+						'.`C` .`B`{padding:0}',
 						{
 							R : ID,
 							I : WV.InpW,
@@ -923,13 +1129,6 @@
 			var
 			Cold = [],
 			ColdMap = {},
-			FillSingle = function(Q,W,A)
-			{
-				WV.Con(Q,A ?
-					[W,MakeHigh(' @ '),A] :
-					W)
-				WV.Ti(Q,A ? W + ' @ ' + A : W)
-			},
 			List = WV.List(
 			{
 				Data : Cold,
@@ -971,8 +1170,8 @@
 					return {
 						U : function(V)
 						{
-							FillSingle(ID,V.I,V.S)
-							FillSingle(Title,V.T,V.U)
+							SingleFill(ID,V.I,V.S)
+							SingleFill(Title,V.T,V.U)
 						}
 					}
 				}
@@ -1053,6 +1252,7 @@
 				{
 					var
 					Row,
+					Task,
 					R = WV.Div(2,['',TaskButtonSize]),
 					Title = MakeSingle(),
 					Status = MakeSingle(),
@@ -1088,7 +1288,11 @@
 					{
 						X : 'Detail',
 						The : WV.TheP,
-						Blk : true
+						Blk : true,
+						C : function()
+						{
+							S[0] && MakeDetail(S[0],Task)
+						}
 					}),
 					Remove = WV.But(
 					{
@@ -1118,13 +1322,15 @@
 					return {
 						U : function(V)
 						{
+							Task = null
 							Play.X('').Off()
-							WV.T(Title,'#' + V.O + ' ' + V.S + ' ' + V.I)
-							WV.T(Pending,'Loading infomation...')
+							SingleFill(Title,'#' + V.O + ' ' + V.S + ' ' + V.I)
+							SingleFill(Pending,'Loading infomation...')
 							LoadO(TaskOverviewLoad(V.O).Now(function(B)
 							{
-								WV.T(Title,B.Title)
-								WV.Con(Pending,
+								Task = B
+								SingleFill(Title,B.Title)
+								SingleFill(Pending,
 									TaskResolving(V.O) ? 'Resolving infomation...' :
 									null == B.Size ? 'Ready to resolve infomation' :
 									Running)
@@ -1137,7 +1343,7 @@
 								OnState(B.State)
 							},function(E)
 							{
-								WV.T(Pending,'Failed to load. ' + ErrorS(E))
+								SingleFill(Pending,'Failed to load. ' + ErrorS(E))
 							}))
 							if (Row)
 							{
@@ -1288,6 +1494,7 @@
 				Make : function(V,S)
 				{
 					var
+					Task,
 					R = WV.Div(2,['',TaskButtonSize]),
 					Title = MakeSingle(),
 					Status = MakeSingle(),
@@ -1298,13 +1505,25 @@
 					{
 						X : 'Detail',
 						The : WV.TheP,
-						Blk : true
+						Blk : true,
+						C : function()
+						{
+							S[0] && MakeDetail(S[0],Task)
+						}
 					}),
 					Remove = WV.But(
 					{
 						X : 'Remove',
 						The : WV.TheP,
-						Blk : true
+						Blk : true,
+						C : function()
+						{
+							S[0] && WebSocketSendAuth(
+							[
+								ActionAuthTaskRemove,
+								[S[0].O]
+							])
+						}
 					}),
 					LoadO = WX.EndL();
 					WV.ClsA(Title,WV.Alt)
@@ -1318,11 +1537,13 @@
 					return {
 						U : function(V)
 						{
+							Task = null
 							WV.Con(Title,'#' + V.O + ' ' + V.S + ' ' + V.I)
 							WV.T(Done,WW.StrDate(V.E) + ' ')
 							WV.T(Pending,'Loading infomation...')
 							LoadO(TaskOverviewLoad(V.O).Now(function(B)
 							{
+								Task = B
 								WV.T(Title,B.Title)
 								WV.Con(Pending,Size.R)
 								Size
@@ -1511,6 +1732,7 @@
 					The : WV.TheP,
 					C : function()
 					{
+						OverlayRelease()
 						RTab.At(TabKey)
 						Token.Foc(true)
 					}
@@ -1777,6 +1999,9 @@
 			],[
 				ShortCutListSelClear,
 				'Esc',WB.SCD
+			],[
+				ShortCutOverlayClose,
+				'Esc',WB.SCD
 			]])
 			WSOnSC = function(Q)
 			{
@@ -1932,7 +2157,18 @@
 		}]
 	])
 	RTab.At(0)
-	ShortCut.On(ShortCutGeneralTabPrev,RTab.Prev).On(ShortCutGeneralTabNext,RTab.Next)
+	ShortCut.On(ShortCutGeneralTabPrev,function()
+	{
+		OverlayRelease()
+		RTab.Prev()
+	}).On(ShortCutGeneralTabNext,function()
+	{
+		OverlayRelease()
+		RTab.Next()
+	})
+
+	WV.On('click',OverlayRelease,ROverlay)
+	ShortCutOnOverlay(ShortCutOverlayClose,OverlayRelease)
 
 	WV.Ready(function()
 	{
@@ -2075,14 +2311,7 @@
 							})
 					}
 				},
-				SolU : function(Q,S)
-				{
-					if (WR.StartW('//',Q))
-						Q = 'http:' + Q
-					if (WR.StartW('/',Q))
-						Q = WW.MU(/^[^/]+\/\/[^/]+/,S) + Q
-					return Q
-				},
+				SolU : SolveURL,
 				DTS : DTS,
 				High : MakeHigh,
 				Ah : function(Q,S)

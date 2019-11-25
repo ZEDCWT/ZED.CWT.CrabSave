@@ -297,8 +297,8 @@ module.exports = Option =>
 					case ActionAuthTaskInfo :
 						DB.Full(K).Now
 						(
-							V => Send([Q[0],K,V]),
-							E => Send([Q[0],K,ErrorS(E)]),
+							V => SendAuth([Q[0],K,V]),
+							E => SendAuth([Q[0],K,ErrorS(E)]),
 						)
 						break
 					case ActionAuthTaskPlay :
