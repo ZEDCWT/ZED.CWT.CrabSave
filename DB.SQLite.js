@@ -1,7 +1,7 @@
 'use strict'
 var
 WW = require('@zed.cwt/wish'),
-{X : WX,N : WN} = WW,
+{R : WR,X : WX,N : WN} = WW,
 SQLite = require('sqlite3');
 
 /**@type {CrabSaveNS.DB}*/
@@ -18,10 +18,64 @@ module.exports = Option =>
 			DBInit.F()
 	}),
 
-	Exec = WX.WrapNode(DB.exec,DB),
-	Run = WX.WrapNode(DB.run,DB),
-	Get = WX.WrapNode(DB.get,DB),
-	All = WX.WrapNode(DB.all,DB),
+	DBLocked,
+	DBLockQueue = [],
+	DBGetLock = T => DBLocked ?
+		DBLockQueue.push(T = WX.Repeater()) && T :
+		WX.Just(0,WX.Sync),
+	DBQueue,
+	DBGetQueue = () => DBLocked ?
+		DBQueue = DBQueue || WX.Repeater() :
+		WX.Just(0,WX.Sync),
+	DBMake = H => (...Q) => DBGetQueue().FMap(() => H(...Q)),
+	Exec = DBMake(WX.WrapNode(DB.exec,DB)),
+	Run_ = WX.WrapNode(DB.run,DB),
+	Run = DBMake(Run_),
+	Get = DBMake(WX.WrapNode(DB.get,DB)),
+	All = DBMake(WX.WrapNode(DB.all,DB)),
+	TransactionEnd = () =>
+	{
+		DBLocked = false
+		if (DBQueue)
+		{
+			DBQueue.D().F()
+			DBQueue = false
+		}
+		if (DBLockQueue.length)
+			DBLockQueue.shift().D().F()
+	},
+	Transaction = Q => WX.Provider(O =>
+	{
+		var
+		Locked,
+		E = DBGetLock()
+			.FMap(() =>
+			(
+				Locked = true,
+				DBLocked = true,
+				Run_('begin transaction')
+			))
+			.FMap(() => WX.From(Q)
+				.FMapO(1,V => Run_(V[0],V[1]))
+				.ErrAs(E => Run_('rollback')
+					.Map(() => WW.Throw(E)))
+				.Fin()
+				.FMap(() => Run_('commit')))
+			.Now(null,E =>
+			{
+				O.E(E)
+				TransactionEnd()
+			},() =>
+			{
+				O.D().F()
+				TransactionEnd()
+			})
+		return () =>
+		{
+			E()
+			Locked && DBLocked && TransactionEnd()
+		}
+	}),
 
 	HotBrief = 'Row,Site,ID,Size',
 	HistBrief = HotBrief + ',Done',
@@ -29,17 +83,10 @@ module.exports = Option =>
 	NewPending = new Set,
 	TaskAdjust = Q =>
 	{
-		if (Q)
-		{
-			if ('Part' in Q)
-				Q.Part = WW.IsStr(Q.Part) ?
-					Q.Part.split(' ').map(Number) :
-					[]
-		}
-		else WW.Throw('Not exists')
+		Q || WW.Throw('Not exists')
 		return Q
 	};
-
+	DB.serialize()
 	return {
 		Init : DBInit.Fin()
 			.FMap(() => Exec(
@@ -53,17 +100,25 @@ module.exports = Option =>
 					Title text not null,
 					UP text,
 					UPAt integer,
-					Part text,
+					File integer,
 					Size integer,
 					Root text,
 					Format text,
 					State integer,
+					Error integer not null,
 					Done integer unique
+				);
+				create table if not exists Part
+				(
+					Task integer not null,
+					Part integer not null,
+					Title text
 				);
 				create table if not exists Down
 				(
 					Task integer not null,
 					Part integer not null,
+					File integer not null,
 					URL text,
 					Ext text,
 					Size integer,
@@ -73,10 +128,12 @@ module.exports = Option =>
 					Play integer,
 					Take integer,
 
-					primary key (Task,Part)
+					primary key (Task,Part,File)
 				);
 				insert into SQLite_Sequence(Name,Seq)
 					select 'Task',799999999 where not exists(select * from SQLite_Sequence where 'Task' = Name);
+				update Task set State = 1 where 2 = State;
+				update Task set Error = 0 where 0 <> Error;
 			`.replace(/^	{4}/mg,'').trim())),
 
 		New : Q => Get('select Row from Task where Done is null and ? = Site and ? = ID',[Q.Site,Q.ID])
@@ -95,28 +152,48 @@ module.exports = Option =>
 						ID,
 						Title,
 						UP,
-						State
+						Root,
+						Format,
+						State,
+						Error
 					)
-					values(?,?,?,?,?,1)
+					values
+					(
+						?,?,?,?,?,
+						?,?,
+						1,0
+					)
 				`,[
 					Q.Birth,
 					Q.Site,
 					Q.ID,
 					Q.Title,
-					Q.UP
+					Q.UP,
+					Q.Root,
+					Q.Format
 				]).Tap(null,
 					() => NewPending.delete(I),
 					() => NewPending.delete(I))
 					.FMap(() => Get(`select ${HotBrief} from Task where ? = Site and ? = ID`,[Q.Site,Q.ID]))
 					.Tap(B => B || WW.Throw('Unknown error occured while adding ' + I))
 			}),
-		Over : Q => Get('select Title,Part,Size,State from Task where ? = Row',[Q])
+		Over : Q => Get(
+		`
+			select
+				Title,File,Size,State,
+				(select sum(Has) from Down where ? = Task) Has
+			from Task where ? = Row
+		`,[Q,Q])
 			.Map(TaskAdjust),
-		Full : Q => Get('select * from Task where ? = Row order by Part',[Q])
+		Full : Q => Get('select * from Task where ? = Row',[Q])
 			.FMap(B =>
 			{
 				TaskAdjust(B)
-				return All('select * from Down where ? = Task ',[Q]).Map(N =>
+				return All('select * from Part where ? = Task order by Part',[Q]).FMap(P =>
+				{
+					B.Part = P
+					return All('select * from Down where ? = Task order by Part,File',[Q])
+				}).Map(N =>
 				{
 					B.Down = N
 					return B
@@ -133,8 +210,92 @@ module.exports = Option =>
 		Hot : (Q,S) => DB.each(`select ${HotBrief} from Task where Done is null order by Row`,
 			(E,V) => E || Q(V),
 			S),
-		Play : Q => Run(`update Task set State = 1 where ? = Row`,[Q]),
+		Play : Q => Run(`update Task set State = 1 where ? = Row and 0 = State`,[Q]),
 		Pause : Q => Run(`update Task set State = 0 where ? = Row`,[Q]),
+
+		TopNoSize : (S,Q) => All(
+		`
+			select Row,Site,ID,State from Task
+			where
+				Done is null
+				and
+				(Size is null or 2 = State)
+				and
+				Error < ?
+			order by Error,State desc,Row
+			limit ?
+		`,[Q,S]),
+		SaveInfo : (S,Q) => Transaction(
+		[
+			[`
+				update Task set
+					Title = coalesce(?,Title,'[Untitled]'),
+					UP = coalesce(?,UP,'[Anonymous]'),
+					UPAt = coalesce(UPAt,?),
+					File = ?,
+					Size = ?
+				where ? = Row
+			`,[
+				Q.Title,
+				Q.UP,
+				Q.UPAt,
+				Q.Down.length,
+				Q.Size,
+				S
+			]],
+			...WR.Map(V =>
+			[
+				`
+					insert into Part(Task,Part,Title)
+						select ?,?,? where not exists(select * from Part where ? = Task and ? = Part)
+				`,
+				[
+					S,V.Part,
+					V.Title,
+					S,V.Part
+				]
+			],Q.Part),
+			...WR.Map(V =>
+			[
+				`
+					insert into Down(Task,Part,File,Has)
+						select ?,?,?,0
+						where not exists(select * from Down where ? = Task and ? = Part and ? = File)
+				`,
+				[
+					S,V.Part,V.File,
+					S,V.Part,V.File
+				]
+			],Q.Down),
+			...WR.Map(V =>
+			[
+				`
+					update Down set
+						URL = ?,
+						Ext = ?,
+						Size = ?
+					where ? = Task and ? = Part and ? = File and (Size is null or Has < Size)
+				`,
+				[
+					V.URL,V.Ext,V.Size,
+					S,V.Part,V.File
+				]
+			],Q.Down)
+		]),
+		SaveSize : (Row,Part,File,Q) => Run(
+		`
+			update Down set Size = ?
+			where ? = Task and ? = Part and ? = File and (Size is null or Has < Size)
+		`,[Q,Row,Part,File]),
+		FillSize : Q => Run(
+		`
+			update Task set
+				Size = (select sum(Size) from Down where ? = Task)
+			where ? = Row
+		`,[Q,Q])
+			.FMap(() => Get(`select Size from Task where ? = Row`,[Q]))
+			.Map(V => V.Size),
+		Err : (Q,S,E) => Run('update Task set State = ?,Error = ? where ? = Row',[S,E,Q]),
 
 		Hist : (Q,S) => DB.each(`select ${HistBrief} from Task where Done is not null order by Done desc`,
 			(E,V) => E || Q(V),

@@ -1,30 +1,34 @@
 'use strict'
 var
 WW = require('@zed.cwt/wish'),
-{R : WR} = WW,
+{R : WR,X : WX} = WW;
 
-SiteAll = [],
-SiteMap = {};
-
-WR.Each((V,S) =>
+/**@type {CrabSaveNS.SiteAll}*/
+module.exports = Option =>
 {
-	S = require(`./${V}=`)
-	SiteAll.push(S)
-	SiteMap[S.ID = V] = S
-},[
-	'BiliBili',
-	'YouTube',
-	'NicoNico',
-])
-
-module.exports =
-{
-	/**@type {CrabSaveNS.SiteO[]}*/
-	A : SiteAll,
-	/**@type {{[K : string] : CrabSaveNS.SiteO[]}}*/
-	M : SiteMap,
-	/**@type {(Q : string) => boolean}*/
-	H : Q => WR.Has(Q,SiteMap),
-	/**@type {(Q : string) => CrabSaveNS.SiteO}*/
-	D : Q => SiteMap[Q]
+	var
+	All = [],
+	Map = {};
+	WR.Each((V,S) =>
+	{
+		S = require(`./${V}=`)(
+		{
+			Req : Q => Option.Req(Q),
+			Coke : Q => Option.Coke(Option.Req(Q),V),
+			Best : (S,Q) => WR.Reduce(WR.MaxBy(V => +V[S]),{[S] : -Infinity},Q),
+		})
+		All.push(S)
+		Map[S.ID = V] = S
+	},[
+		'BiliBili',
+		'YouTube',
+		'NicoNico',
+	])
+	return {
+		A : All,
+		M : Map,
+		H : Q => WR.Has(Q,Map),
+		D : Q => Map[Q],
+		P : Q => WR.Has(Q,Map) ? WX.Just(Map[Q]) : WX.Throw('Unknown site ' + Q),
+	}
 }

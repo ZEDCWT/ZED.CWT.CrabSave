@@ -2,8 +2,8 @@
 var
 WW = require('@zed.cwt/wish'),
 {R : WR,X : WX,C : WC,N : WN} = WW,
-Site = require('./Site/_'),
 HTTP = require('http'),
+Path = require('path'),
 Request = require('request'),
 
 ActionWebTaskNew = 'TaskN',
@@ -11,6 +11,8 @@ ActionWebTaskOverview = 'TaskO',
 ActionWebTaskPlay = 'TaskP',
 ActionWebTaskPause = 'TaskU',
 ActionWebTaskRemove = 'TaskD',
+ActionWebTaskRenew = 'TaskW',
+ActionWebTaskSize = 'TaskS',
 ActionWebTaskHist = 'TaskH',
 ActionWebShortCut = 'SC',
 ActionWebError = 'Err',
@@ -24,7 +26,10 @@ ActionAuthTaskNew = 'TaskN',
 ActionAuthTaskInfo = 'TaskI',
 ActionAuthTaskPlay = 'TaskP',
 ActionAuthTaskPause = 'TaskU',
-ActionAuthTaskRemove = 'TaskD';
+ActionAuthTaskRemove = 'TaskD',
+ActionAuthTaskFile = 'TaskF',
+ActionAuthErr = 'RErr',
+ActionAuthErrTask = 'RErrT';
 
 module.exports = Option =>
 {
@@ -34,19 +39,81 @@ module.exports = Option =>
 
 	PathWeb = WN.JoinP(__dirname,'Web'),
 	FileToken = WN.JoinP(PathData,'Key'),
+	PathSave = WN.JoinP(PathData,'Save'),
 	DataCookie = WN.JSON(WN.JoinP(PathData,'Cookie')),
 	CookieMap,
 	DataSetting = WN.JSON(WN.JoinP(PathData,'Setting')),
 	DataShortCut = WN.JSON(WN.JoinP(PathData,'ShortCut')),
 
+	ConfigDebugLimit = 20,
+
 	ErrorS = E => WW.IsObj(E) && E.stack || E,
+	RecErrList = [],
+	RecErr = (File,Err) =>
+	{
+		ConfigDebugLimit <= RecErrList.length &&
+			RecErrList.shift()
+		File = WN.RelP(__dirname,File)
+		Err = ErrorS(Err)
+		RecErrList.push([File,Err])
+		WebSocketSendAuth([ActionAuthErr,File,Err],true)
+	},
+	RecErrTE = {},
+	RecErrTList = [],
+	RecErrT = (Task,Err) =>
+	{
+		Err = ErrorS(Err)
+		if (null == Err)
+		{
+			WR.Del(Task,RecErrTE)
+			Err = RecErrTList.indexOf(Task)
+			~Err && RecErrTList.splice(Err,1)
+		}
+		else
+		{
+			if (!WR.Has(Task,RecErrTE))
+			{
+				if (ConfigDebugLimit <= RecErrTList.length)
+				{
+					WR.Del(RecErrTList[0],RecErrTE)
+					RecErrTList.shift()
+				}
+				RecErrTList.push(Task)
+			}
+			RecErrTE[Task] = Err
+		}
+		WebSocketSendAuth([ActionAuthErrTask,Task,Err],true)
+	},
 	NumberZip = WC.Rad(WR.Map(WR.CHR,WR.Range(33,127))),
 
+	SettingMake = (K,H,D) => R => H(R = DataSetting.D(K)) ? R : D,
+	Setting =
+	{
+		Dir : SettingMake('Dir',WW.IsStr,PathSave),
+		Fmt : SettingMake('Fmt',WW.IsStr,'|Up|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?'),
+		Proxy : SettingMake('Proxy',WR.Id,false),
+		ProxyURL : SettingMake('ProxyURL',WW.IsStr,undefined),
+		Delay : SettingMake('Delay',WW.IsNum,20),
+	},
+	SiteO = {},
+	Site = require('./Site/_')(SiteO),
 	DB = require('./DB.SQLite')(
 	{
 		PathData
 	}),
-	DBVersion = 114514,
+	DBVersion = WW.Now(),
+	Loop = require('./Loop')(
+	{
+		Setting,
+		Site,
+		DB,
+		Err : RecErr,
+		ErrT : RecErrT,
+		OnRenew : Row => WebSocketSend([ActionWebTaskRenew,Row],true),
+		OnInfo : (Row,Q) => WebSocketSendAuth([ActionAuthTaskInfo,Row,Q],true),
+		OnFile : (Row,Part,File,Size) => WebSocketSendAuth([ActionAuthTaskFile,Row,[Part,File,Size]],true),
+		OnSize : (Row,Q,N) => WebSocketSend([ActionWebTaskSize,Row,[Q,N]],true),
+	}),
 
 	WebToken,
 	TokenStepA = Q => WC.HSHA512(Q,'j!ui+Ju8?j'),
@@ -62,13 +129,19 @@ module.exports = Option =>
 		gzip : true,
 		rejectUnauthorized : false
 	},
-	RequestMake = (Q,S) =>
+	RequestHeader = SiteO.Req = Q =>
 	{
 		Q = WW.Merge(false,true,WW.IsObj(Q) ? Q : {url : Q},RequestDefault)
 		WR.Has(WW.UA,Q.headers) || (Q.headers[WW.UA] = WW.Key())
-		DataSetting.D('Proxy') && WW.IsStr(DataSetting.D('ProxyURL')) &&
-			(Q.proxy = DataSetting.D('ProxyURL').replace(/^(?!\w+:\/\/)/,'http://'))
-		return Request(Q,S)
+		Setting.Proxy() && Setting.ProxyURL() &&
+			(Q.proxy = Setting.ProxyURL().replace(/^(?!\w+:\/\/)/,'http://'))
+		return Q
+	},
+	RequestCoke = SiteO.Coke = (Q,V) =>
+	{
+		Q = WW.IsObj(Q) ? Q : {url : Q}
+		;(Q.headers || (Q.headers = {})).Cookie = CookieMap[V]
+		return Q
 	},
 
 	WebServerMap =
@@ -113,10 +186,10 @@ module.exports = Option =>
 				Q = Q.slice(1) :
 				H = false
 			WR.StartW('{',Q) && (Q = WC.JTOO(Q))
-			RequestMake(Q)
+			Request(RequestHeader(Q))
 				.on('request',O =>
 				{
-					H && WR.EachU(function(V,F)
+					H && WR.EachU((V,F) =>
 					{
 						WebServerProxyOmit.has(WR.Low(F)) ||
 							O.setHeader(F,V)
@@ -124,7 +197,7 @@ module.exports = Option =>
 				})
 				.on('response',O =>
 				{
-					H && WR.EachU(function(V,F)
+					H && WR.EachU((V,F) =>
 					{
 						WebServerProxyOmit.has(WR.Low(F)) ||
 							S.setHeader(F,V)
@@ -181,8 +254,10 @@ module.exports = Option =>
 		{
 			try{S.send(WC.OTJ(D))}catch(_){}
 		},
+		FullTrackingRow,
 		SendAuth = D =>
 		{
+			if (ActionAuthTaskInfo === D[0] && FullTrackingRow !== D[1]) return
 			D = Cipher.D(WC.OTJ([WW.Key(WW.Rnd(20,40)),D,WW.Key(WW.Rnd(20,40))]))
 			try{S.send('\0' + WC.B91S(D))}catch(_){}
 		},
@@ -193,11 +268,15 @@ module.exports = Option =>
 		{
 			var
 			Err = S => Send([ActionWebError,Q[0],S]),
-			DBMulti = (Q,S) => WW.IsArr(Q) ?
+			DBMulti = (Q,S,E) => WW.IsArr(Q) ?
 				WX.From(Q)
 					.FMapO(1,V => S(V).FinErr())
 					.Reduce(WR.Or)
-					.Now(B => B && Err(ErrorS(B[0]))) :
+					.Now(B =>
+					{
+						B && Err(ErrorS(B[0]))
+						E && E()
+					}) :
 				Err('Bad request data'),
 			K,O;
 			if (!WW.IsStr(Q)) return Suicide()
@@ -247,7 +326,11 @@ module.exports = Option =>
 						WebSocketSend([ActionWebShortCut,DataShortCut.O(WR.Where(WR.Id,K))])
 						break
 					case ActionAuthSetting :
-						WebSocketSendAuth([ActionAuthSetting,DataSetting.O(WR.Where(WR.Id,K))])
+						K = WR.Where(WR.Id,K)
+						if ('Dir' in K && !Path.isAbsolute(K.Dir))
+							Err('Download destination should be an absolute path')
+						else
+							WebSocketSendAuth([ActionAuthSetting,DataSetting.O(K)])
 						break
 
 					case ActionAuthApi :
@@ -267,8 +350,8 @@ module.exports = Option =>
 						{
 							if (!/^\w+:\/\//.test(O.url)) O.url = 'http://' + O.url
 							if (O.Cookie)
-								(O.headers || (O.headers = {})).Cookie = CookieMap[O.Cookie]
-							ApiPool.set(K,RequestMake(O,(E,I,R) =>
+								RequestCoke(O,O.Cookie)
+							ApiPool.set(K,Request(RequestHeader(O),(E,I,R) =>
 							{
 								ApiPool.delete(K)
 								SendAuth(
@@ -283,23 +366,28 @@ module.exports = Option =>
 						break
 
 					case ActionAuthTaskNew :
-						DBMulti(K,V =>
+						DBMulti(K,V => Site.H(V.S) ?
 							DB.New(
 							{
 								Birth : WW.Now(),
 								Site : V.S,
 								ID : V.I,
 								Title : V.T,
-								UP : V.U
+								UP : V.U,
+								Root : Setting.Dir(),
+								Format : Setting.Fmt()
 							}).Map(B =>
-								WebSocketSend([ActionWebTaskNew,++DBVersion,B],true)))
+								WebSocketSend([ActionWebTaskNew,++DBVersion,B],true)) :
+							WX.Throw('Bad site ' + V.S),Loop.Info)
 						break
 					case ActionAuthTaskInfo :
-						DB.Full(K).Now
-						(
-							V => SendAuth([Q[0],K,V]),
-							E => SendAuth([Q[0],K,ErrorS(E)]),
-						)
+						false === K ?
+							FullTrackingRow = false :
+							DB.Full(FullTrackingRow = K).Now
+							(
+								V => SendAuth([Q[0],K,V]),
+								E => SendAuth([Q[0],K,ErrorS(E)]),
+							)
 						break
 					case ActionAuthTaskPlay :
 						DBMulti(K,V =>
@@ -336,6 +424,7 @@ module.exports = Option =>
 		})
 
 		WR.Each(Send,WebSocketLast)
+		Send([ActionWebTaskRenew,Loop.Renewing()])
 		WebSocketPool.add(Send)
 	};
 
@@ -350,13 +439,18 @@ module.exports = Option =>
 				)))
 			.Map(Q => WebToken = WC.B91P(Q.split(/\s/)[0]))
 			.FMap(() => DB.Init)
-			.Now(() =>
+			.Now(null,null,() =>
 			{
 				CookieMap = WR.Map(CookieD,DataCookie.O())
+				DataSetting.D('Dir') ||
+					DataSetting.D('Dir',PathSave)
 				WebSocketSendAuth([ActionAuthCookie,CookieMap])
 				WebSocketSend([ActionWebShortCut,DataShortCut.O()])
 				WebSocketSendAuth([ActionAuthSetting,DataSetting.O()])
+				WebSocketSendAuth([ActionAuthErr,RecErrList])
+				WebSocketSendAuth([ActionAuthErrTask,RecErrTE])
 				WW.IsNum(PortWeb) && new (require('ws')).Server({server : WebServer.listen(PortWeb)}).on('connection',OnSocket)
+				Loop.Info()
 			}),
 		Exp : X => (X = X || require('express').Router())
 			.use((Q,S,N) => '/' === Q.path && !/\/(\?.*)?$/.test(Q.originalUrl) ? S.redirect(302,Q.baseUrl + Q.url) : N())

@@ -10,7 +10,7 @@ declare module CrabSaveNS
 			R : typeof Wish.R,
 			X : typeof Wish.X,
 			V : typeof Wish.V
-		) => CrabSaveNS.SiteView) : void
+		) => SiteView) : void
 	}
 	interface WebTool
 	{
@@ -49,7 +49,14 @@ declare module CrabSaveNS
 		Delay : number
 		Merge : string
 		MergeExt : string
-		Alias : string
+	}
+	interface SettingO
+	{
+		Dir() : string
+		Fmt() : string
+		Proxy() : boolean
+		ProxyURL() : boolean
+		Delay() : number
 	}
 }
 declare var CrabSave : CrabSaveNS.Web

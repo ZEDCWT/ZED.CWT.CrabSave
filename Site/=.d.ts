@@ -54,21 +54,44 @@ declare module CrabSaveNS
 
 	interface SiteO
 	{
-		ID? : string
-		URL(ID : string) : WishNS.Provider<SiteURL>
-		Pack?(Q : string) : string | WishNS.RequestOption
+		(Q :
+		{
+			Req(Q : string | WishNS.RequestOption) : WishNS.RequestOption
+			Coke(Q : string | WishNS.RequestOption) : WishNS.RequestOption
+			Best<U>(S : string,Q : U[]) : U
+		}) : {
+			URL(ID : string) : WishNS.Provider<SiteURL>
+			Pack?(Q : string) : string | WishNS.RequestOption
+		}
 	}
 	interface SiteURL
 	{
 		Title? : string
-		Author? : string
+		Up? : string
 		Date? : number
 		Part : SitePart[]
 	}
 	interface SitePart
 	{
+		Index? : number
+		Title : string
 		URL : string[]
-		Ext : string | string[]
 		Size? : number[]
+		Ext : string | string[]
+	}
+
+	interface SiteAll
+	{
+		(Q :
+		{
+			Req(Q : string | WishNS.RequestOption) : WishNS.RequestOption
+			Coke(Q : string | WishNS.RequestOption,Q : string) : WishNS.RequestOption
+		}) : {
+			A : ReturnType<SiteO>[]
+			M : {[K : string] : ReturnType<SiteO>[]}
+			H(Q : string) : boolean
+			D(Q : string) : ReturnType<SiteO>
+			P(Q : string) : WishNS.Provider<ReturnType<SiteO>>
+		}
 	}
 }

@@ -1,5 +1,8 @@
 'use strict'
 
-module.exports =
+module.exports = O =>
 {
+	return {
+
+	}
 }
