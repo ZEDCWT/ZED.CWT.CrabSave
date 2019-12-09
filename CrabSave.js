@@ -3,6 +3,7 @@ var
 WW = require('@zed.cwt/wish'),
 {R : WR,X : WX,C : WC,N : WN} = WW,
 HTTP = require('http'),
+Inspector = require('inspector'),
 Path = require('path'),
 Request = require('request'),
 
@@ -13,6 +14,7 @@ ActionWebTaskPause = 'TaskU',
 ActionWebTaskRemove = 'TaskD',
 ActionWebTaskRenew = 'TaskW',
 ActionWebTaskSize = 'TaskS',
+ActionWebTaskErr = 'TaskE',
 ActionWebTaskHist = 'TaskH',
 ActionWebShortCut = 'SC',
 ActionWebError = 'Err',
@@ -28,8 +30,9 @@ ActionAuthTaskPlay = 'TaskP',
 ActionAuthTaskPause = 'TaskU',
 ActionAuthTaskRemove = 'TaskD',
 ActionAuthTaskFile = 'TaskF',
+ActionAuthInspect = 'Ins',
 ActionAuthErr = 'RErr',
-ActionAuthErrTask = 'RErrT';
+ActionAuthErrT = 'RErrT';
 
 module.exports = Option =>
 {
@@ -60,7 +63,7 @@ module.exports = Option =>
 	},
 	RecErrTE = {},
 	RecErrTList = [],
-	RecErrT = (Task,Err) =>
+	RecErrT = (Task,Err,State,At) =>
 	{
 		Err = ErrorS(Err)
 		if (null == Err)
@@ -68,6 +71,7 @@ module.exports = Option =>
 			WR.Del(Task,RecErrTE)
 			Err = RecErrTList.indexOf(Task)
 			~Err && RecErrTList.splice(Err,1)
+			WebSocketSendAuth([ActionAuthErrT,Task],true)
 		}
 		else
 		{
@@ -81,14 +85,16 @@ module.exports = Option =>
 				RecErrTList.push(Task)
 			}
 			RecErrTE[Task] = Err
+			WebSocketSend([ActionWebTaskErr,Task,[State,At]],true)
+			WebSocketSendAuth([ActionAuthErrT,Task,Err],true)
 		}
-		WebSocketSendAuth([ActionAuthErrTask,Task,Err],true)
 	},
 	NumberZip = WC.Rad(WR.Map(WR.CHR,WR.Range(33,127))),
 
 	SettingMake = (K,H,D) => R => H(R = DataSetting.D(K)) ? R : D,
 	Setting =
 	{
+		Lang : SettingMake('Lang',WW.IsStr,0),
 		Dir : SettingMake('Dir',WW.IsStr,PathSave),
 		Fmt : SettingMake('Fmt',WW.IsStr,'|Up|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?'),
 		Proxy : SettingMake('Proxy',WR.Id,false),
@@ -102,18 +108,20 @@ module.exports = Option =>
 		PathData
 	}),
 	DBVersion = WW.Now(),
-	Loop = require('./Loop')(
+	LoopO =
 	{
 		Setting,
 		Site,
 		DB,
 		Err : RecErr,
 		ErrT : RecErrT,
-		OnRenew : Row => WebSocketSend([ActionWebTaskRenew,Row],true),
+		OnRenew : Row => WebSocketSend([ActionWebTaskRenew,Row,true],true),
+		OnRenewDone : Row => WebSocketSend([ActionWebTaskRenew,Row,false],true),
 		OnInfo : (Row,Q) => WebSocketSendAuth([ActionAuthTaskInfo,Row,Q],true),
 		OnFile : (Row,Part,File,Size) => WebSocketSendAuth([ActionAuthTaskFile,Row,[Part,File,Size]],true),
 		OnSize : (Row,Q,N) => WebSocketSend([ActionWebTaskSize,Row,[Q,N]],true),
-	}),
+	},
+	Loop = require('./Loop')(LoopO),
 
 	WebToken,
 	TokenStepA = Q => WC.HSHA512(Q,'j!ui+Ju8?j'),
@@ -129,7 +137,7 @@ module.exports = Option =>
 		gzip : true,
 		rejectUnauthorized : false
 	},
-	RequestHeader = SiteO.Req = Q =>
+	RequestHeader = SiteO.Req = LoopO.Req = Q =>
 	{
 		Q = WW.Merge(false,true,WW.IsObj(Q) ? Q : {url : Q},RequestDefault)
 		WR.Has(WW.UA,Q.headers) || (Q.headers[WW.UA] = WW.Key())
@@ -148,12 +156,14 @@ module.exports = Option =>
 	{
 		'/' : WN.JoinP(PathWeb,'Entry.htm'),
 		'/W' : require.resolve('@zed.cwt/wish'),
+		'/L' : WN.JoinP(PathWeb,'Lang.js'),
 		'/M' : WN.JoinP(PathWeb,'Entry.js')
 	},
 	WebServer = HTTP.createServer((Q,S) =>
 	{
 		var U = Q.url.replace(/\?.*/,'');
-		WebServerProxy(Q.url,S,Q.headers) &&
+		WebServerSetting(U,S) &&
+			WebServerProxy(Q.url,S,Q.headers) &&
 			WebServerDataBase(Q.url,S) &&
 			(WR.Has(U,WebServerMap) ? WN.UR(U = WebServerMap[U]) :
 				/^\/Site\/\w+\.js$/.test(U) ? WN.UR(WN.JoinP(__dirname,U)) :
@@ -168,6 +178,11 @@ module.exports = Option =>
 					S.end(`Unable to resolve //${Q.headers.host || ''}${Q.url}`)
 				})
 	}),
+	WebServerSetting = (Q,S) =>
+	{
+		return '/S' !== Q ||
+			(S.end(`LangS=${WC.OTJ(Setting.Lang())}`),0)
+	},
 	WebServerProxyOmit = new Set(
 	[
 		'host',
@@ -277,7 +292,7 @@ module.exports = Option =>
 						B && Err(ErrorS(B[0]))
 						E && E()
 					}) :
-				Err('Bad request data'),
+				Err('ErrBadReq'),
 			K,O;
 			if (!WW.IsStr(Q)) return Suicide()
 			if (!Q.charCodeAt())
@@ -285,7 +300,7 @@ module.exports = Option =>
 				Q = WC.JTOO(WC.U16S(Decipher.D(WC.B91P(Q))))
 				if (!WW.IsArr(Q) || !WW.IsArr(Q = Q[1]))
 				{
-					Send([ActionWebError,'Auth','Authorization Failed'])
+					Send([ActionWebError,'Auth','ErrAuthFail'])
 					return Suicide()
 				}
 				K = Q[1]
@@ -307,10 +322,10 @@ module.exports = Option =>
 								{
 									WebToken = WC.B91P(Q)
 									DataCookie.O(WR.Map(CookieE,CookieMap))
-									SendAuth([ActionAuthToken,'New token saved! Connect again'])
+									SendAuth([ActionAuthToken,'AutSaved'])
 									WebSocketPoolAuthSuicide.forEach(V => V())
-								},() => Err(ActionAuthToken,'Failed to save the new token'))
-						else Err('Original token is incorrect')
+								},E => Err(['ErrAuthSave',ErrorS(E)]))
+						else Err('ErrAuthInc')
 						break
 					case ActionAuthCookie :
 						if (Site.H(K))
@@ -319,7 +334,7 @@ module.exports = Option =>
 							DataCookie.D(K,CookieE(CookieMap[K] = O))
 							WebSocketSendAuth([ActionAuthCookie,K,O],true)
 						}
-						else Err('Unknown site ' + K)
+						else Err(['ErrUnkSite',K])
 						break
 
 					case ActionAuthShortCut :
@@ -328,9 +343,12 @@ module.exports = Option =>
 					case ActionAuthSetting :
 						K = WR.Where(WR.Id,K)
 						if ('Dir' in K && !Path.isAbsolute(K.Dir))
-							Err('Download destination should be an absolute path')
+							Err('ErrSetDir')
 						else
+						{
 							WebSocketSendAuth([ActionAuthSetting,DataSetting.O(K)])
+							Loop.OnSet()
+						}
 						break
 
 					case ActionAuthApi :
@@ -343,9 +361,9 @@ module.exports = Option =>
 							}
 						}
 						else if (!K || !WW.IsStr(K) || ApiPool.has(K))
-							Err('Bad token ' + K)
+							Err('ErrBadReq')
 						else if (!WW.IsObj(O))
-							Err('Bad request ' + WC.OTJ(O))
+							Err('ErrBadReq')
 						else
 						{
 							if (!/^\w+:\/\//.test(O.url)) O.url = 'http://' + O.url
@@ -378,7 +396,7 @@ module.exports = Option =>
 								Format : Setting.Fmt()
 							}).Map(B =>
 								WebSocketSend([ActionWebTaskNew,++DBVersion,B],true)) :
-							WX.Throw('Bad site ' + V.S),Loop.Info)
+							WX.Throw(['ErrUnkSite',V.S]),Loop.Info)
 						break
 					case ActionAuthTaskInfo :
 						false === K ?
@@ -398,6 +416,14 @@ module.exports = Option =>
 						DBMulti(K,V =>
 							DB.Pause(V).Map(() =>
 								WebSocketSend([ActionWebTaskPause,++DBVersion,V],true)))
+						break
+
+					case ActionAuthInspect :
+						if (WW.IsArr(K))
+						{
+							Inspector.open(...K)
+							SendAuth([Q[0],Inspector.url()])
+						}
 						break
 				}
 				return
@@ -424,7 +450,7 @@ module.exports = Option =>
 		})
 
 		WR.Each(Send,WebSocketLast)
-		Send([ActionWebTaskRenew,Loop.Renewing()])
+		Send([ActionWebTaskRenew,Loop.Renewing(),true])
 		WebSocketPool.add(Send)
 	};
 
@@ -434,7 +460,8 @@ module.exports = Option =>
 				.ErrAs(K =>
 				(
 					K = WW.Key(20),
-					WN.UW(FileToken,WC.B91S(TokenStepB(TokenStepA(K))) + WN.EOL + `Initial Token : ${K + WN.EOL}CHANGE IT !!!`)
+					WN.UW(FileToken,WC.B91S(TokenStepB(TokenStepA(K))) + WN.EOL +
+						'Initial Token : ' + K)
 						.FMap(() => WN.UR(FileToken))
 				)))
 			.Map(Q => WebToken = WC.B91P(Q.split(/\s/)[0]))
@@ -448,13 +475,14 @@ module.exports = Option =>
 				WebSocketSend([ActionWebShortCut,DataShortCut.O()])
 				WebSocketSendAuth([ActionAuthSetting,DataSetting.O()])
 				WebSocketSendAuth([ActionAuthErr,RecErrList])
-				WebSocketSendAuth([ActionAuthErrTask,RecErrTE])
+				WebSocketSendAuth([ActionAuthErrT,RecErrTE])
 				WW.IsNum(PortWeb) && new (require('ws')).Server({server : WebServer.listen(PortWeb)}).on('connection',OnSocket)
 				Loop.Info()
 			}),
 		Exp : X => (X = X || require('express').Router())
 			.use((Q,S,N) => '/' === Q.path && !/\/(\?.*)?$/.test(Q.originalUrl) ? S.redirect(302,Q.baseUrl + Q.url) : N())
-			.use((Q,S,N) => WebServerProxy(Q.path,S,Q.headers) &&
+			.use((Q,S,N) => WebServerSetting(Q.path,S) &&
+				WebServerProxy(Q.path,S,Q.headers) &&
 				WebServerDataBase(Q.originalUrl,S) &&
 				((Q = WebServerMap[Q.path]) ? S.sendFile(Q) :
 					/^\/Site\/\w+\.js$/.test(Q.path) ? S.sendFile(WN.JoinP(__dirname,Q.path)) :

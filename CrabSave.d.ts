@@ -16,7 +16,7 @@ declare module CrabSaveNS
 
 	type TaskBriefHot = Pick<Task,'Row' | 'Site' | 'ID' | 'Size'>
 	type TaskBriefHist = TaskBriefHot & Pick<Task,'Done'>
-	type TaskOverview = Pick<Task,'Title' | 'File' | 'Size' | 'Has' | 'State'>
+	type TaskOverview = Pick<Task,'Title' | 'File' | 'Size' | 'Has' | 'State' | 'Error'>
 	interface DB
 	{
 		(Q :
@@ -39,6 +39,7 @@ declare module CrabSaveNS
 			SaveSize(Row : number,Part : number,File : number,Size : number) : WishNS.Provider<any>
 			FillSize(Row : number) : WishNS.Provider<number>
 			Err(Row : number,State : number,Date : number) : WishNS.Provider<any>
+			TopErr(State : number) : WishNS.Provider<number>
 
 			Hist(Row : (Q : TaskBriefHist) => any,Down : (E? : any) => any) : any
 			Done(Task : number) : WishNS.Provider<any>
@@ -72,6 +73,8 @@ declare module CrabSaveNS
 		Format? : string
 		/** 0 : Paused. 1 : Running. 2 : Need to refresh info */
 		State? : 0 | 1 | 2
+		/** Error occured date */
+		Error? : number
 		/** Completed date */
 		Done? : number
 		/** Part info */
@@ -122,9 +125,12 @@ declare module CrabSaveNS
 			Site : ReturnType<SiteAll>
 			DB : ReturnType<DB>
 			Err(File : string,Err : any) : any
-			ErrT(Row : number,Err : any) : any
+			ErrT(Row : number,Err : any,State : number,At : number) : any
+
+			Req(Q : string | WishNS.RequestOption) : WishNS.RequestOption
 
 			OnRenew(Row : number) : any
+			OnRenewDone(Row : number) : any
 			OnInfo(Row : number,Info : Task) : any
 			OnFile(Row : number,Part : number,File : number,Size : number) : any
 			OnSize(Row : number,Size : number,Count : number) : any
@@ -132,6 +138,8 @@ declare module CrabSaveNS
 			Info() : any
 			Del(Task : number) : any
 			Renewing() : string[]
+
+			OnSet() : any
 		}
 	}
 }

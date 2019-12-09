@@ -116,7 +116,6 @@ module.exports = O =>
 					.Map(() => R)
 			})
 		},
-		View : Q => 'av' + Q.replace(/#\d+/,''),
 		Pack : Q => (
 		{
 			url : Q,

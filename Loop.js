@@ -14,10 +14,42 @@ module.exports = Option =>
 	ConfigInfoLimit = 1,
 	ConfigRetry = 5E3,
 
-	SolveSize = (Q,S) => WN.ReqH((SiteAll.D(S).Pack || WR.Id)(Q)).Map((H,T) =>
+	MakeDelay = (H,W) =>
+	{
+		var Err,Last;
+		return {
+			D : () =>
+			{
+				H().Now(N =>
+				{
+					if (null != N && !Err | N < Err)
+					{
+						Last && clearTimeout(Last)
+						Err = N
+						Last = setTimeout(W,50 + 1E3 * Setting.Delay() + Err - WW.Now())
+					}
+				},WW.O)
+			},
+			S : () =>
+			{
+				if (Last)
+				{
+					clearTimeout(Last)
+					Last = setTimeout(W,50 + 1E3 * Setting.Delay() + Err - WW.Now())
+				}
+			},
+			F : () =>
+			{
+				Last && clearTimeout(Last)
+				Err = null
+			}
+		}
+	},
+
+	SolveSize = (Q,S) => WN.ReqH(Option.Req((SiteAll.D(S).Pack || WR.Id)(Q))).Map((H,T) =>
 		/^2/.test(H.statusCode) && (T = +H.headers['content-length']) === T ?
 			T :
-			WW.Throw('Failed to resolve size\n' + H.rawHeaders.join('\n'))),
+			WW.Throw(['ErrLoopSize',H.rawHeaders.join('\n')])),
 
 	InfoRunning = new Map,
 	InfoDispatching,InfoDispatchAgain,
@@ -33,6 +65,7 @@ module.exports = Option =>
 				WR.Each(V =>
 				{
 					Option.OnRenew(V.Row)
+					Option.ErrT(V.Row)
 					InfoRunning.set(V.Row,SiteAll.P(V.Site)
 						.FMap(S => S.URL(V.ID))
 						.FMap(U =>
@@ -91,20 +124,24 @@ module.exports = Option =>
 						})
 						.Now(null,E =>
 						{
-							DB.Err(V.Row,2,WW.Now()).Now(null,O =>
+							var At = WW.Now();
+							DB.Err(V.Row,2,At).Now(null,O =>
 							{
-								Option.Err(__filename,O)
 								InfoRunning.delete(V.Row)
+								Option.OnRenewDone(V.Row)
+								Option.Err(__filename,O)
 								InfoDispatch()
 							},() =>
 							{
-								Option.ErrT(V.Row,E)
 								InfoRunning.delete(V.Row)
+								Option.OnRenewDone(V.Row)
+								Option.ErrT(V.Row,E,2,At)
 								InfoDispatch()
 							})
 						},() =>
 						{
 							InfoRunning.delete(V.Row)
+							Option.OnRenewDone(V.Row)
 							InfoDispatch()
 							DownloadDispatch()
 						}))
@@ -114,6 +151,12 @@ module.exports = Option =>
 				{
 					InfoDispatchAgain = false
 					InfoDispatch()
+				}
+				else
+				{
+					InfoRunning.size < ConfigInfoLimit ?
+						InfoDelay.D() :
+						InfoDelay.F()
 				}
 			},E =>
 			{
@@ -126,14 +169,16 @@ module.exports = Option =>
 				}).F)
 			})
 		}
-		else InfoDispatchAgain = true
+		else if (InfoDispatching) InfoDispatchAgain = true
 	},
+	InfoDelay = MakeDelay(() => DB.TopErr(2),InfoDispatch),
 
 
 
 	DownloadDispatch = () =>
 	{
-	};
+	},
+	DownloadDelay = MakeDelay(() => DB.TopErr(1),DownloadDispatch);
 
 	return {
 		Info : InfoDispatch,
@@ -146,5 +191,11 @@ module.exports = Option =>
 			}
 		},
 		Renewing : () => [...InfoRunning.keys()],
+
+		OnSet : () =>
+		{
+			InfoDelay.S()
+			DownloadDelay.S()
+		},
 	}
 }

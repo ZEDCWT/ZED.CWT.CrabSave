@@ -81,9 +81,9 @@ module.exports = Option =>
 	HistBrief = HotBrief + ',Done',
 
 	NewPending = new Set,
-	TaskAdjust = Q =>
+	TaskAdjust = (S,Q) =>
 	{
-		Q || WW.Throw('Not exists')
+		Q || WW.Throw(['ErrDBNo',S])
 		return Q
 	};
 	DB.serialize()
@@ -140,8 +140,8 @@ module.exports = Option =>
 			.FMap(B =>
 			{
 				var I = Q.Site + ' ' + Q.ID
-				B && WW.Throw('Hot list already contains ' + I)
-				NewPending.has(I) && WW.Throw('Already added ' + I)
+				B && WW.Throw(['ErrDBHas',I])
+				NewPending.has(I) && WW.Throw(['ErrDBAdding',I])
 				NewPending.add(I)
 				return Run(
 				`
@@ -175,20 +175,21 @@ module.exports = Option =>
 					() => NewPending.delete(I),
 					() => NewPending.delete(I))
 					.FMap(() => Get(`select ${HotBrief} from Task where ? = Site and ? = ID`,[Q.Site,Q.ID]))
-					.Tap(B => B || WW.Throw('Unknown error occured while adding ' + I))
+					.Tap(B => B || WW.Throw(['ErrDBAddFail',I]))
 			}),
 		Over : Q => Get(
 		`
 			select
 				Title,File,Size,State,
+				Error,
 				(select sum(Has) from Down where ? = Task) Has
 			from Task where ? = Row
 		`,[Q,Q])
-			.Map(TaskAdjust),
+			.Map(B => TaskAdjust(Q,B)),
 		Full : Q => Get('select * from Task where ? = Row',[Q])
 			.FMap(B =>
 			{
-				TaskAdjust(B)
+				TaskAdjust(Q,B)
 				return All('select * from Part where ? = Task order by Part',[Q]).FMap(P =>
 				{
 					B.Part = P
@@ -296,6 +297,8 @@ module.exports = Option =>
 			.FMap(() => Get(`select Size from Task where ? = Row`,[Q]))
 			.Map(V => V.Size),
 		Err : (Q,S,E) => Run('update Task set State = ?,Error = ? where ? = Row',[S,E,Q]),
+		TopErr : S => Get('select Error from Task where ? = State and 0 < Error order by Error limit 1',[S])
+			.Map(V => V && V.Error),
 
 		Hist : (Q,S) => DB.each(`select ${HistBrief} from Task where Done is not null order by Done desc`,
 			(E,V) => E || Q(V),
