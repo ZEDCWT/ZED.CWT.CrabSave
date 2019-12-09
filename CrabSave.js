@@ -137,20 +137,22 @@ module.exports = Option =>
 		gzip : true,
 		rejectUnauthorized : false
 	},
-	RequestHeader = SiteO.Req = LoopO.Req = Q =>
+	RequestHead = SiteO.Head = (Q,K,V,Force) =>
+	{
+		Q = WW.IsObj(Q) ? Q : {url : Q}
+		WR.Has(K,Q.headers || (Q.headers = {})) && !Force ||
+			(Q.headers[K] = V)
+		return Q
+	},
+	RequestComm = SiteO.Req = LoopO.Req = Q =>
 	{
 		Q = WW.Merge(false,true,WW.IsObj(Q) ? Q : {url : Q},RequestDefault)
-		WR.Has(WW.UA,Q.headers) || (Q.headers[WW.UA] = WW.Key())
+		RequestHead(WW.UA,WW.Key())
 		Setting.Proxy() && Setting.ProxyURL() &&
 			(Q.proxy = Setting.ProxyURL().replace(/^(?!\w+:\/\/)/,'http://'))
 		return Q
 	},
-	RequestCoke = SiteO.Coke = (Q,V) =>
-	{
-		Q = WW.IsObj(Q) ? Q : {url : Q}
-		;(Q.headers || (Q.headers = {})).Cookie = CookieMap[V]
-		return Q
-	},
+	RequestCoke = SiteO.Coke = (Q,V) => RequestHead(Q,'Cookie',CookieMap[V]),
 
 	WebServerMap =
 	{
@@ -201,7 +203,7 @@ module.exports = Option =>
 				Q = Q.slice(1) :
 				H = false
 			WR.StartW('{',Q) && (Q = WC.JTOO(Q))
-			Request(RequestHeader(Q))
+			Request(RequestComm(Q))
 				.on('request',O =>
 				{
 					H && WR.EachU((V,F) =>
@@ -369,7 +371,7 @@ module.exports = Option =>
 							if (!/^\w+:\/\//.test(O.url)) O.url = 'http://' + O.url
 							if (O.Cookie)
 								RequestCoke(O,O.Cookie)
-							ApiPool.set(K,Request(RequestHeader(O),(E,I,R) =>
+							ApiPool.set(K,Request(RequestComm(O),(E,I,R) =>
 							{
 								ApiPool.delete(K)
 								SendAuth(

@@ -56,6 +56,7 @@ declare module CrabSaveNS
 	{
 		(Q :
 		{
+			Head(Q : string | WishNS.RequestOption,K : string,V : string,Force? : boolean) : WishNS.RequestOption
 			Req(Q : string | WishNS.RequestOption) : WishNS.RequestOption
 			Coke(Q : string | WishNS.RequestOption) : WishNS.RequestOption
 			Best<U>(S : string,Q : U[]) : U
@@ -84,6 +85,7 @@ declare module CrabSaveNS
 	{
 		(Q :
 		{
+			Head(Q : string | WishNS.RequestOption,K : string,V : string,Force? : boolean) : WishNS.RequestOption
 			Req(Q : string | WishNS.RequestOption) : WishNS.RequestOption
 			Coke(Q : string | WishNS.RequestOption,Q : string) : WishNS.RequestOption
 		}) : {

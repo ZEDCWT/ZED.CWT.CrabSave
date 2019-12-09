@@ -3,6 +3,7 @@ var
 WW = require('@zed.cwt/wish'),
 {R : WR,X : WX,C : WC,N : WN} = WW,
 
+BiliBili = 'https://www.bilibili.com/',
 BiliBiliApi = 'https://api.bilibili.com/',
 BiliBiliApiWebView = WW.Tmpl(BiliBiliApi,'x/web-interface/view?aid=',undefined),
 BiliBiliApiPlayURL = WW.Tmpl(BiliBiliApi,'x/player/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=16'),
@@ -48,7 +49,7 @@ module.exports = O =>
 					Part
 				}
 				return (AV.stein_guide_cid ?
-					WN.ReqB(O.Coke(BiliBiliApiPlayerSo(ID,CIDFirst))).FMap(G =>
+					WN.ReqB(O.Coke(O.Head(BiliBiliApiPlayerSo(ID,CIDFirst),'Referer',BiliBili))).FMap(G =>
 					{
 						var
 						Graph = WW.MF(/graph_version":(\d+)/,G),
@@ -103,8 +104,18 @@ module.exports = O =>
 							{
 								U =
 								{
-									URL : [O.Best('bandwidth',T.video).baseUrl,O.Best('bandwidth',T.audio).baseUrl],
-									Ext : ['.mp4','.mp3']
+									URL : [],
+									Ext : []
+								}
+								if (T.video)
+								{
+									U.URL.push(O.Best('bandwidth',T.video).baseUrl)
+									U.Ext.push('.mp4')
+								}
+								if (T.audio)
+								{
+									U.URL.push(O.Best('bandwidth',T.audio).baseUrl)
+									U.Ext.push('.mp3')
 								}
 							}
 							else WW.Throw(['Unable to resolve download link',B])

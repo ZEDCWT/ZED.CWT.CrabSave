@@ -13,6 +13,7 @@ module.exports = Option =>
 	{
 		S = require(`./${V}=`)(
 		{
+			Head : (Q,K,V) => Option.Head(Q,K,V),
 			Req : Q => Option.Req(Q),
 			Coke : Q => Option.Coke(Option.Req(Q),V),
 			Best : (S,Q) => WR.Reduce(WR.MaxBy(V => +V[S]),{[S] : -Infinity},Q),

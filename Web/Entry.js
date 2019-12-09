@@ -69,7 +69,12 @@
 			WR.Has(Q,LangDefault) ? S ? WW.Fmt(LangDefault[Q],S,'~') : LangDefault[Q] :
 			'{' + Q + (S ? '|' + S.join(':') : '') + '}'
 	},
-	ErrorS = function(E){return '{ERR} ' + (WW.IsObj(E) && E.stack || E)},
+	ErrorS = function(E)
+	{
+		WW.IsObj(E) && (E = E.stack || E)
+		WW.IsObj(E) && (E = WC.OTJ(E))
+		return '{ERR} ' + E
+	},
 	DTS = function(Q){return WW.StrDate(Q,WW.DateColS)},
 	NumberZip = WC.Rad(WR.Map(WR.CHR,WR.Range(33,127))),
 	SolveURL = function(Q,S)
@@ -567,12 +572,12 @@
 	{
 		return WW.Fmt('[`0`%] `1` / `2`',
 		[
-			null == Has ?
+			null == Has || null == Size ?
 				'-' :
 				Has < Size ?
 					WR.ToFix(2,100 * Has / Size) :
 					100,
-			null == Has ?
+			null == Has || null == Size ?
 				'-' :
 				WR.ToSize(Has),
 			null == Size ?
@@ -758,7 +763,8 @@
 		'#`M`{position:relative;overflow:hidden}' +
 		'#`T`{min-width:110px;text-align:center;line-height:`e`px;font-weight:bold}' +
 		'#`C`{position:relative}' +
-		'#`O` .`A`{display:inline-block;width:100%}' +
+		'#`O` .`W`{padding:`q`px 0}' +
+		'#`O` .`A`{display:inline-block;margin:`q`px 0;width:100%}' +
 		'.`S`{position:absolute;left:-2px;top:10%;width:2px;height:80%;background:#BBB}' +
 		'.`U`{float:right}' +
 		'.`G`{margin:`p`px 0}' +
@@ -793,6 +799,7 @@
 			L : WV.Alt,
 			N : WV.NotiW,
 			D : WV.DivC,
+			W : WV.TabT,
 			A : WV.TabB,
 			B : WV.ButW,
 
@@ -1453,18 +1460,24 @@
 					Bar = WV.Rock(ClassBar),
 					LoadO = WX.EndL(),
 					HasError,ErrorToRenew,ErrorAt,
-					OnTick = function()
+					LoadErr,RenewLast,
+					OnTick = function(T)
 					{
-						S[0] && WV.T(Renew,
-							TaskRenewing[S[0].O] ? SA(null == Task.Size ? 'HotSolve' : 'HotRenew') :
-							HasError && WW.Now() <= 1E3 * Setting.Delay + ErrorAt ? SA('Err') + ' ' + RemainS(1E3 * Setting.Delay + ErrorAt - WW.Now()) :
-							HasError && ErrorToRenew ? SA('HotReady') :
-							null == Task.Size ? SA('HotReady') :
-							SA('HotQueue'))
+						if (S[0])
+						{
+							T = null == Task ? SA('LstLoad') :
+								null != LoadErr ? LoadErr :
+								TaskRenewing[S[0].O] ? SA(null == Task.Size ? 'HotSolve' : 'HotRenew') :
+								HasError && WW.Now() <= 1E3 * Setting.Delay + ErrorAt ? SA('Err') + ' ' + RemainS(1E3 * Setting.Delay + ErrorAt - WW.Now()) :
+								HasError && ErrorToRenew ? SA('HotReady') :
+								null == Task.Size ? SA('HotReady') :
+								SA('HotQueue')
+							T === RenewLast || WV.T(Renew,RenewLast = T)
+						}
 					};
 					WV.ClsA(Title,WV.Alt)
 					WV.On('click',WV.StopProp,Play.R)
-					WV.ApR([Play,Running,Renew],Status)
+					WV.Con(Status,[Play.R,Running.R,Renew])
 					WV.ApR([Title,Status],R[1])
 					WV.On('click',WV.StopProp,More.R)
 					WV.On('click',WV.StopProp,Remove.R)
@@ -1474,11 +1487,12 @@
 					return {
 						U : function(V)
 						{
-							Task = {}
+							Task = null
+							LoadErr = null
 							Play.X('').Off()
 							SingleFill(Title,'#' + V.O + ' ' + V.S + ' ' + V.I)
 							WV.ClsA(Running.R,WV.None)
-							WV.T(Renew,SA('LstLoad'))
+							OnTick()
 							LoadO(TaskOverviewLoad(V.O).Now(function(B)
 							{
 								Task = B
@@ -1501,7 +1515,8 @@
 								OnState(B.State)
 							},function(E)
 							{
-								WV.T(Renew,SA('LstFail') + ' ' + ErrorS(E))
+								LoadErr = SA('LstFail') + ' ' + ErrorS(E)
+								OnTick()
 							}))
 							if (Row)
 							{
@@ -2436,7 +2451,9 @@
 								T = false
 								if (B[2] && H) O.D(B.slice(2)).F()
 								else if (B[2] && /^2/.test(B[2])) O.D(B[3]).F()
-								else O.E(B.slice(2,4))
+								else O.E(B[2] ?
+									SA('ErrBadRes') + ' #' + B[2] + ' ' + B[3] :
+									B[3])
 							}
 						}
 						else T = WW.Throw(SA(Online ? 'ErrNoAuth' : 'ErrOff'))
