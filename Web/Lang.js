@@ -1,3 +1,4 @@
+'use strict'
 var Lang = // eslint-disable-line
 {
 	// {INTERNAL FATAL} is used to mark internal errors, should not be seen by users on UI. So not necessary to be translated
@@ -45,6 +46,10 @@ var Lang = // eslint-disable-line
 		DetRoot : 'Download destination',
 		DetDone : 'Completed date',
 		DetPart : 'Part',
+		DetRun : 'Total Run',
+		DetFirst : 'First Byte',
+		DetTake : 'Elapsed',
+		DetAvg : 'Average speed',
 
 		Col : 'Cold',
 		ColCommit : 'Commit',
@@ -111,6 +116,7 @@ var Lang = // eslint-disable-line
 		SetDirH : 'Full path of the directory to save downloaded files',
 		SetFmt : 'File name format',
 		SetFmtH : 'Check the manual for format instructions',
+		SetMax : 'Maximum concurrency of active downloads',
 		SetProxy : 'Downloader proxy',
 		SetProxyE : 'Proxy Enabled',
 		SetProxyD : 'Proxy Disabled',
@@ -189,6 +195,10 @@ var Lang = // eslint-disable-line
 		DetRoot : '下載目錄',
 		DetDone : '下載完成於',
 		DetPart : '章節',
+		DetRun : '運行次數',
+		DetFirst : '首次連接於',
+		DetTake : '總用時',
+		DetAvg : '平均速度',
 
 		Col : '準備下載',
 		ColCommit : '下載',
@@ -255,6 +265,7 @@ var Lang = // eslint-disable-line
 		SetDirH : '存放下載文件的絕對路徑',
 		SetFmt : '文件名格式',
 		SetFmtH : '格式請參閱使用說明',
+		SetMax : '最大同時下載的任務量',
 		SetProxy : '下載代理',
 		SetProxyE : '代理已啓用',
 		SetProxyD : '代理已禁用',
@@ -332,6 +343,10 @@ var Lang = // eslint-disable-line
 		DetRoot : '下载目录',
 		DetDone : '下载完成于',
 		DetPart : '章节',
+		DetRun : '运行次数',
+		DetFirst : '首次连接于',
+		DetTake : '总用时',
+		DetAvg : '平均速度',
 
 		Col : '准备下载',
 		ColCommit : '下载',
@@ -398,6 +413,7 @@ var Lang = // eslint-disable-line
 		SetDirH : '存放下载文件的绝对路径',
 		SetFmt : '文件名格式',
 		SetFmtH : '格式请参阅使用说明',
+		SetMax : '最大同时下载的任务量',
 		SetProxy : '下载代理',
 		SetProxyE : '代理已启用',
 		SetProxyD : '代理已禁用',

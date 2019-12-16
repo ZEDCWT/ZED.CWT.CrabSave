@@ -35,14 +35,24 @@ declare module CrabSaveNS
 			Pause(Task : number) : WishNS.Provider<any>
 
 			TopNoSize(Count : number,From : number) : WishNS.Provider<Pick<Task,'Row' | 'Site' | 'ID' | 'State'>[]>
-			SaveInfo(Row : number,Info : Task) : WishNS.Provider<any>
-			SaveSize(Row : number,Part : number,File : number,Size : number) : WishNS.Provider<any>
-			FillSize(Row : number) : WishNS.Provider<number>
-			Err(Row : number,State : number,Date : number) : WishNS.Provider<any>
+			SaveInfo(Task : number,Info : Task) : WishNS.Provider<any>
+			SaveSize(Task : number,Part : number,File : number,Size : number) : WishNS.Provider<any>
+			FillSize(Task : number) : WishNS.Provider<number>
+			Err(Task : number,State : number,Date : number) : WishNS.Provider<any>
 			TopErr(State : number) : WishNS.Provider<number>
+			TopQueue(Count : number,From : number,Online : number[]) : WishNS.Provider<Omit<Task,'Part' | 'Down'>[]>
+			TopToDown(Task : number) : WishNS.Provider<Down>
+			ViewPart(Task : number,Part : number) : WishNS.Provider<Part>
+
+			SavePlay(Task : number,Part : number,File : number,Play : number) : WishNS.Provider<any>
+			SaveConn(Task : number,Part : number,File : number,First : number) : WishNS.Provider<any>
+			SavePath(Task : number,Part : number,File : number,Path : string) : WishNS.Provider<any>
+			SaveHas(Task : number,Part : number,File : number,Has : number) : WishNS.Provider<any>
+			SaveTake(Task : number,Part : number,File : number,Take : number) : WishNS.Provider<any>
+			SaveDone(Task : number,Part : number,File : number,Date : number) : WishNS.Provider<any>
 
 			Hist(Row : (Q : TaskBriefHist) => any,Down : (E? : any) => any) : any
-			Done(Task : number) : WishNS.Provider<any>
+			Final(Task : number,Done : number) : WishNS.Provider<any>
 		}
 	}
 	interface Task
@@ -88,6 +98,10 @@ declare module CrabSaveNS
 		Task : number
 		/** Part index of the task */
 		Part : number
+		/** Total part count */
+		Total : number
+		/** Count of files of the part */
+		File : number
 		/** Title of the part */
 		Title? : string
 	}
@@ -115,6 +129,8 @@ declare module CrabSaveNS
 		Play? : number
 		/** Total download time in ms */
 		Take? : number
+		/** Completed date */
+		Done? : number
 	}
 
 	interface Loop
@@ -125,17 +141,27 @@ declare module CrabSaveNS
 			Site : ReturnType<SiteAll>
 			DB : ReturnType<DB>
 			Err(File : string,Err : any) : any
-			ErrT(Row : number,Err : any,State : number,At : number) : any
+			ErrT(Task : number,Err : any,State : number,At : number) : any
 
 			Req(Q : string | WishNS.RequestOption) : WishNS.RequestOption
 
-			OnRenew(Row : number) : any
-			OnRenewDone(Row : number) : any
-			OnInfo(Row : number,Info : Task) : any
-			OnFile(Row : number,Part : number,File : number,Size : number) : any
-			OnSize(Row : number,Size : number,Count : number) : any
+			OnRenew(Task : number) : any
+			OnRenewDone(Task : number) : any
+			OnInfo(Task : number,Info : Task) : any
+			OnFile(Task : number,Part : number,File : number,Size : number) : any
+			OnSize(Task : number,Size : number,Count : number) : any
+
+			OnPlay(Task : number,Part : number,File : number,Play : number) : any
+			OnConn(Task : number,Part : number,File : number,Start : number) : any
+			OnPath(Task : number,Part : number,File : number,Path : string) : any
+			OnHas(Task : number,Part : number,File : number,Has : [number,number]) : any
+			OnTake(Task : number,Part : number,File : number,Take : number) : any
+			OnDone(Task : number,Part : number,File : number,Date : number) : any
+
+			OnFinal(Task : number,Done : number) : any
 		}) : {
 			Info() : any
+			Down() : any
 			Del(Task : number) : any
 			Renewing() : string[]
 

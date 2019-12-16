@@ -43,6 +43,7 @@ declare module CrabSaveNS
 	{
 		Dir : string
 		Fmt : string
+		Max : number
 		Proxy : boolean
 		ProxyURL : boolean
 		ProxyView : boolean
@@ -54,6 +55,7 @@ declare module CrabSaveNS
 	{
 		Dir() : string
 		Fmt() : string
+		Max() : number
 		Proxy() : boolean
 		ProxyURL() : boolean
 		Delay() : number

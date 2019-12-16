@@ -112,7 +112,11 @@ module.exports = Option =>
 				(
 					Task integer not null,
 					Part integer not null,
-					Title text
+					Total integer,
+					File integer,
+					Title text,
+
+					primary key (Task,Part)
 				);
 				create table if not exists Down
 				(
@@ -127,6 +131,7 @@ module.exports = Option =>
 					First integer,
 					Play integer,
 					Take integer,
+					Done integer,
 
 					primary key (Task,Part,File)
 				);
@@ -223,7 +228,7 @@ module.exports = Option =>
 				(Size is null or 2 = State)
 				and
 				Error < ?
-			order by Error,State desc,Row
+			order by Row
 			limit ?
 		`,[Q,S]),
 		SaveInfo : (S,Q) => Transaction(
@@ -247,11 +252,13 @@ module.exports = Option =>
 			...WR.Map(V =>
 			[
 				`
-					insert into Part(Task,Part,Title)
-						select ?,?,? where not exists(select * from Part where ? = Task and ? = Part)
+					insert into Part(Task,Part,Total,File,Title)
+						select ?,?,?,?,?
+						where not exists(select * from Part where ? = Task and ? = Part)
 				`,
 				[
 					S,V.Part,
+					Q.Part.length,Q.File,
 					V.Title,
 					S,V.Part
 				]
@@ -259,8 +266,8 @@ module.exports = Option =>
 			...WR.Map(V =>
 			[
 				`
-					insert into Down(Task,Part,File,Has)
-						select ?,?,?,0
+					insert into Down(Task,Part,File,Has,Play,Take)
+						select ?,?,?,0,0,0
 						where not exists(select * from Down where ? = Task and ? = Part and ? = File)
 				`,
 				[
@@ -299,9 +306,77 @@ module.exports = Option =>
 		Err : (Q,S,E) => Run('update Task set State = ?,Error = ? where ? = Row',[S,E,Q]),
 		TopErr : S => Get('select Error from Task where ? = State and 0 < Error order by Error limit 1',[S])
 			.Map(V => V && V.Error),
+		TopQueue : (S,Q,O) => All(
+		`
+			select * from Task
+			where
+				Done is null
+				and
+				1 = State
+				and
+				Size is not null
+				and
+				Error < ?
+				and
+				Row not in (${O})
+			order by Row
+			limit ?
+		`,[Q,S]),
+		TopToDown : Q => Get(
+		`
+			select * from Down
+			where
+				? = Task
+				and
+				Done is null
+			order by Part,File
+		`,[Q]),
+		ViewPart : (Q,S) => Get(
+		`
+			select * from Part
+			where ? = Task and ? = Part
+		`,[Q,S]),
+
+		SavePlay : (Q,W,E,S) => Run(
+		`
+			update Down set Play = ?
+			where ? = Task and ? = Part and ? = File
+		`,[S,Q,W,E]),
+		SaveConn : (Q,W,E,S) => Run(
+		`
+			update Down set First = ?
+			where ? = Task and ? = Part and ? = File and First is null
+		`,[S,Q,W,E]),
+		SavePath : (Q,W,E,S) => Run(
+		`
+			update Down set Path = ?
+			where ? = Task and ? = Part and ? = File
+		`,[S,Q,W,E]),
+		SaveHas : (Q,W,E,S) => Run(
+		`
+			update Down set Has = ?
+			where ? = Task and ? = Part and ? = File
+		`,[S,Q,W,E]),
+		SaveTake : (Q,W,E,S) => Run(
+		`
+			update Down set Take = ?
+			where ? = Task and ? = Part and ? = File
+		`,[S,Q,W,E]),
+		SaveDone : (Q,W,E,S) => Run(
+		`
+			update Down set Done = ?
+			where ? = Task and ? = Part and ? = File
+		`,[S,Q,W,E]),
 
 		Hist : (Q,S) => DB.each(`select ${HistBrief} from Task where Done is not null order by Done desc`,
 			(E,V) => E || Q(V),
 			S),
+		Final : (Q,S) => Run(
+		`
+			update Task set
+				Error = 0,
+				Done = ?
+			where ? = Row
+		`,[S,Q]),
 	}
 }

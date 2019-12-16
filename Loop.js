@@ -11,6 +11,7 @@ module.exports = Option =>
 	Setting = Option.Setting,
 	DB = Option.DB,
 
+	// Note : Must implement to ignore running resolvers before changing this to greater
 	ConfigInfoLimit = 1,
 	ConfigRetry = 5E3,
 
@@ -46,7 +47,8 @@ module.exports = Option =>
 		}
 	},
 
-	SolveSize = (Q,S) => WN.ReqH(Option.Req((SiteAll.D(S).Pack || WR.Id)(Q))).Map((H,T) =>
+	Pack = (Q,S) => Option.Req((SiteAll.D(S).Pack || WR.Id)(Q)),
+	SolveSize = (Q,S) => WN.ReqH(Pack(Q,S)).Map((H,T) =>
 		/^2/.test(H.statusCode) && (T = +H.headers['content-length']) === T ?
 			T :
 			WW.Throw(['ErrLoopSize',H.rawHeaders.join('\n')])),
@@ -80,6 +82,7 @@ module.exports = Option =>
 								Part.push(
 								{
 									Part : F = WR.Default(F,P.Index),
+									File : P.URL.length,
 									Title : P.Title || null
 								})
 								WR.EachU((L,G) =>
@@ -125,11 +128,11 @@ module.exports = Option =>
 						.Now(null,E =>
 						{
 							var At = WW.Now();
-							DB.Err(V.Row,2,At).Now(null,O =>
+							InfoRunning.set(V.Row,DB.Err(V.Row,2,At).Now(null,O =>
 							{
 								InfoRunning.delete(V.Row)
 								Option.OnRenewDone(V.Row)
-								Option.Err(__filename,O)
+								Option.Err(__filename + ':IE',O)
 								InfoDispatch()
 							},() =>
 							{
@@ -137,7 +140,7 @@ module.exports = Option =>
 								Option.OnRenewDone(V.Row)
 								Option.ErrT(V.Row,E,2,At)
 								InfoDispatch()
-							})
+							}))
 						},() =>
 						{
 							InfoRunning.delete(V.Row)
@@ -161,7 +164,7 @@ module.exports = Option =>
 			},E =>
 			{
 				InfoDispatching = false
-				Option.Err(__filename,E)
+				Option.Err(__filename + ':I',E)
 				InfoDispatchOnErr(WW.To(ConfigRetry,() =>
 				{
 					InfoDispatching ||
@@ -175,13 +178,191 @@ module.exports = Option =>
 
 
 
+	NotBigDeal = Q => Q.Now(null,E => Option.Err(__filename + ':B',E)),
+
+	DownloadRunning = new Map,
+	DownloadDispatching,DownloadDispatchAgain,
+	DownloadDispatchOnErr = WX.EndL(),
+	DownloadErrRetry = new Error('Just Retry'),
+	DownloadErrRenew = new Error('Need To Renew'),
 	DownloadDispatch = () =>
 	{
+		var Max = Setting.Max();
+		if (!DownloadDispatching && DownloadRunning.size < Max)
+		{
+			DownloadDispatchOnErr()
+			DownloadDispatching = true
+			DB.TopQueue(Max - DownloadRunning.size,WW.Now() - 1E3 * Setting.Delay(),[...DownloadRunning.keys()]).Now(Q =>
+			{
+				WR.Each(V =>
+				{
+					Option.ErrT(V.Row)
+					DownloadRunning.set(V.Row,WX.TCO(() =>
+						DB.TopToDown(V.Row).FMap(Down => Down ?
+							DB.ViewPart(V.Row,Down.Part).FMap(Part =>
+							{
+								var
+								UPAt = new Date(V.UPAt),
+								NameO =
+								{
+									ID : WR.SafeFile(V.ID),
+									Title : WR.SafeFile(V.Title),
+									Up : WR.SafeFile(V.UP),
+									Date : WW.StrDate(UPAt,WW.DateDotS),
+									Y : UPAt.getFullYear(),
+									M : WW.Pad02(-~UPAt.getMonth()),
+									D : WW.Pad02(UPAt.getDate()),
+									H : WW.Pad02(UPAt.getHours()),
+									N : WW.Pad02(UPAt.getMinutes()),
+									S : WW.Pad02(UPAt.getSeconds()),
+									MS : WW.Pad03(UPAt.getMilliseconds()),
+									PartIndex : 1 < Part.Total && WR.PadU(Down.Part,Part.Total),
+									PartTitle : WR.SafeFile(Part.Title || ''),
+									FileIndex : 1 < Part.File && WR.PadU(Down.File,Part.File),
+								},
+								Name = WW.Fmt
+								(
+									V.Format.replace(/\?([^?]+)\?/g,
+										(Q,S) => WW.MR((D,V) => D && NameO[V],true,/\|([^|]+)\|/,Q) ? S : ''),
+									NameO,'|'
+								) + (Down.Ext || ''),
+								Dest = WN.JoinP(V.Root,Name);
+								return WX.Provider(O =>
+								{
+									var
+									Work = WN.Download(
+									{
+										Req : Pack(Down.URL,V.Site),
+										Path : Dest,
+										Last : Down.Path && WN.JoinP(V.Root,Down.Path),
+										Fresh : !Down.Path,
+										Only200 : true,
+										ForceRange : true,
+										Interval : 1E3
+									}).On('Connected',() =>
+									{
+										if (null == Down.First) Down.First = Work.Info.Start
+										Option.OnConn(Down.Task,Down.Part,Down.File,Down.First)
+										NotBigDeal(DB.SaveConn(Down.Task,Down.Part,Down.File,Down.First))
+									}).On('Path',P =>
+									{
+										P = WN.RelP(V.Root,P)
+										if (P !== Down.Path)
+										{
+											Down.Path = P
+											Option.OnPath(Down.Task,Down.Part,Down.File,P)
+											NotBigDeal(DB.SavePath(Down.Task,Down.Part,Down.File,P))
+										}
+									}).On('Data',Q =>
+									{
+										Option.OnHas(Down.Task,Down.Part,Down.File,[Q.Saved,WW.Now() - Work.Info.Start])
+										NotBigDeal(DB.SaveHas(Down.Task,Down.Part,Down.File,Q.Saved))
+									}).On('Done',() =>
+									{
+										var Done = WW.Now();
+										OnEnd()
+										Option.OnDone(Down.Task,Down.Part,Down.File,Done)
+										DB.SaveDone(Down.Task,Down.Part,Down.File,Done)
+											.Now(null,O.E,O.F)
+									}).On('Die',E =>
+									{
+										OnEnd()
+										;/Status not satisfied/.test(E) ?
+											O.E(DownloadErrRenew) :
+											Work.Info.Begin < Work.Info.Saved ?
+												O.E(DownloadErrRetry) :
+												O.E(E)
+									}),
+									OnEnd = () =>
+									{
+										if (Work.Info.Begin < Work.Info.Saved)
+										{
+											Down.Take += WW.Now() - Work.Info.Start
+											Option.OnTake(Down.Task,Down.Part,Down.File,Down.Take)
+											NotBigDeal(DB.SaveTake(Down.Task,Down.Part,Down.File,Down.Take))
+										}
+									};
+									++Down.Play
+									Option.OnPlay(Down.Task,Down.Part,Down.File,Down.Play)
+									NotBigDeal(DB.SavePlay(Down.Task,Down.Part,Down.File,Down.Play))
+									return Work.Stop
+								}).RetryWhen(E => E.Tap(E =>
+								{
+									E === DownloadErrRetry || WW.Throw(E)
+								}))
+							}).Fin().Map(() => [true]) :
+							WX.Just([false])))
+						.FMap(() =>
+						{
+							var Done = WW.Now();
+							return DB.Final(V.Row,Done)
+								.Tap(() => Option.OnFinal(V.Row,Done))
+						})
+						.Now(null,E =>
+						{
+							var
+							At = WW.Now(),
+							Next = DownloadErrRenew === E ? 2 : 1;
+							DownloadRunning.set(V.Row,DB.Err(V.Row,Next,At).Now(null,O =>
+							{
+								DownloadRunning.delete(V.Row)
+								Option.Err(__filename + ':DE',O)
+								DownloadDispatch()
+							},() =>
+							{
+								DownloadRunning.delete(V.Row)
+								Option.ErrT(V.Row,E,Next,At),
+								DownloadDispatch()
+								2 === Next && InfoDispatch()
+							}))
+						},() =>
+						{
+							DownloadRunning.delete(V.Row)
+							DownloadDispatch()
+						}))
+				},Q)
+				DownloadDispatching = false
+				if (DownloadDispatchAgain)
+				{
+					DownloadDispatchAgain = false
+					DownloadDispatch()
+				}
+				else
+				{
+					DownloadRunning.size < Setting.Max() ?
+						DownloadDelay.D() :
+						DownloadDelay.F()
+				}
+			},E =>
+			{
+				DownloadDispatching = false
+				Option.Err(__filename + ':D',E)
+				DownloadDispatchOnErr(WW.To(ConfigRetry,() =>
+				{
+					DownloadDispatching ||
+						DownloadDispatch()
+				}).F)
+			})
+		}
+		else
+		{
+			Max < DownloadRunning.size &&
+				WR.EachU((V,F) =>
+				{
+					if (Max <= F)
+					{
+						V[1]()
+						DownloadRunning.delete(V[0])
+					}
+				},DownloadRunning)
+			if (DownloadDispatching) DownloadDispatchAgain = true
+		}
 	},
 	DownloadDelay = MakeDelay(() => DB.TopErr(1),DownloadDispatch);
 
 	return {
 		Info : InfoDispatch,
+		Down : DownloadDispatch,
 		Del : Q =>
 		{
 			if (InfoRunning.has(Q))
@@ -196,6 +377,7 @@ module.exports = Option =>
 		{
 			InfoDelay.S()
 			DownloadDelay.S()
+			DownloadDispatch()
 		},
 	}
 }

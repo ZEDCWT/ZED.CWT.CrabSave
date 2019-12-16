@@ -34,7 +34,13 @@
 	ActionAuthTaskPlay = 'TaskP',
 	ActionAuthTaskPause = 'TaskU',
 	ActionAuthTaskRemove = 'TaskD',
-	ActionAuthTaskFile = 'TaskF',
+	ActionAuthDownFile = 'DownF',
+	ActionAuthDownPlay = 'DownP',
+	ActionAuthDownConn = 'DownC',
+	ActionAuthDownPath = 'DownA',
+	ActionAuthDownHas = 'DownH',
+	ActionAuthDownTake = 'DownT',
+	ActionAuthDownDone = 'DownD',
 	ActionAuthInspect = 'Ins',
 	ActionAuthErr = 'RErr',
 	ActionAuthErrT = 'RErrT',
@@ -251,8 +257,14 @@
 						TaskFullInfoUpdate(K,O)
 						break
 
-					case ActionAuthTaskFile :
-						DetailIs(K) && DetailUpdate.F(O[0],O[1],O[2])
+					case ActionAuthDownFile :
+					case ActionAuthDownPlay :
+					case ActionAuthDownConn :
+					case ActionAuthDownPath :
+					case ActionAuthDownHas :
+					case ActionAuthDownTake :
+					case ActionAuthDownDone :
+						DetailIs(K[0]) && DetailUpdate.U(Q[0].slice(-1),K[1],K[2],O)
 						break
 
 					case ActionAuthInspect :
@@ -283,6 +295,9 @@
 				case ActionWebTaskRemove :
 					WSOnDiffHot.D(Q)
 					WSOnDiffHist.D(Q)
+					break
+				case ActionWebTaskHist :
+					WSOnDiffHot.D(Q)
 					break
 				case ActionWebTaskOverview :
 					TaskOverviewUpdate(K,O)
@@ -585,6 +600,10 @@
 				WR.ToSize(Size)
 		])
 	},
+	MakeSpeed = function(BytePerMS)
+	{
+		return WR.ToSize(1E3 * BytePerMS) + '/s'
+	},
 	DetailIs = function(Row){return DetailUpdate && Row === DetailUpdate.O},
 	DetailUpdate,
 	MakeDetail = function(Q,S,E)
@@ -675,13 +694,21 @@
 				{
 					WV.Clr(Part)
 					PartList.length = 0
-					WR.EachU(function(V,F)
+					WR.EachU(function(/**@type {CrabSaveNS.Down}*/V,F)
 					{
 						var
 						U = WV.Rock(ClassDetailPart),
 						URL = WV.Rock(ClassSingle + ' ' + ClassHighLight),
 						Name = WV.Rock(),
-						Prog = WV.Fmt('`P`. ');
+						Prog = WV.Fmt(
+						[
+							'','G',
+							'. ' + SA('DetRun') + ' ','P',
+							'. ' + SA('DetFirst') + ' ','C',
+							'\n' + SA('DetTake') + ' ','T',
+							'. ' + SA('DetAvg') + ' ','V',
+							'\n' + SA('DetDone') + ' ','D',
+						]);
 						if (!PartList[V.Part])
 							PartList[V.Part] = []
 						if (!F || V.Part !== S.Down[~-F].Part)
@@ -701,15 +728,48 @@
 						WV.Ti(URL,V.URL)
 						WV.T(Name,V.Path)
 						Prog
-							.P(MakeProgress(V.Size,V.Has))
+							.P(V.Play)
+							.G(MakeProgress(V.Size,V.Has))
+							.C(null == V.First ? '-' : WW.StrDate(V.First))
+							.T(WW.StrMS(V.Take))
+							.V(V.Take ? MakeSpeed(V.Has / V.Take) : '-')
+							.D(null == V.Done ? '-' : WW.StrDate(V.Done))
 						WV.ApR([URL,Name,Prog],U)
 						WV.Ap(U,Part)
 						PartList[V.Part][V.File] =
 						{
-							Z : function(Size)
+							F : function(Size)
 							{
 								if (null == V.Size || V.Has < V.Size)
-									Prog.P(MakeProgress(V.Size = Size,V.Has))
+									Prog.G(MakeProgress(V.Size = Size,V.Has))
+							},
+							P : function(Play)
+							{
+								Prog.P(Play)
+							},
+							C : function(Conn)
+							{
+								Prog.C(WW.StrDate(Conn))
+							},
+							A : function(Path)
+							{
+								WV.T(Name,Path)
+							},
+							H : function(Has,T)
+							{
+								Prog.G(MakeProgress(V.Size,V.Has = Has[0]))
+								T = V.Take + Has[1]
+								Prog.T(WW.StrMS(T))
+									.V(MakeSpeed(V.Has / (T || 1)))
+							},
+							T : function(Take)
+							{
+								Prog.T(WW.StrMS(V.Take = Take))
+									.V(MakeSpeed(V.Has / (Take || 1)))
+							},
+							D : function(Done)
+							{
+								Prog.D(WW.StrDate(Done))
 							}
 						}
 					},S.Down)
@@ -730,10 +790,10 @@
 				O : Q.O,
 				S : Update,
 				E : OnError,
-				F : function(Part,File,Size)
+				U : function(H,Part,File,Val)
 				{
 					PartList[Part] && PartList[Part][File] &&
-						PartList[Part][File].Z(Size)
+						PartList[Part][File][H](Val)
 				}
 			}
 			return TaskFullInfoLoad(Q.O).Now(Update,function(E)
@@ -1596,16 +1656,30 @@
 						WR.Has(S,HotShown) &&
 							HotShown[S].S(false)
 						break
-					case ActionWebTaskRemove :
-						if (WR.Has(S.Row,HotRowMap))
+					case ActionWebTaskHist :
+						if (WR.Has(S[0],HotRowMap))
 						{
-							H = HotRowMap[S.Row]
-							T = WW.BSL(Hot,S.Row,function(Q,S){return Q.O < S})
-							Hot[T] && Hot[T].O === S.Row &&
+							T = WW.BSL(Hot,S[0],function(Q,S){return Q.O < S})
+							Hot[T] && Hot[T].O === S[0] &&
 								List.Splice(T,1)
-							WR.Del(S.Row,HotRowMap)
-							HotMap.E(T = IDCombine(H.S,H.I),H)
-							BrowserUpdate([T])
+							T = HotRowMap[S[0]]
+							WR.Del(S[0],HotRowMap)
+							HotMap.E(IDCombine(T.S,T.I),T)
+							T.E = S[1]
+							HotCount.D(Hot)
+							WSOnDiffHist.D([Q,H,T])
+						}
+						break
+					case ActionWebTaskRemove :
+						if (WR.Has(S,HotRowMap))
+						{
+							T = WW.BSL(Hot,S,function(Q,S){return Q.O < S})
+							Hot[T] && Hot[T].O === S &&
+								List.Splice(T,1)
+							T = HotRowMap[S]
+							WR.Del(S,HotRowMap)
+							HotMap.E(IDCombine(T.S,T.I),T)
+							BrowserUpdate([IDCombine(T.S,T.I)])
 						}
 						break
 				}
@@ -1808,27 +1882,20 @@
 				switch (Q)
 				{
 					case ActionWebTaskHist :
-						if (!WR.Has(S.Row,HistoryRowMap))
+						if (!WR.Has(S.O,HistoryRowMap))
 						{
-							List.Unshift(HistoryRowMap[S.Row] = HistoryMap.D(T = IDCombine(S.Site,S.ID),
-							{
-								O : S.Row,
-								S : S.Site,
-								I : S.ID,
-								Z : S.Size,
-								E : S.Done
-							}))
+							List.Unshift(HistoryRowMap[S.O] = HistoryMap.D(T = IDCombine(S.S,S.I),S))
 							BrowserUpdate([T])
 						}
 						break
 					case ActionWebTaskRemove :
-						if (WR.Has(S.Row,HistoryRowMap))
+						if (WR.Has(S,HistoryRowMap))
 						{
-							H = HistoryRowMap[S.Row]
+							H = HistoryRowMap[S]
 							T = WW.BSL(History,S.Done,function(Q,S){return Q.E > S})
-							History[T] && History[T].O === S.Row &&
+							History[T] && History[T].O === S &&
 								List.Splice(T,1)
-							WR.Del(S.Row,HistoryRowMap)
+							WR.Del(S,HistoryRowMap)
 							HistoryMap.E(T = IDCombine(H,S,H.I),H)
 							BrowserUpdate([T])
 						}
@@ -2306,8 +2373,8 @@
 					InpU : PC,
 					Inp : function(Q)
 					{
-						LangTo(Q)
-						Noti.S(SA('SetLangH'))
+						LangNow === (LangTo(Q),LangNow) ||
+							Noti.S(SA('SetLangH'))
 					},
 					NoRel : InpNoRel
 				}).Drop(WR.Map(function(V)
@@ -2338,6 +2405,15 @@
 					'|Up|/|Y|/|Up|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?'
 				]),
 				'|Up|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?'
+			],[
+				SA('SetMax'),
+				Key('Max'),
+				WV.Inp(
+				{
+					InpU : PC,
+					NoRel : InpNoRel
+				}).Drop(WR.Range(1,25)),
+				4
 			],[
 				SA('SetProxy'),
 				Key('Proxy'),
@@ -2370,7 +2446,8 @@
 				WV.Inp(
 				{
 					Yep : WV.InpYZ,
-					InpU : PC
+					InpU : PC,
+					Map : Number
 				}),
 				20
 			],[

@@ -29,7 +29,13 @@ ActionAuthTaskInfo = 'TaskI',
 ActionAuthTaskPlay = 'TaskP',
 ActionAuthTaskPause = 'TaskU',
 ActionAuthTaskRemove = 'TaskD',
-ActionAuthTaskFile = 'TaskF',
+ActionAuthDownFile = 'DownF',
+ActionAuthDownPlay = 'DownP',
+ActionAuthDownConn = 'DownC',
+ActionAuthDownPath = 'DownA',
+ActionAuthDownHas = 'DownH',
+ActionAuthDownTake = 'DownT',
+ActionAuthDownDone = 'DownD',
 ActionAuthInspect = 'Ins',
 ActionAuthErr = 'RErr',
 ActionAuthErrT = 'RErrT';
@@ -97,6 +103,7 @@ module.exports = Option =>
 		Lang : SettingMake('Lang',WW.IsStr,0),
 		Dir : SettingMake('Dir',WW.IsStr,PathSave),
 		Fmt : SettingMake('Fmt',WW.IsStr,'|Up|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?'),
+		Max : SettingMake('Max',Q => WW.IsIn(Q,1,25),4),
 		Proxy : SettingMake('Proxy',WR.Id,false),
 		ProxyURL : SettingMake('ProxyURL',WW.IsStr,undefined),
 		Delay : SettingMake('Delay',WW.IsNum,20),
@@ -115,11 +122,20 @@ module.exports = Option =>
 		DB,
 		Err : RecErr,
 		ErrT : RecErrT,
-		OnRenew : Row => WebSocketSend([ActionWebTaskRenew,Row,true],true),
-		OnRenewDone : Row => WebSocketSend([ActionWebTaskRenew,Row,false],true),
-		OnInfo : (Row,Q) => WebSocketSendAuth([ActionAuthTaskInfo,Row,Q],true),
-		OnFile : (Row,Part,File,Size) => WebSocketSendAuth([ActionAuthTaskFile,Row,[Part,File,Size]],true),
-		OnSize : (Row,Q,N) => WebSocketSend([ActionWebTaskSize,Row,[Q,N]],true),
+		OnRenew : Task => WebSocketSend([ActionWebTaskRenew,Task,true],true),
+		OnRenewDone : Task => WebSocketSend([ActionWebTaskRenew,Task,false],true),
+		OnInfo : (Task,Q) => WebSocketSendAuth([ActionAuthTaskInfo,Task,Q],true),
+		OnFile : (Task,Part,File,Size) => WebSocketSendAuth([ActionAuthDownFile,[Task,Part,File],Size],true),
+		OnSize : (Task,Q,N) => WebSocketSend([ActionWebTaskSize,Task,[Q,N]],true),
+
+		OnPlay : (Task,Part,File,Play) => WebSocketSendAuth([ActionAuthDownPlay,[Task,Part,File],Play],true),
+		OnConn : (Task,Part,File,Conn) => WebSocketSendAuth([ActionAuthDownConn,[Task,Part,File],Conn],true),
+		OnPath : (Task,Part,File,Path) => WebSocketSendAuth([ActionAuthDownPath,[Task,Part,File],Path],true),
+		OnHas : (Task,Part,File,Has) => WebSocketSendAuth([ActionAuthDownHas,[Task,Part,File],Has],true),
+		OnTake : (Task,Part,File,Take) => WebSocketSendAuth([ActionAuthDownTake,[Task,Part,File],Take],true),
+		OnDone : (Task,Part,File,Done) => WebSocketSendAuth([ActionAuthDownDone,[Task,Part,File],Done],true),
+
+		OnFinal : (Task,Done) => WebSocketSend([ActionWebTaskHist,++DBVersion,[Task,Done]],true),
 	},
 	Loop = require('./Loop')(LoopO),
 
@@ -147,7 +163,7 @@ module.exports = Option =>
 	RequestComm = SiteO.Req = LoopO.Req = Q =>
 	{
 		Q = WW.Merge(false,true,WW.IsObj(Q) ? Q : {url : Q},RequestDefault)
-		RequestHead(WW.UA,WW.Key())
+		RequestHead(Q,WW.UA,WW.Key())
 		Setting.Proxy() && Setting.ProxyURL() &&
 			(Q.proxy = Setting.ProxyURL().replace(/^(?!\w+:\/\/)/,'http://'))
 		return Q
@@ -480,6 +496,7 @@ module.exports = Option =>
 				WebSocketSendAuth([ActionAuthErrT,RecErrTE])
 				WW.IsNum(PortWeb) && new (require('ws')).Server({server : WebServer.listen(PortWeb)}).on('connection',OnSocket)
 				Loop.Info()
+				Loop.Down()
 			}),
 		Exp : X => (X = X || require('express').Router())
 			.use((Q,S,N) => '/' === Q.path && !/\/(\?.*)?$/.test(Q.originalUrl) ? S.redirect(302,Q.baseUrl + Q.url) : N())
