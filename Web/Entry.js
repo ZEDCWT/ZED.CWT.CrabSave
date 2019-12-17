@@ -22,6 +22,7 @@
 	ActionWebTaskErr = 'TaskE',
 	ActionWebTaskHist = 'TaskH',
 	ActionWebShortCut = 'SC',
+	ActionWebTick = 'Tick',
 	ActionWebError = 'Err',
 	ActionAuthHello = 'Hell',
 	ActionAuthToken = 'Toke',
@@ -182,6 +183,9 @@
 	BrowserOnProgress,
 	TickQueue = [],
 	Tick = function(Q){TickQueue.push(Q)},
+	RStatusBar = WV.Div(2,[0,'10%'],true),
+	RStatus = WV.Rock(),
+	RSpeed = WV.Rock(),
 
 	IDCombine = function(Site,ID)
 	{
@@ -192,6 +196,7 @@
 	IsCold,
 	ColdAdd,
 	ColdDel,
+	ProgressMap = {},
 	HotCount = MakeCount(),
 	IsHot,
 	IsHistory,
@@ -223,7 +228,21 @@
 			var
 			K,O;
 			Q = Q.data
-			if (!Q.charCodeAt(0))
+			if (10 === Q.charCodeAt(0))
+			{
+				ProgressMap = {}
+				WR.Each(function(V)
+				{
+					if (V)
+					{
+						V = V.split(' ')
+						ProgressMap[NumberZip.P(V[0])] = [NumberZip.P(V[1]),NumberZip.P(V[2])]
+					}
+				},Q.split('\n'))
+				WSOnProgress()
+				WebSocketSend([ActionWebTick])
+			}
+			else if (!Q.charCodeAt(0))
 			{
 				Q = WC.JTOO(WC.U16S(Decipher.D(WC.B91P(Q))))
 				if (!WW.IsArr(Q) || !WW.IsArr(Q = Q[1])) return Suicide()
@@ -357,6 +376,7 @@
 		WebSocketSince = WebSocketRetry ? WebSocketSince : WW.Now()
 		First || WebSocketNoti([SA('SocConn'),WebSocketRetry ? ' ' + SA('SocRetry') + ' : ' + WebSocketRetry : ''])
 	},
+	WSOnProgress,
 	WSOnApi = {},
 	WSOnOnline = WW.BusS(),
 	WSOnOffline = WW.BusS(),
@@ -585,14 +605,15 @@
 
 	MakeProgress = function(Size,Has)
 	{
+		Has = Has || 0
 		return WW.Fmt('[`0`%] `1` / `2`',
 		[
-			null == Has || null == Size ?
+			null == Size ?
 				'-' :
 				Has < Size ?
 					WR.ToFix(2,100 * Has / Size) :
 					100,
-			null == Has || null == Size ?
+			null == Size ?
 				'-' :
 				WR.ToSize(Has),
 			null == Size ?
@@ -603,6 +624,12 @@
 	MakeSpeed = function(BytePerMS)
 	{
 		return WR.ToSize(1E3 * BytePerMS) + '/s'
+	},
+	MakeRemain = function(Rest,Speed)
+	{
+		return Rest && !Speed ?
+			'-99:59:59' :
+			'-' + WW.StrS(Rest / Speed / 1E3)
 	},
 	DetailIs = function(Row){return DetailUpdate && Row === DetailUpdate.O},
 	DetailUpdate,
@@ -802,6 +829,21 @@
 				WV.ClsR(ErrReq,WV.None)
 			})
 		})
+	},
+
+
+
+	OverallUpdate = function()
+	{
+		var
+		Active = 0,
+		Speed = 0;
+		WR.Each(function(V)
+		{
+			++Active
+			Speed += V[1]
+		},ProgressMap)
+		WV.T(RSpeed,'[' + Active + '] ' + MakeSpeed(Speed))
 	};
 
 	LangTo(Top.LangS)
@@ -814,6 +856,9 @@
 	WV.Ap(WV.Rock(WV.ST),RMain[4])
 	WV.Ap(WV.Rock(WV.SB),RMain[4])
 	WV.Ap(RMain[0],Rainbow[1])
+	WV.ApA([WV.Rock(WV.VertM),RStatus],RStatusBar[1])
+	WV.ApA([WV.Rock(WV.VertM),RSpeed],RStatusBar[2])
+	WV.Ap(RStatusBar[0],Rainbow[2])
 
 	WV.Style(WW.Fmt
 	(
@@ -853,6 +898,10 @@
 
 		'.`E` .`H`{margin-right:`h`px}' +
 		'.`ET`{padding-left:`p`px}' +
+
+		'#`V`,#`X`{padding:`h`px;line-height:1}' +
+		'#`X`{text-align:center;white-space:nowrap}' +
+		'#`V`>div,#`X`>div{display:inline-block;vertical-align:middle}' +
 		'',
 		{
 			F : WV.Foc,
@@ -878,6 +927,8 @@
 			R : ClassHeader,
 			E : ClassDetail,
 			ET : ClassDetailPart,
+			V : WV.ID(RStatusBar[1]),
+			X : WV.ID(RStatusBar[2]),
 
 			p : Padding,
 			h : PaddingHalf,
@@ -1480,6 +1531,7 @@
 					}),
 					OnState = function(V)
 					{
+						WV.WC(Bar) // Force to reset transition state
 						if (PlayCurrent = V)
 						{
 							Play.X(SA('HotPause'))
@@ -1523,7 +1575,7 @@
 					LoadErr,RenewLast,
 					OnTick = function(T)
 					{
-						if (S[0])
+						if (S[0] && !WR.Has(S[0].O,ProgressMap))
 						{
 							T = null == Task ? SA('LstLoad') :
 								null != LoadErr ? LoadErr :
@@ -1534,6 +1586,17 @@
 								SA('HotQueue')
 							T === RenewLast || WV.T(Renew,RenewLast = T)
 						}
+					},
+					OnSizeHas = function(Size,Has)
+					{
+						Running.P(MakeProgress(Size,Has))
+						WV.CSS(Bar,'width',100 * Has / Size + '%')
+					},
+					OnProgress = function(Q)
+					{
+						OnSizeHas(Task.Size,Task.Has = Q[0])
+						WV.T(Renew,RenewLast = MakeSpeed(Q[1]) +
+							' ' + MakeRemain(Task.Size - Q[0],Q[1]))
 					};
 					WV.ClsA(Title,WV.Alt)
 					WV.On('click',WV.StopProp,Play.R)
@@ -1553,6 +1616,8 @@
 							SingleFill(Title,'#' + V.O + ' ' + V.S + ' ' + V.I)
 							WV.ClsA(Running.R,WV.None)
 							OnTick()
+							OnState(false)
+							WV.CSS(Bar,'width',0)
 							LoadO(TaskOverviewLoad(V.O).Now(function(B)
 							{
 								Task = B
@@ -1567,10 +1632,10 @@
 								OnTick()
 								if (null != B.Size)
 								{
-									Running
-										.F(B.File)
-										.P(MakeProgress(B.Size,B.Has))
+									Running.F(B.File)
+									OnSizeHas(B.Size,B.Has)
 								}
+								WR.Has(V.O,ProgressMap) && OnProgress(ProgressMap[V.O])
 								Play.On()
 								OnState(B.State)
 							},function(E)
@@ -1589,9 +1654,15 @@
 								{
 									return undefined === Q ?
 										PlayCurrent :
-										OnState(Task.State = Q)
+									(
+										OnState(Task.State = Q),
+										WR.Del(V.O,ProgressMap),
+										OverallUpdate(),
+										Q || OnTick()
+									)
 								},
 								W : OnTick,
+								P : OnProgress,
 								E : function(State,At)
 								{
 									HasError = true
@@ -1603,9 +1674,8 @@
 								{
 									WV.ClsR(Running.R,WV.None)
 									HasError = false
-									Running
-										.F(Task.File = Q[1])
-										.P(MakeProgress(Task.Size = Q[0],Task.Has))
+									Running.F(Task.File = Q[1])
+									OnSizeHas(Task.Size = Q[0],Task.Has)
 									OnTick()
 								}
 							}
@@ -1717,6 +1787,15 @@
 					},WW.O,WW.O))
 			})
 
+			WSOnProgress = function()
+			{
+				WR.EachU(function(V,F)
+				{
+					WR.Has(F,HotShown) &&
+						HotShown[F].P(V)
+				},ProgressMap)
+				OverallUpdate()
+			}
 			WSOnRenew = function(Row,Q)
 			{
 				if (Q)
@@ -1772,8 +1851,8 @@
 					return WW.Fmt
 					(
 						'#`R` .`L` .`B`{margin-right:`q`px;padding:0;min-width:0}' +
-						'.`P`{position:absolute;left:0;bottom:0;width:0;height:3px;background:#979797;`t`}' +
-						'.`P`.`O`{background:#69A0D7}',
+						'.`P`{position:absolute;left:0;bottom:0;width:0;height:3px;background:#979797}' +
+						'.`P`.`O`{background:#69A0D7;`t`}',
 						{
 							R : ID,
 							B : WV.ButW,
@@ -2688,5 +2767,6 @@
 			for (F = 0;F < TickQueue.length;++F)
 				TickQueue[F]()
 		},true)
+		OverallUpdate()
 	})
 }()

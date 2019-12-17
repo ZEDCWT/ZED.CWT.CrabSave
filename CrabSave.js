@@ -17,6 +17,7 @@ ActionWebTaskSize = 'TaskS',
 ActionWebTaskErr = 'TaskE',
 ActionWebTaskHist = 'TaskH',
 ActionWebShortCut = 'SC',
+ActionWebTick = 'Tick',
 ActionWebError = 'Err',
 ActionAuthHello = 'Hell',
 ActionAuthToken = 'Toke',
@@ -268,7 +269,7 @@ module.exports = Option =>
 	WebSocketSend = (Q,S) =>
 	{
 		if (!S) WebSocketLast[Q[0]] = Q
-		WebSocketPool.forEach(V => V(Q))
+		WebSocketPool.forEach(V => V[0](Q))
 	},
 	WebSocketPoolAuth = new Set,
 	WebSocketPoolAuthSuicide = new Set,
@@ -285,8 +286,9 @@ module.exports = Option =>
 		Decipher = WC.AESDS(WebToken,WebToken,WC.CFB),
 		Send = D =>
 		{
-			try{S.send(WC.OTJ(D))}catch(_){}
+			try{S.send(WW.IsObj(D) ? WC.OTJ(D) : D)}catch(_){}
 		},
+		Feed = [Send,9],
 		FullTrackingRow,
 		SendAuth = D =>
 		{
@@ -428,12 +430,17 @@ module.exports = Option =>
 					case ActionAuthTaskPlay :
 						DBMulti(K,V =>
 							DB.Play(V).Map(() =>
-								WebSocketSend([ActionWebTaskPlay,++DBVersion,V],true)))
+							{
+								WebSocketSend([ActionWebTaskPlay,++DBVersion,V],true)
+							}),Loop.Down)
 						break
 					case ActionAuthTaskPause :
 						DBMulti(K,V =>
 							DB.Pause(V).Map(() =>
-								WebSocketSend([ActionWebTaskPause,++DBVersion,V],true)))
+							{
+								WebSocketSend([ActionWebTaskPause,++DBVersion,V],true)
+								Loop.Stop(V)
+							}))
 						break
 
 					case ActionAuthInspect :
@@ -458,10 +465,14 @@ module.exports = Option =>
 						E => Send([Q[0],K,ErrorS(E)])
 					)
 					break
+
+				case ActionWebTick :
+					Feed[1] = 9
+					break
 			}
 		}).on('close',() =>
 		{
-			WebSocketPool.delete(Send)
+			WebSocketPool.delete(Feed)
 			WebSocketPoolAuth.delete(SendAuth)
 			WebSocketPoolAuthSuicide.delete(Suicide)
 			ApiPool.forEach(V => V.abort())
@@ -469,7 +480,7 @@ module.exports = Option =>
 
 		WR.Each(Send,WebSocketLast)
 		Send([ActionWebTaskRenew,Loop.Renewing(),true])
-		WebSocketPool.add(Send)
+		WebSocketPool.add(Feed)
 	};
 
 	return {
@@ -497,6 +508,16 @@ module.exports = Option =>
 				WW.IsNum(PortWeb) && new (require('ws')).Server({server : WebServer.listen(PortWeb)}).on('connection',OnSocket)
 				Loop.Info()
 				Loop.Down()
+				WW.To(5E2,() =>
+				{
+					var R = '';
+					if (WebSocketPool.size && Loop.Downloading.size)
+					{
+						Loop.Downloading.forEach((V,F) =>
+							R += '\n' + NumberZip.S(F) + V(NumberZip.S))
+						WebSocketPool.forEach(V => V[1] && V[0](R))
+					}
+				},true)
 			}),
 		Exp : X => (X = X || require('express').Router())
 			.use((Q,S,N) => '/' === Q.path && !/\/(\?.*)?$/.test(Q.originalUrl) ? S.redirect(302,Q.baseUrl + Q.url) : N())

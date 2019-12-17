@@ -235,11 +235,13 @@ module.exports = Option =>
 		[
 			[`
 				update Task set
+					State = 1,
 					Title = coalesce(?,Title,'[Untitled]'),
 					UP = coalesce(?,UP,'[Anonymous]'),
 					UPAt = coalesce(UPAt,?),
 					File = ?,
-					Size = ?
+					Size = ?,
+					Error = 0
 				where ? = Row
 			`,[
 				Q.Title,
@@ -308,8 +310,10 @@ module.exports = Option =>
 			.Map(V => V && V.Error),
 		TopQueue : (S,Q,O) => All(
 		`
-			select * from Task
-			where
+			select
+				*,
+				(select sum(Has) from Down where T.Row = Task) Has
+			from Task T where
 				Done is null
 				and
 				1 = State

@@ -175,6 +175,15 @@ module.exports = Option =>
 		else if (InfoDispatching) InfoDispatchAgain = true
 	},
 	InfoDelay = MakeDelay(() => DB.TopErr(2),InfoDispatch),
+	InfoEnd = Q =>
+	{
+		if (InfoRunning.has(Q))
+		{
+			InfoRunning.get(Q)()
+			InfoRunning.delete(Q)
+			InfoDispatch()
+		}
+	},
 
 
 
@@ -185,6 +194,7 @@ module.exports = Option =>
 	DownloadDispatchOnErr = WX.EndL(),
 	DownloadErrRetry = new Error('Just Retry'),
 	DownloadErrRenew = new Error('Need To Renew'),
+	DownloadStatus = new Map,
 	DownloadDispatch = () =>
 	{
 		var Max = Setting.Max();
@@ -196,6 +206,11 @@ module.exports = Option =>
 			{
 				WR.Each(V =>
 				{
+					var
+					Has = V.Has,
+					Working;
+					DownloadStatus.set(V.Row,H => ' ' + H(Working ? Has + Working.Calc().Saved : Has) +
+						' ' + H(Working ? Working.Info.Speed : 0))
 					Option.ErrT(V.Row)
 					DownloadRunning.set(V.Row,WX.TCO(() =>
 						DB.TopToDown(V.Row).FMap(Down => Down ?
@@ -241,6 +256,9 @@ module.exports = Option =>
 										Interval : 1E3
 									}).On('Connected',() =>
 									{
+										Has -= Down.Has
+										Down.Has = 0
+										Working = Work
 										if (null == Down.First) Down.First = Work.Info.Start
 										Option.OnConn(Down.Task,Down.Part,Down.File,Down.First)
 										NotBigDeal(DB.SaveConn(Down.Task,Down.Part,Down.File,Down.First))
@@ -275,6 +293,8 @@ module.exports = Option =>
 									}),
 									OnEnd = () =>
 									{
+										Has += Down.Has = Work.Info.Saved
+										Working = 0
 										if (Work.Info.Begin < Work.Info.Saved)
 										{
 											Down.Take += WW.Now() - Work.Info.Start
@@ -306,18 +326,21 @@ module.exports = Option =>
 							DownloadRunning.set(V.Row,DB.Err(V.Row,Next,At).Now(null,O =>
 							{
 								DownloadRunning.delete(V.Row)
+								DownloadStatus.delete(V.Row)
 								Option.Err(__filename + ':DE',O)
 								DownloadDispatch()
 							},() =>
 							{
 								DownloadRunning.delete(V.Row)
-								Option.ErrT(V.Row,E,Next,At),
+								DownloadStatus.delete(V.Row)
+								Option.ErrT(V.Row,E,Next,At)
 								DownloadDispatch()
 								2 === Next && InfoDispatch()
 							}))
 						},() =>
 						{
 							DownloadRunning.delete(V.Row)
+							DownloadStatus.delete(V.Row)
 							DownloadDispatch()
 						}))
 				},Q)
@@ -358,20 +381,32 @@ module.exports = Option =>
 			if (DownloadDispatching) DownloadDispatchAgain = true
 		}
 	},
-	DownloadDelay = MakeDelay(() => DB.TopErr(1),DownloadDispatch);
+	DownloadDelay = MakeDelay(() => DB.TopErr(1),DownloadDispatch),
+	DownloadEnd = Q =>
+	{
+		if (DownloadRunning.has(Q))
+		{
+			DownloadRunning.get(Q)()
+			DownloadRunning.delete(Q)
+			DownloadStatus.delete(Q)
+			DownloadDispatch()
+		}
+	};
 
 	return {
 		Info : InfoDispatch,
 		Down : DownloadDispatch,
 		Del : Q =>
 		{
-			if (InfoRunning.has(Q))
-			{
-				InfoRunning.delete(Q)
-				InfoDispatch()
-			}
+			InfoEnd(Q)
+			DownloadEnd(Q)
 		},
 		Renewing : () => [...InfoRunning.keys()],
+		Downloading : DownloadStatus,
+		Stop : Q =>
+		{
+			DownloadEnd(Q)
+		},
 
 		OnSet : () =>
 		{
