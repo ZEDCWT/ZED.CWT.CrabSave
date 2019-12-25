@@ -122,7 +122,7 @@ BestQulity = Util.Best('bitrate'),
 SolveURL = (Q,S,T) => ZED.ReduceToObject
 (
 	KeyQueue.URL,[(T = Q.s || Q.sig) ? Q.url + '&sig=' + TrySign(T) : Q.url],
-	KeyQueue.Suffix,'.' + Util.MF(/\/(\w+)/,Q.type) + (S || '')
+	KeyQueue.Suffix,'.' + Util.MF(/\/(\w+)/,Q.type || Q.mimeType) + (S || '')
 ),
 
 R = ZED.ReduceToObject
@@ -315,6 +315,19 @@ R = ZED.ReduceToObject
 					(
 						KeyQueue.Part,[SolveURL(Q[0]),SolveURL(Q[1],'.mp3')],
 						KeyQueue.Sizes,[+Q[0].clen,+Q[1].clen]
+					)
+				) : Q.player_response ? (
+					Q = ZED.JTO(Q.player_response).streamingData.adaptiveFormats,
+					Q =
+					[
+						BestQulity(Q.filter(V => /^video/.test(V.mimeType) && +V.contentLength)),
+						BestQulity(Q.filter(V => /^audio/.test(V.mimeType) && +V.contentLength))
+					],
+					Q[0].contentLength && Q[1].contentLength || ZED.Throw(L(Lang.Bad)),
+					Q = ZED.ReduceToObject
+					(
+						KeyQueue.Part,[SolveURL(Q[0]),SolveURL(Q[1],'.mp3')],
+						KeyQueue.Sizes,[+Q[0].contentLength,+Q[1].contentLength]
 					)
 				) : (
 					Q = Q.url_encoded_fmt_stream_map,
