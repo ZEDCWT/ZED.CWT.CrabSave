@@ -121,7 +121,7 @@ FilterMenuDef = ZED.reduce((D,V) =>
 BestQulity = Util.Best('bitrate'),
 SolveURL = (Q,S,T) => ZED.ReduceToObject
 (
-	KeyQueue.URL,[(T = Q.s || Q.sig) ? Q.url + '&sig=' + TrySign(T) : Q.url],
+	KeyQueue.URL,[(Q.cipher && ZED.Merge(Q,ZED.QueryString(Q.cipher)),T = Q.s || Q.sig) ? Q.url + '&sig=' + TrySign(T) : Q.url],
 	KeyQueue.Suffix,'.' + Util.MF(/\/(\w+)/,Q.type || Q.mimeType) + (S || '')
 ),
 
