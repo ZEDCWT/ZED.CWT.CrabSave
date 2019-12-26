@@ -27,7 +27,7 @@ module.exports = O =>
 					V => {/^nicohistory=/.test(V) && (NicoHistory = V.split('; ')[0])},
 					H.headers['set-cookie'])
 				B = WC.JTO(B)
-				200 === B.status_code || WW.Throw(['Bad response',B])
+				200 === B.status_code || O.Bad(B)
 				return ((H = B.video.dmcInfo) ?
 					WN.ReqB(O.Req(
 					{
@@ -94,7 +94,7 @@ module.exports = O =>
 					})).Map(B =>
 					(
 						B = WC.JTO(B),
-						B.data || WW.Throw(['Bad response',B]),
+						B.data || O.Bad(B),
 						B.data.session.content_uri
 					)) :
 					WX.Just(B.video.smileInfo.url))

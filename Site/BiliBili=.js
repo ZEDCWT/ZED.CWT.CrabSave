@@ -118,7 +118,7 @@ module.exports = O =>
 									U.Ext.push('.mp3')
 								}
 							}
-							else WW.Throw(['Unable to resolve download link',B])
+							else O.Bad(B)
 							V[1] && AV.title !== V[1] && (U.Title = V[1])
 							U.Index = V[2]
 							Part.push(U)

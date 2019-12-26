@@ -804,6 +804,7 @@
 			},
 			OnError = function(E)
 			{
+				WW.IsArr(E) && (E = SA(E))
 				WV.T(Err,null == E ? '' : ErrorS(E))
 				;(null == E ? WV.ClsA : WV.ClsR)(Err,WV.None)
 			};
@@ -823,11 +824,18 @@
 						PartList[Part][File][H](Val)
 				}
 			}
-			return TaskFullInfoLoad(Q.O).Now(Update,function(E)
-			{
-				WV.T(ErrReq,SA('LstFail') + '\n' + ErrorS(E))
-				WV.ClsR(ErrReq,WV.None)
-			})
+			return WX.EndI(
+			[
+				TaskFullInfoLoad(Q.O).Now(Update,function(E)
+				{
+					WV.T(ErrReq,SA('LstFail') + '\n' + ErrorS(E))
+					WV.ClsR(ErrReq,WV.None)
+				}),
+				function()
+				{
+					WebSocketSendAuth([ActionAuthTaskInfo,false])
+				}
+			])
 		})
 	},
 
@@ -2608,7 +2616,7 @@
 								if (B[2] && H) O.D(B.slice(2)).F()
 								else if (B[2] && /^2/.test(B[2])) O.D(B[3]).F()
 								else O.E(B[2] ?
-									SA('ErrBadRes') + ' #' + B[2] + ' ' + B[3] :
+									SA('ErrBadRes',['#' + B[2] + ' ' + B[3]]) :
 									B[3])
 							}
 						}
@@ -2643,7 +2651,7 @@
 				},
 				BadR : function(Q)
 				{
-					WW.Throw(SA('ErrBadRes') + ' ' + (WW.IsObj(Q) ? WC.OTJ(Q) : Q))
+					WW.Throw(SA('ErrBadRes',[WW.IsObj(Q) ? WC.OTJ(Q) : Q]))
 				},
 				Num : function(Q)
 				{

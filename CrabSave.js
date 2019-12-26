@@ -54,6 +54,7 @@ module.exports = Option =>
 	CookieMap,
 	DataSetting = WN.JSON(WN.JoinP(PathData,'Setting')),
 	DataShortCut = WN.JSON(WN.JoinP(PathData,'ShortCut')),
+	DataComponent = WN.JSON(WN.JoinP(PathData,'Component')),
 
 	ConfigDebugLimit = 20,
 
@@ -109,7 +110,10 @@ module.exports = Option =>
 		ProxyURL : SettingMake('ProxyURL',WW.IsStr,undefined),
 		Delay : SettingMake('Delay',WW.IsNum,20),
 	},
-	SiteO = {},
+	SiteO =
+	{
+		Cmp : DataComponent
+	},
 	Site = require('./Site/_')(SiteO),
 	DB = require('./DB.SQLite')(
 	{
@@ -293,6 +297,7 @@ module.exports = Option =>
 		SendAuth = D =>
 		{
 			if (ActionAuthTaskInfo === D[0] && FullTrackingRow !== D[1]) return
+			if (WR.StartW('Down',D[0]) && FullTrackingRow !== D[1][0]) return
 			D = Cipher.D(WC.OTJ([WW.Key(WW.Rnd(20,40)),D,WW.Key(WW.Rnd(20,40))]))
 			try{S.send('\0' + WC.B91S(D))}catch(_){}
 		},

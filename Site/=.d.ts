@@ -56,10 +56,13 @@ declare module CrabSaveNS
 	{
 		(Q :
 		{
+			Cmp() : any
+			Cmp(D : any) : any
 			Head(Q : string | WishNS.RequestOption,K : string,V : string,Force? : boolean) : WishNS.RequestOption
 			Req(Q : string | WishNS.RequestOption) : WishNS.RequestOption
 			Coke(Q : string | WishNS.RequestOption) : WishNS.RequestOption
 			Best<U>(S : string,Q : U[]) : U
+			Bad(Q : any) : never
 		}) : {
 			URL(ID : string) : WishNS.Provider<SiteURL>
 			Pack?(Q : string) : string | WishNS.RequestOption
@@ -85,6 +88,7 @@ declare module CrabSaveNS
 	{
 		(Q :
 		{
+			Cmp : WishNS.JSONU<{}>
 			Head(Q : string | WishNS.RequestOption,K : string,V : string,Force? : boolean) : WishNS.RequestOption
 			Req(Q : string | WishNS.RequestOption) : WishNS.RequestOption
 			Coke(Q : string | WishNS.RequestOption,Q : string) : WishNS.RequestOption
