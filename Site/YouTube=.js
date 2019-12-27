@@ -49,11 +49,11 @@ module.exports = O =>
 						S.bitrate - Q.bitrate),
 					SolveURL = (H,Q,X) =>
 					{
-						Q = Q.filter(V => WR.StartW(H,V.mimeType))
+						Q = Q.filter(V => WR.StartW(H,V.mimeType) && +V.contentLength)
 						Q[0] || O.Bad(B)
 						Q = Q[0]
 						Size.push(+Q.contentLength || null)
-						Ext.push(WW.MF(/\/(\w+)/,Q.mimeType) + (X || ''))
+						Ext.push('.' + WW.MF(/\/(\w+)/,Q.mimeType) + (X || ''))
 						URL.push(Q.cipher ? WC.QSP(Q.cipher) : Q.url)
 					},
 					URL = [],Size = [],Ext = [],

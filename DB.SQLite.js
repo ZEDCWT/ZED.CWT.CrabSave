@@ -216,12 +216,12 @@ module.exports = Option =>
 		Hot : (Q,S) => DB.each(`select ${HotBrief} from Task where Done is null order by Row`,
 			(E,V) => E || Q(V),
 			S),
-		Play : Q => Run(`update Task set State = 1 where ? = Row and 0 = State`,[Q]),
-		Pause : Q => Run(`update Task set State = 0 where ? = Row`,[Q]),
+		Play : Q => Run(`update Task set State = 1 where ? = Row and 0 = State and Done is null`,[Q]),
+		Pause : Q => Run(`update Task set State = 0,Error = 0 where ? = Row and Done is null`,[Q]),
 
 		TopNoSize : (S,Q) => All(
 		`
-			select Row,Site,ID,State from Task
+			select Row,Site,ID,State,Error from Task
 			where
 				Done is null
 				and

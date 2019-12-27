@@ -61,6 +61,7 @@ var Lang = // eslint-disable-line
 		HotSolve : 'Resolving infomation...',
 		HotRenew : 'Renewing infomation...',
 		HotQueue : 'Queued',
+		HotPaused : 'Paused',
 
 		His : 'History',
 
@@ -210,6 +211,7 @@ var Lang = // eslint-disable-line
 		HotSolve : '正在解析下載信息...',
 		HotRenew : '重新解析下載信息...',
 		HotQueue : '正在排隊',
+		HotPaused : '已暫停',
 
 		His : '已下載',
 
@@ -358,6 +360,7 @@ var Lang = // eslint-disable-line
 		HotSolve : '正在解析下载信息...',
 		HotRenew : '重新解析下载信息...',
 		HotQueue : '正在排队',
+		HotPaused : '已暂停',
 
 		His : '已下载',
 

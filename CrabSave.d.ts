@@ -34,7 +34,7 @@ declare module CrabSaveNS
 			Play(Task : number) : WishNS.Provider<any>
 			Pause(Task : number) : WishNS.Provider<any>
 
-			TopNoSize(Count : number,From : number) : WishNS.Provider<Pick<Task,'Row' | 'Site' | 'ID' | 'State'>[]>
+			TopNoSize(Count : number,From : number) : WishNS.Provider<Pick<Task,'Row' | 'Site' | 'ID' | 'State' | 'Error'>[]>
 			SaveInfo(Task : number,Info : Task) : WishNS.Provider<any>
 			SaveSize(Task : number,Part : number,File : number,Size : number) : WishNS.Provider<any>
 			FillSize(Task : number) : WishNS.Provider<number>
@@ -159,6 +159,8 @@ declare module CrabSaveNS
 			OnDone(Task : number,Part : number,File : number,Date : number) : any
 
 			OnFinal(Task : number,Done : number) : any
+
+			OnEnd() : any
 		}) : {
 			Info() : any
 			Down() : any

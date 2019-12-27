@@ -66,8 +66,8 @@ module.exports = Option =>
 			{
 				WR.Each(V =>
 				{
+					V.Error && Option.ErrT(V.Row)
 					Option.OnRenew(V.Row)
-					Option.ErrT(V.Row)
 					InfoRunning.set(V.Row,SiteAll.P(V.Site)
 						.FMap(S => S.URL(V.ID))
 						.FMap(U =>
@@ -123,7 +123,10 @@ module.exports = Option =>
 										.Fin()
 										.FMap(() => DB.FillSize(V.Row))
 										.Tap(Z => Option.OnSize(V.Row,Z,Down.length)) :
-									WX.Empty)
+									(
+										Option.OnSize(V.Row,Size,Down.length),
+										WX.Empty
+									))
 						})
 						.Now(null,E =>
 						{
@@ -211,7 +214,7 @@ module.exports = Option =>
 					Working;
 					DownloadStatus.set(V.Row,H => ' ' + H(Working ? Has + Working.Calc().Saved : Has) +
 						' ' + H(Working ? Working.Info.Speed : 0))
-					Option.ErrT(V.Row)
+					V.Error && Option.ErrT(V.Row)
 					DownloadRunning.set(V.Row,WX.TCO(() =>
 						DB.TopToDown(V.Row).FMap(Down => Down ?
 							DB.ViewPart(V.Row,Down.Part).FMap(Part =>
@@ -390,6 +393,7 @@ module.exports = Option =>
 			DownloadRunning.delete(Q)
 			DownloadStatus.delete(Q)
 			DownloadDispatch()
+			Option.OnEnd()
 		}
 	};
 

@@ -109,9 +109,9 @@
 	{
 		return WV.T(WV.Rock(ClassHighLight,'span'),V)
 	},
-	MakeSingle = function()
+	MakeSingle = function(Q)
 	{
-		return WV.T(WV.Rock(ClassSingle),'\xA0')
+		return WV.T(WV.Rock(ClassSingle + (Q ? ' ' + Q : '')),'\xA0')
 	},
 	SingleFill = function(Q,W,A)
 	{
@@ -864,8 +864,8 @@
 	WV.Ap(WV.Rock(WV.ST),RMain[4])
 	WV.Ap(WV.Rock(WV.SB),RMain[4])
 	WV.Ap(RMain[0],Rainbow[1])
-	WV.ApA([WV.Rock(WV.VertM),RStatus],RStatusBar[1])
-	WV.ApA([WV.Rock(WV.VertM),RSpeed],RStatusBar[2])
+	WV.Ap(RStatus,WV.VM(RStatusBar[1]))
+	WV.Ap(RSpeed,WV.VM(RStatusBar[2]))
 	WV.Ap(RStatusBar[0],Rainbow[2])
 
 	WV.Style(WW.Fmt
@@ -887,8 +887,8 @@
 		'.`I`{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}' +
 
 		'.`K`{line-height:1.4}' +
-		'.`K` .`I`.`L`{padding:`h`px 0 0 `h`px}' +
-		'.`K` .`I`{padding:0 0 `h`px `h`px}' +
+		'.`K` .`I`.`L`{margin:`h`px 0 0 `h`px}' +
+		'.`K` .`I`{margin:0 0 `h`px `h`px}' +
 		'.`K` .`B`{padding:`q`px}' +
 
 		'.`Y`' +
@@ -909,7 +909,6 @@
 
 		'#`V`,#`X`{padding:`h`px;line-height:1}' +
 		'#`X`{text-align:center;white-space:nowrap}' +
-		'#`V`>div,#`X`>div{display:inline-block;vertical-align:middle}' +
 		'',
 		{
 			F : WV.Foc,
@@ -1502,6 +1501,7 @@
 		[[SA('Hot'),HotCount.R],function(V,_,K)
 		{
 			var
+			ClassStatus = WW.Key(),
 			ClassBar = WW.Key(),
 
 			Hot = [],
@@ -1523,7 +1523,7 @@
 					Task,
 					R = WV.Div(2,['',TaskButtonSize]),
 					Title = MakeSingle(),
-					Status = MakeSingle(),
+					Status = MakeSingle(ClassStatus),
 					PlayCurrent = 9,
 					Play = WV.But(
 					{
@@ -1547,6 +1547,7 @@
 						}
 						else
 						{
+							HasError = false
 							Play.X(SA('HotPlay'))
 							WV.ClsR(Bar,WV.Foc)
 						}
@@ -1591,7 +1592,8 @@
 								HasError && WW.Now() <= 1E3 * Setting.Delay + ErrorAt ? SA('Err') + ' ' + RemainS(1E3 * Setting.Delay + ErrorAt - WW.Now()) :
 								HasError && ErrorToRenew ? SA('HotReady') :
 								null == Task.Size ? SA('HotReady') :
-								SA('HotQueue')
+								Task.State ? SA('HotQueue') :
+								SA('HotPaused')
 							T === RenewLast || WV.T(Renew,RenewLast = T)
 						}
 					},
@@ -1612,7 +1614,7 @@
 					WV.ApR([Title,Status],R[1])
 					WV.On('click',WV.StopProp,More.R)
 					WV.On('click',WV.StopProp,Remove.R)
-					WV.ApR([More,Remove],R[2])
+					WV.ApR([More,Remove],WV.VM(R[2]))
 					WV.ApR([R[0],Bar],V)
 					WV.ClsA(V,ClassTask)
 					return {
@@ -1620,6 +1622,7 @@
 						{
 							Task = null
 							LoadErr = null
+							HasError = false
 							Play.X('').Off()
 							SingleFill(Title,'#' + V.O + ' ' + V.S + ' ' + V.I)
 							WV.ClsA(Running.R,WV.None)
@@ -1666,22 +1669,25 @@
 										OnState(Task.State = Q),
 										WR.Del(V.O,ProgressMap),
 										OverallUpdate(),
-										Q || OnTick()
+										OnTick()
 									)
 								},
 								W : OnTick,
 								P : OnProgress,
-								E : function(State,At)
+								E : function(Q)
 								{
-									HasError = true
-									ErrorToRenew = 2 === State
-									ErrorAt = At
+									if (Q)
+									{
+										HasError = true
+										ErrorToRenew = 2 === Q[0]
+										ErrorAt = Q[1]
+									}
+									else HasError = false
 									OnTick()
 								},
 								Z : function(Q)
 								{
 									WV.ClsR(Running.R,WV.None)
-									HasError = false
 									Running.F(Task.File = Q[1])
 									OnSizeHas(Task.Size = Q[0],Task.Has)
 									OnTick()
@@ -1845,7 +1851,7 @@
 			WSOnTaskErr = function(Row,Q)
 			{
 				WR.Has(Row,HotShown) &&
-					HotShown[Row].E(Q[0],Q[1])
+					HotShown[Row].E(Q)
 			}
 
 			Tick(function()
@@ -1860,11 +1866,16 @@
 					(
 						'#`R` .`L` .`B`{margin-right:`q`px;padding:0;min-width:0}' +
 						'.`P`{position:absolute;left:0;bottom:0;width:0;height:3px;background:#979797}' +
-						'.`P`.`O`{background:#69A0D7;`t`}',
+						'.`P`.`O`{background:#69A0D7;`t`}' +
+						'@media(max-width:600px)' +
+						'{' +
+							'.`S`{line-height:1.4em;height:2.8em;white-space:normal}' +
+						'}',
 						{
 							R : ID,
 							B : WV.ButW,
 							L : ClassSingle,
+							S : ClassStatus,
 							P : ClassBar,
 							O : WV.Foc,
 

@@ -58,6 +58,17 @@ module.exports = Option =>
 
 	ConfigDebugLimit = 20,
 
+	OnTick = () =>
+	{
+		var R = '';
+		if (WebSocketPool.size && Loop.Downloading.size)
+		{
+			Loop.Downloading.forEach((V,F) =>
+				R += '\n' + NumberZip.S(F) + V(NumberZip.S))
+			WebSocketPool.forEach(V => V[1] && V[0](R))
+		}
+	},
+
 	ErrorS = E => WW.IsObj(E) && E.stack || E,
 	RecErrList = [],
 	RecErr = (File,Err) =>
@@ -79,6 +90,7 @@ module.exports = Option =>
 			WR.Del(Task,RecErrTE)
 			Err = RecErrTList.indexOf(Task)
 			~Err && RecErrTList.splice(Err,1)
+			WebSocketSend([ActionWebTaskErr,Task],true)
 			WebSocketSendAuth([ActionAuthErrT,Task],true)
 		}
 		else
@@ -141,6 +153,8 @@ module.exports = Option =>
 		OnDone : (Task,Part,File,Done) => WebSocketSendAuth([ActionAuthDownDone,[Task,Part,File],Done],true),
 
 		OnFinal : (Task,Done) => WebSocketSend([ActionWebTaskHist,++DBVersion,[Task,Done]],true),
+
+		OnEnd : OnTick
 	},
 	Loop = require('./Loop')(LoopO),
 
@@ -513,16 +527,7 @@ module.exports = Option =>
 				WW.IsNum(PortWeb) && new (require('ws')).Server({server : WebServer.listen(PortWeb)}).on('connection',OnSocket)
 				Loop.Info()
 				Loop.Down()
-				WW.To(5E2,() =>
-				{
-					var R = '';
-					if (WebSocketPool.size && Loop.Downloading.size)
-					{
-						Loop.Downloading.forEach((V,F) =>
-							R += '\n' + NumberZip.S(F) + V(NumberZip.S))
-						WebSocketPool.forEach(V => V[1] && V[0](R))
-					}
-				},true)
+				WW.To(5E2,OnTick,true)
 			}),
 		Exp : X => (X = X || require('express').Router())
 			.use((Q,S,N) => '/' === Q.path && !/\/(\?.*)?$/.test(Q.originalUrl) ? S.redirect(302,Q.baseUrl + Q.url) : N())
