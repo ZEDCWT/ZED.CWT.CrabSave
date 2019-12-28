@@ -239,7 +239,7 @@ module.exports = Option =>
 								Name = WW.Fmt
 								(
 									V.Format.replace(/\?([^?]+)\?/g,
-										(Q,S) => WW.MR((D,V) => D && NameO[V],true,/\|([^|]+)\|/,Q) ? S : ''),
+										(Q,S) => WW.MR((D,V) => D && NameO[V[1]],true,/\|([^|]+)\|/,Q) ? S : ''),
 									NameO,'|'
 								) + (Down.Ext || ''),
 								Dest = WN.JoinP(V.Root,Name);
@@ -371,15 +371,19 @@ module.exports = Option =>
 		}
 		else
 		{
-			Max < DownloadRunning.size &&
+			if (Max < DownloadRunning.size)
+			{
 				WR.EachU((V,F) =>
 				{
 					if (Max <= F)
 					{
 						V[1]()
 						DownloadRunning.delete(V[0])
+						DownloadStatus.delete(V[0])
 					}
 				},DownloadRunning)
+				Option.OnEnd()
+			}
 			if (DownloadDispatching) DownloadDispatchAgain = true
 		}
 	},

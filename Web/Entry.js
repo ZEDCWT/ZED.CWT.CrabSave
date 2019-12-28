@@ -105,6 +105,7 @@
 	ClassHeader = WW.Key(),
 	ClassDetail = WW.Key(),
 	ClassDetailPart = WW.Key(),
+	ClassConfirm = WW.Key(),
 	MakeHigh = function(V)
 	{
 		return WV.T(WV.Rock(ClassHighLight,'span'),V)
@@ -140,9 +141,33 @@
 
 	CrabSave = Top.CrabSave,
 
+	OnUpdateBar = function()
+	{
+		WV.Con(RToolbar,RTab.Key()[ToolbarKey])
+		WV.Con(RStatus,RTab.Key()[StatusKey])
+	},
 	Rainbow = WV.Div(2,1,null,[0,SizeFooter]),
 	RMain = WV.Div(2,2,['10%'],[SizeHeader,'100%'],true),
-	RTab = WV.Split({Pan : [null,RMain[3],RMain[4]],Main : true}),
+	RToolbar = WV.VM(RMain[2]),
+	OnUpdateBar = function()
+	{
+		if (OverlayOn)
+		{
+			WV.Clr(RToolbar)
+			WV.Clr(RStatus)
+		}
+		else
+		{
+			WV.Con(RToolbar,RTab.Key()[ToolbarKey])
+			WV.Con(RStatus,RTab.Key()[StatusKey])
+		}
+	},
+	RTab = WV.Split(
+	{
+		Pan : [null,RMain[3],RMain[4]],
+		Main : true,
+		S : OnUpdateBar
+	}),
 	ROverlay = WV.Rock(ClassOverlay),
 	Noti = WV.Noti({Top : RMain[0]}),
 	NotiAuth = Noti.O(),
@@ -581,13 +606,13 @@
 	OverlayEnd = WX.EndL(),
 	MakeOverlay = function(H)
 	{
-		var T = WV.Rock();
+		var T = WV.VM(WV.Clr(ROverlay));
 		OverlayOn = true
+		OnUpdateBar()
 		WV.TI(T)
 		WV.On('click',WV.StopProp,T)
 		OverlayEnd(H(T))
 		OverlayEvent(WV.On('click',OverlayRelease,RMain[3]))
-		WV.Con(ROverlay,T)
 		WV.Ap(ROverlay,RMain[4])
 		T.focus()
 	},
@@ -596,6 +621,7 @@
 		if (OverlayOn)
 		{
 			OverlayOn = false
+			OnUpdateBar()
 			WV.Del(ROverlay)
 			OverlayEvent()
 			OverlayEnd()
@@ -839,8 +865,100 @@
 		})
 	},
 
+	MakeConfirm = function(Title,Body,No,Yes,H)
+	{
+		MakeOverlay(function(Y)
+		{
+			var
+			Header = WV.T(WV.Rock(ClassHeader),Title),
+			Content = WV.X(Body),
+			ButNo = WV.But(
+			{
+				X : No,
+				Blk : true,
+				The : WV.TheP,
+				C : OverlayRelease
+			}),
+			ButYes = WV.But(
+			{
+				X : Yes,
+				Blk : true,
+				The : WV.TheP,
+				C : function()
+				{
+					OverlayRelease()
+					H()
+				}
+			});
+			WV.ClsA(Y,ClassConfirm)
+			WV.ApR([Header,Content,ButNo,ButYes],Y)
+		})
+	},
+	ConfirmRemove = function(Q)
+	{
+		MakeConfirm(SA('LstDelConfirm'),SA('LstDelCount',[Q.length]),
+			SA('GenCancel'),SA('LstRemove'),
+			function(){WebSocketSendAuth([ActionAuthTaskRemove,Q])})
+	},
 
 
+
+	ToolbarKey = 6,
+	ToolbarSet = function(K,Q)
+	{
+		K[ToolbarKey] = Q
+		OverlayOn ||
+			RTab.Is(K) && WV.Con(RToolbar,Q)
+	},
+	StatusKey = 7,
+	StatusSet = function(K,Q)
+	{
+		K[StatusKey] = Q
+		OverlayOn ||
+			RTab.Is(K) && WV.Con(RStatus,Q)
+	},
+	MakeSelectSize = function(K)
+	{
+		var
+		Count = 0,Plus = 0,
+		Size = 0,
+		Update = function()
+		{
+			StatusSet(K,Count ?
+				'[' + WR.ToSize(Size) + (Plus ? '+' : '') + '] ' +
+					SA('StsSelect',[Count]) +
+					(Plus ? SA('StsPlus',[Plus]) : '') :
+				null)
+			return Count
+		};
+		return {
+			C : Update,
+			A : function(Q)
+			{
+				++Count
+				null == Q.Z ?
+					++Plus :
+					Size += Q.Z
+			},
+			D : function(Q)
+			{
+				--Count
+				null == Q.Z ?
+					--Plus :
+					Size -= Q.Z
+			},
+			I : function(Q,S)
+			{
+				null == Q ?
+					--Plus :
+					Size -= Q
+				null == S ?
+					++Plus :
+					Size += S
+				Update()
+			}
+		}
+	},
 	OverallUpdate = function()
 	{
 		var
@@ -857,7 +975,7 @@
 	LangTo(Top.LangS)
 
 	WV.ClsA(RMain[1],WV.NoSel)
-	WV.Text(RMain[1],SA('Title'))
+	WV.Text(WV.VM(RMain[1]),SA('Title'))
 	WV.Ap(WV.Rock(ClassTitleSplit),RMain[2])
 	WV.Ap(WV.Rock(WV.ST),RMain[3])
 	WV.Ap(WV.Rock(WV.SB),RMain[3])
@@ -874,7 +992,7 @@
 		'.`N` .`B`{padding-top:0;padding-bottom:0}' +
 
 		'#`M`{position:relative;overflow:hidden}' +
-		'#`T`{min-width:110px;text-align:center;line-height:`e`px;font-weight:bold}' +
+		'#`T`{min-width:110px;text-align:center;font-weight:bold}' +
 		'#`C`{position:relative}' +
 		'#`O` .`W`{padding:`q`px 0}' +
 		'#`O` .`A`{display:inline-block;margin:`q`px 0;width:100%}' +
@@ -897,15 +1015,18 @@
 			'left:0;right:0;top:0;bottom:0;' +
 			'padding:`p`px;' +
 			'background:rgba(0,0,0,.45);' +
+			'text-align:center;' +
 			'word-wrap:break-word' +
 		'}' +
-		'.`Y`>div{width:100%;height:100%;background:#F7F7F7;overflow:auto}' +
+		'.`Y`>div{width:100%;height:100%;max-width:100%;max-height:100%;background:#F7F7F7;text-align:initial;overflow:auto}' +
 		'.`Y`>div>div{padding:`h`px `p`px}' +
 
 		'.`R`{background:#F3EBFA}' +
 
 		'.`E` .`H`{margin-right:`h`px}' +
 		'.`ET`{padding-left:`p`px}' +
+
+		'.`Y`>.`Q`{height:auto;text-align:center}' +
 
 		'#`V`,#`X`{padding:`h`px;line-height:1}' +
 		'#`X`{text-align:center;white-space:nowrap}' +
@@ -934,13 +1055,13 @@
 			R : ClassHeader,
 			E : ClassDetail,
 			ET : ClassDetailPart,
+			Q : ClassConfirm,
 			V : WV.ID(RStatusBar[1]),
 			X : WV.ID(RStatusBar[2]),
 
 			p : Padding,
 			h : PaddingHalf,
-			q : PaddingQuarter,
-			e : SizeHeader
+			q : PaddingQuarter
 		}
 	))
 
@@ -1395,11 +1516,84 @@
 			var
 			Cold = [],
 			ColdMap = {},
+			Selected = 0,
+			OnDel = function(ID,Index)
+			{
+				WR.Del(ID,ColdMap)
+				~Index && List.Splice(Index,1)
+				BrowserUpdate([ID])
+				ColdCount.D(Cold)
+				Cold.length || JustCommitAll.Off()
+			},
+			JustCommit = WV.But(
+			{
+				X : SA('ColCommit'),
+				The : WV.TheP,
+				C : function()
+				{
+					WebSocketSendAuthPrecheck() && WebSocketSendAuth(
+					[
+						ActionAuthTaskNew,
+						WR.Map(function(V)
+						{
+							return Cold[V]
+						},List.SelL())
+					])
+				}
+			}).Off(),
+			JustRemove = WV.But(
+			{
+				X : SA('LstRemove'),
+				The : WV.TheP,
+				C : function(L,F)
+				{
+					L = List.SelL()
+					for (F = L.length;F;)
+						OnDel(Cold[L[--F]].O,L[F])
+				}
+			}).Off(),
+			JustCommitAll = WV.But(
+			{
+				X : SA('ColCommitAll'),
+				The : WV.TheP,
+				C : function()
+				{
+					if (Cold.length && WebSocketSendAuthPrecheck())
+					{
+						WebSocketSendAuth([ActionAuthTaskNew,Cold])
+						RTab.Next()
+					}
+				}
+			}).Off(),
 			List = WV.List(
 			{
 				Data : Cold,
 				Pan : V,
 				Sel : true,
+				SelC : function()
+				{
+					StatusSet(K,Selected ?
+						SA('StsSelect',[Selected]) :
+						null)
+					if (Selected)
+					{
+						JustCommit.On()
+						JustRemove.On()
+					}
+					else
+					{
+						JustCommit.Off()
+						JustRemove.Off()
+					}
+				},
+				SelA : function()
+				{
+					++Selected
+				},
+				SelD : function()
+				{
+					--Selected
+				},
 				Make : function(V,S)
 				{
 					var
@@ -1443,27 +1637,17 @@
 				}
 			});
 
+			ToolbarSet(K,
+			[
+				JustCommit.R,
+				JustRemove.R,
+				JustCommitAll.R
+			])
+
 			ShortCutOnPage(K,ShortCutListSelAll,List.SelAll)
 			ShortCutOnPage(K,ShortCutListSelClear,List.SelClr)
-			ShortCutOnPage(K,ShortCutColdCommit,function()
-			{
-				WebSocketSendAuthPrecheck() && WebSocketSendAuth(
-				[
-					ActionAuthTaskNew,
-					WR.Map(function(V)
-					{
-						return Cold[V]
-					},List.SelL())
-				])
-			})
-			ShortCutOnPage(K,ShortCutColdCommitAll,function()
-			{
-				if (Cold.length && WebSocketSendAuthPrecheck())
-				{
-					WebSocketSendAuth([ActionAuthTaskNew,Cold])
-					RTab.Next()
-				}
-			})
+			ShortCutOnPage(K,ShortCutColdCommit,JustCommit.C)
+			ShortCutOnPage(K,ShortCutColdCommitAll,JustCommitAll.C)
 
 			IsCold = function(ID){return WR.Has(ID,ColdMap)}
 			ColdAdd = function(ID,Site,/**@type {CrabSaveNS.SiteItem}*/Q)
@@ -1480,18 +1664,13 @@
 					})
 					BrowserUpdate([ID])
 					ColdCount.D(Cold)
+					JustCommitAll.On()
 				}
 			}
-			ColdDel = function(ID,T)
+			ColdDel = function(ID)
 			{
 				if (IsCold(ID))
-				{
-					T = Cold.indexOf(ColdMap[ID])
-					WR.Del(ID,ColdMap)
-					~T && List.Splice(T,1)
-					BrowserUpdate([ID])
-					ColdCount.D(Cold)
-				}
+					OnDel(ID,Cold.indexOf(ColdMap[ID]))
 			}
 			return {
 				Show : List.In,
@@ -1511,11 +1690,50 @@
 			HotRead = WX.EndL(),
 			HotShown = {},
 			TaskErr = {},
+			Selected = MakeSelectSize(K),
+			MakeJust = function(H,Action,Confirm)
+			{
+				return WV.But(
+				{
+					X : SA(H),
+					The : WV.TheP,
+					C : function(L)
+					{
+						if (WebSocketSendAuthPrecheck() && (L = List.SelL()).length)
+						{
+							L = WR.Map(function(V){return Hot[V].O},L)
+							Confirm ?
+								Confirm(L) :
+								WebSocketSendAuth([Action,L])
+						}
+					}
+				}).Off()
+			},
+			JustPlay = MakeJust('HotPlay',ActionAuthTaskPlay),
+			JustPause = MakeJust('HotPause',ActionAuthTaskPause),
+			JustRemove = MakeJust('LstRemove',ActionAuthTaskRemove,ConfirmRemove),
 			List = WV.List(
 			{
 				Data : Hot,
 				Pan : V,
 				Sel : true,
+				SelC : function()
+				{
+					if (Selected.C())
+					{
+						JustPlay.On()
+						JustPause.On()
+						JustRemove.On()
+					}
+					else
+					{
+						JustPlay.Off()
+						JustPause.Off()
+						JustRemove.Off()
+					}
+				},
+				SelA : Selected.A,
+				SelD : Selected.D,
 				Make : function(V,S)
 				{
 					var
@@ -1571,11 +1789,7 @@
 						Blk : true,
 						C : function()
 						{
-							S[0] && WebSocketSendAuth(
-							[
-								ActionAuthTaskRemove,
-								[S[0].O]
-							])
+							S[0] && ConfirmRemove([S[0].O])
 						}
 					}),
 					Bar = WV.Rock(ClassBar),
@@ -1707,6 +1921,13 @@
 				}
 			});
 
+			ToolbarSet(K,
+			[
+				JustPlay.R,
+				JustPause.R,
+				JustRemove.R
+			])
+
 			ShortCutOnPage(K,ShortCutListSelAll,List.SelAll)
 			ShortCutOnPage(K,ShortCutListSelClear,List.SelClr)
 
@@ -1776,6 +1997,7 @@
 					.RetryWhen(TaskBriefRetry(SA('Hot')))
 					.Now(function(B)
 					{
+						List.SelClr()
 						TaskBriefSolve(4,B,function(V)
 						{
 							Hot.length = 0
@@ -1830,10 +2052,17 @@
 						HotShown[Row].W()
 				}
 			}
-			WSOnSize = function(Row,Q)
+			WSOnSize = function(Row,Q,T)
 			{
 				WR.Has(Row,HotShown) &&
 					HotShown[Row].Z(Q)
+				T = WW.BSL(Hot,Row,function(Q,S){return Q.O < S})
+				if (Hot[T] && Hot[T].O === Row)
+				{
+					List.SelHas(T) &&
+						Selected.I(Hot[T].Z,Q[0])
+					Hot[T].Z = Q[0]
+				}
 			}
 			WSOnErrT = function(Q,S)
 			{
@@ -1899,11 +2128,44 @@
 			HistoryRowMap = {},
 			HistoryVersion = '',
 			HistoryRead = WX.EndL(),
+			Selected = MakeSelectSize(K),
+			MakeJust = function(H,Action,Confirm)
+			{
+				return WV.But(
+				{
+					X : SA(H),
+					The : WV.TheP,
+					C : function(L)
+					{
+						if (WebSocketSendAuthPrecheck() && (L = List.SelL()).length)
+						{
+							L = WR.Map(function(V){return History[V].O},L)
+							Confirm ?
+								Confirm(L) :
+								WebSocketSendAuth([Action,L])
+						}
+					}
+				}).Off()
+			},
+			JustRemove = MakeJust('LstRemove',ActionAuthTaskRemove,ConfirmRemove),
 			List = WV.List(
 			{
 				Data : History,
 				Pan : V,
 				Sel : true,
+				SelC : function()
+				{
+					if (Selected.C())
+					{
+						JustRemove.On()
+					}
+					else
+					{
+						JustRemove.Off()
+					}
+				},
+				SelA : Selected.A,
+				SelD : Selected.D,
 				Make : function(V,S)
 				{
 					var
@@ -1931,11 +2193,7 @@
 						Blk : true,
 						C : function()
 						{
-							S[0] && WebSocketSendAuth(
-							[
-								ActionAuthTaskRemove,
-								[S[0].O]
-							])
+							S[0] && ConfirmRemove([S[0].O])
 						}
 					}),
 					LoadO = WX.EndL();
@@ -1970,6 +2228,11 @@
 					}
 				}
 			});
+
+			ToolbarSet(K,
+			[
+				JustRemove.R
+			])
 
 			ShortCutOnPage(K,ShortCutListSelAll,List.SelAll)
 			ShortCutOnPage(K,ShortCutListSelClear,List.SelClr)
@@ -2009,6 +2272,7 @@
 					.RetryWhen(TaskBriefRetry(SA('His')))
 					.Now(function(B)
 					{
+						List.SelClr()
 						TaskBriefSolve(5,B,function(V)
 						{
 							History.length = 0
@@ -2039,11 +2303,11 @@
 				Show : List.In,
 				HideP : List.Out
 			}
-		}],
+		}],/*
 		[SA('Cmp'),function()
 		{
 
-		}],
+		}],*/
 		[SA('Aut'),function(V,_,TabKey)
 		{
 			var

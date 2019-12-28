@@ -12,6 +12,7 @@ var Lang = // eslint-disable-line
 		GenLoading : 'Loading...',
 		GenNoSock : 'WebSocket is not supported',
 		GenNoRel : 'No items relative to',
+		GenCancel : 'Cancel',
 		GenUnknown : '[Unknown]',
 
 		Bro : 'Browser',
@@ -30,6 +31,8 @@ var Lang = // eslint-disable-line
 		BroSugDone : 'Suggestions for ~0~',
 
 		LstRemove : 'Remove',
+		LstDelConfirm : 'Are you sure to remove?',
+		LstDelCount : 'Totally ~0~ items',
 		LstDetail : 'Detail',
 		LstLoad : 'Loading task...',
 		LstFail : 'Failed to load.',
@@ -50,9 +53,12 @@ var Lang = // eslint-disable-line
 		DetFirst : 'First Byte',
 		DetTake : 'Elapsed',
 		DetAvg : 'Average speed',
+		StsSelect : 'Selecting ~0~ item(s)',
+		StsPlus : ', ~0~ to resolve infomation',
 
 		Col : 'Cold',
 		ColCommit : 'Commit',
+		ColCommitAll : 'Commit All',
 
 		Hot : 'Hot',
 		HotPause : 'Pause',
@@ -164,6 +170,7 @@ var Lang = // eslint-disable-line
 		GenLoading : '正在讀取...',
 		GenNoSock : '當前瀏覽器不支持WebSocket',
 		GenNoRel : '備選項中沒有相關條目',
+		GenCancel : '取消',
 		GenUnknown : '[未知]',
 
 		Bro : '瀏覽',
@@ -182,6 +189,8 @@ var Lang = // eslint-disable-line
 		BroSugDone : '關於 ~0~ 的蒐索建議',
 
 		LstRemove : '移除',
+		LstDelConfirm : '確認移除?',
+		LstDelCount : '共計~0~個項目',
 		LstDetail : '詳細',
 		LstLoad : '正在讀取任務信息...',
 		LstFail : '未能讀取任務信息.',
@@ -200,9 +209,12 @@ var Lang = // eslint-disable-line
 		DetFirst : '首次連接於',
 		DetTake : '總用時',
 		DetAvg : '平均速度',
+		StsSelect : '選中~0~個項目',
+		StsPlus : ', 其中~0~個在排隊獲取信息',
 
 		Col : '準備下載',
 		ColCommit : '下載',
+		ColCommitAll : '下載全部',
 
 		Hot : '正在下載',
 		HotPause : '暫停',
@@ -313,6 +325,7 @@ var Lang = // eslint-disable-line
 		GenLoading : '正在读取...',
 		GenNoSock : '当前浏览器不支持WebSocket',
 		GenNoRel : '备选项中没有相关条目',
+		GenCancel : '取消',
 		GenUnknown : '[未知]',
 
 		Bro : '浏览',
@@ -331,6 +344,8 @@ var Lang = // eslint-disable-line
 		BroSugDone : '关于 ~0~ 的搜索建议',
 
 		LstRemove : '移除',
+		LstDelConfirm : '确认移除?',
+		LstDelCount : '共计~0~个项目',
 		LstDetail : '详细',
 		LstLoad : '正在读取任务信息...',
 		LstFail : '未能读取任务信息.',
@@ -349,9 +364,12 @@ var Lang = // eslint-disable-line
 		DetFirst : '首次连接于',
 		DetTake : '总用时',
 		DetAvg : '平均速度',
+		StsSelect : '选中~0~个项目',
+		StsPlus : ', 其中~0~个在排队获取信息',
 
 		Col : '准备下载',
 		ColCommit : '下载',
+		ColCommitAll : '下载全部',
 
 		Hot : '正在下载',
 		HotPause : '暂停',

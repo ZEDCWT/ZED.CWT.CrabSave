@@ -179,7 +179,7 @@ module.exports = Option =>
 				]).Tap(null,
 					() => NewPending.delete(I),
 					() => NewPending.delete(I))
-					.FMap(() => Get(`select ${HotBrief} from Task where ? = Site and ? = ID`,[Q.Site,Q.ID]))
+					.FMap(() => Get(`select ${HotBrief} from Task where Done is null and ? = Site and ? = ID`,[Q.Site,Q.ID]))
 					.Tap(B => B || WW.Throw(['ErrDBAddFail',I]))
 			}),
 		Over : Q => Get(
@@ -262,7 +262,7 @@ module.exports = Option =>
 				`,
 				[
 					S,V.Part,
-					Q.Part.length,Q.File,
+					Q.Part.length,V.File,
 					V.Title,
 					S,V.Part
 				]
