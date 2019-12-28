@@ -205,13 +205,15 @@ module.exports = Option =>
 					return B
 				})
 			}),
-		Del : Q => Exec(
-		`
-			begin transaction;
-				delete from Task where ? = ID;
-				delete from Down where ? = Task;
-			commit
-		`,[Q,Q]),
+		Del : Q => Get('select Done from Task where ? = Row',[Q])
+			.FMap(B => Exec(
+			`
+				begin transaction;
+					delete from Task where ${Q = String(Q).replace(/\D/g,'')} = Row;
+					delete from Part where ${Q} = Task;
+					delete from Down where ${Q} = Task;
+				commit
+			`).Map(() => B && B.Done)),
 
 		Hot : (Q,S) => DB.each(`select ${HotBrief} from Task where Done is null order by Row`,
 			(E,V) => E || Q(V),
@@ -235,7 +237,7 @@ module.exports = Option =>
 		[
 			[`
 				update Task set
-					State = 1,
+					State = case when 2 = State then 1 else State end,
 					Title = coalesce(?,Title,'[Untitled]'),
 					UP = coalesce(?,UP,'[Anonymous]'),
 					UPAt = coalesce(UPAt,?),
@@ -356,11 +358,11 @@ module.exports = Option =>
 			update Down set Path = ?
 			where ? = Task and ? = Part and ? = File
 		`,[S,Q,W,E]),
-		SaveHas : (Q,W,E,S) => Run(
+		SaveHas : (Q,W,E,S,K) => Run(
 		`
-			update Down set Has = ?
+			update Down set Has = ?,Take = ?
 			where ? = Task and ? = Part and ? = File
-		`,[S,Q,W,E]),
+		`,[S,K,Q,W,E]),
 		SaveTake : (Q,W,E,S) => Run(
 		`
 			update Down set Take = ?
@@ -372,7 +374,7 @@ module.exports = Option =>
 			where ? = Task and ? = Part and ? = File
 		`,[S,Q,W,E]),
 
-		Hist : (Q,S) => DB.each(`select ${HistBrief} from Task where Done is not null order by Done desc`,
+		Hist : (Q,S) => DB.each(`select ${HistBrief} from Task where Done is not null order by Done desc,Row`,
 			(E,V) => E || Q(V),
 			S),
 		Final : (Q,S) => Run(

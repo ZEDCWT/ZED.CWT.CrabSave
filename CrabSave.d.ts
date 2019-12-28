@@ -47,7 +47,7 @@ declare module CrabSaveNS
 			SavePlay(Task : number,Part : number,File : number,Play : number) : WishNS.Provider<any>
 			SaveConn(Task : number,Part : number,File : number,First : number) : WishNS.Provider<any>
 			SavePath(Task : number,Part : number,File : number,Path : string) : WishNS.Provider<any>
-			SaveHas(Task : number,Part : number,File : number,Has : number) : WishNS.Provider<any>
+			SaveHas(Task : number,Part : number,File : number,Has : number,Take : number) : WishNS.Provider<any>
 			SaveTake(Task : number,Part : number,File : number,Take : number) : WishNS.Provider<any>
 			SaveDone(Task : number,Part : number,File : number,Date : number) : WishNS.Provider<any>
 

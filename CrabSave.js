@@ -58,13 +58,14 @@ module.exports = Option =>
 
 	ConfigDebugLimit = 20,
 
-	OnTick = () =>
+	OnTick = Force =>
 	{
 		var R = '';
-		if (WebSocketPool.size && Loop.Downloading.size)
+		if (WebSocketPool.size && (Force || Loop.Downloading.size))
 		{
 			Loop.Downloading.forEach((V,F) =>
 				R += '\n' + NumberZip.S(F) + V(NumberZip.S))
+			R = R || '\n'
 			WebSocketPool.forEach(V => V[1] && V[0](R))
 		}
 	},
@@ -154,7 +155,7 @@ module.exports = Option =>
 
 		OnFinal : (Task,Done) => WebSocketSend([ActionWebTaskHist,++DBVersion,[Task,Done]],true),
 
-		OnEnd : OnTick
+		OnEnd : () => OnTick(true)
 	},
 	Loop = require('./Loop')(LoopO),
 
@@ -459,6 +460,14 @@ module.exports = Option =>
 							{
 								WebSocketSend([ActionWebTaskPause,++DBVersion,V],true)
 								Loop.Stop(V)
+							}))
+						break
+					case ActionAuthTaskRemove :
+						DBMulti(K,V =>
+							DB.Del(V).Map(Done =>
+							{
+								WebSocketSend([ActionWebTaskRemove,++DBVersion,[V,Done]],true)
+								Loop.Del(V)
 							}))
 						break
 

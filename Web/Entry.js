@@ -758,7 +758,7 @@
 							.P(V.Play)
 							.G(MakeProgress(V.Size,V.Has))
 							.C(null == V.First ? '-' : WW.StrDate(V.First))
-							.T(WW.StrMS(V.Take))
+							.T(V.Take ? WW.StrMS(V.Take) : '-')
 							.V(V.Take ? MakeSpeed(V.Has / V.Take) : '-')
 							.D(null == V.Done ? '-' : WW.StrDate(V.Done))
 						WV.ApR([URL,Name,Prog],U)
@@ -785,7 +785,7 @@
 							H : function(Has,T)
 							{
 								Prog.G(MakeProgress(V.Size,V.Has = Has[0]))
-								T = V.Take + Has[1]
+								T = Has[1]
 								Prog.T(WW.StrMS(T))
 									.V(MakeSpeed(V.Has / (T || 1)))
 							},
@@ -1755,14 +1755,15 @@
 						}
 						break
 					case ActionWebTaskRemove :
-						if (WR.Has(S,HotRowMap))
+						if (WR.Has(S[0],HotRowMap))
 						{
-							T = WW.BSL(Hot,S,function(Q,S){return Q.O < S})
-							Hot[T] && Hot[T].O === S &&
+							T = WW.BSL(Hot,S[0],function(Q,S){return Q.O < S})
+							Hot[T] && Hot[T].O === S[0] &&
 								List.Splice(T,1)
-							T = HotRowMap[S]
-							WR.Del(S,HotRowMap)
+							T = HotRowMap[S[0]]
+							WR.Del(S[0],HotRowMap)
 							HotMap.E(IDCombine(T.S,T.I),T)
+							HotCount.D(Hot)
 							BrowserUpdate([IDCombine(T.S,T.I)])
 						}
 						break
@@ -1852,6 +1853,7 @@
 			{
 				WR.Has(Row,HotShown) &&
 					HotShown[Row].E(Q)
+				WR.Del(Row,ProgressMap)
 			}
 
 			Tick(function()
@@ -1987,13 +1989,13 @@
 						}
 						break
 					case ActionWebTaskRemove :
-						if (WR.Has(S,HistoryRowMap))
+						if (S[1] && WR.Has(S[0],HistoryRowMap))
 						{
-							H = HistoryRowMap[S]
-							T = WW.BSL(History,S.Done,function(Q,S){return Q.E > S})
-							History[T] && History[T].O === S &&
+							H = HistoryRowMap[S[0]]
+							T = WW.BSL(History,S,function(Q,S){return Q.E - S[1] ? S[1] < Q.E : Q.O < S[0]})
+							History[T] && History[T].O === S[0] &&
 								List.Splice(T,1)
-							WR.Del(S,HistoryRowMap)
+							WR.Del(S[0],HistoryRowMap)
 							HistoryMap.E(T = IDCombine(H,S,H.I),H)
 							BrowserUpdate([T])
 						}

@@ -17,7 +17,13 @@ module.exports = Option =>
 
 	MakeDelay = (H,W) =>
 	{
-		var Err,Last;
+		var
+		Err,Last,
+		Go = () =>
+		{
+			Last && clearTimeout(Last)
+			Last = Err && setTimeout(W,Math.min(50 + 1E3 * Setting.Delay() + Err - WW.Now(),2100000000))
+		};
 		return {
 			D : () =>
 			{
@@ -25,24 +31,16 @@ module.exports = Option =>
 				{
 					if (null != N && !Err | N < Err)
 					{
-						Last && clearTimeout(Last)
 						Err = N
-						Last = setTimeout(W,50 + 1E3 * Setting.Delay() + Err - WW.Now())
+						Go()
 					}
 				},WW.O)
 			},
-			S : () =>
-			{
-				if (Last)
-				{
-					clearTimeout(Last)
-					Last = setTimeout(W,50 + 1E3 * Setting.Delay() + Err - WW.Now())
-				}
-			},
+			S : () => Last && Go(),
 			F : () =>
 			{
-				Last && clearTimeout(Last)
 				Err = null
+				Go()
 			}
 		}
 	},
@@ -276,8 +274,9 @@ module.exports = Option =>
 										}
 									}).On('Data',Q =>
 									{
-										Option.OnHas(Down.Task,Down.Part,Down.File,[Q.Saved,WW.Now() - Work.Info.Start])
-										NotBigDeal(DB.SaveHas(Down.Task,Down.Part,Down.File,Q.Saved))
+										var D = Down.Take + WW.Now() - Work.Info.Start
+										Option.OnHas(Down.Task,Down.Part,Down.File,[Q.Saved,D])
+										NotBigDeal(DB.SaveHas(Down.Task,Down.Part,Down.File,Q.Saved,D))
 									}).On('Done',() =>
 									{
 										var Done = WW.Now();
