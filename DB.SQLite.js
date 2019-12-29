@@ -106,7 +106,7 @@ module.exports = Option =>
 					Format text,
 					State integer,
 					Error integer not null,
-					Done integer unique
+					Done integer
 				);
 				create table if not exists Part
 				(
@@ -384,5 +384,7 @@ module.exports = Option =>
 				Done = ?
 			where ? = Row
 		`,[S,Q]),
+
+		Run
 	}
 }

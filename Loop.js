@@ -329,12 +329,14 @@ module.exports = Option =>
 							{
 								DownloadRunning.delete(V.Row)
 								DownloadStatus.delete(V.Row)
+								Option.OnEnd()
 								Option.Err(__filename + ':DE',O)
 								DownloadDispatch()
 							},() =>
 							{
 								DownloadRunning.delete(V.Row)
 								DownloadStatus.delete(V.Row)
+								Option.OnEnd()
 								Option.ErrT(V.Row,E,Next,At)
 								DownloadDispatch()
 								2 === Next && InfoDispatch()
@@ -343,6 +345,7 @@ module.exports = Option =>
 						{
 							DownloadRunning.delete(V.Row)
 							DownloadStatus.delete(V.Row)
+							Option.OnEnd()
 							DownloadDispatch()
 						}))
 				},Q)
