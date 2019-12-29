@@ -267,7 +267,9 @@ module.exports = Option =>
 		var
 		Each = WR.StartW('/Hot',Q) ? DB.Hot :
 			WR.StartW('/Hist',Q) ? DB.Hist :
-			null;
+			null,
+		SiteCount = 0,
+		SiteMap = {};
 		if (!Each) return 9
 		if (String(DBVersion) === Q.replace(/\D/g,'')) return S.end()
 		S.write(DBVersion + '\n')
@@ -276,7 +278,7 @@ module.exports = Option =>
 			S.write
 			(
 				NumberZip.S(V.Row) + '\n' +
-				V.Site + '\n' +
+				(SiteMap[V.Site] ? SiteMap[V.Site] : (SiteMap[V.Site] = ++SiteCount) + ' ' + V.Site) + '\n' +
 				V.ID + '\n' +
 				(null == V.Size ? '' : NumberZip.S(V.Size)) + '\n' +
 				(null == V.Done ? '' : NumberZip.S(V.Done) + '\n')

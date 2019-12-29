@@ -101,7 +101,7 @@ module.exports = O =>
 					.Map(U => (
 					{
 						Title : B.video.title,
-						Up : B.owner.nickname,
+						Up : B.owner.nickname.replace(/ さん$/,''), // 敬稱略
 						Date : +new Date(B.video.postedDateTime + '+0900'),
 						Part : [
 						{

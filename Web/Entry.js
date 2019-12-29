@@ -171,7 +171,6 @@
 	ROverlay = WV.Rock(ClassOverlay),
 	Noti = WV.Noti({Top : RMain[0]}),
 	NotiAuth = Noti.O(),
-	NotiNewToken = Noti.O(),
 	CookieMap = {},
 	ShortCut = WW.Bus(),
 	ShortCutGeneralTabPrev = 'GenTabPrev',
@@ -282,8 +281,7 @@
 						break
 
 					case ActionAuthToken :
-						NotiNewToken(SA(K))
-						NotiNewToken(false)
+						Noti.S(SA(K))
 						break
 					case ActionAuthCookie :
 						WSOnCookie(K,O)
@@ -478,7 +476,9 @@
 	},
 	TaskBriefSolve = function(S,Q,P,H,N)
 	{
-		var V = [],F = 0,G;
+		var
+		V = [],F = 0,G,
+		SiteMap = {};
 		F = Q.indexOf('\n')
 		if (!Q) return
 		G = +Q.slice(0,F)
@@ -489,6 +489,13 @@
 			V[G] = Q.slice(F,~(F = Q.indexOf('\n',F)) ? F : F = Q.length)
 			if (++G === S)
 			{
+				if (~V[1].indexOf(' '))
+				{
+					G = V[1].split(' ')
+					SiteMap[G[0]] = G[1]
+					V[1] = G[1]
+				}
+				else V[1] = SiteMap[V[1]]
 				H(V)
 				G = 0
 			}
@@ -1818,6 +1825,7 @@
 					},
 					OnProgress = function(Q)
 					{
+						if (null == Task) return
 						OnSizeHas(Task.Size,Task.Has = Q[0])
 						WV.T(Renew,RenewLast = MakeSpeed(Q[1]) +
 							' ' + MakeRemain(Task.Size - Q[0],Q[1]))
@@ -1877,6 +1885,7 @@
 							{
 								S : function(Q)
 								{
+									if (null == Task) return
 									return undefined === Q ?
 										PlayCurrent :
 									(
@@ -1901,8 +1910,9 @@
 								},
 								Z : function(Q)
 								{
+									if (null == Task) return
 									WV.ClsR(Running.R,WV.None)
-									Running.F(Task.File = Q[1])
+									Running.F(Q[1])
 									OnSizeHas(Task.Size = Q[0],Task.Has)
 									OnTick()
 								}
@@ -2328,8 +2338,18 @@
 						Token.V('').Fresh().Foc()
 						WebSocketSendAuth([ActionAuthHello])
 						NotiAuth(SA('AutAuthing'))
+						TokenEnt.Off()
+						TokenNew.On()
+						TokenNewEnt.On()
 					}
 				}
+			}),
+			TokenEnt = WV.But(
+			{
+				X : SA('AutAut'),
+				The : WV.TheO,
+				Blk : true,
+				C : Token.Ent
 			}),
 			TokenNew = WV.Inp(
 			{
@@ -2341,10 +2361,17 @@
 					{
 						Token.V('').Fresh()
 						TokenNew.V('').Fresh().Foc()
-						NotiNewToken(SA('AutSaving'))
+						Noti.S(SA('AutSaving'))
 					}
 				}
-			}),
+			}).Off(),
+			TokenNewEnt = WV.But(
+			{
+				X : SA('AutSave'),
+				The : WV.TheO,
+				Blk : true,
+				C : TokenNew.Ent
+			}).Off(),
 			Site = WV.Inp(
 			{
 				Hint : '<' + SA('AutSite') + '>',
@@ -2411,20 +2438,8 @@
 			}
 			WV.ApR(
 			[
-				Token,WV.But(
-				{
-					X : SA('AutAut'),
-					The : WV.TheO,
-					Blk : true,
-					C : Token.Ent
-				}),
-				TokenNew,WV.But(
-				{
-					X : SA('AutSave'),
-					The : WV.TheO,
-					Blk : true,
-					C : TokenNew.Ent
-				})
+				Token,TokenEnt,
+				TokenNew,TokenNewEnt
 			],RToken)
 			SiteOnLoad.R(function()
 			{
@@ -2432,6 +2447,12 @@
 				{
 					return [V.ID,V.ID + (V.Name ? ' ' + V.Name : '')]
 				},WR.Where(function(V){return V.Sign},SiteAll)))
+			})
+			WSOnOffline.R(function()
+			{
+				TokenEnt.On()
+				TokenNew.Off()
+				TokenNewEnt.Off()
 			})
 			WSOnCookie = function(K,O)
 			{
@@ -2814,7 +2835,7 @@
 					Map : Number
 				}),
 				20
-			],[
+			]/*,[
 				SA('SetMerge'),
 				Key('Merge'),
 				WV.Inp(
@@ -2823,7 +2844,7 @@
 					InpU : PC
 				}),
 				''
-			]])
+			]*/])
 			WV.Ap(Pref.R,V)
 			WSOnSetting = function(Q)
 			{
