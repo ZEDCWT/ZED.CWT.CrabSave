@@ -58,7 +58,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			})
 		},function(I,Page)
 		{
-			return O.Req(MakeHead(I[0] + '&cursor=' + I[Page])).Map(function(B)
+			return O.Req(MakeHead(I[0] + '&cursor=' + WC.UE(I[Page]))).Map(function(B)
 			{
 				B = Common(B)
 				WR.Key(B.globalObjects.tweets).length && (I[-~Page] = SolveCursor(B))
@@ -71,7 +71,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				Item : WR.Map(function(V)
 				{
 					return SolveTweet(V[0],V[1],Q.users)
-				},WR.Ent(Q.tweets).sort(function(Q,S){return Q[0] < S[0] || S[0] < Q[0] && -1}))
+				},WR.Ent(Q.tweets).sort(function(Q,S)
+				{
+					Q = WR.PadS0(32,Q[0])
+					S = WR.PadS0(32,S[0])
+					return Q < S || S < Q && -1
+				}))
 			}
 		})
 	},

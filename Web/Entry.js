@@ -793,7 +793,7 @@
 						WV.Ti(URL,V.URL)
 						WV.T(Name,V.Path)
 						Prog
-							.P(V.Play)
+							.P(V.Play || '-')
 							.G(MakeProgress(V.Size,V.Has))
 							.C(null == V.First ? '-' : WW.StrDate(V.First))
 							.T(V.Take ? WW.StrMS(V.Take) : '-')
