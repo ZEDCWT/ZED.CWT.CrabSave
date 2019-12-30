@@ -110,7 +110,11 @@ module.exports = Option =>
 							// Optimize : We could omit full reading and size resolving for downloaded files
 							return DB.SaveInfo(V.Row,R)
 								.FMap(() => DB.Full(V.Row))
-								.Tap(R => Option.OnInfo(V.Row,R))
+								.Tap(R =>
+								{
+									Option.OnInfo(V.Row,R)
+									V.Title === R.Title || Option.OnTitle(V.Row,R.Title)
+								})
 								.FMap(() => null == Size ?
 									WX.From(Down)
 										.FMapO(1,W => null == W.Size ?
@@ -222,7 +226,7 @@ module.exports = Option =>
 								NameO =
 								{
 									ID : WR.SafeFile(V.ID),
-									Title : WR.SafeFile(V.Title),
+									Title : WR.SafeFile(V.Title) || '[Untitled]',
 									Up : WR.SafeFile(V.UP),
 									Date : WW.StrDate(UPAt,WW.DateDotS),
 									Y : UPAt.getFullYear(),

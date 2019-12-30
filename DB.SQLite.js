@@ -223,7 +223,7 @@ module.exports = Option =>
 
 		TopNoSize : (S,Q) => All(
 		`
-			select Row,Site,ID,State,Error from Task
+			select Row,Site,ID,Title,State,Error from Task
 			where
 				Done is null
 				and
@@ -238,9 +238,9 @@ module.exports = Option =>
 			[`
 				update Task set
 					State = case when 2 = State then 1 else State end,
-					Title = coalesce(?,Title,'[Untitled]'),
-					UP = coalesce(?,UP,'[Anonymous]'),
-					UPAt = coalesce(UPAt,?),
+					Title = ?,
+					UP = ?,
+					UPAt = ?,
 					File = ?,
 					Size = ?,
 					Error = 0

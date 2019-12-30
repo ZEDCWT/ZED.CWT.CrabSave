@@ -19,6 +19,7 @@
 	ActionWebTaskRemove = 'TaskD',
 	ActionWebTaskSize = 'TaskS',
 	ActionWebTaskRenew = 'TaskW',
+	ActionWebTaskTitle = 'TaskT',
 	ActionWebTaskErr = 'TaskE',
 	ActionWebTaskHist = 'TaskH',
 	ActionWebShortCut = 'SC',
@@ -347,6 +348,9 @@
 				case ActionWebTaskRenew :
 					WSOnRenew(K,O)
 					break
+				case ActionWebTaskTitle :
+					WSOnTitle(K,O)
+					break
 				case ActionWebTaskSize :
 					WSOnSize(K,O)
 					break
@@ -406,6 +410,7 @@
 	WSOnDiffHot,
 	WSOnDiffHist,
 	WSOnRenew,
+	WSOnTitle,
 	WSOnSize,
 	WSOnTaskErr,
 	WSOnErrT,
@@ -1863,7 +1868,7 @@
 							LoadO(TaskOverviewLoad(V.O).Now(function(B)
 							{
 								Task = B
-								SingleFill(Title,B.Title)
+								SingleFill(Title,B.Title || SA('GenUntitle'))
 								null == B.Size || WV.ClsR(Running.R,WV.None)
 								if (B.Error)
 								{
@@ -1916,6 +1921,11 @@
 									}
 									else HasError = false
 									OnTick()
+								},
+								T : function(Q)
+								{
+									if (null == Task) return
+									SingleFill(Title,Q || SA('GenUntitle'))
 								},
 								Z : function(Q)
 								{
@@ -2070,6 +2080,11 @@
 					WR.Has(Row,HotShown) &&
 						HotShown[Row].W()
 				}
+			}
+			WSOnTitle = function(Row,Q)
+			{
+				WR.Has(Row,HotShown) &&
+					HotShown[Row].T(Q)
 			}
 			WSOnSize = function(Row,Q,T)
 			{
@@ -2234,7 +2249,7 @@
 							LoadO(TaskOverviewLoad(V.O).Now(function(B)
 							{
 								Task = B
-								SingleFill(Title,B.Title)
+								SingleFill(Title,B.Title || SA('GenUntitle'))
 								WV.Con(Pending,Size.R)
 								Size
 									.F(B.File)

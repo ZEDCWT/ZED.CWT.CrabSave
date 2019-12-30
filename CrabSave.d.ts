@@ -148,6 +148,7 @@ declare module CrabSaveNS
 			OnRenew(Task : number) : any
 			OnRenewDone(Task : number) : any
 			OnInfo(Task : number,Info : Task) : any
+			OnTitle(Task : number,Title : string) : any
 			OnFile(Task : number,Part : number,File : number,Size : number) : any
 			OnSize(Task : number,Size : number,Count : number) : any
 
