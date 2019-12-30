@@ -5,16 +5,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	// We may need to resolve some tokens automatically if it changes in the future
 	// /"[^"]+/main[^"]+/ https://abs.twimg.com/responsive-web/web/main.713ccc64.js
 	Twitter = 'https://twitter.com/',
-	TwitterTweet = WW.Tmpl(Twitter,'statuses/',undefined),
+	TwitterTweet = WW.Tmpl(Twitter,'_/status/',undefined),
 	TwitterAPI = 'https://api.twitter.com/',
-	TwitterAPITypeConversation = 'conversation',
-	TwitterAPITypeMedia = 'media',
-	TwitterAPITimelineURL = WW.Tmpl(TwitterAPI,'2/timeline/',undefined,'.json?tweet_mode=extended&count=',O.Size),
-	TwitterAPITimeline = function(Type,ID,More)
-	{
-		return MakeHead(TwitterAPITimelineURL('home' === ID ? ID : Type + '/' + ID) +
-			(More ? '&cursor=' + WC.UE(More) : ''))
-	},
+	TwitterAPITypeHome = 'timeline/home',
+	TwitterAPITypeConversation = 'timeline/conversation/',
+	TwitterAPITypeMedia = 'timeline/media/',
+	TwitterAPITypeSearch = 'search/adaptive',
+	TwitterAPITypeGuide = 'guide',
+	TwitterAPISearchSug = WW.Tmpl(TwitterAPI,'1.1/search/typeahead.json?q=',undefined,'&tweet_mode=extended&count=',O.Size),
+	TwitterAPIFollowing = WW.Tmpl(TwitterAPI,'1.1/friends/list.json?user_id=',undefined,'&cursor=',undefined,'&count=',O.Size),
+	TwitterAPIJSON = WW.Tmpl(TwitterAPI,'2/',undefined,'.json?tweet_mode=extended&count=',O.Size),
 	TwitterAPIUserByScreen = WW.Tmpl(TwitterAPI,'graphql/G6Lk7nZ6eEKd7LBBZw9MYw/UserByScreenName?variables=%7B%22screen_name%22%3A',undefined,'%2C%22withHighlightedLabel%22%3Atrue%7D'),
 	TwitterAuth = 'AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA',
 	Common = function(Q)
@@ -47,17 +47,18 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	{
 		return O.More(function(ID)
 		{
-			return H(ID).FMap(function(ID)
+			return H(ID).FMap(function(URL)
 			{
-				return O.Req(TwitterAPITimeline(TwitterAPITypeMedia,ID)).Map(function(B)
+				return O.Req(MakeHead(URL)).Map(function(B,T)
 				{
 					B = Common(B)
-					return [[ID,SolveCursor(B)],B]
+					T = SolveCursor(B)
+					return [T ? [URL,T] : [URL],B]
 				})
 			})
 		},function(I,Page)
 		{
-			return O.Req(TwitterAPITimeline(TwitterAPITypeMedia,I[0],I[Page])).Map(function(B)
+			return O.Req(MakeHead(I[0] + '&cursor=' + I[Page])).Map(function(B)
 			{
 				B = Common(B)
 				WR.Key(B.globalObjects.tweets).length && (I[-~Page] = SolveCursor(B))
@@ -82,7 +83,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			V = WR.Path(['content','operation','cursor'],V)
 			if (V && 'Bottom' === V.cursorType)
 				R = V.value
-		},Q.timeline.instructions[0].addEntries.entries)
+		},WR.Path(['timeline','instructions',0,'addEntries','entries'],Q))
 		return R
 	},
 	MakeHead = function(Q)
@@ -108,29 +109,32 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		},
 		Map : [
 		{
-			Name : 'User',
-			Judge : [/\.com\/([^/]+)/i,O.Word('User')],
+			Name : 'Search',
+			Judge : O.Find,
 			View : MakeTimeline(function(ID)
 			{
-				return O.Req(MakeHead(TwitterAPIUserByScreen(WC.UE(WC.OTJ(ID))))).Map(function(U)
+				return WX.Just(TwitterAPIJSON(TwitterAPITypeSearch) + '&q=' + WC.UE(ID))
+			}),
+			Hint : function(Q)
+			{
+				return O.Req(MakeHead(TwitterAPISearchSug(WC.UE(Q)))).Map(function(B)
 				{
-					return Common(U).data.user.rest_id
+					B = Common(B)
+					return {
+						Item : WR.Unnest(
+						[
+							WR.Pluck('topic',B.topics),
+							WR.Pluck('name',B.users)
+						])
+					}
 				})
-			})
-		},{
-			Name : 'UserID',
-			Judge : O.Num('UserID'),
-			View : MakeTimeline(WX.Just)
-		},{
-			Name : 'Timeline',
-			Judge : O.TL,
-			View : MakeTimeline(WR.Const(WX.Just('home')))
+			}
 		},{
 			Name : 'Tweet',
 			Judge : [/^\d+$/,O.Num('Tweet|Status(?:es)?')],
 			View : function(ID)
 			{
-				return O.Req(TwitterAPITimeline(TwitterAPITypeConversation,ID)).Map(function(B)
+				return O.Req(MakeHead(TwitterAPIJSON(TwitterAPITypeConversation + ID))).Map(function(B)
 				{
 					B = Common(B)
 					B = B.globalObjects
@@ -139,6 +143,66 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 					}
 				})
 			}
+		},{
+			Name : 'User',
+			Judge : [/\.com\/([^/]+)/i,O.Word('User')],
+			View : MakeTimeline(function(ID)
+			{
+				return O.Req(MakeHead(TwitterAPIUserByScreen(WC.UE(WC.OTJ(ID))))).Map(function(U)
+				{
+					return TwitterAPIJSON(TwitterAPITypeMedia + Common(U).data.user.rest_id)
+				})
+			})
+		},{
+			Name : 'UserID',
+			Judge : O.Num('UserID'),
+			View : MakeTimeline(function(ID)
+			{
+				return WX.Just(TwitterAPIJSON(TwitterAPITypeMedia + ID))
+			})
+		},{
+			Name : 'Timeline',
+			Judge : O.TL,
+			View : MakeTimeline(WR.Const(WX.Just(TwitterAPIJSON(TwitterAPITypeHome))))
+		},{
+			Name : 'Following',
+			Judge : O.UP,
+			View : O.More(function()
+			{
+				return O.Req(MakeHead(TwitterAPIJSON(TwitterAPITypeGuide))).FMap(function(U)
+				{
+					U = WW.MU(/\d+/,Common(U).timeline.id)
+					return O.Req(MakeHead(TwitterAPIFollowing(U,-1))).Map(function(B)
+					{
+						B = Common(B)
+						return [[U,B.next_cursor_str],B]
+					})
+				})
+			},function(I,Page)
+			{
+				return O.Req(MakeHead(TwitterAPIFollowing(I[0],I[Page]))).Map(function(B)
+				{
+					B = Common(B)
+					B.users.length && (I[-~Page] = B.next_cursor_str)
+					return B
+				})
+			},function(Q)
+			{
+				return {
+					Item : WR.Map(function(V)
+					{
+						return {
+							Non : true,
+							ID : V.screen_name,
+							View : '@' + V.screen_name,
+							URL : Twitter + V.screen_name,
+							Img : V.profile_image_url_https,
+							Title : V.name,
+							Desc : (V.location ? '[[' + V.location + ']]\n\n' : '') + V.description
+						}
+					},Q.users)
+				}
+			})
 		}],
 		IDURL : TwitterTweet
 	}
