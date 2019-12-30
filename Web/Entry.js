@@ -1025,7 +1025,16 @@
 			'text-align:center;' +
 			'word-wrap:break-word' +
 		'}' +
-		'.`Y`>div{width:100%;height:100%;max-width:100%;max-height:100%;background:#F7F7F7;text-align:initial;overflow:auto}' +
+		'.`Y`>div' +
+		'{' +
+			'width:100%;' +
+			'height:100%;' +
+			'max-width:100%;' +
+			'max-height:100%;' +
+			'background:#F7F7F7;' +
+			'text-align:left;text-align:initial;' +
+			'overflow:auto' +
+		'}' +
 		'.`Y`>div>div{padding:`h`px `p`px}' +
 
 		'.`R`{background:#F3EBFA}' +
@@ -2945,7 +2954,11 @@
 				},
 				Bad : function(Q,S)
 				{
-					WW.Throw(null == S ? Q : '[' + Q + '] ' + S)
+					WW.Throw(null == S ?
+						Q :
+						WW.IsArr(S) ?
+							SA(Q,S) :
+							'[' + Q + '] ' + S)
 				},
 				BadR : function(Q)
 				{
@@ -2963,6 +2976,7 @@
 				[
 					/^$/,
 					/\b(?:Dynamic|Sub|Subscri(?:be|ption)|Timeline|TL)\b/i,
+					/\b(?:Home)\b/i,
 					/\b(?:Top|Repo)\b/i
 				],
 				UP : /\b(?:Up|Uploader|Fo|Follow|Following)\b/i,
@@ -3065,7 +3079,8 @@
 		},[
 			'BiliBili',
 			'YouTube',
-			'NicoNico'
+			'NicoNico',
+			'Twitter'
 		]).length
 		SiteOnNoti()
 		WW.To(TickInterval,function(F)

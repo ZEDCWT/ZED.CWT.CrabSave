@@ -125,7 +125,8 @@ module.exports = Option =>
 	},
 	SiteO =
 	{
-		Cmp : DataComponent
+		Cmp : DataComponent,
+		CokeRaw : Q => CookieMap[Q]
 	},
 	Site = require('./Site/_')(SiteO),
 	DB = require('./DB.SQLite')(
