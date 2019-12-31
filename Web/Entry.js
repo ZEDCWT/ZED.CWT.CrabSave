@@ -172,6 +172,11 @@
 		Main : true,
 		S : OnUpdateBar
 	}),
+	RTabTo = function(Q)
+	{
+		OverlayRelease()
+		RTab.At(Q)
+	},
 	ROverlay = WV.Rock(ClassOverlay),
 	Noti = WV.Noti({Top : RMain[0]}),
 	NotiAuth = Noti.O(),
@@ -181,6 +186,7 @@
 	ShortCutGeneralTabNext = 'GenTabNext',
 	ShortCutGeneralProxy = 'GenProxy',
 	ShortCutGeneralFocus = 'GenFocusKeywordInput',
+	ShortCutGeneralFocusAuth = 'GenFocusAuth',
 	ShortCutBrowseSelAll = 'BroSelAll',
 	ShortCutBrowseSelClear = 'BroSelClear',
 	ShortCutBrowseHead = 'BroHead',
@@ -1031,12 +1037,12 @@
 			var
 			Header = WV.Rock(ClassHeader);
 			DebugIn = true
-			WV.T(Header,'Debug ' + (WR.Last(Last) - Last[0]) + 'ms')
+			WV.T(Header,'Debug' + (Last ? ' ' + (WR.Last(Last) - Last[0]) + 'ms' : ''))
 			WV.ApA([Header,DebugView],Y)
 			return function()
 			{
 				DebugIn = false
-				Last.length = 0
+				if (Last) Last.length = 0
 			}
 		})
 	};
@@ -1507,8 +1513,7 @@
 
 			ShortCut.On(ShortCutGeneralFocus,function()
 			{
-				OverlayRelease()
-				RTab.At(K)
+				RTabTo(K)
 				Keyword.I.select()
 				Keyword.Foc(true)
 			})
@@ -2519,8 +2524,7 @@
 					The : WV.TheP,
 					C : function()
 					{
-						OverlayRelease()
-						RTab.At(TabKey)
+						RTabTo(TabKey)
 						Token.Foc(true)
 					}
 				}).R])
@@ -2576,6 +2580,11 @@
 				Cookie,
 				CookieSave
 			],WV.ClsA(V,ClassPadding))
+			ShortCut.On(ShortCutGeneralFocusAuth,function()
+			{
+				RTabTo(TabKey)
+				Token.Foc(true)
+			})
 			return {
 				CSS : function(ID)
 				{
@@ -2751,6 +2760,9 @@
 				ShortCutGeneralFocus,
 				'`',WB.SCD
 			],[
+				ShortCutGeneralFocusAuth,
+				'Alt+u',WB.SCD | WB.SCI
+			],[
 				ShortCutBrowseSelAll,
 				'Ctrl+a',WB.SCD
 			],[
@@ -2788,6 +2800,10 @@
 			{
 				WR.EachU(function(V,F){V(Q[F])},SCC)
 			}
+			SC.On('Shift+Ctrl+Alt+Space+p+-+]',function()
+			{
+				MakeDebug()
+			},WB.SCD | WB.SCI)
 			return {
 				CSS : function(ID)
 				{
