@@ -262,7 +262,7 @@ module.exports = Option =>
 				`,
 				[
 					S,V.Part,
-					Q.Part.length,V.File,
+					Q.PartTotal,V.File,
 					V.Title,
 					S,V.Part
 				]

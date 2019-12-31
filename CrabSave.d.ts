@@ -89,6 +89,8 @@ declare module CrabSaveNS
 		Done? : number
 		/** Part info */
 		Part? : Part[]
+		/** Specially used when saving infomation */
+		PartTotal? : number
 		/** Download info */
 		Down? : Down[]
 	}

@@ -75,6 +75,8 @@ declare module CrabSaveNS
 		Up? : string
 		Date? : number
 		Part : SitePart[]
+		/** Specially used when part cound neq Part.length */
+		PartTotal? : number
 	}
 	interface SitePart
 	{

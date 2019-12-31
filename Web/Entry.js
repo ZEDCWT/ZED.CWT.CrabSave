@@ -58,6 +58,9 @@
 	TaskButtonSize = 80,
 	CacheLimit = 128,
 	TickInterval = 500,
+	DebugClick = 10,
+	DebugInterval = 2000,
+	DebugLimit = 2048,
 
 	Href = location.href.replace(/[?#].*/,'').replace(/^http/,'ws'),
 	URLSite = 'Site/',
@@ -266,11 +269,13 @@
 				},Q.split('\n'))
 				WSOnProgress()
 				WebSocketSend([ActionWebTick])
+				return
 			}
 			else if (!Q.charCodeAt(0))
 			{
 				Q = WC.JTOO(WC.U16S(Decipher.D(WC.B91P(Q))))
 				if (!WW.IsArr(Q) || !WW.IsArr(Q = Q[1])) return Suicide()
+				DebugLog('Auth',Q)
 				K = Q[1]
 				O = Q[2]
 				switch (Q[0])
@@ -323,6 +328,7 @@
 				}
 				return
 			}
+			DebugLog('Web',Q)
 			Q = WC.JTOO(Q)
 			K = Q[1]
 			O = Q[2]
@@ -365,6 +371,7 @@
 		Client.onopen = function()
 		{
 			Online = true
+			DebugLog('Online')
 			First || WebSocketNoti(SA('SocOn'))
 			WebSocketNoti(false)
 			WebSocketRetry = 0
@@ -394,6 +401,7 @@
 			WebSocketSend = WebSocketNotConnected
 			WebSocketSendAuth = WebSocketNotConnected
 			Cipher = Decipher = false
+			DebugLog('Offline',WebSocketRetry)
 			WebSocketNoti(SA('SocOff',[WW.StrDate(WebSocketSince),WebSocketRetry++]))
 			Online ?
 				MakeWebSocket(Online = false) :
@@ -461,7 +469,7 @@
 	SiteSolveName = function(Q)
 	{
 		Q = WW.IsObj(Q) ? Q : SiteMap[Q]
-		return Q ? Q.Name || Q.ID : SA('GenUnknown')
+		return Q ? Q.Name || Q.ID : SA('GenUnknown',[Q])
 	},
 
 	TaskBriefRetry = function(H)
@@ -683,7 +691,7 @@
 			SiteID = WV.X(
 			[
 				SiteSolveName(Site),' ',
-				Site.IDView ?
+				Site && Site.IDView ?
 					Site.IDView(Q.I) :
 					Q.I
 			]),
@@ -753,7 +761,7 @@
 				},Line)
 				WR.Each(function(V)
 				{
-					PartMap[V.Part] = V.Title
+					PartMap[V.Part] = V
 				},S.Part)
 				if (S.Down)
 				{
@@ -784,8 +792,8 @@
 								WW.Fmt('`0` / `1` `2`',
 								[
 									V.Part,
-									S.Part.length,
-									PartMap[V.Part] || ''
+									PartMap[V.Part] ? PartMap[V.Part].Total : S.Part.length,
+									PartMap[V.Part] ? PartMap[V.Part].Title : ''
 								])
 							]),Part)
 						}
@@ -982,12 +990,62 @@
 			Speed += V[1]
 		},ProgressMap)
 		WV.T(RSpeed,'[' + Active + '] ' + MakeSpeed(Speed))
+	},
+
+
+
+	DebugCount = 0,
+	DebugView = WV.Rock(),
+	DebugCurrent = [],
+	DebugLog = function(Q,S)
+	{
+		Q = '{' + WW.StrDate() + ' #' + DebugCount++ + '} ' + WR.Map(function(V)
+		{
+			V = null == V ?
+				'' :
+				WW.IsObj(V) ? WC.OTJ(V) : String(V)
+			return V.length < 512 ? V : V.slice(0,512) + '...'
+		},[Q,S]).join(' ')
+		DebugCurrent.push(WV.Pre(WV.X(Q),DebugView))
+		DebugCurrent.length < DebugLimit ||
+			WV.Del(DebugCurrent.shift())
+	},
+	DebugIn,
+	DebugReg = function(Target,Event)
+	{
+		var
+		Last = [];
+		WV.On(Event,function()
+		{
+			Last.push(WW.Now())
+			DebugClick < Last.length && Last.shift()
+			Last.length < DebugClick ||
+				WR.Last(Last) - Last[0] < DebugInterval &&
+				MakeDebug(Last)
+		},Target)
+	},
+	MakeDebug = function(Last)
+	{
+		DebugIn || MakeOverlay(function(Y)
+		{
+			var
+			Header = WV.Rock(ClassHeader);
+			DebugIn = true
+			WV.T(Header,'Debug ' + (WR.Last(Last) - Last[0]) + 'ms')
+			WV.ApA([Header,DebugView],Y)
+			return function()
+			{
+				DebugIn = false
+				Last.length = 0
+			}
+		})
 	};
 
 	LangTo(Top.LangS)
 
 	WV.ClsA(RMain[1],WV.NoSel)
 	WV.Text(WV.VM(RMain[1]),SA('Title'))
+	DebugReg(RMain[1],'mousedown')
 	WV.Ap(WV.Rock(ClassTitleSplit),RMain[2])
 	WV.Ap(WV.Rock(WV.ST),RMain[3])
 	WV.Ap(WV.Rock(WV.SB),RMain[3])
@@ -1231,6 +1289,7 @@
 				if (Action)
 				{
 					if (!BriefKeywordOn) BriefKeywordOn = WV.Con(Brief,BriefKeyword.R)
+					StatusSet(K,SA('GenLoading'))
 					BriefKeyword.K(Key)
 						.S(SiteSolveName(Site))
 						.A(Action.Name)
@@ -1238,6 +1297,7 @@
 						.U(SA('GenLoading'))
 					JumpEnd(Action.View(ID,Q,Action === GoPrefAction ? GoPref : undefined).Now(function(/**@type {CrabSaveNS.SitePage}*/S)
 					{
+						StatusSet(K)
 						WV.Clear(List)
 						Bar.length = 0
 						BarMap.C()
@@ -1349,6 +1409,7 @@
 						}
 					},function(E)
 					{
+						StatusSet(K)
 						BriefKeyword.U(ErrorS(E))
 					}))
 				}
@@ -1486,7 +1547,7 @@
 					(
 						'#`R`>.`I`{line-height:34px;font-weight:bold}' +
 						'#`R`>.`I` .`D`{line-height:normal}' +
-						'#`R`>.`I` input{padding-left:6px}' +
+						'#`R`>.`I` input{padding-left:6px;height:34px}' +
 						'#`R`>.`I` .`B`{padding:0;min-width:60px}' +
 						'.`E`{padding:`h`px;`e`}' +
 						'.`L`{margin-left:-`l`px;margin-right:-`l`px;text-align:center}' +
@@ -2022,6 +2083,7 @@
 
 			WSOnOnline.R(function()
 			{
+				DebugLog('HotBegin',HotVersion)
 				HotRead(WB.ReqB('Hot' + (HotVersion ? '?' + HotVersion : ''))
 					.RetryWhen(TaskBriefRetry(SA('Hot')))
 					.Now(function(B)
@@ -2033,6 +2095,7 @@
 							HotMap.C()
 							HotRowMap = {}
 							HotVersion = V
+							DebugLog('HotEnd',HotVersion)
 						},function(V)
 						{
 							V[0] = NumberZip.P(V[0])
@@ -2302,6 +2365,7 @@
 
 			WSOnOnline.R(function()
 			{
+				DebugLog('HistBegin',HistoryVersion)
 				HistoryRead(WB.ReqB('Hist' + (HistoryVersion ? '?' + HistoryVersion : ''))
 					.RetryWhen(TaskBriefRetry(SA('His')))
 					.Now(function(B)
@@ -2313,6 +2377,7 @@
 							HistoryMap.C()
 							HistoryRowMap = {}
 							HistoryVersion = V
+							DebugLog('HistEnd',HistoryVersion)
 						},function(V)
 						{
 							V[0] = NumberZip.P(V[0])
@@ -2915,7 +2980,7 @@
 	WV.Ready(function()
 	{
 		WV.Ap(Rainbow[0],WV.Body)
-		WebSocket ? MakeWebSocket(true) : WebSocketNoti(SA('GenNoSock'))
+		WW.TryE === WW.Try(MakeWebSocket,[true]) && WebSocketNoti(SA('GenNoSock'))
 
 		Top.CrabSave = CrabSave = {}
 		CrabSave.Site = function(Q)
@@ -2951,7 +3016,7 @@
 				},
 				Api : function(Q)
 				{
-					return WB.ReqB(URLApi + WC.UE(WW.IsObj(Q) ? WC.OTJ(Q) : Q))
+					return WB.ReqB(URLApi + '~' + WC.UE(WW.IsObj(Q) ? WC.OTJ(Q) : Q))
 				},
 				Head : function(Q,K,V)
 				{

@@ -13,7 +13,7 @@ var Lang = // eslint-disable-line
 		GenNoSock : 'WebSocket is not supported',
 		GenNoRel : 'No items relative to',
 		GenCancel : 'Cancel',
-		GenUnknown : '[Unknown]',
+		GenUnknown : '[Unknown:~0~]',
 		GenUntitle : '[Untitled]',
 
 		Bro : 'Browser',
@@ -172,7 +172,7 @@ var Lang = // eslint-disable-line
 		GenNoSock : '當前瀏覽器不支持WebSocket',
 		GenNoRel : '備選項中沒有相關條目',
 		GenCancel : '取消',
-		GenUnknown : '[未知]',
+		GenUnknown : '[未知:~0~]',
 		GenUntitle : '[無標題]',
 
 		Bro : '瀏覽',
@@ -328,7 +328,7 @@ var Lang = // eslint-disable-line
 		GenNoSock : '当前浏览器不支持WebSocket',
 		GenNoRel : '备选项中没有相关条目',
 		GenCancel : '取消',
-		GenUnknown : '[未知]',
+		GenUnknown : '[未知:~0~]',
 		GenUntitle : '[无标题]',
 
 		Bro : '浏览',
@@ -484,7 +484,7 @@ var Lang = // eslint-disable-line
 		GenNoSock : 'WebSocketはサポートされていません',
 		GenNoRel : '関連アイテムはありません',
 		GenCancel : 'キャンセル',
-		GenUnknown : '[未知]',
+		GenUnknown : '[未知:~0~]',
 		GenUntitle : '[無題]',
 
 		Bro : 'ブラウザ',

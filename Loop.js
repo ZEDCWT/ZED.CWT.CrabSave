@@ -105,6 +105,7 @@ module.exports = Option =>
 								UPAt : WR.Default(WW.Now(),U.Date),
 								Size,
 								Part,
+								PartTotal : WR.Default(Part.length,U.PartTotal),
 								Down
 							}
 							// Optimize : We could omit full reading and size resolving for downloaded files

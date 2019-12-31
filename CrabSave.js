@@ -242,7 +242,10 @@ module.exports = Option =>
 				Q = Q.slice(1) :
 				H = false
 			WR.StartW('{',Q) && (Q = WC.JTOO(Q))
-			Request(RequestComm(Q))
+			Q = RequestComm(Q)
+			WR.Del('gzip',Q)
+			Q.encoding = null
+			Request(Q)
 				.on('request',O =>
 				{
 					H && WR.EachU((V,F) =>

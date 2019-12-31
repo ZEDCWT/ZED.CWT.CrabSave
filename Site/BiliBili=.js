@@ -71,10 +71,11 @@ module.exports = O =>
 					.FMap(V =>
 					{
 						WR.EachU((V,F) => V.push(F),V)
+						R.PartTotal = V.length
 						if (CID)
 						{
 							V = WR.Find(B => CID === String(B[0]),V)
-							if (!V) WW.Throw('CID Not Found #' + CID)
+							if (!V) WW.Throw('CID Not Found #' + CID + '@' + ID)
 							V = [V]
 						}
 						return WX.From(V)
