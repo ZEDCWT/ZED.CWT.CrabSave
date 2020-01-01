@@ -28,6 +28,7 @@ module.exports = Option =>
 		'YouTube',
 		'NicoNico',
 		'Twitter',
+		'WeiBo',
 	])
 	return {
 		A : All,

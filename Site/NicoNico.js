@@ -7,7 +7,6 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	NicoUser = WW.Tmpl(Nico,'user/',undefined),
 	NicoUserVideo = WW.Tmpl(Nico,'user/',undefined,'/video?page=',undefined),
 	NicoMyList = WW.Tmpl(Nico,'mylist/',undefined),
-	NicoAPIMyList = Nico + 'api/mylist/list',
 	NicoMy = Nico + 'my',
 	NicoMyFavUser = WW.Tmpl(Nico,'my/fav/user?page=',undefined),
 	NicoRepo = WW.Tmpl(Nico,'api/nicorepo/timeline/my/followingUser?cursor=',undefined,'&client_app=pc_myrepo'),
@@ -150,15 +149,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Judge : O.Num('MyList'),
 			View : O.Less(function(ID)
 			{
-				return O.Req(
+				return O.Req(NicoMyList(ID)).Map(function(B)
 				{
-					url : NicoAPIMyList,
-					method : 'POST',
-					form : {group_id : ID}
-				}).Map(function(B)
-				{
-					B = WC.JTO(B)
-					'ok' === B.status || O.Bad(B.error.code,B.error.description)
+					B = WC.JTO(WW.MF(/preload\([^[]+(.*)\);/,B))
+					WW.IsArr(B) || O.Bad('Unable to find mylite data')
 					return WR.Map(function(V,D)
 					{
 						D = V.item_data
@@ -168,11 +162,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							Title : D.title,
 							Date : 1E3 * D.first_retrieve,
 							Len : +D.length_seconds,
-							Desc : D,
+							Desc : D.last_res_body,
 							More : 'Updated at ' + O.DTS(1E3 * D.update_time) + '\n' +
 								'Added at ' + O.DTS(1E3 * V.create_time)
 						}
-					},B.mylistitem).reverse()
+					},B.reverse())
 				})
 			})
 		},{

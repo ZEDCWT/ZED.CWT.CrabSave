@@ -498,7 +498,7 @@ var Lang = // eslint-disable-line
 		BroAdd : '追加',
 		BroCold : 'コールド',
 		BroHot : 'ホット',
-		BroHist : '歴史',
+		BroHist : 'ダウンロード済み',
 		BroDesc : '説明',
 		BroItem : '項目',
 		BroPage : 'ページ',
@@ -527,7 +527,7 @@ var Lang = // eslint-disable-line
 		DetTake : '時間経過',
 		DetAvg : '平均速度',
 		StsSelect : '~0~アイテムを選択中',
-		StsPlus : '、その中〜0〜アイテムは情報を読み込み中...',
+		StsPlus : '、その中~0~アイテムは情報を読み込み中...',
 
 		Col : 'コールド',
 		ColCommit : 'コミット',
@@ -542,7 +542,7 @@ var Lang = // eslint-disable-line
 		HotQueue : '待機中',
 		HotPaused : '一時停止',
 
-		His : '歴史',
+		His : 'ダウンロード済み',
 
 		Cmp : '部品',
 

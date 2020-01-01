@@ -227,7 +227,7 @@ module.exports = Option =>
 								NameO =
 								{
 									ID : WR.SafeFile(V.ID),
-									Title : WR.SafeFile(V.Title) || '[Untitled]',
+									Title : WR.SafeFile(V.Title).slice(0,220) || '[Untitled]',
 									Up : WR.SafeFile(V.UP),
 									Date : WW.StrDate(UPAt,WW.DateDotS),
 									Y : UPAt.getFullYear(),

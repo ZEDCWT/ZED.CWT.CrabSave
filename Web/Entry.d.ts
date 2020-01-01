@@ -31,7 +31,7 @@ declare module CrabSaveNS
 		Pascal(Q : string) : string
 		Less(Q : (ID : string) => WishNS.Provider<SiteItem[]>) : (ID : string,Page : number) => WishNS.Provider<SitePage>
 		More<U>(Q : (ID : string) => WishNS.Provider<[U[],SitePage]>,S : (O : U[],Page : number,ID : string) => WishNS.Provider<SitePage>) : WishNS.Provider<SitePage>
-		More<U,N>(Q : (ID : string) => WishNS.Provider<[U[],N]>,S : (O : U[],Page : number,ID : string) => WishNS.Provider<N>,M : (Q : N) => SitePage) : WishNS.Provider<SitePage>
+		More<U,N>(Q : (ID : string) => WishNS.Provider<[U[],N]>,S : (O : U[],Page : number,ID : string) => WishNS.Provider<N>,M : (Q : N,I : U[],P : number) => SitePage) : WishNS.Provider<SitePage>
 		SolU(Q : string,S? : string) : string
 		DTS(Q : string | number) : string
 		High(Q : string) : WishNS.EleContent

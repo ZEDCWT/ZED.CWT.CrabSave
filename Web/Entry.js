@@ -628,7 +628,6 @@
 	},
 
 	OverlayOn,
-	OverlayEvent = WX.EndL(),
 	OverlayEnd = WX.EndL(),
 	MakeOverlay = function(H)
 	{
@@ -637,8 +636,12 @@
 		OnUpdateBar()
 		WV.TI(T)
 		WV.On('click',WV.StopProp,T)
-		OverlayEnd(H(T))
-		OverlayEvent(WV.On('click',OverlayRelease,RMain[3]))
+		OverlayEnd()
+		OverlayEnd(WX.EndI(
+		[
+			H(T),
+			WV.On('click',OverlayRelease,RMain[3])
+		]))
 		WV.Ap(ROverlay,RMain[4])
 		T.focus()
 	},
@@ -649,7 +652,6 @@
 			OverlayOn = false
 			OnUpdateBar()
 			WV.Del(ROverlay)
-			OverlayEvent()
 			OverlayEnd()
 			WV.Clr(ROverlay)
 		}
@@ -2114,9 +2116,9 @@
 						},function()
 						{
 							HotCount.D(Hot)
-							WSOnDiffHot.S(HotVersion)
 							BrowserUpdate()
 						})
+						WSOnDiffHot.S(HotVersion)
 						List.Re()
 					},WW.O,WW.O))
 			})
@@ -2396,9 +2398,9 @@
 							}))
 						},function()
 						{
-							WSOnDiffHist.S(HistoryVersion)
 							BrowserUpdate()
 						})
+						WSOnDiffHist.S(HistoryVersion)
 						List.Re()
 					}))
 			})
@@ -3125,7 +3127,7 @@
 						return Cache && Page ?
 							S(Cache,Page,ID).Map(function(V)
 							{
-								V = M(V)
+								V = M(V,Cache,Page)
 								Len += V.Item.length - (0 | Count[Page])
 								Count[Page] = V.Item.length
 								Finalize(V,Page)
@@ -3134,7 +3136,7 @@
 							Q(ID).Map(function(V)
 							{
 								Cache = V[0]
-								V = M(V[1])
+								V = M(V[1],Cache,Page)
 								Count = [Len = V.Item.length]
 								Finalize(V,Page)
 								return V
@@ -3176,7 +3178,8 @@
 			'BiliBili',
 			'YouTube',
 			'NicoNico',
-			'Twitter'
+			'Twitter',
+			'WeiBo'
 		]).length
 		SiteOnNoti()
 		WW.To(TickInterval,function(F)

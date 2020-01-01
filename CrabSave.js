@@ -261,6 +261,7 @@ module.exports = Option =>
 						WebServerProxyOmit.has(WR.Low(F)) ||
 							S.setHeader(F,V)
 					},O.headers)
+					S.writeHead(O.statusCode,O.statusMessage)
 				})
 				.on('data',D => S.write(D))
 				.on('complete',() => S.end())
