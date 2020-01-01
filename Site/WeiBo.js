@@ -6,6 +6,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	WeiBoUserAll = WW.Tmpl(WeiBo,undefined,'?is_all=1&page=',undefined),
 	WeiBoUserAllSub = WW.Tmpl(WeiBo,'p/aj/v6/mblog/mbloglist?script_uri=/',undefined,'&id=',undefined,'&pl_name=Pl_Official_MyProfileFeed__20&domain=100505&is_all=1&page=',undefined,'&pre_page=',undefined,'&pagebar=',undefined),
 	WeiBoHome = WW.Tmpl(WeiBo,'aj/mblog/fsearch?',undefined),
+	WeiBoFollow = WW.Tmpl(WeiBo,undefined,'/follow'),
+	WeiBoFollowAPI = WW.Tmpl(WeiBo,'p/',undefined,'/myfollow?ajaxpagelet=1&pids=Pl_Official_RelationMyfollow__95&Pl_Official_RelationMyfollow__95_page=',undefined),
 	NumberZip = WC.Rad(WW.D + WW.az + WW.AZ),
 	Zip = function(Q)
 	{
@@ -18,15 +20,36 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		B.msg && O.Bad(B.code,B.msg)
 		return B.data
 	},
+	SolveID = function(B){return WW.MF(/href="\/(\d+\/\w+).*?date="/,B)},
+	SolvePageID = function(B){return WW.MF(/page_id']='(\d+)/,B)},
+	SolveHTML = function(B)
+	{
+		return WR.Trim(WC.HED(B
+			.replace(/<br>/g,'\n')
+			.replace(/<.*?>/g,''))
+			.replace(/.*/g,WR.Trim))
+	},
 	SolveCard = function(B)
 	{
 		var
 		Non = true,
-		Title = WR.Trim(WC.HED(WW.MU(/<[^>]+WB_text[^]+?<\/div>/,B)
-			.replace(/<a[^>]+ignore=.*?<\/a>/g,'')
-			.replace(/<br>/g,'\n')
-			.replace(/<.*?>/g,''))),
+		Title = SolveHTML(WW.MU(/<[^>]+WB_text[^]+?<\/div>/,B)
+			.replace(/<a[^>]+ignore=.*?<\/a>/g,'')),
+		More,
 		Img,T;
+		T = B.split('"WB_feed_expand">')
+		if (T[1])
+		{
+			B = T[0]
+			T = T[1]
+			More = WC.HED(WW.MF(/nick-name="([^"]+)/,T))
+			T = SolveID(T)
+			More =
+			[
+				O.Ah(T,WeiBo + T),
+				O.Ah('@' + More,WeiBo + T.replace(/\/.*/,''))
+			]
+		}
 		if (T = WW.MF(/WB_video.*action-data="([^"]+)/,B)) // Video
 		{
 			Non = false
@@ -44,19 +67,31 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		}
 		return {
 			Non : Non,
-			ID : WW.MF(/href="\/(\d+\/\w+).*?data="/,B),
+			ID : SolveID(B),
 			Img : Img,
 			Title : Title.slice(0,128),
 			UP : WC.HED(WW.MF(/face".*title="([^"]+)/,B)),
-			UPURL : WeiBo + WW.MF(/WB_info.*\s+.*?href=".*?(\w+)[^/"]+"/,B),
+			UPURL : WeiBo + WW.MF(/WB_info.*\s+.*?href=".*?(\w+)[^/"]*"/,B),
 			Date : +WW.MF(/date="(\d+)/,B),
-			Desc : Title
+			Desc : Title,
+			More : More
 		}
 	},
 	SolveCardList = function(B)
 	{
 		return WR.Map(SolveCard,B.match(/feed_list_item"[^]+?WB_feed_handle/g))
-	};
+	},
+	SolveSelfUID = WR.Pipe(O.Coke,WX.CacheL(function()
+	{
+		return O.Req(WeiBo).Map(function(B)
+		{
+			return WW.MF(/'uid']='(\d+)/,B)
+		})
+	})),
+	SolveFollowPageID = WX.CacheL(function(UID)
+	{
+		return O.Req(WeiBoFollow(UID)).Map(SolvePageID)
+	});
 	return {
 		ID : 'WeiBo',
 		Name : '\u65B0\u6D6A\u5FAE\u535A',
@@ -102,7 +137,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 						O.Req(WeiBoUserAll(ID,-~Page))
 							.Map(function(B)
 							{
-								PageID = WW.MF(/page_id']='(\d+)/,B)
+								PageID = SolvePageID(B)
 								return WC.JTO(WW.MU(/{"ns":"pl.content.home.*MyProfileFeed.*}/,B)).html
 							})
 				}).Reduce(WR.Add,'').Map(function(B)
@@ -134,6 +169,42 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 					Item : SolveCardList(B)
 				}
 			})
+		},{
+			Name : 'Following',
+			Judge : O.UP,
+			View : function(_,Page)
+			{
+				return SolveSelfUID()
+					.FMap(SolveFollowPageID)
+					.FMap(function(PageID)
+					{
+						return O.Req(WeiBoFollowAPI(PageID,-~Page))
+					})
+					.Map(function(B)
+					{
+						B = WC.JTO(WW.MU(/{.*}/,B)).html
+						return {
+							Max : WW.MR(function(D,V)
+							{
+								return WR.Max(D,+V[1])
+							},1,/"page"[^>]+>(\d+)</g,B),
+							Item : WW.MR(function(D,V,I)
+							{
+								D.push(
+								{
+									Non : true,
+									ID : I = WW.MF(/\/u\/(\d+)/,V) || WW.MF(/name"[^>]+href="\/(\w+)/,V),
+									URL : WeiBo + I,
+									Img : WW.MF(/src="([^"]+)/,V),
+									Title : WC.HED(WW.MF(/title="([^"]+)/,V)),
+									More : WR.Trim(WR.Trim(WW.MF(/"text[^>]+>([^<]+)/,V)) + '\n' +
+										SolveHTML(WW.MF(/info_from[^>]+>([^]+?)<\/div/,V)))
+								})
+								return D
+							},[],/member_li[^]+?<\/li/g,B)
+						}
+					})
+			}
 		}],
 		IDURL : WR.Add(WeiBo)
 	}

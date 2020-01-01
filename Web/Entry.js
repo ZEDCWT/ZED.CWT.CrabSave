@@ -1068,6 +1068,7 @@
 	(
 		'body{height:100%;font-size:14px;overflow:hidden}' +
 		'.`N` .`B`{padding-top:0;padding-bottom:0}' +
+		'.`J`{overflow:hidden}' +
 
 		'#`M`{position:relative;overflow:hidden}' +
 		'#`T`{min-width:110px;text-align:center;font-weight:bold}' +
@@ -1126,6 +1127,7 @@
 			W : WV.TabT,
 			A : WV.TabB,
 			B : WV.ButW,
+			J : WV.ListI,
 
 			M : WV.ID(RMain[0]),
 			T : WV.ID(RMain[1]),

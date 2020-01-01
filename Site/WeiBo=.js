@@ -14,6 +14,7 @@ module.exports = O =>
 			var T;
 			B = WC.JTO(WW.MU(/{"ns":"pl.content.*}/,B)).html
 			B || O.Bad('Unable to resolve infomation')
+			B = B.replace(/"WB_feed_expand">[^]+/,'')
 			if (T = WW.MF(/WB_video_mini.*sources="([^"]+)/,B))
 			{
 				T = WR.Ent(WC.QSP(T)).filter(V => !/\D/.test(V[0]) && V[1]).sort((Q,S) => S[0] - Q[0])
