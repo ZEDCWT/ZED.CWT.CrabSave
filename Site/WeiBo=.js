@@ -17,9 +17,9 @@ module.exports = O =>
 			B = B.replace(/"WB_feed_expand">[^]+/,'')
 			if (T = WW.MF(/WB_video_mini.*sources="([^"]+)/,B))
 			{
-				T = WR.Ent(WC.QSP(T)).filter(V => !/\D/.test(V[0]) && V[1]).sort((Q,S) => S[0] - Q[0])
-				URL = T[0][1]
-				URL || O.Bad(T)
+				URL = WR.Ent(WC.QSP(T)).filter(V => !/\D/.test(V[0]) && V[1]).sort((Q,S) => S[0] - Q[0])
+				URL[0] && URL[0][1] || O.Bad(URL)
+				URL = URL[0][1]
 			}
 			else if (T = WW.MF(/li_story.*?action-data="([^"]+)/,B))
 				URL = WC.QSP(T).gif_ourl

@@ -2574,6 +2574,7 @@
 					CookieMap = K
 					O = CookieMap[K = Site.V()]
 				}
+				else CookieMap[K] = O
 				Site.V() && K === Site.V() && Cookie.V(O || '')
 			}
 			WV.ApR(
@@ -3051,6 +3052,10 @@
 				Coke : function()
 				{
 					return CookieMap[V.Cookie] || ''
+				},
+				CokeU : function(Q)
+				{
+					WebSocketSendAuth([ActionAuthCookie,V.ID,Q])
 				},
 				Bad : function(Q,S)
 				{

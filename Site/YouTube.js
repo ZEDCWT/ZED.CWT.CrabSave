@@ -51,6 +51,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						('true' === V.contentDetails.caption ? '\nCaption On' : '')
 				}
 			},B.items)
+				.sort(function(Q,S){return S.Date - Q.Date})
 		}
 	},
 	SolveDetail = function(B)

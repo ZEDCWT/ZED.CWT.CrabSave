@@ -248,7 +248,7 @@ module.exports = Option =>
 									NameO,'|'
 								) + (Down.Ext || ''),
 								Dest = WN.JoinP(V.Root,Name);
-								return WX.Provider(O =>
+								return WN.MakeDir(WN.DirN(Dest)).FMap(() => WX.Provider(O =>
 								{
 									var
 									Work = WN.Download(
@@ -316,7 +316,7 @@ module.exports = Option =>
 								}).RetryWhen(E => E.Tap(E =>
 								{
 									E === DownloadErrRetry || WW.Throw(E)
-								}))
+								})))
 							}).Fin().Map(() => [true]) :
 							WX.Just([false])))
 						.FMap(() =>

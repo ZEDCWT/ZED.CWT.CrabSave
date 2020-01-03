@@ -8,11 +8,45 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	WeiBoHome = WW.Tmpl(WeiBo,'aj/mblog/fsearch?',undefined),
 	WeiBoFollow = WW.Tmpl(WeiBo,undefined,'/follow'),
 	WeiBoFollowAPI = WW.Tmpl(WeiBo,'p/',undefined,'/myfollow?ajaxpagelet=1&pids=Pl_Official_RelationMyfollow__95&Pl_Official_RelationMyfollow__95_page=',undefined),
+	WeiBoSearch = 'https://s.weibo.com/',
+	WeiBoSearchSugg = WW.Tmpl(WeiBoSearch,'Ajax_Search/suggest?where=weibo&type=weibo&key=',undefined),
+	WeiBoSearchQuery = WW.Tmpl(WeiBoSearch,'weibo?xsort=hot&q=',undefined,'&page=',undefined),
+	SinaLogin = 'https://login.sina.com.cn/sso/login.php',
 	NumberZip = WC.Rad(WW.D + WW.az + WW.AZ),
 	Zip = function(Q)
 	{
 		return WR.MapU(function(V,F){return V = NumberZip.S(V),F ? WR.PadS0(4,V) : V},
 			WR.SplitAll(7,WR.PadS0(7 * Math.ceil(Q.length / 7),Q))).join('')
+	},
+	TryLogin = WX.CacheL(function()
+	{
+		return O.Req({url : SinaLogin,followRedirect : false},true).Map(function(B,T)
+		{
+			B = B[2] && B[2]['set-cookie']
+			B = B && WR.Find(WR.StartW('SUB='),B)
+			B = B && B.split('; ')[0]
+			if (B)
+			{
+				T = WC.CokeP(O.Coke(),WR.Id)
+				T.SUB = WC.CokeP(B).SUB
+				O.CokeU(WC.CokeS(T,WR.Id))
+			}
+			return !!B
+		})
+	}),
+	Req = function(Q)
+	{
+		return O.Req(Q).FMap(function(B)
+		{
+			return /'islogin'][ =]*'0'|login\.php/.test(B) && WC.CokeP(O.Coke()).ALC ?
+				TryLogin(O.Coke()).FMap(function(Y)
+				{
+					return Y ?
+						O.Req(Q) :
+						WX.Just(B)
+				}) :
+				WX.Just(B)
+		})
 	},
 	Common = function(B)
 	{
@@ -67,6 +101,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		}
 		return {
 			Non : Non,
+			AD : /blocktype=ad&/.test(B),
 			ID : SolveID(B),
 			Img : Img,
 			Title : Title.slice(0,128),
@@ -79,25 +114,26 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	},
 	SolveCardList = function(B)
 	{
-		return WR.Map(SolveCard,B.match(/feed_list_item"[^]+?WB_feed_handle/g))
+		return WR.Where(function(V){return !V.AD},
+			WR.Map(SolveCard,B.match(/feed_list_item"[^]+?WB_feed_handle/g)))
 	},
 	SolveSelfUID = WR.Pipe(O.Coke,WX.CacheL(function()
 	{
-		return O.Req(WeiBo).Map(function(B)
+		return Req(WeiBo).Map(function(B)
 		{
 			return WW.MF(/'uid']='(\d+)/,B)
 		})
 	})),
 	SolveFollowPageID = WX.CacheL(function(UID)
 	{
-		return O.Req(WeiBoFollow(UID)).Map(SolvePageID)
+		return Req(WeiBoFollow(UID)).Map(SolvePageID)
 	});
 	return {
 		ID : 'WeiBo',
 		Name : '\u65B0\u6D6A\u5FAE\u535A',
 		Alias : 'WB',
 		Judge : /\bWeiBo\b/i,
-		Min : 'SUB',
+		Min : 'ALC SUB',
 		Sign : function()
 		{
 			return O.Req(WeiBo).Map(function(B)
@@ -107,6 +143,89 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		},
 		Map : [
 		{
+			Name : 'Search',
+			Judge : O.Find,
+			View : function(ID,Page)
+			{
+				return Req(WeiBoSearchQuery(WC.UE(ID),-~Page)).Map(function(B)
+				{
+					return {
+						Max : WW.MR(function(D,V)
+						{
+							return WR.Max(D,+V[1])
+						},1,/href="[^"]+&page=(\d+)/g,B),
+						Size : 20,
+						Item : WW.MR(function(D,V)
+						{
+							var
+							Non = true,
+							Title = SolveHTML(WW.MU(/<[^>]+feed_list_content_full".*\s+.*/,V) ||
+								WW.MU(/<[^>]+feed_list_content".*\s+.*/,V)),
+							More,
+							Img,T;
+							T = V.split(/(feed_list_forwardContent">[^]+)(?="from">)/)
+							if (T[1])
+							{
+								V = T[0] + T[2]
+								T = T[1]
+								More = WC.HED(WW.MF(/nick-name="([^"]+)/,T))
+								T = WW.MF(/from".*\s+.*href="[^"]+\/(\d+\/\w+)/,More)
+								More =
+								[
+									O.Ah(T,WeiBo + T),
+									O.Ah('@' + More,WeiBo + T.replace(/\/.*/,''))
+								]
+							}
+							if (T = WW.MF(/WB_video.*action-data="([^"]+)/,V)) // Video
+							{
+								Non = false
+								Img = WC.QSP(T).cover_img
+							}
+							else if (T = WW.MF(/media-piclist"[^]+?src="([^"]+)/,V))
+							{
+								Img = T
+							}
+							D.push(
+							{
+								Non : Non,
+								ID : T = WW.MF(/from".*\s+.*href="[^"]+\/(\d+\/\w+)/,V),
+								Img : Img,
+								Title : Title.slice(0,128),
+								UP : WC.HED(WW.MF(/nick-name="([^"]+)/,V)),
+								UPURL : WeiBo + T.replace(/\/.*/,''),
+								Date : WW.MF(/from".*\s+.*\s+(\S+)/,V),
+								Desc : Title,
+								More : More
+							})
+							return D
+						},[],/feed_list_item"[^]+?"feed_list_repeat"/g,B)
+					}
+				})
+			},
+			Hint : function(Q)
+			{
+				return Req(
+				{
+					url : WeiBoSearchSugg(WC.UE(Q)),
+					headers :
+					{
+						'X-Requested-With' : 'XMLHttpRequest',
+						Referer : WeiBo
+					}
+				}).Map(function(B)
+				{
+					return {
+						Item : WR.Map(function(V)
+						{
+							return [
+								V.word,
+								V.word + ' (' + V.count + ')'
+							]
+						},Common(B))
+					}
+				})
+			}
+		},{
 			Name : 'Post',
 			Judge : /(?:\/|Post\s+)(\d+\/\w+)/i,
 			View : function(ID)
@@ -115,7 +234,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				if (!/\D/.test(ID[1]))
 					ID[1] = Zip(ID[1])
 				ID = ID.join('/')
-				return O.Req(WeiBo + ID).Map(function(B)
+				return Req(WeiBo + ID).Map(function(B)
 				{
 					B = WC.JTO(WW.MU(/{"ns":"pl.content.*}/,B)).html
 					return {
@@ -132,9 +251,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				return WX.Range(0,3).FMapO(1,function(N)
 				{
 					return N ?
-						WX.Just().FMap(function(){return O.Req(WeiBoUserAllSub(ID,PageID,-~Page,-~Page,~-N))})
+						WX.Just().FMap(function(){return Req(WeiBoUserAllSub(ID,PageID,-~Page,-~Page,~-N))})
 							.Map(Common) :
-						O.Req(WeiBoUserAll(ID,-~Page))
+						Req(WeiBoUserAll(ID,-~Page))
 							.Map(function(B)
 							{
 								PageID = SolvePageID(B)
@@ -153,14 +272,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			Judge : O.TL,
 			View : O.More(function()
 			{
-				return O.Req(WeiBo).Map(function(B)
+				return Req(WeiBo).Map(function(B)
 				{
 					B = WC.JTO(WW.MU(/{"ns":"pl.content.homefeed.*}/,B)).html
 					return [[0],B]
 				})
 			},function(I,Page)
 			{
-				return O.Req(WeiBoHome(I[Page])).Map(Common)
+				return Req(WeiBoHome(I[Page])).Map(Common)
 			},function(B,I,Page,T)
 			{
 				T = WW.MF(/lazyload" action-data="([^"]+)/,B)
@@ -178,7 +297,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 					.FMap(SolveFollowPageID)
 					.FMap(function(PageID)
 					{
-						return O.Req(WeiBoFollowAPI(PageID,-~Page))
+						return Req(WeiBoFollowAPI(PageID,-~Page))
 					})
 					.Map(function(B)
 					{

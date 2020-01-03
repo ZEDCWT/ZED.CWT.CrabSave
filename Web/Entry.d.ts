@@ -20,6 +20,7 @@ declare module CrabSaveNS
 		Head(Q : string | WishNS.RequestOption,K : string,V : string) : WishNS.RequestOption
 		Auth() : boolean
 		Coke() : string
+		CokeU() : any
 		Bad(Code? : any,Message : any) : never
 		BadR(Q : any) : never
 		Num(Q : string) : RegExp
