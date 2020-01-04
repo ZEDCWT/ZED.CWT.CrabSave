@@ -12,7 +12,7 @@
 	"license" : "MIT",
 	"dependencies" :
 	{
-		"@zed.cwt/wish" : "^0.0.10",
+		"@zed.cwt/wish" : "^0.0.11",
 		"request" : "^2.88.0",
 		"sqlite3" : "^4.1.1",
 		"ws" : "^7.2.1"

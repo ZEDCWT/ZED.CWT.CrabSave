@@ -60,8 +60,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	{
 		return WR.Trim(WC.HED(B
 			.replace(/<br>/g,'\n')
-			.replace(/<.*?>/g,''))
-			.replace(/.*/g,WR.Trim))
+			.replace(/<.*?>/g,'')))
 	},
 	SolveCard = function(B)
 	{

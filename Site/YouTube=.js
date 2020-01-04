@@ -6,7 +6,7 @@ WW = require('@zed.cwt/wish'),
 YouTube = 'https://www.youtube.com/',
 YouTubeWatch = WW.Tmpl(YouTube,'watch?v=',undefined),
 YouTubeGetVideoInfo = WW.Tmpl('https://www.youtube.com/get_video_info?video_id=',undefined,'&eurl=',undefined,'&el=detailpage'),
-GoogleAPIKey = 'AIzaSyA_ltEFFYL4E_rOBYkQtA8aKHnL5QR_uMA',
+GoogleAPIKey = '#GoogleAPIKey#',
 GoogleAPI = 'https://www.googleapis.com/',
 GoogleAPIYouTube = GoogleAPI + 'youtube/v3/',
 GoogleAPIYouTubeVideo = WW.Tmpl(GoogleAPIYouTube,'videos?key=',GoogleAPIKey,'&part=',undefined,'&id=',undefined);

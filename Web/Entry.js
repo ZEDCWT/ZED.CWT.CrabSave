@@ -1520,6 +1520,7 @@
 				RTabTo(K)
 				Keyword.I.select()
 				Keyword.Foc(true)
+				WV.SIN(Keyword.R,V)
 			})
 			ShortCutOnPage(K,ShortCutBrowseSelAll,function()
 			{
@@ -2353,7 +2354,10 @@
 					case ActionWebTaskHist :
 						if (!WR.Has(S.O,HistoryRowMap))
 						{
-							List.Unshift(HistoryRowMap[S.O] = HistoryMap.D(T = IDCombine(S.S,S.I),S))
+							S = HistoryRowMap[S.O] = HistoryMap.D(T = IDCombine(S.S,S.I),S)
+							!History.length || History[0].E < S.E || History[0].E === S.E && S.O < History[0].O ?
+								List.Unshift(S) :
+								List.Splice(WW.BSL(History,S,function(Q,S){return Q.E - S.E ? S.E < Q.E : Q.O < S.O}),0,S)
 							BrowserUpdate([T])
 						}
 						break

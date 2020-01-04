@@ -8,7 +8,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	YouTubeFollowing = YouTube + 'subscription_manager',
 	YouTubeSubscription = YouTube + 'feed/subscriptions',
 	YouTubeAccount = YouTube + 'account',
-	GoogleAPIKey = 'AIzaSyA_ltEFFYL4E_rOBYkQtA8aKHnL5QR_uMA',
+	GoogleAPIKey = '#GoogleAPIKey#',
 	GoogleAPI = 'https://www.googleapis.com/',
 	GoogleAPIYouTube = GoogleAPI + 'youtube/v3/',
 	GoogleAPIYouTubeVideo = WW.Tmpl(GoogleAPIYouTube,'videos?key=',GoogleAPIKey,'&part=',undefined,'&id=',undefined),

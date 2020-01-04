@@ -6,6 +6,8 @@ declare module CrabSaveNS
 		{
 			PortWeb? : number
 			Data? : string
+
+			GoogleAPIKey? : string
 		}) : {
 			/**Express.Router*/
 			Exp(Express? : object) : object
