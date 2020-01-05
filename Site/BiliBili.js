@@ -107,8 +107,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					UP : R.UP,
 					UPURL : R.UPURL,
 					Len : B.duration,
-					More : 'cid' + V.cid,
-					CID : V.cid
+					More : 'cid' + B.cid,
+					CID : B.cid
 				}
 			},V.pages))
 			return (R[0].EP ? EP2AV(R[0].EP).Tap(function(Q)
