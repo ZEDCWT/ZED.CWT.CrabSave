@@ -226,7 +226,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			}
 		},{
 			Name : 'Post',
-			Judge : /(?:\/|Post\s+)(\d+\/\w+)/i,
+			Judge : /(?:^|\/|Post\s+)(\d+\/\w+)/i,
 			View : function(ID)
 			{
 				ID = ID.split('/')

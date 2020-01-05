@@ -3,6 +3,10 @@
 	"version" : "1.0.0",
 	"description" : "Yet Another Video Downloader With GUI",
 	"main" : "CrabSave",
+	"bin" :
+	{
+		"crabsave" : "CLI.js"
+	},
 	"repository" :
 	{
 		"type" : "git",

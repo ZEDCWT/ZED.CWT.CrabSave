@@ -18,13 +18,17 @@ module.exports = Option =>
 	MakeDelay = (H,W) =>
 	{
 		var
-		Err,Last,
+		Err,Last = WX.EndL(),
 		Go = () =>
 		{
-			Last && clearTimeout(Last)
-			Last = Err && setTimeout(W,Math.min(50 + 1E3 * Setting.Delay() + Err - WW.Now(),2100000000))
-		};
-		return {
+			Last(Err && WW.To(Math.min(50 + 1E3 * Setting.Delay() + Err - WW.Now(),2100000000),() =>
+			{
+				Err = null
+				W()
+			}).F)
+		},
+		R =
+		{
 			D : () =>
 			{
 				H().Now(N =>
@@ -34,7 +38,11 @@ module.exports = Option =>
 						Err = N
 						Go()
 					}
-				},WW.O)
+				},E =>
+				{
+					Option.Err(__filename + ':Y',E)
+					WW.To(5E3,R.D)
+				})
 			},
 			S : () => Last && Go(),
 			F : () =>
@@ -42,7 +50,8 @@ module.exports = Option =>
 				Err = null
 				Go()
 			}
-		}
+		};
+		return R
 	},
 
 	Pack = (Q,S) => Option.Req((SiteAll.D(S).Pack || WR.Id)(Q)),

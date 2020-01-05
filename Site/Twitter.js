@@ -80,15 +80,17 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			}
 		})
 	},
-	SolveCursor = function(Q,R)
+	SolveCursor = function(Q)
 	{
-		R = ''
-		WR.Each(function(V)
+		var
+		H = function(Q)
 		{
-			V = WR.Path(['content','operation','cursor'],V)
-			if (V && 'Bottom' === V.cursorType)
-				R = V.value
-		},WR.Path(['timeline','instructions',0,'addEntries','entries'],Q))
+			'Bottom' === Q.cursorType ?
+				R = Q.value :
+				WR.Each(function(V){WW.IsObj(V) && H(V)},Q)
+		},
+		R = '';
+		H(Q.timeline)
 		return R
 	},
 	MakeHead = function(Q)
@@ -136,7 +138,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			}
 		},{
 			Name : 'Tweet',
-			Judge : [/^\d+$/,O.Num('Tweet|Status(?:es)?')],
+			Judge : [/^\d+ *$/,O.Num('Tweet|Status(?:es)?')],
 			View : function(ID)
 			{
 				return O.Req(MakeHead(TwitterAPIJSON(TwitterAPITypeConversation + ID))).Map(function(B)

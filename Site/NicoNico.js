@@ -171,7 +171,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			})
 		},{
 			Name : 'Video',
-			Judge : [/^\d+$/,O.Num('Video|SM')],
+			Judge : [/^\d+ *$/,O.Num('Video|SM')],
 			View : function(ID)
 			{
 				return O.Api(NicoExtSM(ID)).Map(function(B)

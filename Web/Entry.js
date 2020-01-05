@@ -3079,7 +3079,7 @@
 				},
 				Word : function(Q)
 				{
-					return RegExp('\\b(?:' + Q + ')[\\s/=]+([^&?#\\s]+)','i')
+					return RegExp('\\b(?:' + Q + ')[\\s/=]+([^&?#\\s/]+)','i')
 				},
 				TL :
 				[

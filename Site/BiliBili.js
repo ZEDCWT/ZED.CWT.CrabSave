@@ -325,7 +325,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			}))
 		},{
 			Name : 'Video',
-			Judge : [/^\d+$/,O.Num('Video|AID|AV')],
+			Judge : [/^\d+ *$/,O.Num('Video|AID|AV')],
 			View : O.Less(AV)
 		},{
 			Name : 'Fav',
