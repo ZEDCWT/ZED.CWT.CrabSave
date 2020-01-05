@@ -163,7 +163,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			}
 		},{
 			Name : 'PlayList',
-			Judge : O.Word('PlayList'),
+			Judge : O.Word('PlayList(?:\\b.*\\bList\\b)?'),
 			View : SolvePlayList
 		},{
 			Name : 'Following',
