@@ -553,8 +553,8 @@ module.exports = Option =>
 			.use((Q,S,N) => '/' === Q.path && !/\/(\?.*)?$/.test(Q.originalUrl) ? S.redirect(302,Q.baseUrl + Q.url) : N())
 			.use((Q,S,N) => WebServerSetting(Q.path,S) &&
 				WebServerProxy(Q.path,S,Q.headers) &&
-				WebServerDataBase(Q.originalUrl,S) &&
-				((Q = WebServerMap[Q.path]) ? S.sendFile(Q) :
+				WebServerDataBase(Q.url,S) &&
+				(WebServerMap[Q.path] ? S.sendFile(WebServerMap[Q.path]) :
 					/^\/Site\/\w+\.js$/.test(Q.path) ? S.sendFile(WN.JoinP(__dirname,Q.path)) :
 					N())),
 		Soc : OnSocket
