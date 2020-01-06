@@ -4,12 +4,17 @@ var
 WW = require('@zed.cwt/wish'),
 FS = require('fs'),
 
+Package = require('./package.json'),
+
 Arg = WW.N.ArgParse(
 {
 	PortWeb : ['P','Port to deploy the server','PortNumber'],
 	Data : ['D','Directory to store settings and databases','Path'],
 
 	GoogleAPIKey : ['G','Google API Key','Key']
+},{
+	Name : Package.name,
+	Version : Package.version
 })[0],
 
 Fail = Q => console.log(Q) || process.exit(9);
