@@ -71,10 +71,11 @@ The basic usage would be like
 + Paste the link or type in the keywords
 + Select videos by clicking their cover images to download or `Ctrl+a` to select all shown videos, where selected videos could be viewed from the Cold list
 + Commit tasks from the Cold list to the Hot list to start downloading
+
 Check folder `Site` for supported sites
 
 ### Keyword input
-And we support multiple ways to locate the videos to download here
+We support multiple ways to locate the videos to download here
 + Enter the link of the video (eg. `https://www.youtube.com/watch?v=kobvF5cs6xY`)
 + Enter the link of the uploader (eg. `https://www.youtube.com/user/ChromeDevelopers`, `https://www.youtube.com/channel/UCnUYZLuoy1rq1aVMwx4aTzw`)
 + Enter keyword command (eg. `YouTube kobvF5cs6xY`, `YouTube User ChromeDevelopers`, `YouTube Channel UCnUYZLuoy1rq1aVMwx4aTzw`)
@@ -91,7 +92,7 @@ All available fields are shown below
 |---|---|
 |\|ID\||ID of a video|
 |\|Title\||The title|
-|\|Author\||Name of the uploader or channel|
+|\|Up\||Name of the uploader or channel|
 |\|Y\||The year of the created date (in local timezone)|
 |\|M\||The month of the created date (in local timezone)|
 |\|D\||The day of the created date (in local timezone)|
