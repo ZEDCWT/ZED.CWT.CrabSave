@@ -77,8 +77,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		return O.Api(O.Head(BiliBiliBgmEP(ID),'Cookie','stardustpgcv=0')).Map(function(B)
 		{
 			return [
-				WW.MF(/aid":(\d+)/,B),
-				WW.MF(/season_id":(\d+)/,B)
+				WW.MF(/\/av(\d+)/,B),
+				WW.MF(/ssId":(\d+)/,B)
 			]
 		})
 	}),
