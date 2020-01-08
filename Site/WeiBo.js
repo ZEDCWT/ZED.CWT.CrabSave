@@ -262,6 +262,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				{
 					return {
 						Max : +WW.MF(/"page".*countPage=(\d+)/,B),
+						Size : 45,
 						Item : SolveCardList(B)
 					}
 				})
