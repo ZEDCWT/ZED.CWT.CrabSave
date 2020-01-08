@@ -109,9 +109,9 @@ All available fields are shown below
 ## Misc
 
 ### Data Folder Structure
-Windows `%AppData%/ZED/CrabSave`
-Unix `%HOME%/.local/share/ZED/CrabSave`
-Mac `%HOME%/Library/Preferences/ZED/CrabSave`
+Windows `%AppData%/ZED/CrabSave`  
+Unix `$HOME/.local/share/ZED/CrabSave`  
+Mac `$HOME/Library/Preferences/ZED/CrabSave`  
 ```sh
 ZED/CrabSave
 +-- Key # The authorization token, randomly generated on the first run

@@ -236,7 +236,7 @@ module.exports = Option =>
 								NameO =
 								{
 									ID : WR.SafeFile(V.ID),
-									Title : WR.SafeFile(V.Title).slice(0,220) || '[Untitled]',
+									Title : WR.SafeFile(V.Title) || '[Untitled]',
 									Up : WR.SafeFile(V.UP),
 									Date : WW.StrDate(UPAt,WW.DateDotS),
 									Y : UPAt.getFullYear(),
@@ -255,7 +255,7 @@ module.exports = Option =>
 									V.Format.replace(/\?([^?]+)\?/g,
 										(Q,S) => WW.MR((D,V) => D && NameO[V[1]],true,/\|([^|]+)\|/,Q) ? S : ''),
 									NameO,'|'
-								) + (Down.Ext || ''),
+								).slice(0,220) + (Down.Ext || ''),
 								Dest = WN.JoinP(V.Root,Name);
 								return WN.MakeDir(WN.DirN(Dest)).FMap(() => WX.Provider(O =>
 								{
