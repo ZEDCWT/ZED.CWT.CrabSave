@@ -44,10 +44,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	{
 		return {
 			ID : V.aid,
-			Img : V.pic,
-			Title : V.title,
-			UP : WR.Default(V.author,V.owner && V.owner.name),
-			UPURL : BiliBiliSpace + WR.Default(V.mid,V.owner && V.owner.mid),
+			Img : V.pic || V.cover,
+			Title : V.title || V.new_desc,
+			UP : WR.Default(V.author,V.owner && V.owner.name) ||
+				V.apiSeasonInfo && V.apiSeasonInfo.title + ' ss' + V.apiSeasonInfo.season_id,
+			UPURL : (E = WR.Default(V.mid,V.owner && V.owner.mid)) ? BiliBiliSpace + E :
+				V.apiSeasonInfo ? BiliBiliBgmSS(V.apiSeasonInfo.season_id) :
+				null,
 			Date : 1E3 * WR.Default(V.created,V.pubdate),
 			Len : WR.Default(V.length,V.duration),
 			Desc : WR.Default(V.description,V.desc),
