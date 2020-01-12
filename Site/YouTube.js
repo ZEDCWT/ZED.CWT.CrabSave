@@ -91,8 +91,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		['videoDimension',['any','2d','3d']],
 		['videoDuration',['any','long','medium','short']],
 		['videoType',['any','episode','movie']]
-	],
-	SubsMore = /more-href="([^"]+)/;
+	];
 	return {
 		ID : 'YouTube',
 		Alias : 'Y',
@@ -195,23 +194,19 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Judge : O.TL,
 			View : O.More(function()
 			{
-				return O.Req(YouTubeSubscription).Map(function(B)
-				{
-					return [[0,WC.HED(WW.MF(SubsMore,B))],B]
-				})
+				return O.Req(YouTubeSubscription)
 			},function(I,Page)
 			{
-				return O.Req(O.SolU(I[Page],YouTube)).Map(function(B,R)
+				return O.Req(O.SolU(I[Page],YouTube)).Map(function(B)
 				{
-					R = WC.JTO(B)
-					R.content_html || O.BadR(B)
-					B = WC.HED(WW.MF(SubsMore,R.load_more_widget_html))
-					B && (I[-~Page] = B)
-					return R.content_html
+					B = WC.JTO(B)
+					B.content_html || O.BadR(B)
+					return B.load_more_widget_html + B.content_html
 				})
 			},function(B)
 			{
-				return {
+				return [WC.HED(WW.MF(/more-href="([^"]+)/,B)),
+				{
 					Item : WW.MR(function(D,V,I)
 					{
 						D.push(
@@ -227,7 +222,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						})
 						return D
 					},[],/shelf-grid[^]+?menu-container/g,B)
-				}
+				}]
 			})
 		},{
 			Name : 'Video',

@@ -472,10 +472,10 @@
 			SiteNoti(false)
 		)
 	},
-	SiteSolveName = function(Q)
+	SiteSolveName = function(Q,S)
 	{
-		Q = WW.IsObj(Q) ? Q : SiteMap[Q]
-		return Q ? Q.Name || Q.ID : SA('GenUnknown',[Q])
+		S = WW.IsObj(Q) ? Q : SiteMap[Q]
+		return S ? S.Name || S.ID : SA('GenUnknown',[Q])
 	},
 
 	TaskBriefRetry = function(H)
@@ -1452,11 +1452,11 @@
 									.M(WW.Now() - B)
 									.D(V.Desc || '')
 								Keyword.Hint(undefined,KeywordHint.R)
-									.Drop(WR.Map(function(V)
+									.Drop(WR.Map(function(B)
 									{
-										return WW.IsArr(V) ?
-											[S[3] + V[0],V[1],0] :
-											[S[3] + V,V,0]
+										return WW.IsArr(B) ?
+											[(V.Jump ? '' : S[3]) + B[0],B[1],0] :
+											[S[3] + B,B,0]
 									},V.Item),false)
 							}
 						},function(E)
@@ -1751,7 +1751,7 @@
 						O : ID,
 						S : Site.ID,
 						I : Q.ID,
-						T : Q.Title,
+						T : Q.Title || '',
 						U : Q.UP
 					})
 					BrowserUpdate([ID])
@@ -2966,7 +2966,7 @@
 				LangTo(Q.Lang)
 			}
 			WR.Has(Top.LangS,Lang) && SetC.Lang(Top.LangS)
-			WR.Del('Lang',Top)
+			Top.Lang = null
 			WR.Del('LangS',Top)
 			ShortCut.On(ShortCutGeneralProxy,function(V)
 			{
@@ -3061,6 +3061,14 @@
 				{
 					WebSocketSendAuth([ActionAuthCookie,V.ID,Q])
 				},
+				CokeC : function(Q)
+				{
+					Q = WX.CacheL(Q)
+					return function()
+					{
+						return Q(CookieMap[V.Cookie] || '')
+					}
+				},
 				Bad : function(Q,S)
 				{
 					WW.Throw(null == S ?
@@ -3120,37 +3128,26 @@
 				},
 				More : function(Q,S,M)
 				{
-					var
-					Cache,Count,Len,
-					Finalize = function(V,P)
-					{
-						if (!WR.Has('Len',V)) V.Len = Len
-						if (!WR.Has('Max',V)) V.Max = Cache.length
-						P = WR.Sum(Count.slice(0,P))
-						WR.Each(function(B)
-						{
-							if (!WR.Has('Index',B)) B.Index = P++
-						},V.Item)
-					};
-					M = M || WR.Id
+					var Cache,Count,Len;
 					return function(ID,Page)
 					{
-						return Cache && Page ?
-							S(Cache,Page,ID).Map(function(V)
+						return (Cache && Page ?
+							S(Cache,Page,ID) :
+							Q(ID,Cache = [],Count = [],Len = 0))
+							.Map(function(R)
 							{
-								V = M(V,Cache,Page)
-								Len += V.Item.length - (0 | Count[Page])
-								Count[Page] = V.Item.length
-								Finalize(V,Page)
-								return V
-							}) :
-							Q(ID).Map(function(V)
-							{
-								Cache = V[0]
-								V = M(V[1],Cache,Page)
-								Count = [Len = V.Item.length]
-								Finalize(V,Page)
-								return V
+								R = M(R,Cache,Page)
+								if (R[0]) Cache[-~Page] = R[0]
+								R = R[1]
+								Len -= (Count[Page] || 0) - (Count[Page] = R.Item.length)
+								if (null == R.Len) R.Len = Len
+								if (null == R.Max) R.Max = Cache.length
+								Page = WR.Sum(Count.slice(0,Page))
+								WR.Each(function(V)
+								{
+									if (null == V.Index) V.Index = Page++
+								},R.Item)
+								return R
 							})
 					}
 				},
@@ -3189,6 +3186,7 @@
 			'BiliBili',
 			'YouTube',
 			'NicoNico',
+			'Instagram',
 			'Twitter',
 			'WeiBo'
 		]).length

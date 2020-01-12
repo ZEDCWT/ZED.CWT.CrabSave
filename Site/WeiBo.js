@@ -18,7 +18,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		return WR.MapU(function(V,F){return V = NumberZip.S(V),F ? WR.PadS0(4,V) : V},
 			WR.SplitAll(7,WR.PadS0(7 * Math.ceil(Q.length / 7),Q))).join('')
 	},
-	TryLogin = WX.CacheL(function()
+	TryLogin = O.CokeC(function()
 	{
 		return O.Req({url : SinaLogin,followRedirect : false},true).Map(function(B,T)
 		{
@@ -39,7 +39,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		return O.Req(Q).FMap(function(B)
 		{
 			return /'islogin'][ =]*'0'|login\.php/.test(B) && WC.CokeP(O.Coke()).ALC ?
-				TryLogin(O.Coke()).FMap(function(Y)
+				TryLogin().FMap(function(Y)
 				{
 					return Y ?
 						O.Req(Q) :
@@ -116,13 +116,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		return WR.Where(function(V){return !V.AD},
 			WR.Map(SolveCard,B.match(/feed_list_item"[^]+?WB_feed_handle/g)))
 	},
-	SolveSelfUID = WR.Pipe(O.Coke,WX.CacheL(function()
+	SolveSelfUID = O.CokeC(function()
 	{
 		return Req(WeiBo).Map(function(B)
 		{
 			return WW.MF(/'uid']='(\d+)/,B)
 		})
-	})),
+	}),
 	SolveFollowPageID = WX.CacheL(function(UID)
 	{
 		return Req(WeiBoFollow(UID)).Map(SolvePageID)
@@ -274,19 +274,17 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			{
 				return Req(WeiBo).Map(function(B)
 				{
-					B = WC.JTO(WW.MU(/{"ns":"pl.content.homefeed.*}/,B)).html
-					return [[0],B]
+					return WC.JTO(WW.MU(/{"ns":"pl.content.homefeed.*}/,B)).html
 				})
 			},function(I,Page)
 			{
 				return Req(WeiBoHome(I[Page])).Map(Common)
-			},function(B,I,Page,T)
+			},function(B)
 			{
-				T = WW.MF(/lazyload" action-data="([^"]+)/,B)
-				T && (I[-~Page] = T)
-				return {
+				return [WW.MF(/lazyload" action-data="([^"]+)/,B),
+				{
 					Item : SolveCardList(B)
-				}
+				}]
 			})
 		},{
 			Name : 'Following',

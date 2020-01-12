@@ -197,57 +197,47 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Judge : O.TL,
 			View : O.More(function()
 			{
-				return O.Req(NicoRepo('')).Map(function(B,R)
-				{
-					R = function(B)
-					{
-						B = WC.JTO(B)
-						'ok' === B.status || O.Bad(B.meta.status,B.status)
-						return [B.meta.minId,
-						{
-							Item : WR.Reduce(function(D,V)
-							{
-								switch (V.topic)
-								{
-									case 'nicovideo.user.video.upload' :
-										D.push(
-										{
-											ID : SolveSM(V.video.id),
-											Img : V.video.thumbnailUrl.normal,
-											Title : V.video.title,
-											UP : V.senderNiconicoUser.nickname,
-											UPURL : NicoUser(V.senderNiconicoUser.id),
-											Date : new Date(V.createdAt)
-										})
-										break
-									case 'nicovideo.user.mylist.add.video' :
-										D.push(
-										{
-											Non : true,
-											ID : 'MyList ' + V.mylist.id,
-											URL : NicoMyList(V.mylist.id),
-											Img : WR.Last(WR.Val(V.senderNiconicoUser.icons.tags.defaultValue.urls)),
-											Title : V.mylist.name,
-											UP : V.senderNiconicoUser.nickname,
-											UPURL : NicoUser(V.senderNiconicoUser.id),
-											Date : new Date(V.createdAt)
-										})
-										break
-								}
-							},[],B.data)
-						}]
-					}
-					B = R(B)
-					return [[R,B[0]],B[1]]
-				})
+				return O.Req(NicoRepo(''))
 			},function(I,Page)
 			{
-				return O.Req(NicoRepo(I[Page])).Map(function(B)
+				return O.Req(NicoRepo(I[Page]))
+			},function(B)
+			{
+				B = WC.JTO(B)
+				'ok' === B.status || O.Bad(B.meta.status,B.status)
+				return [B.meta.minId,
 				{
-					B = I[0](B)
-					I[-~Page] = B[0]
-					return B[1]
-				})
+					Item : WR.Reduce(function(D,V)
+					{
+						switch (V.topic)
+						{
+							case 'nicovideo.user.video.upload' :
+								D.push(
+								{
+									ID : SolveSM(V.video.id),
+									Img : V.video.thumbnailUrl.normal,
+									Title : V.video.title,
+									UP : V.senderNiconicoUser.nickname,
+									UPURL : NicoUser(V.senderNiconicoUser.id),
+									Date : new Date(V.createdAt)
+								})
+								break
+							case 'nicovideo.user.mylist.add.video' :
+								D.push(
+								{
+									Non : true,
+									ID : 'MyList ' + V.mylist.id,
+									URL : NicoMyList(V.mylist.id),
+									Img : WR.Last(WR.Val(V.senderNiconicoUser.icons.tags.defaultValue.urls)),
+									Title : V.mylist.name,
+									UP : V.senderNiconicoUser.nickname,
+									UPURL : NicoUser(V.senderNiconicoUser.id),
+									Date : new Date(V.createdAt)
+								})
+								break
+						}
+					},[],B.data)
+				}]
 			})
 		}],
 		IDView : WR.Add('sm'),

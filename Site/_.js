@@ -18,8 +18,9 @@ module.exports = Option =>
 			Req : Q => Option.Req(Q),
 			Coke : Q => Option.Coke(Option.Req(Q),V),
 			CokeRaw : () => Option.CokeRaw(V),
-			Best : (S,Q) => WR.Reduce(WR.MaxBy(V => +V[S]),{[S] : -Infinity},Q),
-			Bad : Q => ['ErrBadRes',WW.IsStr(Q) ? Q : WC.OTJ(Q)]
+			Best : (S,Q) => WR.Reduce(WR.MaxBy(V => WW.IsArr(S) ? +WR.Path(S,V) : +V[S]),
+				{[S] : -Infinity},Q),
+			Bad : Q => WW.Throw(['ErrBadRes',WW.IsStr(Q) ? Q : WC.OTJ(Q)])
 		})
 		All.push(S)
 		Map[S.ID = V] = S
@@ -27,6 +28,7 @@ module.exports = Option =>
 		'BiliBili',
 		'YouTube',
 		'NicoNico',
+		'Instagram',
 		'Twitter',
 		'WeiBo',
 	])

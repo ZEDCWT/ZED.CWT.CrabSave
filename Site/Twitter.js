@@ -45,39 +45,30 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	},
 	MakeTimeline = function(H)
 	{
-		return O.More(function(ID)
+		return O.More(function(ID,I)
 		{
 			return H(ID).FMap(function(URL)
 			{
-				return O.Req(MakeHead(URL)).Map(function(B,T)
-				{
-					B = Common(B)
-					T = SolveCursor(B)
-					return [T ? [URL,T] : [URL],B]
-				})
+				return O.Req(MakeHead(I[0] = URL))
 			})
 		},function(I,Page)
 		{
-			return O.Req(MakeHead(I[0] + '&cursor=' + WC.UE(I[Page]))).Map(function(B)
-			{
-				B = Common(B)
-				WR.Key(B.globalObjects.tweets).length && (I[-~Page] = SolveCursor(B))
-				return B
-			})
-		},function(Q)
+			return O.Req(MakeHead(I[0] + '&cursor=' + WC.UE(I[Page])))
+		},function(B)
 		{
-			Q = Q.globalObjects
-			return {
+			B = Common(B)
+			return [WR.Key(B.globalObjects.tweets).length && SolveCursor(B),
+			{
 				Item : WR.Map(function(V)
 				{
-					return SolveTweet(V[0],V[1],Q.users)
-				},WR.Ent(Q.tweets).sort(function(Q,S)
+					return SolveTweet(V[0],V[1],B.globalObjects.users)
+				},WR.Ent(B.globalObjects.tweets).sort(function(Q,S)
 				{
 					Q = WR.PadS0(32,Q[0])
 					S = WR.PadS0(32,S[0])
 					return Q < S || S < Q && -1
 				}))
-			}
+			}]
 		})
 	},
 	SolveCursor = function(Q)
@@ -174,28 +165,21 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		},{
 			Name : 'Following',
 			Judge : O.UP,
-			View : O.More(function()
+			View : O.More(function(_,I)
 			{
 				return O.Req(MakeHead(TwitterAPIJSON(TwitterAPITypeGuide))).FMap(function(U)
 				{
-					U = WW.MU(/\d+/,Common(U).timeline.id)
-					return O.Req(MakeHead(TwitterAPIFollowing(U,-1))).Map(function(B)
-					{
-						B = Common(B)
-						return [[U,B.next_cursor_str],B]
-					})
+					I[0] = WW.MU(/\d+/,Common(U).timeline.id)
+					return O.Req(MakeHead(TwitterAPIFollowing(I[0],-1)))
 				})
 			},function(I,Page)
 			{
-				return O.Req(MakeHead(TwitterAPIFollowing(I[0],I[Page]))).Map(function(B)
-				{
-					B = Common(B)
-					B.users.length && (I[-~Page] = B.next_cursor_str)
-					return B
-				})
-			},function(Q)
+				return O.Req(MakeHead(TwitterAPIFollowing(I[0],I[Page])))
+			},function(B)
 			{
-				return {
+				B = Common(B)
+				return [B.users.length && B.next_cursor_str,
+				{
 					Item : WR.Map(function(V)
 					{
 						return {
@@ -207,8 +191,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 							Title : V.name,
 							Desc : (V.location ? '[[' + V.location + ']]\n\n' : '') + V.description
 						}
-					},Q.users)
-				}
+					},B.users)
+				}]
 			})
 		}],
 		IDURL : TwitterTweet

@@ -109,7 +109,7 @@ module.exports = Option =>
 							},U.Part)
 							R =
 							{
-								Title : U.Title,
+								Title : U.Title || '',
 								UP : U.Up,
 								UPAt : WR.Default(WW.Now(),U.Date),
 								Size,

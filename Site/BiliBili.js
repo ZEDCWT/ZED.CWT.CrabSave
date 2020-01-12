@@ -421,27 +421,20 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Judge : O.TL,
 			View : O.More(function()
 			{
-				return O.Req(BiliBiliVCApiDynamicNew).Map(function(B)
-				{
-					B = Common(B).cards
-					return [[0,WR.Last(B).desc.dynamic_id_str],B]
-				})
+				return O.Req(BiliBiliVCApiDynamicNew)
 			},function(I,Page)
 			{
-				return O.Req(BiliBiliVCApiDynamicHistory(I[Page])).Map(function(B)
-				{
-					B = Common(B)
-					B.has_more && (I[-~Page] = WR.Last(B.cards).desc.dynamic_id_str)
-					return B.cards
-				})
-			},function(Q)
+				return O.Req(BiliBiliVCApiDynamicHistory(I[Page]))
+			},function(B)
 			{
-				return {
+				B = Common(B).cards
+				return [B.length && WR.Last(B).desc.dynamic_id_str,
+				{
 					Item : WR.Map(function(V)
 					{
 						return SolveAV(WC.JTO(V.card))
-					},Q)
-				}
+					},B)
+				}]
 			})
 		},{
 			Name : 'Episode',

@@ -618,9 +618,9 @@ var Lang = // eslint-disable-line
 		Err : 'エラー',
 		ErrOff : 'オフライン時には実行できません',
 		ErrNoAuth : '認証しないと実行することはできません',
-		ErrBadRes : '応答を理解できない ~0~',
+		ErrBadRes : '応答を理解できません ~0~',
 
-		ErrBadReq : 'リクエストを理解できない',
+		ErrBadReq : 'リクエストを理解できません',
 		ErrAuthFail : '認証に失敗しました',
 		ErrAuthInc : '元のTokenが正しくありません',
 		ErrAuthSave : '新しいTokenを保存できませんでした ~0~',

@@ -97,7 +97,7 @@ module.exports = Option =>
 					Birth integer,
 					Site text not null,
 					ID text not null,
-					Title text not null,
+					Title text,
 					UP text,
 					UPAt integer,
 					File integer,

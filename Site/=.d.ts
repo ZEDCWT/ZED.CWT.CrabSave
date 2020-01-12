@@ -50,6 +50,7 @@ declare module CrabSaveNS
 	{
 		Item : WishNS.EleValView<string>[]
 		Desc? : string
+		Jump? : boolean
 	}
 
 	interface SiteO
@@ -62,7 +63,7 @@ declare module CrabSaveNS
 			Req(Q : string | WishNS.RequestOption) : WishNS.RequestOption
 			Coke(Q : string | WishNS.RequestOption) : WishNS.RequestOption
 			CokeRaw() : string
-			Best<U>(S : string,Q : U[]) : U
+			Best<U>(S : string | string[],Q : U[]) : U
 			Bad(Q : any) : never
 		}) : {
 			URL(ID : string) : WishNS.Provider<SiteURL>
