@@ -60,7 +60,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				V.stein_guide_cid &&
 					O.Ah('Stein ' + V.stein_guide_cid + ' (' + V.videos + ')',
 						BiliBiliVideo(V.aid) + '#Stein'),
-				V.redirect_url && O.Ah(E = WW.MU(/ep\d+/,V.redirect_url),BiliBiliBgmEP(E = E.slice(2)))
+				(E = V.redirect_url) && O.Ah(E = WW.MU(/ep\d+/,V.redirect_url),BiliBiliBgmEP(E = E.slice(2)))
 			],
 			EP : E
 		}
