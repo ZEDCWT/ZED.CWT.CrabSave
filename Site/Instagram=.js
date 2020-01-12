@@ -23,27 +23,33 @@ module.exports = O =>
 		URL : ID => InstagramQuery(InstagramHashPost,{shortcode : ID}).FMap(B =>
 		{
 			B = B.shortcode_media
-			B.is_video || O.Bad('Not a video')
-			return (B.dash_info && B.dash_info.is_dash_eligible ?
-				XMLParse(B.dash_info.video_dash_manifest).Map(V =>
-				{
-					var URL = [],Ext = [];
-					WR.EachU((B,F) =>
+			return WX.From([B].concat(WR.Pluck('node',WR.Path(['edge_sidecar_to_children','edges'],B))))
+				.FMapO(1,V => V.is_video ?
+					V.dash_info && V.dash_info.is_dash_eligible ?
+						XMLParse(V.dash_info.video_dash_manifest).Map(V =>
+						{
+							var URL = [],Ext = [];
+							WR.EachU((B,F) =>
+							{
+								B = B.Representation.sort((Q,S) => S.$.bandwidth - Q.$.bandwidth)[0]
+								URL.push(B.BaseURL[0])
+								Ext.push('.' + B.$.mimeType.replace(/.*\//,'') + (F ? '.mp3' : ''))
+							},V.MPD.Period[0].AdaptationSet)
+							return {URL,Ext}
+						}) :
+						WX.Just({URL : [V.video_url],Ext : '.mp4'}) :
+					WX.Empty)
+				.Reduce((D,V) => D.push(V) && D,[])
+				.Map(Part =>
+				(
+					Part.length || O.Bad('Contains no videos'),
 					{
-						B = B.Representation.sort((Q,S) => S.$.bandwidth - Q.$.bandwidth)[0]
-						URL.push(B.BaseURL[0])
-						Ext.push('.' + B.$.mimeType.replace(/.*\//,'') + (F ? '.mp3' : ''))
-					},V.MPD.Period[0].AdaptationSet)
-					return [URL,Ext]
-				}) :
-				WX.Just([[B.video_url],'.mp4']))
-				.Map(([URL,Ext]) => (
-				{
-					Title : B.title || WR.Path(['edge_media_to_caption','edges',0,'node','text'],B),
-					Up : B.owner.full_name,
-					Date : 1E3 * B.taken_at_timestamp,
-					Part : [{URL,Ext}]
-				}))
+						Title : B.title || WR.Path(['edge_media_to_caption','edges',0,'node','text'],B),
+						Up : B.owner.full_name,
+						Date : 1E3 * B.taken_at_timestamp,
+						Part : Part
+					}
+				))
 		})
 	}
 }

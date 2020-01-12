@@ -34,15 +34,20 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	{
 		return 'shortcode' in V &&
 		{
-			Non : !V.is_video,
+			Non : !V.is_video &&
+				WR.None(WR.Path(['node','is_video']),WR.Path(['edge_sidecar_to_children','edges'],V) || []),
 			ID : V.shortcode,
 			Title : (V.title || WR.Path(['edge_media_to_caption','edges',0,'node','text'],V) || '').slice(0,216),
 			Img : V.display_url,
-			UP : V.owner.full_name || V.owner.username,
-			UPURL : Instagram + V.owner.username,
+			UP : V.owner && (V.owner.full_name || V.owner.username),
+			UPURL : V.owner && Instagram + V.owner.username,
 			Date : 1E3 * V.taken_at_timestamp,
 			Len : V.video_duration && WW.StrMS(1E3 * V.video_duration),
-			More : WR.Path(['location','name'],V)
+			More :
+			[
+				V.edge_sidecar_to_children && 'Sidecar [' + V.edge_sidecar_to_children.edges.length + ']',
+				WR.Path(['location','name'],V)
+			]
 		}
 	},
 	SolveMore = function(H,V)
@@ -204,10 +209,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			Judge : [/^[\w-]+$/,/\/P\/(\w+)/i,O.Word('Post')],
 			View : function(ID)
 			{
-				return InstagramQuery(InstagramHashPost,{shortcode : ID}).Map(function(B)
+				return InstagramQuery(InstagramHashPost,{shortcode : ID}).Map(function(B,R)
 				{
+					B = B.shortcode_media
+					R = [SolvePost(B)]
+					B.edge_sidecar_to_children && WR.Each(function(V)
+					{
+						R.push(SolvePost(V.node))
+					},B.edge_sidecar_to_children.edges)
 					return {
-						Item : [SolvePost(B.shortcode_media)]
+						Item : R
 					}
 				})
 			}
