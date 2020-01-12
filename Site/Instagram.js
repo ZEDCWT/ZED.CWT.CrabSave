@@ -32,7 +32,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	}),
 	SolvePost = function(V)
 	{
-		return {
+		return 'shortcode' in V &&
+		{
 			Non : !V.is_video,
 			ID : V.shortcode,
 			Title : (V.title || WR.Path(['edge_media_to_caption','edges',0,'node','text'],V) || '').slice(0,216),
@@ -49,7 +50,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		return [V.page_info.has_next_page && V.page_info.end_cursor,
 		{
 			Len : V.count,
-			Item : WR.Map(function(B){return H(B.node)},V.edges)
+			Item : WR.Where(WR.Id,WR.Map(function(B){return H(B.node)},V.edges))
 		}]
 	},
 	SolveSelfID = O.CokeC(function()
@@ -170,7 +171,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			}
 		},{
 			Name : 'User',
-			Judge : [/com\/(?!(P|Explore)\/)(\w+)/i,O.Word('User')],
+			Judge : [/com\/(?!(?:P|Explore)\/)(\w+)/i,O.Word('User')],
 			View : O.More(function(ID,I)
 			{
 				return SolveUserID(ID).FMap(function(ID)
