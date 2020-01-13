@@ -45,7 +45,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			Len : V.video_duration && WW.StrMS(1E3 * V.video_duration),
 			More :
 			[
-				V.edge_sidecar_to_children && 'Sidecar [' + V.edge_sidecar_to_children.edges.length + ']',
+				V.edge_sidecar_to_children && 'Sidecar [' + V.edge_sidecar_to_children.edges.length + ']\n',
 				WR.Path(['location','name'],V)
 			]
 		}
@@ -176,7 +176,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			}
 		},{
 			Name : 'User',
-			Judge : [/com\/(?!(?:P|Explore)\/)(\w+)/i,O.Word('User')],
+			Judge : [/com\/(?!(?:P|Explore)\/)([\w-]+)/i,O.Word('User')],
 			View : O.More(function(ID,I)
 			{
 				return SolveUserID(ID).FMap(function(ID)
@@ -193,7 +193,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			})
 		},{
 			Name : 'Tag',
-			Judge : [/Explore\/Tags\/(\w+)/i,O.Word('Tag')],
+			Judge : [/Explore\/Tags\/([\w-]+)/i,O.Word('Tag')],
 			View : O.More(function(ID)
 			{
 				return InstagramQuery(InstagramHashTag,{tag_name : ID,first : O.Size})
@@ -206,7 +206,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			})
 		},{
 			Name : 'Post',
-			Judge : [/^[\w-]+$/,/\/P\/(\w+)/i,O.Word('Post')],
+			Judge : [/^[\w-]+$/,/\/P\/([\w-]+)/i,O.Word('Post')],
 			View : function(ID)
 			{
 				return InstagramQuery(InstagramHashPost,{shortcode : ID}).Map(function(B,R)
