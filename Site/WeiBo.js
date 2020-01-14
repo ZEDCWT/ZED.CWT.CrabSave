@@ -235,7 +235,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				ID = ID.join('/')
 				return Req(WeiBo + ID).Map(function(B)
 				{
-					B = WC.JTO(WW.MU(/{"ns":"pl.content.*}/,B)).html
+					B = WC.JTO(WW.MU(/{"ns":"pl.content.weiboDetail.*}/,B)).html
 					return {
 						Item : [SolveCard(B)]
 					}

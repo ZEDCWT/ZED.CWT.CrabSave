@@ -12,7 +12,7 @@ module.exports = O =>
 		URL : ID => WN.ReqB(O.Coke(WeiBo + ID)).Map(B =>
 		{
 			var T;
-			B = WC.JTO(WW.MU(/{"ns":"pl.content.*}/,B)).html
+			B = WC.JTO(WW.MU(/{"ns":"pl.content.weiboDetail.*}/,B)).html
 			B || O.Bad('Unable to resolve infomation')
 			B = B.replace(/"WB_feed_expand">[^]+/,'')
 			if (T = WW.MF(/WB_video_mini.*sources="([^"]+)/,B))
