@@ -23,7 +23,7 @@ module.exports = O =>
 		URL : ID => InstagramQuery(InstagramHashPost,{shortcode : ID}).FMap(B =>
 		{
 			B = B.shortcode_media
-			return WX.From([B].concat(WR.Pluck('node',WR.Path(['edge_sidecar_to_children','edges'],B))))
+			return WX.From([B].concat(WR.Pluck('node',WR.Path(['edge_sidecar_to_children','edges'],B) || [])))
 				.FMapO(1,V => V.is_video ?
 					V.dash_info && V.dash_info.is_dash_eligible ?
 						XMLParse(V.dash_info.video_dash_manifest).Map(V =>
