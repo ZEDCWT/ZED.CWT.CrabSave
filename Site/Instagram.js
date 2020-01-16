@@ -193,13 +193,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			})
 		},{
 			Name : 'Tag',
-			Judge : [/Explore\/Tags\/([\w-]+)/i,O.Word('Tag')],
-			View : O.More(function(ID)
+			Judge : [/Explore\/Tags\/([^?/]+)/i,O.Word('Tag')],
+			View : O.More(function(ID,I)
 			{
-				return InstagramQuery(InstagramHashTag,{tag_name : ID,first : O.Size})
-			},function(I,Page,ID)
+				I[0] = /(%[\dA-F]{2}){3}/i.test(ID) ? WC.UD(ID) : ID
+				return InstagramQuery(InstagramHashTag,{tag_name : I[0],first : O.Size})
+			},function(I,Page)
 			{
-				return InstagramQuery(InstagramHashTag,{tag_name : ID,first : O.Size,after : I[Page]})
+				return InstagramQuery(InstagramHashTag,{tag_name : I[0],first : O.Size,after : I[Page]})
 			},function(B)
 			{
 				return SolveMore(SolvePost,B.hashtag.edge_hashtag_to_media)
