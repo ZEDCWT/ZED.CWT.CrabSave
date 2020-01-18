@@ -17,6 +17,7 @@ declare module CrabSaveNS
 	{
 		Name : string
 		Judge? : RegExp | RegExp[]
+		Join? : string
 		View(ID : string,Page : number,Pref? : object) : WishNS.Provider<SitePage>
 		Hint?(Q : string) : SiteHint
 	}
@@ -65,6 +66,7 @@ declare module CrabSaveNS
 			CokeRaw() : string
 			Best<U>(S : string | string[],Q : U[]) : U
 			Bad(Q : any) : never
+			Text(Q : string) : string
 		}) : {
 			URL(ID : string) : WishNS.Provider<SiteURL>
 			Pack?(Q : string) : string | WishNS.RequestOption

@@ -67,7 +67,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	});
 	return {
 		ID : 'Instagram',
-		Alias : 'Ins Inst',
+		Alias : 'Ins Inst Insta',
 		Judge : /\bInstagram\b/i,
 		Min : 'sessionid',
 		Sign : function()

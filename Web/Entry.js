@@ -1007,7 +1007,7 @@
 	DebugCurrent = [],
 	DebugLog = function(Q,S)
 	{
-		Q = '{' + WW.StrDate() + ' #' + DebugCount++ + '} ' + WR.Map(function(V)
+		Q = '{' + WW.StrDate() + ' | ' + WW.Tick() + ' #' + DebugCount++ + '} ' + WR.Map(function(V)
 		{
 			V = null == V ?
 				'' :
@@ -1200,7 +1200,9 @@
 					return WR.Any(function(B)
 					{
 						B = B.exec(T)
-						ID = B && (2 in B ? B.slice(1).join('#') : B[1 in B ? 1 : 0])
+						ID = B && (2 in B ?
+							B.slice(1).join(WR.Default('#',V.Join)) :
+							B[1 in B ? 1 : 0])
 						return B
 					},V.Judge)
 				},Site.Map)
@@ -3158,6 +3160,15 @@
 				{
 					return WV.X(WV.Ah(Q,S))
 				},
+				Text : function(Q,S)
+				{
+					Q = WC.HED(Q
+						.replace(/<br(\s[^>]+)?>/g,'\n')
+						.replace(/<.*?>/g,''))
+					return S ?
+						Q.replace(/.+/g,WR.Trim) :
+						WR.Trim(Q)
+				},
 				Progress : BrowserOnProgress
 			},WW,WC,WR,WX,WV);
 			if (!WW.IsNum(SiteMap[V.ID])) return
@@ -3186,6 +3197,7 @@
 			'BiliBili',
 			'YouTube',
 			'NicoNico',
+			'Facebook',
 			'Instagram',
 			'Twitter',
 			'WeiBo'

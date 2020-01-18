@@ -146,7 +146,7 @@ var Lang = // eslint-disable-line
 		Err : 'Error',
 		ErrOff : 'Unable to perform when offline',
 		ErrNoAuth : 'Unable to perform without authorization',
-		ErrBadRes : 'Bad response ~0~',
+		ErrBadRes : 'Bad response | ~0~',
 
 		ErrBadReq : 'Bad request',
 		ErrAuthFail : 'Authorization Failed',
@@ -304,7 +304,7 @@ var Lang = // eslint-disable-line
 		Err : '發生錯誤',
 		ErrOff : '連接斷開時無法操作',
 		ErrNoAuth : '未驗證時無法操作',
-		ErrBadRes : '無效的響應 ~0~',
+		ErrBadRes : '無效的響應 | ~0~',
 
 		ErrBadReq : '無效的請求',
 		ErrAuthFail : '驗證失敗',
@@ -461,7 +461,7 @@ var Lang = // eslint-disable-line
 		Err : '发生异常',
 		ErrOff : '连接断开时无法操作',
 		ErrNoAuth : '未验证时无法操作',
-		ErrBadRes : '无效的响应 ~0~',
+		ErrBadRes : '无效的响应 | ~0~',
 
 		ErrBadReq : '无效的请求',
 		ErrAuthFail : '验证失败',
@@ -562,7 +562,7 @@ var Lang = // eslint-disable-line
 		AutCoke : 'Cookie',
 		AutCokeSave : 'Cookieを保存する',
 		AutCheck : 'ログインしているかどうかを確認中',
-		AutSigned : 'ログインしている',
+		AutSigned : 'ログインしています',
 		AutNoSign : 'ログインしていません',
 
 		Sot : 'ショートカット',
@@ -618,7 +618,7 @@ var Lang = // eslint-disable-line
 		Err : 'エラー',
 		ErrOff : 'オフライン時には実行できません',
 		ErrNoAuth : '認証しないと実行することはできません',
-		ErrBadRes : '応答を理解できません ~0~',
+		ErrBadRes : '応答を理解できません | ~0~',
 
 		ErrBadReq : 'リクエストを理解できません',
 		ErrAuthFail : '認証に失敗しました',

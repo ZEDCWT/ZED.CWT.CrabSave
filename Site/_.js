@@ -20,7 +20,12 @@ module.exports = Option =>
 			CokeRaw : () => Option.CokeRaw(V),
 			Best : (S,Q) => WR.Reduce(WR.MaxBy(V => WW.IsArr(S) ? +WR.Path(S,V) : +V[S]),
 				{[S] : -Infinity},Q),
-			Bad : Q => WW.Throw(['ErrBadRes',WW.IsStr(Q) ? Q : WC.OTJ(Q)])
+			Bad : Q => WW.Throw(['ErrBadRes',WW.IsStr(Q) ? Q : WC.OTJ(Q)]),
+			Text : Q => WC.HED(Q
+				.replace(/<br\b[^>]*>/g,'\n')
+				.replace(/<.*?>/g,''))
+				.replace(/.+/g,WR.Trim)
+				.replace(/\r?\n/g,' '),
 		})
 		All.push(S)
 		Map[S.ID = V] = S
@@ -28,6 +33,7 @@ module.exports = Option =>
 		'BiliBili',
 		'YouTube',
 		'NicoNico',
+		'Facebook',
 		'Instagram',
 		'Twitter',
 		'WeiBo',

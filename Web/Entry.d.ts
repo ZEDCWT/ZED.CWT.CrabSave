@@ -42,6 +42,7 @@ declare module CrabSaveNS
 		DTS(Q : string | number) : string
 		High(Q : string) : WishNS.EleContent
 		Ah(Title : string,URL : string) : WishNS.Ele
+		Text(Q : string,Trim? : boolean) : string
 		Progress(Q : string) : any
 	}
 

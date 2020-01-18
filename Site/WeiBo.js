@@ -56,17 +56,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	},
 	SolveID = function(B){return WW.MF(/href="\/(\d+\/\w+).*?date="/,B)},
 	SolvePageID = function(B){return WW.MF(/page_id']='(\d+)/,B)},
-	SolveHTML = function(B)
-	{
-		return WR.Trim(WC.HED(B
-			.replace(/<br>/g,'\n')
-			.replace(/<.*?>/g,'')))
-	},
 	SolveCard = function(B)
 	{
 		var
 		Non = true,
-		Title = SolveHTML(WW.MU(/<[^>]+WB_text[^]+?<\/div>/,B)
+		Title = O.Text(WW.MU(/<[^>]+WB_text[^]+?<\/div>/,B)
 			.replace(/<a[^>]+ignore=.*?<\/a>/g,'')),
 		More,
 		Img,T;
@@ -158,7 +152,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 						{
 							var
 							Non = true,
-							Title = SolveHTML(WW.MU(/<[^>]+feed_list_content_full".*\s+.*/,V) ||
+							Title = O.Text(WW.MU(/<[^>]+feed_list_content_full".*\s+.*/,V) ||
 								WW.MU(/<[^>]+feed_list_content".*\s+.*/,V)),
 							More,
 							Img,T;
@@ -315,7 +309,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 									Img : WW.MF(/src="([^"]+)/,V),
 									Title : WC.HED(WW.MF(/title="([^"]+)/,V)),
 									More : WR.Trim(WR.Trim(WW.MF(/"text[^>]+>([^<]+)/,V)) + '\n' +
-										SolveHTML(WW.MF(/info_from[^>]+>([^]+?)<\/div/,V)))
+										O.Text(WW.MF(/info_from[^>]+>([^]+?)<\/div/,V)))
 								})
 								return D
 							},[],/member_li[^]+?<\/li/g,B)
