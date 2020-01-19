@@ -251,6 +251,10 @@
 	TokenStepA = function(Q){return WC.HSHA512(Q,'j!ui+Ju8?j')},
 	TokenStepB = function(Q){return WC.HSHA512('!(|[.:O9;~',Q)},
 	Cipher,Decipher,
+	WebSocketTick = WW.To(3E5,function()
+	{
+		WebSocketSend([ActionWebTick])
+	},true).F(),
 	MakeWebSocket = function()
 	{
 		var
@@ -401,6 +405,7 @@
 			}
 			WSOnOnline.D()
 			WebSocketNotConnectedNoti(false)
+			WebSocketTick.D()
 		}
 		Client.onclose = function()
 		{
@@ -413,6 +418,7 @@
 				MakeWebSocket(Online = false) :
 				WW.To(Retry,MakeWebSocket)
 			WSOnOffline.D()
+			WebSocketTick.F()
 		}
 		WebSocketSince = WebSocketRetry ? WebSocketSince : WW.Now()
 		First || WebSocketNoti([SA('SocConn'),WebSocketRetry ? ' ' + SA('SocRetry') + ' : ' + WebSocketRetry : ''])
@@ -698,7 +704,7 @@
 			Title = WV.Rock(),
 			SiteID = WV.X(
 			[
-				SiteSolveName(Site),' ',
+				SiteSolveName(Q.S),' ',
 				Site && Site.IDView ?
 					Site.IDView(Q.I) :
 					Q.I
