@@ -4,6 +4,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 	var
 	Facebook = 'https://www.facebook.com/',
 	FacebookPage = WW.Tmpl(Facebook,'pages_reaction_units/more/?__a=1&fb_dtsg_ag=',undefined,'&page_id=',undefined,'&surface=www_pages_posts&cursor=%7B%22timeline_cursor%22%3A%22',undefined,'%22%2C%22timeline_section_cursor%22%3A%7B%7D%2C%22has_next_page%22%3Atrue%7D&unit_count=',O.Size),
+	FacebookProfileTimeline = WW.Tmpl(Facebook,'ajax/pagelet/generic.php/ProfileTimelineJumperStoriesPagelet?__a=1&fb_dtsg_ag=',undefined,'&data=%7B%22profile_id%22%3A%22',undefined,'%22%2C%22start%22%3A%220%22%2C%22end%22%3A%22',undefined,'%22%2C%22cursor%22%3A%22',undefined,'%22%7D'),
 	FacebookTimelineRecent = Facebook + '?sk=h_chr',
 	FacebookPageletRecent = WW.Tmpl(Facebook,'ajax/pagelet/generic.php/LitestandTailLoadPagelet?__a=1&fb_dtsg_ag=',undefined,'&data=',undefined),
 	IDURL = function(Q){return Facebook + Q.replace('/','/posts/')},
@@ -15,7 +16,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 	},
 	SolveAsyncToken = function(B)
 	{
-		return WW.MF(/"async_get_token":"([^"]+)/,B)
+		return WC.UE(WW.MF(/"async_get_token":"([^"]+)/,B))
 	},
 	SolvePost = function(B,Count,R)
 	{
@@ -28,13 +29,20 @@ CrabSave.Site(function(O,WW,WC,WR)
 		for (;Count-- && (T = W.exec(B));)
 		{
 			T = WC.TagM('div',T.index,B)
-			ID = WR.Match(/<a[^>]+href="[^>]*?(\w+)(?:\/[\w.]+)+(\/\d+)[^>]+>(?:<[^>]+data-utime="(\d+)|<abbr[^>]+title="([^"]+))/,T)
+			ID = WR.Match(/<a[^>]+href="[^>]*?(?:(\w+)(?:\/[\w.]+)+(\/\d+)|fbid=(\d+))[^>]+>(?:<[^>]+data-utime="(\d+)|<abbr[^>]+title="([^"]+))/,T)
 			if (!ID.length) continue
+			if (ID[3])
+			{
+				ID[1] = WW.MF(/title=[^>]+href="[^"]+\/(\w+)/,T)
+				ID[2] = '/' + ID[3]
+			}
 			Img = T
 			if (Video = WW.MU(/<video[^]+?<img[^>]+/,T))
 				Img = Video
 			else
-				Img = WW.MU(/"scaledImage[^>]+/,T)
+				Img = ID[3] ?
+					WW.MU(/<img[^>]+data-src=/,T) :
+					WW.MU(/"scaledImage[^>]+/,T)
 			R.push(
 			{
 				Non : !Video,
@@ -43,7 +51,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 				Title : O.Text(WC.TagM('p',0,T),true),
 				UP : WC.HED(WW.MF(/>([^<]+)<\/a><\/span/,T)),
 				UPURL : Facebook + ID[1],
-				Date : ID[3] ? 1E3 * ID[3] : ID[4]
+				Date : ID[4] ? 1E3 * ID[4] : ID[5]
 			})
 		}
 		return R
@@ -70,7 +78,6 @@ CrabSave.Site(function(O,WW,WC,WR)
 				{
 					I[0] = SolveAsyncToken(B)
 					return B
-					return [WW.MF(/data-cursor="([^"=]+)/,B),B]
 				})
 			},function(I,Page)
 			{
@@ -86,15 +93,6 @@ CrabSave.Site(function(O,WW,WC,WR)
 				})))).Map(function(B)
 				{
 					return Common(B).payload
-					var Next;
-					B = Common(B)
-					WR.Each(function(V)
-					{
-						if (V = WR.Path([3,1,'__bbox','result','data','feedback','top_level_comments','page_info'],V))
-							Next = V.has_next_page && V.end_cursor
-						return !Next
-					},B.jsmods.pre_display_requires)
-					return [Next,B.payload]
 				})
 			},function(B)
 			{
@@ -109,7 +107,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 			Join : '',
 			View : function(ID)
 			{
-				return O.Api(IDURL(ID)).Map(function(B)
+				return O.Req(IDURL(ID)).Map(function(B)
 				{
 					return {
 						Item : SolvePost(B,1)
@@ -121,22 +119,36 @@ CrabSave.Site(function(O,WW,WC,WR)
 			Judge : [/com\/(?:pg\/)?(\w+)/,O.Word('User')],
 			View : O.More(function(ID,I)
 			{
-				return O.Api(IDURL(ID)).FMap(function(B)
+				return O.Req(IDURL(ID)).FMap(function(B)
 				{
 					var
 					PageID = WW.MF(/"pageID":"(\d+)/,B),
+					ProfileID = WW.MF(/profile_id:(\d+),vanity/,B),
 					Token = SolveAsyncToken(B);
-					I[0] = [Token,PageID]
-					return O.Api(FacebookPage(Token,PageID,''))
+					I[0] = [Token,PageID,ProfileID]
+					return O.Req(PageID ?
+						FacebookPage(Token,PageID,'') :
+						FacebookProfileTimeline(Token,ProfileID,0 | WW.Now() / 1E3,''))
 				})
 			},function(I,Page)
 			{
-				return O.Api(FacebookPage(I[0][0],I[0][1],I[Page]))
-			},function(B,T)
+				return O.Req(I[0][1] ?
+					FacebookPage(I[0][0],I[0][1],I[Page]) :
+					FacebookProfileTimeline(I[0][0],I[0][2],0 | WW.Now() / 1E3,I[Page]))
+			},function(B,I,T)
 			{
 				B = Common(B)
-				T = B.domops[0][3].__html
-				return [WW.MF(/timeline_cursor.{9}([^%]+)/,T),
+				T = I[0][1] ?
+					B.domops[0][3].__html :
+					B.payload
+				return [I[0][1] ?
+					WW.MF(/timeline_cursor.{9}([^%]+)/,T) :
+					WR.Reduce(function(D,V)
+					{
+						return D || (V = WR.Path([2,2],V)) &&
+							V.profile_id &&
+							V.cursor
+					},'',B.jsmods.instances),
 				{
 					Item : SolvePost(T)
 				}]
