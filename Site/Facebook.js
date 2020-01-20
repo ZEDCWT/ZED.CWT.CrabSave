@@ -6,7 +6,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 	FacebookPage = WW.Tmpl(Facebook,'pages_reaction_units/more/?__a=1&fb_dtsg_ag=',undefined,'&page_id=',undefined,'&surface=www_pages_posts&cursor=%7B%22timeline_cursor%22%3A%22',undefined,'%22%2C%22timeline_section_cursor%22%3A%7B%7D%2C%22has_next_page%22%3Atrue%7D&unit_count=',O.Size),
 	FacebookProfileTimeline = WW.Tmpl(Facebook,'ajax/pagelet/generic.php/ProfileTimelineJumperStoriesPagelet?__a=1&fb_dtsg_ag=',undefined,'&data=%7B%22profile_id%22%3A%22',undefined,'%22%2C%22start%22%3A%220%22%2C%22end%22%3A%22',undefined,'%22%2C%22cursor%22%3A%22',undefined,'%22%7D'),
 	FacebookTimelineRecent = Facebook + '?sk=h_chr',
-	FacebookPageletRecent = WW.Tmpl(Facebook,'ajax/pagelet/generic.php/LitestandTailLoadPagelet?__a=1&fb_dtsg_ag=',undefined,'&data=',undefined),
+	FacebookPageletRecent = WW.Tmpl(Facebook,'ajax/pagelet/generic.php/LitestandTailLoadPagelet?__a=1&fb_dtsg_ag=',undefined,'&data=%7B%22cursor%22%3A%22',undefined,'%22%2C%22pager_config%22%3A%22%7B%5C%22section_type%5C%22%3A1%2C%5C%22most_recent%5C%22%3Atrue%2C%5C%22sequence%5C%22%3Anull%7D%22%7D'),
 	IDURL = function(Q){return Facebook + Q.replace('/','/posts/')},
 	Common = function(B)
 	{
@@ -81,16 +81,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 				})
 			},function(I,Page)
 			{
-				return O.Req(FacebookPageletRecent(I[0],WC.UE(WC.OTJ(
-				{
-					cursor : I[Page],
-					pager_config : WC.OTJ(
-					{
-						"section_type" : 1,
-						"most_recent" : true,
-						"sequence" : null
-					})
-				})))).Map(function(B)
+				return O.Req(FacebookPageletRecent(I[0],I[Page])).Map(function(B)
 				{
 					return Common(B).payload
 				})

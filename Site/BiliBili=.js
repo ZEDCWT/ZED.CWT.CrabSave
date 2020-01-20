@@ -3,12 +3,16 @@ var
 WW = require('@zed.cwt/wish'),
 {R : WR,X : WX,C : WC,N : WN} = WW,
 
+ShortVideoPrefix = 'vc',
+
 BiliBili = 'https://www.bilibili.com/',
 BiliBiliApi = 'https://api.bilibili.com/',
 BiliBiliApiWebView = WW.Tmpl(BiliBiliApi,'x/web-interface/view?aid=',undefined),
 BiliBiliApiPlayURL = WW.Tmpl(BiliBiliApi,'x/player/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=16'),
 BiliBiliApiPlayerSo = WW.Tmpl(BiliBiliApi,'x/player.so?aid=',undefined,'&id=cid:',undefined),
 BiliBiliApiSteinNode = WW.Tmpl(BiliBiliApi,'x/stein/nodeinfo?aid=',undefined,'&graph_version=',undefined,'&node_id=',undefined),
+BiliBiliVCApi = 'https://api.vc.bilibili.com/',
+BiliBiliVCApiDetail = WW.Tmpl(BiliBiliVCApi,'clip/v1/video/detail?video_id=',undefined,'&need_playurl=1'),
 
 Common = V => (V = WC.JTO(V)).code ?
 	WW.Throw(V) :
@@ -33,6 +37,21 @@ module.exports = O =>
 			Q = Q.split('#')
 			ID = Q[0]
 			CID = Q[1]
+
+			if (WR.StartW(ShortVideoPrefix,ID)) return WN.ReqB(O.Coke(BiliBiliVCApiDetail(ID.slice(ShortVideoPrefix.length)))).Map(B =>
+			{
+				B = Common(B)
+				return {
+					Title : B.item.description,
+					Up : B.user.name,
+					Date : +new Date(B.item.upload_time + '+0800'),
+					Part : [
+					{
+						URL : [B.item.video_playurl]
+					}]
+				}
+			})
+
 			return WN.ReqB(O.Coke(BiliBiliApiWebView(ID))).FMap(AV =>
 			{
 				var

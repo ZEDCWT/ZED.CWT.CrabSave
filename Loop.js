@@ -99,7 +99,10 @@ module.exports = Option =>
 										Part : F,
 										File : G,
 										URL : L,
-										Ext : WW.IsArr(P.Ext) ? P.Ext[G] : P.Ext,
+										Ext : WW.IsArr(P.Ext) ? P.Ext[G] :
+											null != P.Ext ? P.Ext :
+											(F = WN.ExtN(L.replace(/\?.*/,''))) && F.length < 7 ? F :
+											'.mp4',
 										Size : P.Size ? P.Size[G] : null
 									})
 									null != Size && P.Size && null != P.Size[G] ?

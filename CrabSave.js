@@ -71,7 +71,10 @@ module.exports = Option =>
 		}
 	},
 
-	ErrorS = E => WW.IsObj(E) && E.stack || E,
+	RegExpDir = RegExp(WR.SafeRX(__dirname.replace(/[\\/][^\\/]*_modules[\\/].*/,'')),'ig'),
+	ErrorS = E => WW.IsObj(E) && E.stack && WW.IsStr(E.stack) ?
+		E.stack.replace(RegExpDir,'{[RootDir]}') :
+		E,
 	RecErrList = [],
 	RecErr = (File,Err) =>
 	{

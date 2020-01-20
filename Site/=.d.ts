@@ -78,7 +78,7 @@ declare module CrabSaveNS
 		Up? : string
 		Date? : number
 		Part : SitePart[]
-		/** Specially used when part cound neq Part.length */
+		/** Specially used when parts count !== Part.length */
 		PartTotal? : number
 	}
 	interface SitePart
@@ -87,7 +87,7 @@ declare module CrabSaveNS
 		Title? : string
 		URL : string[]
 		Size? : number[]
-		Ext : string | string[]
+		Ext? : string | string[]
 	}
 
 	interface SiteAll

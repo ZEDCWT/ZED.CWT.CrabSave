@@ -33,8 +33,7 @@ module.exports = O =>
 				Date : +WW.MF(/date="(\d+)/,B),
 				Part : [
 				{
-					URL : [URL],
-					Ext : '.mp4' // Pretty lazy here...
+					URL : [URL]
 				}]
 			}
 		})

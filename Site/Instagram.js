@@ -80,45 +80,6 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		},
 		Map : [
 		{
-			Name : 'Timeline',
-			Judge : O.TL,
-			View : O.More(function()
-			{
-				return InstagramQuery(InstagramHashTimeline,{fetch_media_item_count : O.Size})
-			},function(I,Page)
-			{
-				return InstagramQuery(InstagramHashTimeline,{fetch_media_item_count : O.Size,fetch_media_item_cursor : I[Page]})
-			},function(B)
-			{
-				return SolveMore(SolvePost,B.user.edge_web_feed_timeline)
-			})
-		},{
-			Name : 'Following',
-			Judge : O.UP,
-			View : O.More(function(_,I)
-			{
-				return SolveSelfID().FMap(function(ID)
-				{
-					I[0] = ID
-					return InstagramQuery(InstagramHashFollowing,{id : ID,first : O.Size})
-				})
-			},function(I,Page)
-			{
-				return InstagramQuery(InstagramHashFollowing,{id : I[0],first : O.Size,after : I[Page]})
-			},function(B)
-			{
-				return SolveMore(function(V)
-				{
-					return {
-						Non : true,
-						ID : V.username,
-						URL : Instagram + V.username,
-						Img : V.profile_pic_url,
-						Title : V.full_name
-					}
-				},B.user.edge_follow)
-			})
-		},{
 			Name : 'Search',
 			Judge : O.Find,
 			View : function(ID)
@@ -174,6 +135,45 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 					}
 				})
 			}
+		},{
+			Name : 'Timeline',
+			Judge : O.TL,
+			View : O.More(function()
+			{
+				return InstagramQuery(InstagramHashTimeline,{fetch_media_item_count : O.Size})
+			},function(I,Page)
+			{
+				return InstagramQuery(InstagramHashTimeline,{fetch_media_item_count : O.Size,fetch_media_item_cursor : I[Page]})
+			},function(B)
+			{
+				return SolveMore(SolvePost,B.user.edge_web_feed_timeline)
+			})
+		},{
+			Name : 'Following',
+			Judge : O.UP,
+			View : O.More(function(_,I)
+			{
+				return SolveSelfID().FMap(function(ID)
+				{
+					I[0] = ID
+					return InstagramQuery(InstagramHashFollowing,{id : ID,first : O.Size})
+				})
+			},function(I,Page)
+			{
+				return InstagramQuery(InstagramHashFollowing,{id : I[0],first : O.Size,after : I[Page]})
+			},function(B)
+			{
+				return SolveMore(function(V)
+				{
+					return {
+						Non : true,
+						ID : V.username,
+						URL : Instagram + V.username,
+						Img : V.profile_pic_url,
+						Title : V.full_name
+					}
+				},B.user.edge_follow)
+			})
 		},{
 			Name : 'User',
 			Judge : [/com\/(?!(?:P|Explore)\/)([\w-]+)/i,O.Word('User')],

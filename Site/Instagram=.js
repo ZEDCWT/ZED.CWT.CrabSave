@@ -26,7 +26,7 @@ module.exports = O =>
 				.FMapO(1,V => V.is_video ?
 					V.dash_info && V.dash_info.is_dash_eligible ?
 						Facebook.Dash(V.dash_info.video_dash_manifest) :
-						WX.Just({URL : [V.video_url],Ext : '.mp4'}) :
+						WX.Just({URL : [V.video_url]}) :
 					WX.Empty)
 				.Reduce((D,V) => D.push(V) && D,[])
 				.Map(Part =>

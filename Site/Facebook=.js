@@ -58,7 +58,7 @@ module.exports = O =>
 				.FMap(Video => WW.IsArr(Video) ? WX.From(Video) : O.Bad('Contains no videos'))
 				.FMapO(1,V => V.dash_manifest ?
 					SolveDash(V.dash_manifest) :
-					WX.Just({URL : [V.hd_src || V.sd_src],Ext : '.mp4'}))
+					WX.Just({URL : [V.hd_src || V.sd_src]}))
 				.Reduce((D,V) => D.push({...V,Title : VideoTitle}) && D,[])
 				.Map(Part =>
 				{
