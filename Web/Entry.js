@@ -357,6 +357,7 @@
 					break
 				case ActionWebTaskHist :
 					WSOnDiffHot.D(Q)
+					DetailIs(O[0]) && DetailUpdate.F(O[1])
 					break
 				case ActionWebTaskOverview :
 					TaskOverviewUpdate(K,O)
@@ -745,13 +746,16 @@
 				[SA('DetDone'),function(S)
 				{
 					return null != S.Done &&
-						WW.StrDate(S.Done)
+						WW.StrDate(S.Done) +
+							(null == Birth ? '' : ' (' + WW.StrMS(S.Done - Birth) + ')')
 				}]
 			],
 			PartList = [],
+			Birth,
 			Update = function(S)
 			{
 				S = S || {}
+				Birth = S.Birth
 				WR.Has('Title',S) &&
 					WV.T(Title,S.Title)
 				WR.Each(function(V,T)
@@ -882,6 +886,12 @@
 				{
 					PartList[Part] && PartList[Part][File] &&
 						PartList[Part][File][H](Val)
+				},
+				F : function(Done,T)
+				{
+					T = WR.Last(Line)
+					WV.T(T[2],T[1]({Done : Done}))
+					WV.Ap(T[0],Detail)
 				}
 			}
 			return WX.EndI(

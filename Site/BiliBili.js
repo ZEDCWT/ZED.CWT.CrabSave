@@ -36,9 +36,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliVCApi = 'https://api.vc.bilibili.com/',
 	BiliBiliVCApiDetail = WW.Tmpl(BiliBiliVCApi,'clip/v1/video/detail?video_id=',undefined),
 	BiliBiliVCApiOnes = WW.Tmpl(BiliBiliVCApi,'clip/v1/video/ones?poster_uid=',undefined,'&need_playurl=0&page_size=',O.Size,'&next_offset=',undefined),
-	BiliBiliVCApiDynamicNewType = 'type_list=8,16,512',
-	BiliBiliVCApiDynamicNew = BiliBiliVCApi + 'dynamic_svr/v1/dynamic_svr/dynamic_new?uid=&' + BiliBiliVCApiDynamicNewType,
-	BiliBiliVCApiDynamicHistory = WW.Tmpl(BiliBiliVCApi,'dynamic_svr/v1/dynamic_svr/dynamic_history?uid=&',BiliBiliVCApiDynamicNewType,'&offset_dynamic_id=',undefined),
+	BiliBiliVCApiDynamicType = 'type_list=8,16,512',
+	BiliBiliVCApiDynamicNew = BiliBiliVCApi + 'dynamic_svr/v1/dynamic_svr/dynamic_new?uid=&' + BiliBiliVCApiDynamicType,
+	BiliBiliVCApiDynamicHistory = WW.Tmpl(BiliBiliVCApi,'dynamic_svr/v1/dynamic_svr/dynamic_history?uid=&',BiliBiliVCApiDynamicType,'&offset_dynamic_id=',undefined),
 	// Appkey = '20bee1f7a18a425c',
 	Common = function(V)
 	{
