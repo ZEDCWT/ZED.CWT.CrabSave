@@ -44,5 +44,10 @@ module.exports = Option =>
 		H : Q => WR.Has(Q,Map),
 		D : Q => Map[Q],
 		P : Q => WR.Has(Q,Map) ? WX.Just(Map[Q]) : WX.Throw(['ErrUnkSite',Q]),
+		F : () =>
+		{
+			WR.EachU((_,F) => WR.Del(require.resolve(`./${F}=`),require.cache),Map)
+			WR.Del(__filename,require.cache)
+		}
 	}
 }

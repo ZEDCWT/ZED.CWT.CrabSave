@@ -39,6 +39,7 @@ ActionAuthDownHas = 'DownH',
 ActionAuthDownTake = 'DownT',
 ActionAuthDownDone = 'DownD',
 ActionAuthInspect = 'Ins',
+ActionAuthReload = 'Red',
 ActionAuthErr = 'RErr',
 ActionAuthErrT = 'RErrT';
 
@@ -491,6 +492,11 @@ module.exports = Option =>
 							Inspector.open(...K)
 							SendAuth([Q[0],Inspector.url()])
 						}
+						break
+
+					case ActionAuthReload :
+						Site.F()
+						Site = require('./Site/_')(SiteO)
 						break
 				}
 				return

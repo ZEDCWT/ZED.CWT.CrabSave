@@ -105,6 +105,7 @@ declare module CrabSaveNS
 			H(Q : string) : boolean
 			D(Q : string) : ReturnType<SiteO>
 			P(Q : string) : WishNS.Provider<ReturnType<SiteO>>
+			F() : any
 		}
 	}
 }

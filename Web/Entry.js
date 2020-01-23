@@ -44,6 +44,7 @@
 	ActionAuthDownTake = 'DownT',
 	ActionAuthDownDone = 'DownD',
 	ActionAuthInspect = 'Ins',
+	ActionAuthReload = 'Red',
 	ActionAuthErr = 'RErr',
 	ActionAuthErrT = 'RErrT',
 
@@ -1538,7 +1539,7 @@
 				RTabTo(K)
 				Keyword.I.select()
 				Keyword.Foc(true)
-				WV.SIN(Keyword.R,V)
+				V.scrollTop = 0
 			})
 			ShortCutOnPage(K,ShortCutBrowseSelAll,function()
 			{
@@ -3202,6 +3203,10 @@
 		CrabSave.Inspect = function()
 		{
 			WebSocketSendAuth([ActionAuthInspect,WW.Arr(arguments)])
+		}
+		CrabSave.Reload = function()
+		{
+			WebSocketSendAuth([ActionAuthReload])
 		}
 		SiteBegin = WW.Now()
 		WW.To(1E3,function(){SiteCount < SiteTotal && SiteOnNoti()})
