@@ -1,6 +1,6 @@
 {
 	"name" : "crabsave",
-	"version" : "1.1.0",
+	"version" : "1.1.1",
 	"description" : "Yet Another Video Downloader With GUI",
 	"main" : "CrabSave",
 	"bin" :

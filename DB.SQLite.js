@@ -10,13 +10,7 @@ module.exports = Option =>
 	var
 	PathData = Option.PathData,
 
-	DBInit = WX.Repeater(),
-	DB = new SQLite.Database(WN.JoinP(PathData,'DB.db'),E =>
-	{
-		E ?
-			DBInit.E(E) :
-			DBInit.F()
-	}),
+	DB,
 
 	DBLocked,
 	DBLockQueue = [],
@@ -28,11 +22,11 @@ module.exports = Option =>
 		DBQueue = DBQueue || WX.Repeater() :
 		WX.Just(0,WX.Sync),
 	DBMake = H => (...Q) => DBGetQueue().FMap(() => H(...Q)),
-	Exec = DBMake(WX.WrapNode(DB.exec,DB)),
-	Run_ = WX.WrapNode(DB.run,DB),
-	Run = DBMake(Run_),
-	Get = DBMake(WX.WrapNode(DB.get,DB)),
-	All = DBMake(WX.WrapNode(DB.all,DB)),
+	Exec,
+	Run_,
+	Run,
+	Get,
+	All,
 	TransactionEnd = () =>
 	{
 		DBLocked = false
@@ -86,9 +80,24 @@ module.exports = Option =>
 		Q || WW.Throw(['ErrDBNo',S])
 		return Q
 	};
-	DB.serialize()
 	return {
-		Init : DBInit.Fin()
+		Init : WX.Provider(O =>
+		{
+			DB = new SQLite.Database(WN.JoinP(PathData,'DB.db'),E =>
+			{
+				if (E) O.E(E)
+				else
+				{
+					Exec = DBMake(WX.WrapNode(DB.exec,DB)),
+					Run_ = WX.WrapNode(DB.run,DB),
+					Run = DBMake(Run_),
+					Get = DBMake(WX.WrapNode(DB.get,DB)),
+					All = DBMake(WX.WrapNode(DB.all,DB)),
+					O.D().F()
+				}
+			})
+			DB.serialize()
+		})
 			.FMap(() => Exec(
 			`
 				create table if not exists Task
