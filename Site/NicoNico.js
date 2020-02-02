@@ -74,7 +74,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								R.S([[null,WV.Inp(
 								{
 									Hint : WW.MF(/h\d+>([^<]+)/,V),
-									Inp : R.C(K)
+									Inp : R.C(K),
+									NoRel : O.NoRel
 								}).Drop(D)]])
 							},0,/"title">\s+<h[^]+?<\/ul/g,B)
 							return R

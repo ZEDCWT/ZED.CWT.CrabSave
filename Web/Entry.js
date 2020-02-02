@@ -3125,6 +3125,7 @@
 						return V.charAt(0).toUpperCase() + V.slice(1)
 					})
 				},
+				NoRel : InpNoRel,
 				Less : function(Q)
 				{
 					/**@type {CrabSaveNS.SiteItem[]}*/

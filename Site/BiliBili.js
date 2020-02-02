@@ -250,7 +250,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								R.S([[null,WV.Inp(
 								{
 									Hint : O.Pascal(F),
-									Inp : R.C(F)
+									Inp : R.C(F),
+									NoRel : O.NoRel
 								}).Drop(WR.Map(function(V)
 								{
 									return [V[0].split('-').pop(),V[1] + ' (' + V[0] + ')']

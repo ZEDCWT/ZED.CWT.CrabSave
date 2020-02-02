@@ -51,7 +51,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						('true' === V.contentDetails.caption ? '\nCaption On' : '')
 				}
 			},B.items)
-				.sort(function(Q,S){return S.Date - Q.Date})
+				// .sort(function(Q,S){return S.Date - Q.Date})
 		}
 	},
 	SolveDetail = function(B)
@@ -123,7 +123,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								return [null,WV.Inp(
 								{
 									Hint : O.Pascal(V[0]).replace(/Video/,''),
-									Inp : R.C(V[0])
+									Inp : R.C(V[0]),
+									NoRel : O.NoRel
 								}).Drop(WR.Map(function(V)
 								{
 									return [V,O.Pascal(V)]
