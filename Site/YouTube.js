@@ -219,6 +219,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							UP : WC.HED(WW.MF(/\/(?:user|channel)\/[^>]+>([^<]+)/,V)),
 							UPURL : YouTube + WW.MF(/\/((?:user|channel)\/[^"]+)/,V),
 							Date : WW.MF(/meta-info.*?<\/li.*?<li.*?>([^<]+)/,V),
+							More : (I = WW.MF(/-timestamp="(\d+)[^<]+>/,V)) ? O.DTS(1E3 * I) : '',
 							Len : WW.MF(/-time"[^>]+>([^<]+)/,V)
 						})
 						return D
