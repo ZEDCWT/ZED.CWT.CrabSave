@@ -3,7 +3,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 {
 	var
 	Nico = 'https://www.nicovideo.jp/',
-	NicoWatch = WW.Tmpl(Nico,'watch/sm',undefined),
+	NicoWatch = WW.Tmpl(Nico,'watch/',undefined),
 	NicoUser = WW.Tmpl(Nico,'user/',undefined),
 	NicoUserVideo = WW.Tmpl(Nico,'user/',undefined,'/video?page=',undefined),
 	NicoMyList = WW.Tmpl(Nico,'mylist/',undefined),
@@ -18,6 +18,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	SolveSM = function(Q)
 	{
 		return Q.replace(/^SM/i,'')
+	},
+	PadSM = function(Q)
+	{
+		return /^\d/.test(Q) ? 'sm' + Q : Q
 	};
 	return {
 		ID : 'NicoNico',
@@ -47,14 +51,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						{
 							D.push(
 							{
-								ID : WW.MF(/sm(\d+)/,V),
-								Img : WW.MF(/original="([^"]+)/,V),
+								ID : SolveSM(V[1]),
+								Img : WW.MF(/original="([^"]+)/,V = V[0]),
 								Title : WC.HED(WW.MF(/title="([^"]+)/,V)),
 								Date : WW.MF(/time">([^<]+)/,V),
 								Len : WW.MF(/gth">([^<]+)/,V)
 							})
 							return D
-						},[],/video-id[^]+?<\/li/g,B),
+						},[],/video-id="([^"]+)[^]+?<\/li/g,B),
 						Pref : function(I)
 						{
 							var
@@ -241,7 +245,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				}]
 			})
 		}],
-		IDView : WR.Add('sm'),
-		IDURL : NicoWatch
+		IDView : PadSM,
+		IDURL : WR.Pipe(PadSM,NicoWatch)
 	}
 })
