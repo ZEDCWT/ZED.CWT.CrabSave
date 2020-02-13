@@ -4,8 +4,8 @@ WW = require('@zed.cwt/wish'),
 {R : WR,X : WX,C : WC,N : WN} = WW,
 
 Nico = 'https://www.nicovideo.jp/',
-NicoWatch = WW.Tmpl(Nico,'watch/sm',undefined),
-NicoWatchPC = WW.Tmpl(Nico,'watch/sm',undefined,'?mode=pc_html5&playlist_token=',undefined),
+NicoWatch = WW.Tmpl(Nico,'watch/',undefined),
+NicoWatchPC = WW.Tmpl(Nico,'watch/',undefined,'?mode=pc_html5&playlist_token=',undefined),
 NicoDMCApi = 'https://api.dmc.nico/api/sessions?_format=json',
 
 NicoHistory = '';
@@ -13,11 +13,22 @@ NicoHistory = '';
 /**@type {CrabSaveNS.SiteO}*/
 module.exports = O =>
 {
+	var
+	PadSM = function(Q)
+	{
+		return /^\d/.test(Q) ? 'sm' + Q : Q
+	},
+	Coke = function(Q)
+	{
+		Q = O.Coke(Q)
+		Q.headers.Cookie += '; watch_flash=0'
+		return Q
+	};
 	return {
-		URL : ID => WN.ReqB(O.Coke(NicoWatch(ID)))
+		URL : ID => WN.ReqB(Coke(NicoWatch(PadSM(ID))))
 			.FMap(B =>
 			(
-				B = O.Coke(NicoWatchPC(ID,WW.MF(/playlistToken&quot;:&quot;([^&]+)/,B))),
+				B = Coke(NicoWatchPC(PadSM(ID),WW.MF(/playlistToken&quot;:&quot;([^&]+)/,B))),
 				B.headers.Cookie = NicoHistory + '; ' + B.headers.Cookie,
 				WN.ReqU(B)
 			))
@@ -97,11 +108,12 @@ module.exports = O =>
 						B.data || O.Bad(B),
 						B.data.session.content_uri
 					)) :
-					WX.Just(B.video.smileInfo.url))
+					WX.Just(B.video.smileInfo.url || WW.Throw('No provided url, a paid video?')))
 					.Map(U => (
 					{
 						Title : B.video.title,
-						Up : B.owner.nickname.replace(/ さん$/,''), // 敬稱略
+						Up : B.owner ? B.owner.nickname.replace(/ さん$/,'') : // 敬稱略
+							B.channel.name,
 						Date : +new Date(B.video.postedDateTime + '+0900'),
 						Part : [
 						{

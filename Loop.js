@@ -7,7 +7,6 @@ WW = require('@zed.cwt/wish'),
 module.exports = Option =>
 {
 	var
-	SiteAll = Option.Site,
 	Setting = Option.Setting,
 	DB = Option.DB,
 
@@ -54,7 +53,7 @@ module.exports = Option =>
 		return R
 	},
 
-	Pack = (Q,S) => Option.Req((SiteAll.D(S).Pack || WR.Id)(Q)),
+	Pack = (Q,S) => Option.Req((Option.Site.D(S).Pack || WR.Id)(Q)),
 	SolveSize = (Q,S) => WN.ReqH(Pack(Q,S)).Map((H,T) =>
 		/^2/.test(H.statusCode) && (T = +H.headers['content-length']) === T ?
 			T :
@@ -75,7 +74,7 @@ module.exports = Option =>
 				{
 					V.Error && Option.ErrT(V.Row)
 					Option.OnRenew(V.Row)
-					InfoRunning.set(V.Row,SiteAll.P(V.Site)
+					InfoRunning.set(V.Row,Option.Site.P(V.Site)
 						.FMap(S => S.URL(V.ID))
 						.FMap(U =>
 						{

@@ -496,6 +496,7 @@ module.exports = Option =>
 
 					case ActionAuthReload :
 						Site.F()
+						LoopO.Site =
 						Site = require('./Site/_')(SiteO)
 						break
 				}

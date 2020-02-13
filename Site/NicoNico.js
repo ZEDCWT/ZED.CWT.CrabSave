@@ -11,8 +11,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	NicoMyFavUser = WW.Tmpl(Nico,'my/fav/user?page=',undefined),
 	NicoRepo = WW.Tmpl(Nico,'api/nicorepo/timeline/my/followingUser?cursor=',undefined,'&client_app=pc_myrepo'),
 	NicoSearch = WW.Tmpl(Nico,'search/',undefined,'?page=',undefined,undefined),
+	NicoChannel = 'https://ch.nicovideo.jp/',
+	NicoChannelCH = NicoChannel + 'ch',
 	NicoExt = 'https://ext.nicovideo.jp/',
-	NicoExtSM = WW.Tmpl(NicoExt,'api/getthumbinfo/sm',undefined),
+	NicoExtThumb = WW.Tmpl(NicoExt,'api/getthumbinfo/',undefined),
 	NicoSearchSug = 'http://sug.search.nicovideo.jp/',
 	NicoSearchSugComplete = WW.Tmpl(NicoSearchSug,'suggestion/complete/',undefined),
 	SolveSM = function(Q)
@@ -176,11 +178,17 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			})
 		},{
 			Name : 'Video',
-			Judge : [/^\d+ *$/,O.Num('Video|SM')],
+			Judge :
+			[
+				/^\d+$/,O.Num('Video|SM'),
+				/\b(?:SO|NM)\d+\b/i
+			],
 			View : function(ID)
 			{
-				return O.Api(NicoExtSM(ID)).Map(function(B)
+				ID = WR.Low(ID)
+				return O.Api(NicoExtThumb(PadSM(ID))).Map(function(B)
 				{
+					var T;
 					/<error>/.test(B) && O.Bad(WW.MF(/code>([^<]+)/,B),WW.MF(/tion>([^<]+)/,B))
 					return {
 						Item : [
@@ -189,7 +197,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							Img : WW.MF(/l_url>([^<]+)/,B),
 							Title : WC.HED(WW.MF(/itle>([^<]+)/,B)),
 							UP : WC.HED(WW.MF(/name>([^<]+)/,B)),
-							UPURL : NicoUser(WW.MF(/user_id>(\d+)/,B)),
+							UPURL : (T = WW.MF(/user_id>(\d+)/,B)) ? NicoUser(T) :
+								(T = WW.MF(/ch_id>(\d+)/,B)) ? NicoChannelCH + T :
+								'',
 							Date : new Date(WW.MF(/ieve>([^<]+)/,B)),
 							Len : WW.MF(/gth>([^<]+)/,B),
 							Desc : WC.HED(WW.MF(/tion>([^<]+)/,B))

@@ -129,7 +129,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			}
 		},{
 			Name : 'Tweet',
-			Judge : [/^\d+ *$/,O.Num('Tweet|Status(?:es)?')],
+			Judge : [/^\d+$/,O.Num('Tweet|Status(?:es)?')],
 			View : function(ID)
 			{
 				return O.Req(MakeHead(TwitterAPIJSON(TwitterAPITypeConversation + ID))).Map(function(B)

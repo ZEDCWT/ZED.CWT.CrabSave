@@ -1200,6 +1200,7 @@
 			GoSolve = function(Q)
 			{
 				var Site,Action,ID,T;
+				Q = Q.replace(/\s+$/,'')
 				if (T = Q.match(/^\s*([A-Z\u2E80-\u9FFF\uAC00-\uD7FF\uF900-\uFAFF]+)(?:\s+([^]*))?$/i))
 				{
 					if (!WR.Has(Site = WR.Up(T[1]),SiteMap)) return SA('BroUnSite',[T[1]])
@@ -3102,7 +3103,7 @@
 				},
 				Num : function(Q)
 				{
-					return RegExp('\\b(?:' + Q + ')(?![A-Z])\\D*(\\d+)','i')
+					return RegExp('\\b(?:' + Q + ')(?![A-Z])(?:\\D*\\b)?(\\d+)\\b','i')
 				},
 				Word : function(Q)
 				{
