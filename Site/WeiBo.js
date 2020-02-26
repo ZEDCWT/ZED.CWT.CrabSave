@@ -23,12 +23,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		return O.Req({url : SinaLogin,followRedirect : false},true).Map(function(B,T)
 		{
 			B = B[2] && B[2]['set-cookie']
-			B = B && WR.Find(WR.StartW('SUB='),B)
-			B = B && B.split('; ')[0]
-			if (B)
+			B = B && WR.Where(WR.Test(/^SUBP?=/),B)
+			if (2 === B.length)
 			{
 				T = WC.CokeP(O.Coke(),WR.Id)
-				T.SUB = WC.CokeP(B).SUB
+				B = WC.CokeP(B.join('; '))
+				T.SUB = B.SUB
+				T.SUBP = B.SUBP
 				O.CokeU(WC.CokeS(T,WR.Id))
 			}
 			return !!B
@@ -126,7 +127,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		Name : '\u65B0\u6D6A\u5FAE\u535A',
 		Alias : 'WB',
 		Judge : /\bWeiBo\b/i,
-		Min : 'ALC SUB',
+		Min : 'ALC SUB SUBP',
 		Sign : function()
 		{
 			return O.Req(WeiBo).Map(function(B)
