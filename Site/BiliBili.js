@@ -86,9 +86,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	{
 		return O.Api(O.Head(BiliBiliBgmEP(ID),'Cookie','stardustpgcv=0')).Map(function(B)
 		{
+			B = B.slice(18 + /__INITIAL_STATE__={/.exec(B).index)
+			B = WC.JTO(B,{More : true})[0]
 			return [
-				WW.MF(/\/av(\d+)/,B),
-				WW.MF(/ssId":(\d+)/,B)
+				B.epInfo.aid,
+				B.mediaInfo.ssId
 			]
 		})
 	}),
@@ -506,7 +508,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			})
 		},{
 			Name : 'Season',
-			Judge : O.Num('Season|SS'),
+			Judge : O.Num('Season|SS|BanGuMi\\b.*?\\bAnime'),
 			View : O.Less(function(ID)
 			{
 				return O.Api(BiliBiliApiPGCSeason(ID)).Map(function(B)

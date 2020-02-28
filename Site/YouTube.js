@@ -7,6 +7,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	YouTubeChannel = WW.Tmpl(YouTube,'channel/',undefined),
 	YouTubeFollowing = YouTube + 'subscription_manager',
 	YouTubeSubscription = YouTube + 'feed/subscriptions',
+	YouTubeBrowse = WW.Tmpl(YouTube,'browse_ajax?ctoken=',undefined,'&continuation=',undefined,'&itct=',undefined),
 	YouTubeAccount = YouTube + 'account',
 	GoogleAPIKey = '#GoogleAPIKey#',
 	GoogleAPI = 'https://www.googleapis.com/',
@@ -193,37 +194,52 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},{
 			Name : 'Subscription',
 			Judge : O.TL,
-			View : O.More(function()
+			View : O.More(function(_,I)
 			{
-				return O.Req(YouTubeSubscription)
+				return O.Req(YouTubeSubscription).Map(function(V)
+				{
+					I[0] =
+					{
+						'X-YouTube-Client-Name' : 1,
+						'X-YouTube-Client-Version' : WW.MF(/CLIENT_VERSION":"([^"]+)/,V),
+						'X-YouTube-Identity-Token' : WW.MF(/ID_TOKEN":"([^"]+)/,V)
+					}
+					return WW.MF(/ytInitialData[^\w{]+?({.*});/,V)
+				})
 			},function(I,Page)
 			{
-				return O.Req(O.SolU(I[Page],YouTube)).Map(function(B)
+				return O.Req(
 				{
-					B = WC.JTO(B)
-					B.content_html || O.BadR(B)
-					return B.load_more_widget_html + B.content_html
+					url : YouTubeBrowse(I[Page][0],I[Page][0],I[Page][1]),
+					headers : I[0]
 				})
 			},function(B)
 			{
-				return [WC.HED(WW.MF(/more-href="([^"]+)/,B)),
+				var
+				Token,
+				Item = [],
+				H = function(V,K)
 				{
-					Item : WW.MR(function(D,V,I)
-					{
-						D.push(
-						{
-							ID : I = WW.MF(/v=([^"&]+)/,V),
-							URL : YouTubeWatch(I),
-							Img : WC.HED(O.SolU(WW.MF(/(?:data-thumb|src(?!.*data-thumb))="([^"]+)/,V))),
-							Title : WC.HED(WW.MF(/-title[^]+?title="([^"]+)/,V)),
-							UP : WC.HED(WW.MF(/\/(?:user|channel)\/[^>]+>([^<]+)/,V)),
-							UPURL : YouTube + WW.MF(/\/((?:user|channel)\/[^"]+)/,V),
-							Date : WW.MF(/meta-info.*?<\/li.*?<li.*?>([^<]+)/,V),
-							More : (I = WW.MF(/-timestamp="(\d+)[^<]+>/,V)) ? O.DTS(1E3 * I) : '',
-							Len : WW.MF(/-time"[^>]+>([^<]+)/,V)
-						})
-						return D
-					},[],/shelf-grid[^]+?menu-container/g,B)
+					'nextContinuationData' === K ?
+						Token = [WC.UE(V.continuation),WC.UE(V.clickTrackingParams)] :
+						'gridVideoRenderer' === K ?
+							Item.push(
+							{
+								ID : V.videoId,
+								Img : V.thumbnail.thumbnails[0].url,
+								Title : V.title.simpleText,
+								UP : V.shortBylineText.runs[0].text,
+								UPURL : O.SolU(V.shortBylineText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata,YouTube),
+								Date : V.publishedTimeText && V.publishedTimeText.simpleText,
+								More : V.upcomingEventData && O.DTS(1E3 * V.upcomingEventData.startTime),
+								Len : '' + WR.MapW(WR.Prop(['thumbnailOverlayTimeStatusRenderer','text','simpleText']),V.thumbnailOverlays)
+							}) :
+							WW.IsObj(V) && WR.EachU(H,V)
+				};
+				H(WC.JTO(B))
+				return [Token,
+				{
+					Item : Item
 				}]
 			})
 		},{
