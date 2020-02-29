@@ -229,7 +229,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								Img : V.thumbnail.thumbnails[0].url,
 								Title : V.title.simpleText,
 								UP : V.shortBylineText.runs[0].text,
-								UPURL : O.SolU(V.shortBylineText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata,YouTube),
+								UPURL : O.SolU(V.shortBylineText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata.url,YouTube),
 								Date : V.publishedTimeText && V.publishedTimeText.simpleText,
 								More : V.upcomingEventData && O.DTS(1E3 * V.upcomingEventData.startTime),
 								Len : '' + WR.MapW(WR.Prop(['thumbnailOverlayTimeStatusRenderer','text','simpleText']),V.thumbnailOverlays)
