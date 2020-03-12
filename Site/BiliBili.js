@@ -203,7 +203,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					Find(BiliBiliApiSearchTypeBgm),
 					Find(BiliBiliApiSearchTypeFilm),
 					Menu ? WX.Empty :
-						O.Api(O.Head(BiliBiliSearch,WW.UA,'Chrome/' + WW.Rnd(3E3,9E9)))
+						O.Api(BiliBiliSearch)
 							.FMap(function(B)
 							{
 								return WW.B.ReqB(O.SolU(WW.MF(/"([^"]+\/search\.[^"]+\.js)/,B)))

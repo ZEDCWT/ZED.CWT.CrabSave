@@ -36,10 +36,6 @@ module.exports = O =>
 			{
 				url : FacebookVideoTahoeAsync(Q.replace(/.*\//,'')),
 				method : 'post',
-				headers :
-				{
-					[WW.UA] : `Chrome/${WW.Rnd(3E3,9E9)} Safari/${WW.Rnd(3E3,9E9)}`
-				},
 				form :
 				{
 					__a : 1,

@@ -99,7 +99,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		Min : 'auth_token ct0 rweb_optin',
 		Sign : function()
 		{
-			return O.Req(O.Head(Twitter,WW.UA,'Chrome/' + WW.Rnd(3E3,6E6))).Map(function(B)
+			return O.Req(Twitter).Map(function(B)
 			{
 				B = WW.MF(/,"name":("([^"]+|\\")+")/,B)
 				return B && WC.JTO(B)
