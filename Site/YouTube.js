@@ -102,7 +102,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		{
 			return O.Req({url : YouTubeAccount,followRedirect : false}).Map(function(B)
 			{
-				return WW.MF(/user-name[^>]+>([^<]+)/,B)
+				return WC.JTO(WW.MF(/"name":(".*?"),"/,B))
 			})
 		},
 		Map : [
