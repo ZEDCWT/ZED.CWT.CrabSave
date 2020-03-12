@@ -16,10 +16,10 @@
 	"license" : "MIT",
 	"dependencies" :
 	{
-		"@zed.cwt/wish" : "^0.0.13",
+		"@zed.cwt/wish" : ">=0.1.1",
 		"request" : "^2.88.2",
 		"sqlite3" : "^4.1.1",
 		"xml2js" : "^0.4.23",
-		"ws" : "^7.2.1"
+		"ws" : "^7.2.3"
 	}
 }

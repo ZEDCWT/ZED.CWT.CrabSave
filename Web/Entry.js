@@ -9,7 +9,6 @@
 	WV = WW.V,
 	WX = WW.X,
 	Top = Wish.Top,
-	WebSocket = Top.WebSocket,
 	RegExp = Top.RegExp,
 
 	ActionWebTaskNew = 'TaskN',
@@ -63,7 +62,6 @@
 	DebugInterval = 2000,
 	DebugLimit = 2048,
 
-	Href = location.href.replace(/[?#].*/,'').replace(/^http/,'ws'),
 	URLSite = 'Site/',
 	URLApi = 'Api/',
 
@@ -256,17 +254,42 @@
 	{
 		WebSocketSend([ActionWebTick])
 	},true).F(),
-	MakeWebSocket = function()
+	WS = WB.WS(
 	{
-		var
-		First = !WebSocketRetry,
-		Client = new WebSocket(Href),
-		Suicide = function(){Client.close()};
-		Client.onmessage = function(Q)
+		Rect : false,
+		Beg : function()
 		{
-			var
-			K,O;
-			Q = Q.data
+			WebSocketSince = WebSocketRetry ? WebSocketSince : WW.Now()
+			WebSocketRetry && WebSocketNoti(SA('SocConn') + ' ' + SA('SocRetry') + ' : ' + WebSocketRetry)
+		},
+		Hsk : function()
+		{
+			Online = true
+			DebugLog('Online')
+			WebSocketRetry && WebSocketNoti(SA('SocOn'))
+			WebSocketNoti(false)
+			WebSocketRetry = 0
+			WebSocketSend = function(Q)
+			{
+				WS.D(WC.OTJ(Q))
+				return true
+			}
+			WebSocketSendAuth = function(Q)
+			{
+				if (Cipher)
+				{
+					Q = Cipher.D(WC.OTJ([WW.Key(WW.Rnd(20,40)),Q,WW.Key(WW.Rnd(20,40))]))
+					WS.D(Q)
+					return true
+				}
+				WebSocketNotAuthed()
+			}
+			WSOnOnline.D()
+			WebSocketNotConnectedNoti(false)
+			WebSocketTick.D()
+		},
+		Str : function(Q,K,O)
+		{
 			if (10 === Q.charCodeAt(0))
 			{
 				ProgressMap = {}
@@ -280,63 +303,6 @@
 				},Q.split('\n'))
 				WSOnProgress()
 				WebSocketSend([ActionWebTick])
-				return
-			}
-			else if (!Q.charCodeAt(0))
-			{
-				Q = WC.JTOO(WC.U16S(Decipher.D(WC.B91P(Q))))
-				if (!WW.IsArr(Q) || !WW.IsArr(Q = Q[1])) return Suicide()
-				DebugLog('Auth',Q)
-				K = Q[1]
-				O = Q[2]
-				switch (Q[0])
-				{
-					case ActionAuthHello :
-						NotiAuth(SA('AutAuthed'))
-						NotiAuth(false)
-						WebSocketNotAuthedNoti(false)
-						break
-
-					case ActionAuthToken :
-						Noti.S(SA(K))
-						break
-					case ActionAuthCookie :
-						WSOnCookie(K,O)
-						break
-
-					case ActionAuthSetting :
-						WSOnSetting(K)
-						break
-
-					case ActionAuthApi :
-						WR.Has(K,WSOnApi) && WSOnApi[K](Q)
-						break
-
-					case ActionAuthTaskInfo :
-						TaskFullInfoUpdate(K,O)
-						break
-
-					case ActionAuthDownFile :
-					case ActionAuthDownPlay :
-					case ActionAuthDownConn :
-					case ActionAuthDownPath :
-					case ActionAuthDownHas :
-					case ActionAuthDownTake :
-					case ActionAuthDownDone :
-						DetailIs(K[0]) && DetailUpdate.U(Q[0].slice(-1),K[1],K[2],O)
-						break
-
-					case ActionAuthInspect :
-						console.log('Inspecting on',K)
-						break
-
-					case ActionAuthErr :
-						WSOnErr(K,O)
-						break
-					case ActionAuthErrT :
-						WSOnErrT(K,O)
-						break
-				}
 				return
 			}
 			DebugLog('Web',Q)
@@ -379,52 +345,75 @@
 				case ActionWebError :
 					Noti.S([SA('Err'),' | ',K,' | ',SA(O)])
 			}
-		}
-		Client.onopen = function()
+		},
+		Bin : function(Q,K,O)
 		{
-			Online = true
-			DebugLog('Online')
-			First || WebSocketNoti(SA('SocOn'))
-			WebSocketNoti(false)
-			WebSocketRetry = 0
-			WebSocketSend = function(Q)
+			Q = WC.JTOO(WC.U16S(Decipher.D(Q)))
+			if (!WW.IsArr(Q) || !WW.IsArr(Q = Q[1])) return WS.F()
+			DebugLog('Auth',Q)
+			K = Q[1]
+			O = Q[2]
+			switch (Q[0])
 			{
-				if (1 === Client.readyState)
-				{
-					Client.send(WC.OTJ(Q))
-					return true
-				}
+				case ActionAuthHello :
+					NotiAuth(SA('AutAuthed'))
+					NotiAuth(false)
+					WebSocketNotAuthedNoti(false)
+					break
+
+				case ActionAuthToken :
+					Noti.S(SA(K))
+					break
+				case ActionAuthCookie :
+					WSOnCookie(K,O)
+					break
+
+				case ActionAuthSetting :
+					WSOnSetting(K)
+					break
+
+				case ActionAuthApi :
+					WR.Has(K,WSOnApi) && WSOnApi[K](Q)
+					break
+
+				case ActionAuthTaskInfo :
+					TaskFullInfoUpdate(K,O)
+					break
+
+				case ActionAuthDownFile :
+				case ActionAuthDownPlay :
+				case ActionAuthDownConn :
+				case ActionAuthDownPath :
+				case ActionAuthDownHas :
+				case ActionAuthDownTake :
+				case ActionAuthDownDone :
+					DetailIs(K[0]) && DetailUpdate.U(Q[0].slice(-1),K[1],K[2],O)
+					break
+
+				case ActionAuthInspect :
+					console.log('Inspecting on',K)
+					break
+
+				case ActionAuthErr :
+					WSOnErr(K,O)
+					break
+				case ActionAuthErrT :
+					WSOnErrT(K,O)
+					break
 			}
-			WebSocketSendAuth = function(Q)
-			{
-				if (1 === Client.readyState && Cipher)
-				{
-					Q = Cipher.D(WC.OTJ([WW.Key(WW.Rnd(20,40)),Q,WW.Key(WW.Rnd(20,40))]))
-					Client.send('\0' + WC.B91S(Q))
-					return true
-				}
-				WebSocketNotAuthed()
-			}
-			WSOnOnline.D()
-			WebSocketNotConnectedNoti(false)
-			WebSocketTick.D()
-		}
-		Client.onclose = function()
+		},
+		End : function()
 		{
 			WebSocketSend = WebSocketNotConnected
 			WebSocketSendAuth = WebSocketNotConnected
 			Cipher = Decipher = false
 			DebugLog('Offline',WebSocketRetry)
 			WebSocketNoti(SA('SocOff',[WW.StrDate(WebSocketSince),WebSocketRetry++]))
-			Online ?
-				MakeWebSocket(Online = false) :
-				WW.To(Retry,MakeWebSocket)
 			WSOnOffline.D()
 			WebSocketTick.F()
+			WW.To(Online ? 0 : Retry,WS.C,Online = false)
 		}
-		WebSocketSince = WebSocketRetry ? WebSocketSince : WW.Now()
-		First || WebSocketNoti([SA('SocConn'),WebSocketRetry ? ' ' + SA('SocRetry') + ' : ' + WebSocketRetry : ''])
-	},
+	}),
 	WSOnProgress,
 	WSOnApi = {},
 	WSOnOnline = WW.BusS(),
@@ -3025,7 +3014,8 @@
 	WV.Ready(function()
 	{
 		WV.Ap(Rainbow[0],WV.Body)
-		WW.TryE === WW.Try(MakeWebSocket,[true]) && WebSocketNoti(SA('GenNoSock'))
+		WS.H || WebSocketNoti(SA('GenNoSock'))
+		WS.C()
 
 		Top.CrabSave = CrabSave = {}
 		CrabSave.Site = function(Q)

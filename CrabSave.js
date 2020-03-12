@@ -329,7 +329,7 @@ module.exports = Option =>
 			if (ActionAuthTaskInfo === D[0] && FullTrackingRow !== D[1]) return
 			if (WR.StartW('Down',D[0]) && FullTrackingRow !== D[1][0]) return
 			D = Cipher.D(WC.OTJ([WW.Key(WW.Rnd(20,40)),D,WW.Key(WW.Rnd(20,40))]))
-			try{S.send('\0' + WC.B91S(D))}catch(_){}
+			try{S.send(Buffer.from(D))}catch(_){}
 		},
 		Suicide = () => S.terminate(),
 		ApiPool = new Map;
@@ -349,10 +349,9 @@ module.exports = Option =>
 					}) :
 				Err('ErrBadReq'),
 			K,O;
-			if (!WW.IsStr(Q)) return Suicide()
-			if (!Q.charCodeAt())
+			if (WW.IsBuff(Q))
 			{
-				Q = WC.JTOO(WC.U16S(Decipher.D(WC.B91P(Q))))
+				Q = WC.JTOO(WC.U16S(Decipher.D(Q)))
 				if (!WW.IsArr(Q) || !WW.IsArr(Q = Q[1]))
 				{
 					Send([ActionWebError,'Auth','ErrAuthFail'])
@@ -502,6 +501,7 @@ module.exports = Option =>
 				}
 				return
 			}
+			if (!WW.IsStr(Q)) Suicide()
 			Q = WC.JTOO(Q)
 			K = Q[1]
 			O = Q[2]
