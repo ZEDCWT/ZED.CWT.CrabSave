@@ -51,7 +51,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 				Title : O.Text(WC.TagM('p',0,T),true),
 				UP : WC.HED(WW.MF(/>([^<]+)<\/a><\/span/,T)),
 				UPURL : Facebook + ID[1],
-				Date : ID[4] ? 1E3 * ID[4] : ID[5]
+				Date : ID[4] ? 1E3 * ID[4] : WC.HED(ID[5] || '')
 			})
 		}
 		return R

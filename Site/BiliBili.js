@@ -15,6 +15,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliApiWeb = BiliBiliApi + 'x/web-interface/',
 	BiliBiliApiWebNav = BiliBiliApiWeb + 'nav',
 	BiliBiliApiWebView = WW.Tmpl(BiliBiliApiWeb,'view?aid=',undefined),
+	BiliBiliApiWebViewBV = WW.Tmpl(BiliBiliApiWeb,'view/detail?bvid=',undefined),
 	BiliBiliApiPlayerSo = WW.Tmpl(BiliBiliApi,'x/player.so?aid=',undefined,'&id=cid:',undefined),
 	BiliBiliApiSteinNode = WW.Tmpl(BiliBiliApi,'x/stein/nodeinfo?aid=',undefined,'&graph_version=',undefined,'&node_id=',undefined),
 	BiliBiliApiFo = WW.Tmpl(BiliBiliApi,'x/relation/followings?vmid=',undefined,'&ps=',O.Size,'&pn=',undefined),
@@ -386,6 +387,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Name : 'Video',
 			Judge : [/^\d+$/,O.Num('Video|AID|AV')],
 			View : O.Less(AV)
+		},{
+			Name : 'BV',
+			Judge : /\bBV[\d\w]+\b/i,
+			View : O.Less(function(ID)
+			{
+				return O.Api(BiliBiliApiWebViewBV(ID)).FMap(function(B)
+				{
+					return AV(Common(B).View.aid)
+				})
+			})
 		},{
 			Name : 'Fav',
 			Judge : O.Num('Fav|FID'),
