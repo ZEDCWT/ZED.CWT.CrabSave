@@ -93,11 +93,14 @@ module.exports = Option =>
 		Err = ErrorS(Err)
 		if (null == Err)
 		{
-			WR.Del(Task,RecErrTE)
-			Err = RecErrTList.indexOf(Task)
-			~Err && RecErrTList.splice(Err,1)
-			WebSocketSend([ActionWebTaskErr,Task],true)
-			WebSocketSendAuth([ActionAuthErrT,Task],true)
+			if (WR.Has(Task,RecErrTE))
+			{
+				WR.Del(Task,RecErrTE)
+				Err = RecErrTList.indexOf(Task)
+				~Err && RecErrTList.splice(Err,1)
+				WebSocketSend([ActionWebTaskErr,Task],true)
+				WebSocketSendAuth([ActionAuthErrT,Task],true)
+			}
 		}
 		else
 		{
@@ -481,6 +484,7 @@ module.exports = Option =>
 							DB.Pause(V).Map(() =>
 							{
 								WebSocketSend([ActionWebTaskPause,++DBVersion,V],true)
+								RecErrT(V)
 								Loop.Stop(V)
 							}))
 						break
