@@ -288,7 +288,11 @@ module.exports = Option =>
 		SiteCount = 0,
 		SiteMap = {};
 		if (!Each) return 9
-		if (String(DBVersion) === Q.replace(/\D/g,'')) return S.end()
+		if (String(DBVersion) === Q.replace(/\D/g,''))
+		{
+			S.end()
+			return
+		}
 		S.write(DBVersion + '\n')
 		Each(V =>
 		{

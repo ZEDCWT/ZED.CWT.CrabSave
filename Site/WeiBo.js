@@ -238,7 +238,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			}
 		},{
 			Name : 'User',
-			Judge : [/\.com\/(\w+)/,O.Word('User')],
+			Judge : [/\.com\/(?:u\/(?=\d))?(\w+)/,O.Word('User')],
 			View : function(ID,Page)
 			{
 				var PageID;

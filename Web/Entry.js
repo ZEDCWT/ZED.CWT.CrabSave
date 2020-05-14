@@ -409,6 +409,7 @@
 			Cipher = Decipher = false
 			DebugLog('Offline',WebSocketRetry)
 			WebSocketNoti(SA('SocOff',[WW.StrDate(WebSocketSince),WebSocketRetry++]))
+			NotiAuth(false)
 			WSOnOffline.D()
 			WebSocketTick.F()
 			WW.To(Online ? 0 : Retry,WS.C,Online = false)
@@ -1388,7 +1389,7 @@
 						},S.Item)
 						BriefKeyword.U(WW.Fmt
 						(
-							'`F`~`T`. `I` `L`/`U`. `G` `A`/`P`. `M`s',
+							'`F`~`T`. `I` `L`/`U`. `G` `A`/`P`. `M`s (`D`)',
 							{
 								F : S.Item.length && S.Item[0].Index,
 								T : S.Item.length && WR.Last(S.Item).Index,
@@ -1398,6 +1399,7 @@
 								G : SA('BroPage'),
 								A : S.At = WR.Default(Q,S.At),
 								P : S.Max = WR.Default(Math.ceil(S.Len / (S.Size || PageSize)) || 1,S.Max),
+								D : WW.StrDate(),
 								M : WR.ToFix(3,(WW.Now() - N) / 1E3)
 							}
 						))
