@@ -1,7 +1,7 @@
 'use strict'
 var
 WW = require('@zed.cwt/wish'),
-{R : WR,X : WX,N : WN} = WW;
+{R : WR,X : WX,C : WC,N : WN} = WW;
 
 /**@type {CrabSaveNS.Loop}*/
 module.exports = Option =>
@@ -119,6 +119,7 @@ module.exports = Option =>
 								PartTotal : WR.Default(Part.length,U.PartTotal),
 								Down
 							}
+							WR.All(V => V.URL && WW.IsStr(V.URL),Down) || WW.Throw(['ErrLoopURL',WC.OTJ(R)])
 							// Optimize : We could omit full reading and size resolving for downloaded files
 							return DB.SaveInfo(V.Row,R)
 								.FMap(() => DB.Full(V.Row))

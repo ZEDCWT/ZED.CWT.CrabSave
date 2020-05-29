@@ -158,6 +158,7 @@ var Lang = // eslint-disable-line
 		ErrDBHas : 'Hot list already contains ~0~',
 		ErrDBAdding : 'Already adding ~0~',
 		ErrDBAddFail : '{INTERNAL FATAL} Unknown error occured while adding ~0~',
+		ErrLoopURL : 'Failed to resolve some URLs\n~0~',
 		ErrLoopSize : 'Failed to resolve size\n~0~',
 
 		'' : ''
@@ -315,6 +316,7 @@ var Lang = // eslint-disable-line
 		ErrDBNo : '任務ID不存在 ~0~',
 		ErrDBHas : '該任務已加入到下載列表中 ~0~',
 		ErrDBAdding : '同時有其他請求將該任務加入到下載列表中 ~0~',
+		ErrLoopURL : '部分URL解析失敗\n~0~',
 		ErrLoopSize : '解析文件大小失敗\n~0~',
 
 		'' : ''
@@ -472,6 +474,7 @@ var Lang = // eslint-disable-line
 		ErrDBNo : '任务ID不存在 ~0~',
 		ErrDBHas : '该任务已加入到下载列表中 ~0~',
 		ErrDBAdding : '同时有其他请求将该任务加入到下载列表中 ~0~',
+		ErrLoopURL : '部分URL解析失败\n~0~',
 		ErrLoopSize : '解析文件大小失败\n~0~',
 
 		'' : ''
@@ -629,6 +632,7 @@ var Lang = // eslint-disable-line
 		ErrDBNo : 'タスクはありません ~0~',
 		ErrDBHas : 'ホットリストには既に~0~が含まれています',
 		ErrDBAdding : '~0~は既に追加中',
+		ErrLoopURL : '一部のURLを解決できませんでした\n~0~',
 		ErrLoopSize : 'サイズを解決できませんでした\n~0~',
 
 		'' : ''
