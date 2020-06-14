@@ -149,8 +149,8 @@ module.exports = O =>
 		},
 		Pack : Q => (
 		{
-			url : Q,
-			headers : {Referer : BiliBiliApi}
+			URL : Q,
+			Head : {Referer : BiliBiliApi}
 		})
 	}
 }

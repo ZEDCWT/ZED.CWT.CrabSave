@@ -5,7 +5,6 @@ WW = require('@zed.cwt/wish'),
 HTTP = require('http'),
 Inspector = require('inspector'),
 Path = require('path'),
-Request = require('request'),
 
 ActionWebTaskNew = 'TaskN',
 ActionWebTaskOverview = 'TaskO',
@@ -175,33 +174,26 @@ module.exports = Option =>
 	CookieE = Q => WC.B91S(WC.AESE(WebToken.slice(0,32),WebToken.slice(-16),Q)),
 	CookieD = Q => WC.U16S(WC.AESD(WebToken.slice(0,32),WebToken.slice(-16),WC.B91P(Q))),
 
-	RequestDefault =
-	{
-		headers : {Accept : '*/*'},
-		timeout : 1E4,
-		forever : true,
-		gzip : true,
-		rejectUnauthorized : false
-	},
 	RequestHead = SiteO.Head = (Q,K,V,Force) =>
 	{
-		Q = WW.IsObj(Q) ? Q : {url : Q}
-		WR.Has(K,Q.headers || (Q.headers = {})) && !Force ||
-			(Q.headers[K] = V)
+		Q = WW.IsObj(Q) ? Q : {URL : Q}
+		WR.Has(K,Q.Head || (Q.Head = {})) && !Force ||
+			(Q.Head[K] = V)
 		return Q
 	},
 	RequestComm = SiteO.Req = LoopO.Req = Q =>
 	{
-		Q = WW.Merge(false,true,WW.IsObj(Q) ? Q : {url : Q},RequestDefault)
-		if (WW.IsStr(Q.url) && WR.StartW('https://www.googleapis.com/',Q.url))
-			Q.url = Q.url.replace(/#GoogleAPIKey#/,Option.GoogleAPIKey || 'AIzaSyA_ltEFFYL4E_rOBYkQtA8aKHnL5QR_uMA')
+		Q = WW.IsObj(Q) ? Q : {URL : Q}
+		if (WW.IsStr(Q.URL) && WR.StartW('https://www.googleapis.com/',Q.URL))
+			Q.URL = Q.URL.replace(/#GoogleAPIKey#/,Option.GoogleAPIKey || 'AIzaSyA_ltEFFYL4E_rOBYkQtA8aKHnL5QR_uMA')
 		RequestHead(Q,WW.UA,
 			WW.Key() + '/' + WW.Rnd(3E3,9E9) +
 			' Chrome/' + WW.Rnd(3E3,6E6) +
 			' Safari/' + WW.Rnd(3E3,6E6) +
 			' AppleWebKit/' + WW.Rnd(3E3,6E6))
+		Q.AC = false
 		Setting.Proxy() && Setting.ProxyURL() &&
-			(Q.proxy = Setting.ProxyURL().replace(/^(?!\w+:\/\/)/,'http://'))
+			(Q.Pro = Setting.ProxyURL())
 		return Q
 	},
 	RequestCoke = SiteO.Coke = (Q,V) => RequestHead(Q,'Cookie',CookieMap[V]),
@@ -256,10 +248,13 @@ module.exports = Option =>
 				H = false
 			WR.StartW('{',Q) && (Q = WC.JTOO(Q))
 			Q = RequestComm(Q)
-			WR.Del('gzip',Q)
-			Q.encoding = null
-			Request(Q)
-				.on('request',O =>
+			Q.GZ = false
+			Q.Enc = false
+			Q.AC = true
+			Q.OnD = D => S.write(D)
+			Q.OnE = () => S.end()
+			WN.Req(Q)
+				.On('Req',O =>
 				{
 					H && WR.EachU((V,F) =>
 					{
@@ -267,7 +262,7 @@ module.exports = Option =>
 							O.setHeader(F,V)
 					},H)
 				})
-				.on('response',O =>
+				.On('Res',O =>
 				{
 					H && WR.EachU((V,F) =>
 					{
@@ -276,9 +271,7 @@ module.exports = Option =>
 					},O.headers)
 					S.writeHead(O.statusCode,O.statusMessage)
 				})
-				.on('data',D => S.write(D))
-				.on('complete',() => S.end())
-				.on('error',() => S.destroy())
+				.On('Err',() => S.destroy())
 		}
 		catch(_){S.destroy()}
 	},
@@ -421,7 +414,7 @@ module.exports = Option =>
 						{
 							if (ApiPool.has(K))
 							{
-								ApiPool.get(K).abort()
+								ApiPool.get(K)()
 								ApiPool.delete(K)
 							}
 						}
@@ -431,18 +424,28 @@ module.exports = Option =>
 							Err('ErrBadReq')
 						else
 						{
-							if (!/^\w+:\/\//.test(O.url)) O.url = 'http://' + O.url
+							if (!/^\w+:\/\//.test(O.URL)) O.URL = 'http://' + O.URL
 							if (O.Cookie)
 								RequestCoke(O,O.Cookie)
-							ApiPool.set(K,Request(RequestComm(O),(E,I,R) =>
+							ApiPool.set(K,WN.ReqU(RequestComm(O)).Now(B =>
 							{
 								ApiPool.delete(K)
 								SendAuth(
 								[
 									ActionAuthApi,K,
-									!E && I.statusCode,
-									E ? ErrorS(E) : R,
-									I && I.headers
+									B[0].Code,
+									B[1],
+									B[0].H
+								])
+							},E =>
+							{
+								ApiPool.delete(K)
+								SendAuth(
+								[
+									ActionAuthApi,K,
+									false,
+									ErrorS(E),
+									null
 								])
 							}))
 						}
@@ -536,7 +539,7 @@ module.exports = Option =>
 			WebSocketPool.delete(Feed)
 			WebSocketPoolAuth.delete(SendAuth)
 			WebSocketPoolAuthSuicide.delete(Suicide)
-			ApiPool.forEach(V => V.abort())
+			ApiPool.forEach(V => V())
 		})
 
 		WR.Each(Send,WebSocketLast)

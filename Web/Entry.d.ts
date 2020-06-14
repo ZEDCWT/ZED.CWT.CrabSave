@@ -14,10 +14,10 @@ declare module CrabSaveNS
 	}
 	interface WebTool
 	{
-		Req(Q : string | WishNS.RequestOption) : WishNS.Provider<string>
-		Req(Q : string | WishNS.RequestOption,H : true) : WishNS.Provider<[number | false,string,WishNS.RequestHeader]>
-		Api(Q : string | WishNS.RequestOption) : WishNS.Provider<string>
-		Head(Q : string | WishNS.RequestOption,K : string,V : string) : WishNS.RequestOption
+		Req(Q : string | WishNS.ReqAccept) : WishNS.Provider<string>
+		Req(Q : string | WishNS.ReqAccept,H : true) : WishNS.Provider<[number | false,string,WishNS.RequestHeader]>
+		Api(Q : string | WishNS.ReqAccept) : WishNS.Provider<string>
+		Head(Q : string | WishNS.ReqAccept,K : string,V : string) : WishNS.ReqAccept
 		Auth() : boolean
 		Coke() : string
 		CokeU() : any

@@ -34,9 +34,8 @@ module.exports = O =>
 			VideoTitle;
 			return (DTSToken ? WN.ReqB(O.Coke(
 			{
-				url : FacebookVideoTahoeAsync(Q.replace(/.*\//,'')),
-				method : 'post',
-				form :
+				URL : FacebookVideoTahoeAsync(Q.replace(/.*\//,'')),
+				Form :
 				{
 					__a : 1,
 					fb_dtsg : DTSToken

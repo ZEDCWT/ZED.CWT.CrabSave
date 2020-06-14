@@ -11,14 +11,11 @@ TwitterAuth = 'AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv
 module.exports = O =>
 {
 	var
-	MakeHead = Q =>
-	{
-		Q = WW.IsObj(Q) ? Q : {url : Q}
-		Q.headers || (Q.headers = {})
-		Q.headers['X-CSRF-Token'] = WC.CokeP(O.CokeRaw()).ct0
-		Q.headers.Authorization = 'Bearer ' + TwitterAuth
-		return Q
-	};
+	MakeHead = Q => WN.ReqOH(Q,
+	[
+		'X-CSRF-Token',WC.CokeP(O.CokeRaw()).ct0,
+		'Authorization','Bearer ' + TwitterAuth
+	]);
 	return {
 		URL : ID =>
 		{

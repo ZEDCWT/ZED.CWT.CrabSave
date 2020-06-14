@@ -33,7 +33,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		Min : 'user_session',
 		Sign : function()
 		{
-			return O.Req({url : NicoMy,maxRedirects : 1}).Map(function(B)
+			return O.Req({URL : NicoMy,RedX : 1}).Map(function(B)
 			{
 				return WC.JTO(WW.MF(/nickname[ =]+(".*");/,B))
 			})

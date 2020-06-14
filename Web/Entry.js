@@ -864,6 +864,8 @@
 				;(null == E ? WV.ClsA : WV.ClsR)(Err,WV.None)
 			};
 			WV.ApA([Title,SiteID],Header)
+			Site && Site.IDURL &&
+				WV.Ap(WV.X(Site.IDURL(Q.I)),Header)
 			Update(S)
 			WV.ApA([Header,Detail,ErrReq,Err,Part],Y)
 			WV.ClsA(Y,ClassDetail)
@@ -3026,7 +3028,7 @@
 			{
 				Req : function(Q,H)
 				{
-					Q = WW.IsObj(Q) ? Q : {url : Q}
+					Q = WW.IsObj(Q) ? Q : {URL : Q}
 					Q.Cookie = V.Cookie
 					return WX.Provider(function(O)
 					{
@@ -3057,9 +3059,7 @@
 				},
 				Head : function(Q,K,V)
 				{
-					Q = WW.IsObj(Q) ? Q : {url : Q}
-					;(Q.headers || (Q.headers = {}))[K] = V
-					return Q
+					return WW.N.ReqOH(Q,K,V)
 				},
 				Auth : function()
 				{

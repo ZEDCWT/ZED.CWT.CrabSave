@@ -100,7 +100,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		Min : 'SID SSID LOGIN_INFO PREF',
 		Sign : function()
 		{
-			return O.Req({url : YouTubeAccount,followRedirect : false}).Map(function(B)
+			return O.Req({URL : YouTubeAccount,Red : false}).Map(function(B)
 			{
 				return WC.JTO(WW.MF(/"name":(".*?"),"/,B))
 			})
@@ -210,8 +210,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			{
 				return O.Req(
 				{
-					url : YouTubeBrowse(I[Page][0],I[Page][0],I[Page][1]),
-					headers : I[0]
+					URL : YouTubeBrowse(I[Page][0],I[Page][0],I[Page][1]),
+					Head : I[0]
 				})
 			},function(B)
 			{

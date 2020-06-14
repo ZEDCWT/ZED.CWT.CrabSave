@@ -55,9 +55,9 @@ module.exports = Option =>
 
 	Pack = (Q,S) => Option.Req((Option.Site.D(S).Pack || WR.Id)(Q)),
 	SolveSize = (Q,S) => WN.ReqH(Pack(Q,S)).Map((H,T) =>
-		/^2/.test(H.statusCode) && (T = +H.headers['content-length']) === T ?
+		/^2/.test(H.Code) && (T = +H.H['content-length']) === T ?
 			T :
-			WW.Throw(['ErrLoopSize',H.rawHeaders.join('\n')])),
+			WW.Throw(['ErrLoopSize',H.W.join('\n')])),
 
 	InfoRunning = new Map,
 	InfoDispatching,InfoDispatchAgain,

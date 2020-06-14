@@ -60,16 +60,16 @@ declare module CrabSaveNS
 		{
 			Cmp() : any
 			Cmp(D : any) : any
-			Head(Q : string | WishNS.RequestOption,K : string,V : string,Force? : boolean) : WishNS.RequestOption
-			Req(Q : string | WishNS.RequestOption) : WishNS.RequestOption
-			Coke(Q : string | WishNS.RequestOption) : WishNS.RequestOption
+			Head(Q : string | WishNS.ReqAccept,K : string,V : string,Force? : boolean) : WishNS.ReqAccept
+			Req(Q : string | WishNS.ReqAccept) : WishNS.ReqAccept
+			Coke(Q : string | WishNS.ReqAccept) : WishNS.ReqAccept
 			CokeRaw() : string
 			Best<U>(S : string | string[],Q : U[]) : U
 			Bad(Q : any) : never
 			Text(Q : string) : string
 		}) : {
 			URL(ID : string) : WishNS.Provider<SiteURL>
-			Pack?(Q : string) : string | WishNS.RequestOption
+			Pack?(Q : string) : string | WishNS.ReqAccept
 		}
 	}
 	interface SiteURL
@@ -96,9 +96,9 @@ declare module CrabSaveNS
 		{
 			Cmp : WishNS.JSONU<{}>
 			CokeRaw(Q : string) : string
-			Head(Q : string | WishNS.RequestOption,K : string,V : string,Force? : boolean) : WishNS.RequestOption
-			Req(Q : string | WishNS.RequestOption) : WishNS.RequestOption
-			Coke(Q : string | WishNS.RequestOption,Q : string) : WishNS.RequestOption
+			Head(Q : string | WishNS.ReqAccept,K : string,V : string,Force? : boolean) : WishNS.ReqAccept
+			Req(Q : string | WishNS.ReqAccept) : WishNS.ReqAccept
+			Coke(Q : string | WishNS.ReqAccept,Q : string) : WishNS.ReqAccept
 		}) : {
 			A : ReturnType<SiteO>[]
 			M : {[K : string] : ReturnType<SiteO>[]}

@@ -21,7 +21,7 @@ module.exports = O =>
 	Coke = function(Q)
 	{
 		Q = O.Coke(Q)
-		Q.headers.Cookie += '; watch_flash=0'
+		Q.Head.Cookie += '; watch_flash=0'
 		return Q
 	};
 	return {
@@ -29,22 +29,21 @@ module.exports = O =>
 			.FMap(B =>
 			(
 				B = Coke(NicoWatchPC(PadSM(ID),WW.MF(/playlistToken&quot;:&quot;([^&]+)/,B))),
-				B.headers.Cookie = NicoHistory + '; ' + B.headers.Cookie,
+				B.Head.Cookie = NicoHistory + '; ' + B.Head.Cookie,
 				WN.ReqU(B)
 			))
 			.FMap(([H,B],S) =>
 			{
 				WR.Each(
 					V => {/^nicohistory=/.test(V) && (NicoHistory = V.split('; ')[0])},
-					H.headers['set-cookie'])
+					H.H['set-cookie'])
 				B = WC.JTO(B)
 				200 === B.status_code || O.Bad(B)
 				return ((H = B.video.dmcInfo) ?
 					WN.ReqB(O.Req(
 					{
-						url : NicoDMCApi,
-						method : 'post',
-						form : WC.OTJ(
+						URL : NicoDMCApi,
+						Form : WC.OTJ(
 						{
 							session :
 							{
@@ -124,8 +123,8 @@ module.exports = O =>
 			}),
 		Pack : Q => (
 		{
-			url : Q,
-			headers : {Cookie : NicoHistory}
+			URL : Q,
+			Head : {Cookie : NicoHistory}
 		})
 	}
 }

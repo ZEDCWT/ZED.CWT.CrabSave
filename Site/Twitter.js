@@ -86,11 +86,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	},
 	MakeHead = function(Q)
 	{
-		Q = WW.IsObj(Q) ? Q : {url : Q}
-		Q.headers || (Q.headers = {})
-		Q.headers['X-CSRF-Token'] = WC.CokeP(O.Coke()).ct0
-		Q.headers.Authorization = 'Bearer ' + TwitterAuth
-		return Q
+		return WW.N.ReqOH(Q,
+		[
+			'X-CSRF-Token',WC.CokeP(O.Coke()).ct0,
+			'Authorization','Bearer ' + TwitterAuth
+		])
 	};
 	return {
 		ID : 'Twitter',

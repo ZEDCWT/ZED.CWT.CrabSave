@@ -20,7 +20,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	},
 	TryLogin = O.CokeC(function()
 	{
-		return O.Req({url : SinaLogin,followRedirect : false},true).Map(function(B,T)
+		return O.Req({URL : SinaLogin,Red : false},true).Map(function(B,T)
 		{
 			B = B[2] && B[2]['set-cookie']
 			B = B && WR.Where(WR.Test(/^SUBP?=/),B)
@@ -200,8 +200,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			{
 				return Req(
 				{
-					url : WeiBoSearchSugg(WC.UE(Q)),
-					headers :
+					URL : WeiBoSearchSugg(WC.UE(Q)),
+					Head :
 					{
 						'X-Requested-With' : 'XMLHttpRequest',
 						Referer : WeiBo
