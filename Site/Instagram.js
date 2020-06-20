@@ -25,7 +25,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	InstagramSearchTop = WW.Tmpl(Instagram,'web/search/topsearch/?query=',undefined),
 	SolveUserID = WX.CacheM(function(ID)
 	{
-		return O.Api(InstagramProfile(ID)).Map(function(B)
+		return O.Req(InstagramProfile(ID)).Map(function(B)
 		{
 			return WC.JTO(B).graphql.user.id
 		})
