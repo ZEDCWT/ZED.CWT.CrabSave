@@ -67,6 +67,7 @@ declare module CrabSaveNS
 			Best<U>(S : string | string[],Q : U[]) : U
 			Bad(Q : any) : never
 			Text(Q : string) : string
+			M3U(Q : string) : WishNS.Provider<SitePart[]>
 		}) : {
 			URL(ID : string) : WishNS.Provider<SiteURL>
 			Pack?(Q : string) : string | WishNS.ReqAccept

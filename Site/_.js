@@ -1,7 +1,7 @@
 'use strict'
 var
 WW = require('@zed.cwt/wish'),
-{R : WR,X : WX,C : WC} = WW;
+{R : WR,X : WX,C : WC,N : WN} = WW;
 
 /**@type {CrabSaveNS.SiteAll}*/
 module.exports = Option =>
@@ -26,6 +26,13 @@ module.exports = Option =>
 				.replace(/<.*?>/g,''))
 				.replace(/.+/g,WR.Trim)
 				.replace(/\r?\n/g,' '),
+			M3U : Q => WN.ReqB(Q).FMap(B =>
+			{
+				B = WC.M3U(B)
+				if (WW.IsArr(B.INF))
+					return WX.Just(B.INF.map(V => WN.JoinU(Q,V[1])))
+				WX.Throw(['ErrBadRes',B])
+			})
 		})
 		All.push(S)
 		Map[S.ID = V] = S

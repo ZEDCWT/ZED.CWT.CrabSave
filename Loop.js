@@ -100,7 +100,7 @@ module.exports = Option =>
 										URL : L,
 										Ext : WW.IsArr(P.Ext) ? P.Ext[G] :
 											null != P.Ext ? P.Ext :
-											(F = WN.ExtN(L.replace(/\?.*/,''))) && F.length < 7 ? F :
+											(L = WN.ExtN(L.replace(/\?.*/,''))) && L.length < 7 ? L :
 											'.mp4',
 										Size : P.Size ? P.Size[G] : null
 									})

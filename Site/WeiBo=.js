@@ -1,7 +1,7 @@
 'use strict'
 var
 WW = require('@zed.cwt/wish'),
-{R : WR,C : WC,N : WN} = WW,
+{R : WR,X : WX,C : WC,N : WN} = WW,
 
 WeiBo = 'https://weibo.com/';
 
@@ -9,7 +9,7 @@ WeiBo = 'https://weibo.com/';
 module.exports = O =>
 {
 	return {
-		URL : ID => WN.ReqB(O.Coke(WeiBo + ID)).Map(B =>
+		URL : ID => WN.ReqB(O.Coke(WeiBo + ID)).FMap(B =>
 		{
 			var T;
 			B = WC.JTO(WW.MU(/{"ns":"pl.content.weiboDetail.*}/,B)).html
@@ -21,21 +21,25 @@ module.exports = O =>
 				URL[0] && URL[0][1] || O.Bad(URL)
 				URL = URL[0][1]
 			}
+			else if (T = WW.MF(/WB_video_mini.*action-data="([^"]+)/,B))
+			{
+				URL = WC.QSP(T).live_src
+				URL || O.Bad(T)
+				URL = O.M3U(URL)
+			}
 			else if (T = WW.MF(/li_story.*?action-data="([^"]+)/,B))
 				URL = WC.QSP(T).gif_ourl
 			else O.Bad('Contains no media')
-			return {
+			return (WW.IsStr(URL) ? WX.Just([URL]) : URL).Map(URL => (
+			{
 				Title : WR.Trim(WC.HED(WW.MU(/<[^>]+WB_text[^]+?<\/div>/,B)
 					.replace(/<a[^>]+ignore=.*?<\/a>/g,'')
 					.replace(/<br>/g,'\n')
 					.replace(/<.*?>/g,''))),
 				Up : WC.HED(WW.MF(/face".*title="([^"]+)/,B)),
 				Date : +WW.MF(/date="(\d+)/,B),
-				Part : [
-				{
-					URL : [URL]
-				}]
-			}
+				Part : [{URL}]
+			}))
 		})
 	}
 }
