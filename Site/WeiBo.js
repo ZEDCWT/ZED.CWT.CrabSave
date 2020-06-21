@@ -11,7 +11,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	WeiBoSearch = 'https://s.weibo.com/',
 	WeiBoSearchSugg = WW.Tmpl(WeiBoSearch,'Ajax_Search/suggest?where=weibo&type=weibo&key=',undefined),
 	WeiBoSearchQuery = WW.Tmpl(WeiBoSearch,'weibo?xsort=hot&q=',undefined,'&page=',undefined),
-	SinaLogin = 'https://login.sina.com.cn/sso/login.php',
+	SinaLogin = 'https://login.sina.com.cn/',
+	SinaLoginSSO = SinaLogin + 'sso/login.php',
+	SinaLoginCross = SinaLogin + 'crossdomain2.php?action=login',
 	NumberZip = WC.Rad(WW.D + WW.az + WW.AZ),
 	Zip = function(Q)
 	{
@@ -20,19 +22,39 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	},
 	TryLogin = O.CokeC(function()
 	{
-		return O.Req({URL : SinaLogin,Red : false},true).Map(function(B,T)
+		return O.Req(SinaLoginSSO,true).FMap(function(AT,T)
 		{
-			B = B[2] && B[2]['set-cookie']
-			B = B && WR.Where(WR.Test(/^SUBP?=/),B)
-			if (2 === B.length)
-			{
-				T = WC.CokeP(O.Coke(),WR.Id)
-				B = WC.CokeP(B.join('; '))
-				T.SUB = B.SUB
-				T.SUBP = B.SUBP
-				O.CokeU(WC.CokeS(T,WR.Id))
-			}
-			return !!B
+			AT = AT[2] && AT[2]['set-cookie']
+			return AT && 1 < AT.length ?
+			(
+				T = WC.CokeP(O.Coke(),WR.Id),
+				AT = WC.CokeP(AT.join('; '),WR.Id),
+				T.ALC = AT.ALC,
+				O.Req(
+				{
+					URL : SinaLoginCross,
+					Head : {Cookie : WC.CokeS(T,WR.Id) + '; tgc=' + AT.tgc},
+					Cookie : false
+				}).FMap(function(B)
+				{
+					B = WC.JTOO(WW.MF(/List\(.*?(\[.*])/,B))
+					return WW.IsArr(B) && B.length ?
+						O.Req({URL : B[0],Cookie : false},true) :
+						WX.Just()
+				}).Map(function(B)
+				{
+					B = B && B[2] && B[2]['set-cookie']
+					if (B && 1 < B.length)
+					{
+						B = WC.CokeP(B.join('; '),WR.Id)
+						T.SUB = B.SUB
+						T.SUBP = B.SUBP
+						O.CokeU(WC.CokeS(T,WR.Id))
+					}
+					else B = 0
+					return !!B
+				})
+			) : WX.Just()
 		})
 	}),
 	Req = function(Q)

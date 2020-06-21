@@ -3029,7 +3029,8 @@
 				Req : function(Q,H)
 				{
 					Q = WW.IsObj(Q) ? Q : {URL : Q}
-					Q.Cookie = V.Cookie
+					if (!WR.Has('Cookie',Q))
+						Q.Cookie = V.Cookie
 					return WX.Provider(function(O)
 					{
 						var T = WW.Key();

@@ -14,10 +14,10 @@ declare module CrabSaveNS
 	}
 	interface WebTool
 	{
-		Req(Q : string | WishNS.ReqAccept) : WishNS.Provider<string>
-		Req(Q : string | WishNS.ReqAccept,H : true) : WishNS.Provider<[number | false,string,WishNS.RequestHeader]>
-		Api(Q : string | WishNS.ReqAccept) : WishNS.Provider<string>
-		Head(Q : string | WishNS.ReqAccept,K : string,V : string) : WishNS.ReqAccept
+		Req(Q : string | WebReq) : WishNS.Provider<string>
+		Req(Q : string | WebReq,H : true) : WishNS.Provider<[number | false,string,WishNS.ReqH['H']]>
+		Api(Q : WishNS.ReqAccept) : WishNS.Provider<string>
+		Head(Q : WishNS.ReqAccept,K : string,V : string) : WishNS.ReqO
 		Auth() : boolean
 		Coke() : string
 		CokeU() : any
@@ -45,6 +45,10 @@ declare module CrabSaveNS
 		Ah(Title : string,URL : string) : WishNS.Ele
 		Text(Q : string,Trim? : boolean) : string
 		Progress(Q : string) : any
+	}
+	interface WebReq extends WishNS.ReqO
+	{
+		Cookie? : any
 	}
 
 	interface Setting
