@@ -54,7 +54,10 @@ module.exports = O =>
 						Q = Q[0]
 						Size.push(+Q.contentLength || null)
 						Ext.push('.' + WW.MF(/\/(\w+)/,Q.mimeType) + (X || ''))
-						URL.push(Q.cipher ? WC.QSP(Q.cipher) : Q.url)
+						URL.push(
+							Q.cipher ? WC.QSP(Q.cipher) :
+							Q.signatureCipher ? WC.QSP(Q.signatureCipher) :
+							Q.url)
 					},
 					URL = [],Size = [],Ext = [],
 					T;
