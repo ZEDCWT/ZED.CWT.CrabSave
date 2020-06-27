@@ -112,7 +112,8 @@ module.exports = O =>
 					{
 						Title : B.video.title,
 						Up : B.owner ? B.owner.nickname.replace(/ さん$/,'') : // 敬稱略
-							B.channel.name,
+							B.channel ? B.channel.name :
+							'{ナナシ}', // sm16963398
 						Date : +new Date(B.video.postedDateTime + '+0900'),
 						Part : [
 						{
