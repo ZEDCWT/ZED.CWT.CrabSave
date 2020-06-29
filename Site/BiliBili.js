@@ -27,6 +27,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliApiPGC = BiliBiliApi + 'pgc/',
 	BiliBiliApiPGCMedia = WW.Tmpl(BiliBiliApiPGC,'view/web/media?media_id=',undefined),
 	BiliBiliApiPGCSeason = WW.Tmpl(BiliBiliApiPGC,'view/web/season?season_id=',undefined),
+	BiliBiliApiPGCSeasonSection = WW.Tmpl(BiliBiliApiPGC,'web/season/section?season_id=',undefined),
 	BiliBiliSearch = 'https://search.bilibili.com/',
 	BiliBiliSearchS = 'https://s.search.bilibili.com/',
 	BiliBiliSearchSuggestion = WW.Tmpl(BiliBiliSearchS,'main/suggest?main_ver=v1&highlight&term=',undefined),
@@ -550,6 +551,26 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							More : 'cid' + V.cid
 						}
 					},B.episodes))
+				}).FMap(function(R)
+				{
+					return O.Api(BiliBiliApiPGCSeasonSection(ID)).Map(function(B)
+					{
+						B = Common(B)
+						return WR.Concat(R,WR.Unnest(WR.Map(function(V)
+						{
+							return WR.Map(function(B)
+							{
+								return {
+									ID : B.aid + '#' + B.cid,
+									URL : BiliBiliBgmEP(B.id),
+									Img : B.cover,
+									Title : WR.Trim(V.title + ' | ' + B.title + ' ' + B.long_title),
+									UP : 'ep' + B.id,
+									UPURL : BiliBiliBgmEP(B.id),
+								}
+							},V.episodes)
+						},B.section)))
+					})
 				})
 			})
 		},{
