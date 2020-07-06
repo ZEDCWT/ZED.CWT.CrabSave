@@ -38,9 +38,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliVCApi = 'https://api.vc.bilibili.com/',
 	BiliBiliVCApiDetail = WW.Tmpl(BiliBiliVCApi,'clip/v1/video/detail?video_id=',undefined),
 	BiliBiliVCApiOnes = WW.Tmpl(BiliBiliVCApi,'clip/v1/video/ones?poster_uid=',undefined,'&need_playurl=0&page_size=',O.Size,'&next_offset=',undefined),
-	BiliBiliVCApiDynamicType = 'type_list=8,16,512',
-	BiliBiliVCApiDynamicNew = BiliBiliVCApi + 'dynamic_svr/v1/dynamic_svr/dynamic_new?uid=&' + BiliBiliVCApiDynamicType,
-	BiliBiliVCApiDynamicHistory = WW.Tmpl(BiliBiliVCApi,'dynamic_svr/v1/dynamic_svr/dynamic_history?uid=&',BiliBiliVCApiDynamicType,'&offset_dynamic_id=',undefined),
+	BiliBiliVCApiDynamicType = 268435455,
+	BiliBiliVCApiDynamicNew = BiliBiliVCApi + 'dynamic_svr/v1/dynamic_svr/dynamic_new?uid=&type_list=' + BiliBiliVCApiDynamicType,
+	BiliBiliVCApiDynamicHistory = WW.Tmpl(BiliBiliVCApi,'dynamic_svr/v1/dynamic_svr/dynamic_history?uid=&type=',BiliBiliVCApiDynamicType,'&offset_dynamic_id=',undefined),
 	// Appkey = '20bee1f7a18a425c',
 	Common = function(V)
 	{
@@ -495,17 +495,17 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				return O.Req(BiliBiliVCApiDynamicHistory(I[Page]))
 			},function(B)
 			{
-				B = Common(B).cards
-				return [B.length && WR.Last(B).desc.dynamic_id_str,
+				B = Common(B)
+				return [B.history_offset || B.has_more && B.next_offset,
 				{
-					Item : WR.Map(function(V,C)
+					Item : WR.MapW(function(V,C)
 					{
 						C = WC.JTO(V.card)
 						V = V.desc.type
-						return 16 === V ?
-							SolveVC(C) :
-							SolveAV(C)
-					},B)
+						return 16 === V ? SolveVC(C) :
+							8 === V || 512 === V ? SolveAV(C) :
+							null
+					},B.cards)
 				}]
 			})
 		},{
