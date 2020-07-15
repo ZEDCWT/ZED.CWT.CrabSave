@@ -8,7 +8,7 @@ ShortVideoPrefix = 'vc',
 BiliBili = 'https://www.bilibili.com/',
 BiliBiliApi = 'https://api.bilibili.com/',
 BiliBiliApiWebView = WW.Tmpl(BiliBiliApi,'x/web-interface/view?aid=',undefined),
-BiliBiliApiPlayURL = WW.Tmpl(BiliBiliApi,'x/player/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=16'),
+BiliBiliApiPlayURL = WW.Tmpl(BiliBiliApi,'x/player/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=16&fourk=1'),
 BiliBiliApiPlayerSo = WW.Tmpl(BiliBiliApi,'x/player.so?aid=',undefined,'&id=cid:',undefined),
 BiliBiliApiSteinNode = WW.Tmpl(BiliBiliApi,'x/stein/nodeinfo?aid=',undefined,'&graph_version=',undefined,'&node_id=',undefined),
 BiliBiliVCApi = 'https://api.vc.bilibili.com/',
@@ -23,7 +23,7 @@ module.exports = O =>
 {
 	var
 	PlayURL = (ID,CID,Quality) =>
-		WN.ReqB(O.Coke(BiliBiliApiPlayURL(ID,CID,Quality || 112)))
+		WN.ReqB(O.Coke(BiliBiliApiPlayURL(ID,CID,Quality || 120)))
 			.Map(Common)
 			.RetryWhen(E => E.Map((V,F) =>
 				!F && V && -503 === V.code || WW.Throw(V))
@@ -100,7 +100,7 @@ module.exports = O =>
 						return WX.From(V)
 					})
 					.FMapO(1,V =>
-						PlayURL(ID,V[0],112).FMap((B,T) =>
+						PlayURL(ID,V[0],120).FMap((B,T) =>
 						{
 							T = B.accept_quality && Math.max(...B.accept_quality)
 							return T && B.quality < T ?
