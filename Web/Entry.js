@@ -3107,6 +3107,7 @@
 					/^$/,
 					/\b(?:Dynamic|Sub|Subscri(?:be|ption)|Timeline|TL)\b/i,
 					/\b(?:Home)\b/i,
+					/\b(?:Feed)\b/i,
 					/\b(?:Top|Repo)\b/i
 				],
 				UP : /\b(?:Up|Uploader|Fo|Follow|Following)\b/i,
@@ -3118,6 +3119,11 @@
 					{
 						return V.charAt(0).toUpperCase() + V.slice(1)
 					})
+				},
+				JOM : function(S,Q)
+				{
+					S = S.exec(Q)
+					return WC.JTO(Q.slice(S.index + S[0].length),{More : true})[0]
 				},
 				NoRel : InpNoRel,
 				Less : function(Q)
@@ -3186,7 +3192,7 @@
 			if (!WW.IsNum(SiteMap[V.ID])) return
 			V.Judge || (V.Judge = /(?!)/)
 			V.Cookie || V.Sign && (V.Cookie = V.ID)
-			WW.IsStr(V.Min) && (V.Min = V.Min.split(' '))
+			V.Min && WW.IsStr(V.Min) && (V.Min = V.Min.split(' '))
 			WR.Each(function(B){B.Judge = WW.IsArr(B.Judge) ? B.Judge : B.Judge ? [B.Judge] : []},V.Map)
 			V.IDView || (V.IDView = WR.Id)
 			SiteAll[SiteMap[V.ID]] = V
@@ -3215,6 +3221,7 @@
 			'NicoNico',
 			'Facebook',
 			'Instagram',
+			'IXiGua',
 			'Twitter',
 			'WeiBo'
 		]).length

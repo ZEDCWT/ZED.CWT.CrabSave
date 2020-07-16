@@ -88,8 +88,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	{
 		return O.Api(O.Head(BiliBiliBgmEP(ID),'Cookie','stardustpgcv=0')).Map(function(B)
 		{
-			B = B.slice(18 + /__INITIAL_STATE__={/.exec(B).index)
-			B = WC.JTO(B,{More : true})[0]
+			B = O.JOM(/__INITIAL_STATE__=/,B)
 			return [
 				B.epInfo.aid,
 				B.mediaInfo.ssId

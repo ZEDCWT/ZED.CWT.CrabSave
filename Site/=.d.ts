@@ -66,6 +66,7 @@ declare module CrabSaveNS
 			CokeRaw() : string
 			Best<U>(S : string | string[],Q : U[]) : U
 			Bad(Q : any) : never
+			JOM(S : RegExp,Q : string) : object
 			Text(Q : string) : string
 			M3U(Q : string) : WishNS.Provider<SitePart[]>
 		}) : {

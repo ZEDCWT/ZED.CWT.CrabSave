@@ -31,6 +31,7 @@ declare module CrabSaveNS
 		Find : RegExp | RegExp[]
 		Size : number
 		Pascal(Q : string) : string
+		JOM(S : RegExp,Q : string) : object
 		NoRel(Q : string) : WishNS.EleContent
 		Less(Q : (ID : string) => WishNS.Provider<SiteItem[]>) : (ID : string,Page : number) => WishNS.Provider<SitePage>
 		More<U,N>

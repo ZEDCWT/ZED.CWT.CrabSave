@@ -21,6 +21,11 @@ module.exports = Option =>
 			Best : (S,Q) => WR.Reduce(WR.MaxBy(V => WW.IsArr(S) ? +WR.Path(S,V) : +V[S]),
 				{[S] : -Infinity},Q),
 			Bad : Q => WW.Throw(['ErrBadRes',WW.IsStr(Q) ? Q : WC.OTJ(Q)]),
+			JOM : (S,Q) =>
+			(
+				S = S.exec(Q),
+				WC.JTO(Q.slice(S.index + S[0].length),{More : true})[0]
+			),
 			Text : Q => WC.HED(Q
 				.replace(/<br\b[^>]*>/g,'\n')
 				.replace(/<.*?>/g,''))
@@ -42,6 +47,7 @@ module.exports = Option =>
 		'NicoNico',
 		'Facebook',
 		'Instagram',
+		'IXiGua',
 		'Twitter',
 		'WeiBo',
 	])
