@@ -7,7 +7,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	WeiBoUserAllSub = WW.Tmpl(WeiBo,'p/aj/v6/mblog/mbloglist?script_uri=/',undefined,'&id=',undefined,'&pl_name=Pl_Official_MyProfileFeed__20&domain=100505&is_all=1&page=',undefined,'&pre_page=',undefined,'&pagebar=',undefined),
 	WeiBoHome = WW.Tmpl(WeiBo,'aj/mblog/fsearch?',undefined),
 	WeiBoFollow = WW.Tmpl(WeiBo,undefined,'/follow'),
-	WeiBoFollowAPI = WW.Tmpl(WeiBo,'p/',undefined,'/myfollow?ajaxpagelet=1&pids=Pl_Official_RelationMyfollow__95&Pl_Official_RelationMyfollow__95_page=',undefined),
+	WeiBoFollowAPI = WW.Tmpl(WeiBo,'p/',undefined,'/myfollow?ajaxpagelet=1&pids=Pl_Official_RelationMyfollow__93&Pl_Official_RelationMyfollow__93_page=',undefined),
 	WeiBoSearch = 'https://s.weibo.com/',
 	WeiBoSearchSugg = WW.Tmpl(WeiBoSearch,'Ajax_Search/suggest?where=weibo&type=weibo&key=',undefined),
 	WeiBoSearchQuery = WW.Tmpl(WeiBoSearch,'weibo?xsort=hot&q=',undefined,'&page=',undefined),
