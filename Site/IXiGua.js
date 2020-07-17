@@ -24,6 +24,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		'RegExp',
 		'JSON'
 	]),
+	Sign,SignAt,
 	SolveSign = WX.CacheL(function(URL)
 	{
 		return O.Api(URL).Map(function(B,T)
@@ -42,18 +43,19 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			{
 				WR.Del(T,CrabSave)
 			}
-			return B.sign || WR.Const('')
+			SignAt = WW.Now()
+			return Sign = B.sign || WR.Const('')
 		})
 	}),
-	ReqAPI = function(Q)
+	ReqAPI = function(Q,Api)
 	{
-		return O.Api(IXiGua).FMap(function(B)
+		return (Sign && WW.Now() < SignAt + 36E5 ? WX.Just(Sign) : O.Api(IXiGua).FMap(function(B)
 		{
 			Happy.tac = WC.JTO('"' + WW.MF(/tac='(.+?)'<\/scr/,B).replace(/"/g,'\\"') + '"')
 			return SolveSign(WW.MF(/="([^"]+vendors_index[^"]+js)"/,B))
-		}).FMap(function(S)
+		})).FMap(function(S)
 		{
-			return (O.Coke() ? O.Req : O.Api)(
+			return (!Api && O.Coke() ? O.Req : O.Api)(
 			{
 				URL : Q + (/\?/.test(Q) ? '&' : '?') + '_signature=' + S(
 				{
@@ -99,10 +101,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			Judge : O.Find,
 			View : O.More(function(ID)
 			{
-				return ReqAPI(IXiGuaAPISearch(WC.UE(ID),0))
+				return ReqAPI(IXiGuaAPISearch(WC.UE(ID),0),true)
 			},function(I,Page,ID)
 			{
-				return ReqAPI(IXiGuaAPISearch(WC.UE(ID),I[Page]))
+				return ReqAPI(IXiGuaAPISearch(WC.UE(ID),I[Page]),true)
 			},function(B)
 			{
 				B = Common(B)
@@ -126,7 +128,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			}),
 			Hint : function(Q)
 			{
-				return ReqAPI(IXiGuaAPISearchSugg(WC.UE(Q))).Map(function(B)
+				return ReqAPI(IXiGuaAPISearchSugg(WC.UE(Q)),true).Map(function(B)
 				{
 					return {
 						Item : WR.Pluck('keyword',Common(B).data)
