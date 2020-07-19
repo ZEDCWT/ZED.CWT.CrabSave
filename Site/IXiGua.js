@@ -174,7 +174,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			],
 			View : function(ID)
 			{
-				return ((O.Coke() ? O.Req : O.Api))(IXiGua + ID).Map(function(B)
+				return (O.Coke() ? O.Req : O.Api)(IXiGua + ID).Map(function(B)
 				{
 					return {
 						Item : [
