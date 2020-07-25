@@ -14,11 +14,18 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	SinaLogin = 'https://login.sina.com.cn/',
 	SinaLoginSSO = SinaLogin + 'sso/login.php',
 	SinaLoginCross = SinaLogin + 'crossdomain2.php?action=login',
+	WeiBoMobile = 'https://m.weibo.cn/',
+	WeiBoMobileDetail = WW.Tmpl(WeiBoMobile,'detail/',undefined),
 	NumberZip = WC.Rad(WW.D + WW.az + WW.AZ),
 	Zip = function(Q)
 	{
 		return WR.MapU(function(V,F){return V = NumberZip.S(V),F ? WR.PadS0(4,V) : V},
 			WR.SplitAll(7,WR.PadS0(7 * Math.ceil(Q.length / 7),Q))).join('')
+	},
+	UnZip = function(Q)
+	{
+		return WR.MapU(function(V,F){return V = NumberZip.P(V),F ? WR.PadS0(7,V) : V},
+			WR.SplitAll(4,WR.PadS0(4 * Math.ceil(Q.length / 4),Q))).join('')
 	},
 	TryLogin = O.CokeC(function()
 	{
@@ -243,20 +250,35 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			}
 		},{
 			Name : 'Post',
-			Judge : /(?:^|\/|Post\s+)(\d+\/\w+)/i,
+			Judge :
+			[
+				/(?:^|\/|Post\s+)(\d+\/\w+)/i,
+				/Post\s+(\w+)\b/i,
+				/\bDetail\/(\d+)\b/i
+			],
 			View : function(ID)
 			{
 				ID = ID.split('/')
-				if (!/\D/.test(ID[1]))
-					ID[1] = Zip(ID[1])
-				ID = ID.join('/')
-				return Req(WeiBo + ID).Map(function(B)
-				{
-					B = WC.JTO(WW.MU(/{"ns":"pl.content.weiboDetail.*}/,B)).html
-					return {
-						Item : [SolveCard(B)]
-					}
-				})
+				return (ID[1] ?
+					WX.Just([ID[0],/\D/.test(ID[1]) ? ID[1] : Zip(ID[1])]) :
+					Req(WeiBoMobileDetail(ID = /\D/.test(ID[0]) ? UnZip(ID[0]) : ID[0])).Map(function(B)
+					{
+						return [
+							WW.MF(/"id"[: ]+(\d+),/,B),
+							Zip(ID)
+						]
+					}))
+					.FMap(function(I)
+					{
+						return Req(WeiBo + I.join('/'))
+					})
+					.Map(function(B)
+					{
+						B = WC.JTO(WW.MU(/{"ns":"pl.content.weiboDetail.*}/,B)).html
+						return {
+							Item : [SolveCard(B)]
+						}
+					})
 			}
 		},{
 			Name : 'User',
