@@ -170,7 +170,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			[
 				/^\d+$/,
 				O.Num('Video'),
-				/\bIXiGua\b[^/]+\/(\d+)/i
+				/\bIXiGua\b[^/]+\/I?(\d+)/i
 			],
 			View : function(ID)
 			{
