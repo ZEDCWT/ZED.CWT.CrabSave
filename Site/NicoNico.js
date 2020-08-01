@@ -5,12 +5,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	Nico = 'https://www.nicovideo.jp/',
 	NicoWatch = WW.Tmpl(Nico,'watch/',undefined),
 	NicoUser = WW.Tmpl(Nico,'user/',undefined),
-	NicoUserVideo = WW.Tmpl(Nico,'user/',undefined,'/video?page=',undefined),
 	NicoMyList = WW.Tmpl(Nico,'mylist/',undefined),
 	NicoMy = Nico + 'my',
-	NicoMyFavUser = WW.Tmpl(Nico,'my/fav/user?page=',undefined),
 	NicoRepo = WW.Tmpl(Nico,'api/nicorepo/timeline/my/followingUser?cursor=',undefined,'&client_app=pc_myrepo'),
 	NicoSearch = WW.Tmpl(Nico,'search/',undefined,'?page=',undefined,undefined),
+	NicoNVAPI = 'https://nvapi.nicovideo.jp/',
+	NicoNVAPIUser = WW.Tmpl(NicoNVAPI,'v1/users/',undefined,'/videos?sortKey=registeredAt&sortOrder=desc&pageSize=',O.Size,'&page=',undefined),
+	NicoNVAPIFollowing = WW.Tmpl(NicoNVAPI,'v1/users/me/following/users?pageSize=',O.Size,'&cursor=',undefined),
+	NicoNVAPIMyList = WW.Tmpl(NicoNVAPI,'v2/mylists/',undefined,'?pageSize=',O.Size,'&page=',undefined),
 	NicoChannel = 'https://ch.nicovideo.jp/',
 	NicoChannelCH = NicoChannel + 'ch',
 	NicoExt = 'https://ext.nicovideo.jp/',
@@ -24,6 +26,35 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	PadSM = function(Q)
 	{
 		return /^\d/.test(Q) ? 'sm' + Q : Q
+	},
+	MakeNV = function(Q)
+	{
+		return O.Head(Q,'X-Frontend-Id',WW.Rnd(3389))
+	},
+	NVCommon = function(Q)
+	{
+		Q = WC.JTO(Q)
+		Q.meta || O.Bad(Q)
+		200 === Q.meta.status || O.Bad(O.meta.status,Q.meta.errorCode)
+		return Q.data
+	},
+	SolveNVItem = function(Q)
+	{
+		return WR.Map(function(V,B)
+		{
+			B = V.video || V
+			return {
+				ID : SolveSM(B.id),
+				Img : B.thumbnail.url,
+				Title : B.title,
+				UP : B.owner && B.owner.name,
+				UPURL : B.owner && NicoUser(B.owner.id),
+				Date : O.DTS(B.registeredAt),
+				Len : +B.duration,
+				More : (V.addedAt ? 'Added at ' + O.DTS(V.addedAt) + '\n' : '') +
+					B.latestCommentSummary
+			}
+		},Q.items)
 	};
 	return {
 		ID : 'NicoNico',
@@ -99,82 +130,61 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				})
 			}
 		},{
+			Name : 'MyList',
+			Judge : O.Num('MyList'),
+			View : function(ID,Page)
+			{
+				return O.Req(MakeNV(NicoNVAPIMyList(ID,-~Page))).Map(function(B)
+				{
+					B = NVCommon(B).mylist
+					return {
+						Len : B.totalItemCount,
+						Item : SolveNVItem(B)
+					}
+				})
+			}
+		},{
 			Name : 'User',
 			Judge : O.Num('User'),
 			View : function(ID,Page)
 			{
-				return O.Api(NicoUserVideo(ID,-~Page)).Map(function(B)
+				return O.Api(MakeNV(NicoNVAPIUser(ID,-~Page))).Map(function(B)
 				{
-					/noListMsg/.test(B) &&
-						O.Bad(WC.HED(WW.MF(/noListMsg[^]+?>(?=[^\s<])([^<]+)/,B)))
+					B = NVCommon(B)
 					return {
-						Len : +WW.MF(/id="video[^]+?(\d+(?!>))/,B),
-						Item : WW.MR(function(D,V)
-						{
-							D.push(
-							{
-								ID : WW.MF(/sm(\d+)/,V),
-								Img : WC.HED(WW.MF(/inal="([^"]+)/,V)),
-								Title : WC.HED(WW.MF(/<a[^>]+\/sm\d[^>]+>([^<]+)/,V)),
-								Date : WR.Trim(WW.MF(/time">([^<]+)/,V)),
-								Len : WW.MF(/Time">([^<]+)/,V)
-							})
-							return D
-						},[],/"outer[^]+?<\/p/g,B)
+						Len : B.totalCount,
+						Item : SolveNVItem(B)
 					}
 				})
 			}
 		},{
 			Name : 'Following',
 			Judge : O.UP,
-			View : function(_,Page)
+			View : O.More(function()
 			{
-				return O.Req(NicoMyFavUser(-~Page)).Map(function(B)
-				{
-					return {
-						Len : +WW.MF(/favUser[^(]+\((\d+)/,B),
-						Size : 20,
-						Item : WW.MR(function(D,V,I)
-						{
-							D.push(
-							{
-								Non : true,
-								ID : I = WW.MF(/user\/(\d+)/,V),
-								URL : NicoUser(I),
-								Img : WW.MF(/src="([^"]+)/,V),
-								UP : WC.HED(WW.MF(/alt="([^"]+)/,V)),
-								UPURL : NicoUser(I),
-								More : WC.HED(WW.MF(/<p>([^<]+)/,V))
-							})
-							return D
-						},[],/thumbCont[^]+?buttonShape/g,B)
-					}
-				})
-			}
-		},{
-			Name : 'MyList',
-			Judge : O.Num('MyList'),
-			View : O.Less(function(ID)
+				return O.Req(MakeNV(NicoNVAPIFollowing('')))
+			},function(I,Page)
 			{
-				return O.Req(NicoMyList(ID)).Map(function(B)
+				return O.Req(MakeNV(NicoNVAPIFollowing(I[Page])))
+			},function(B)
+			{
+				B = NVCommon(B)
+				return [B.summary.hasNext && B.summary.cursor,
 				{
-					B = WC.JTO(WW.MF(/preload\([^[]+(.*)\);/,B))
-					WW.IsArr(B) || O.Bad('Unable to find mylite data')
-					return WR.Map(function(V,D)
+					Len : B.summary.followees,
+					Item : WR.Map(function(V)
 					{
-						D = V.item_data
 						return {
-							ID : SolveSM(D.video_id),
-							Img : D.thumbnail_url,
-							Title : D.title,
-							Date : 1E3 * D.first_retrieve,
-							Len : +D.length_seconds,
-							Desc : D.last_res_body,
-							More : 'Updated at ' + O.DTS(1E3 * D.update_time) + '\n' +
-								'Added at ' + O.DTS(1E3 * V.create_time)
+							Non : true,
+							ID : V.id,
+							URL : NicoUser(V.id),
+							Img : V.icons.large,
+							UP : V.nickname,
+							UPURL : NicoUser(V.id),
+							More : V.description
 						}
-					},B.reverse())
-				})
+					},B.items)
+				}]
 			})
 		},{
 			Name : 'Video',
