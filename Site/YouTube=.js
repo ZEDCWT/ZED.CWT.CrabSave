@@ -33,7 +33,11 @@ module.exports = O =>
 			return R
 		})),
 	TransformSolve = Q => WN.ReqB(O.Req(Q))
-		.FMap(B => TransformParse(WC.JTO(WW.MF(/assets"[^}]+js":("[^"]+")/,B))))
+		.FMap(B => TransformParse
+		(
+			WW.MF(/"([/\w]+player_ias[^"]+base.js)"/,B) ||
+			WC.JTO(WW.MF(/assets"[^}]+js":("[^"]+")/,B))
+		))
 		.ErrAs(() => WX.Just(WR.Id));
 	return {
 		URL : ID => WN.ReqB(O.Req(GoogleAPIYouTubeVideo('snippet',ID))).FMap(Info =>
