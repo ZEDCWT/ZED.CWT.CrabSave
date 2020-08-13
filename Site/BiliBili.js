@@ -20,6 +20,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliApiSteinNode = WW.Tmpl(BiliBiliApi,'x/stein/nodeinfo?aid=',undefined,'&graph_version=',undefined,'&node_id=',undefined),
 	BiliBiliApiFo = WW.Tmpl(BiliBiliApi,'x/relation/followings?vmid=',undefined,'&ps=',O.Size,'&pn=',undefined),
 	BiliBiliApiChannel = WW.Tmpl(BiliBiliApi,'x/space/channel/video?mid=',undefined,'&cid=',undefined,'&pn=',undefined,'&ps=',O.Size),
+	BiliBiliApiSpaceUpload = WW.Tmpl(BiliBiliApi,'x/space/arc/search?mid=',undefined,'&ps=',O.Size,'&pn=',undefined),
 	BiliBiliApiSearchTypeVideo = 'video',
 	BiliBiliApiSearchTypeBgm = 'media_bangumi',
 	BiliBiliApiSearchTypeFilm = 'media_ft',
@@ -32,7 +33,6 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliSearchS = 'https://s.search.bilibili.com/',
 	BiliBiliSearchSuggestion = WW.Tmpl(BiliBiliSearchS,'main/suggest?main_ver=v1&highlight&term=',undefined),
 	BiliBiliSpace = 'https://space.bilibili.com/',
-	BiliBiliSpaceSubmit = WW.Tmpl(BiliBiliSpace,'ajax/member/getSubmitVideos?mid=',undefined,'&pagesize=',O.Size,'&page=',undefined),
 	BiliBiliVC = 'https://vc.bilibili.com/',
 	BiliBiliVCVideo = WW.Tmpl(BiliBiliVC,'video/',undefined),
 	BiliBiliVCApi = 'https://api.vc.bilibili.com/',
@@ -443,13 +443,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Judge : O.Num('Space|User'),
 			View : function(ID,Page)
 			{
-				return O.Api(BiliBiliSpaceSubmit(ID,++Page)).Map(function(V)
+				return O.Api(BiliBiliApiSpaceUpload(ID,++Page)).Map(function(V)
 				{
 					V = Common(V)
 					return {
-						Max : V.pages,
-						Len : V.count,
-						Item : WR.Map(SolveAV,V.vlist)
+						Len : V.page.count,
+						Item : WR.Map(SolveAV,V.list.vlist)
 					}
 				})
 			}
