@@ -57,10 +57,12 @@ module.exports = Option =>
 				.FMap(() => Run_('commit')))
 			.Now(null,E =>
 			{
+				Locked = false
 				O.E(E)
 				TransactionEnd()
 			},() =>
 			{
+				Locked = false
 				O.D().F()
 				TransactionEnd()
 			})
