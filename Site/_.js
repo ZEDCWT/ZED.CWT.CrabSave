@@ -35,7 +35,11 @@ module.exports = Option =>
 			{
 				B = WC.M3U(B)
 				if (WW.IsArr(B.INF))
-					return WX.Just(B.INF.map(V => WN.JoinU(Q,V[1])))
+				{
+					B = B.INF.map(V => WN.JoinU(Q,V[1]))
+					B = B.length < 16 ? B : {URL : B,Size : WR.RepA(1,B.length)}
+					return WX.Just(B)
+				}
 				WX.Throw(['ErrBadRes',B])
 			})
 		})

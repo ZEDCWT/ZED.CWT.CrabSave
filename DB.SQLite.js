@@ -316,6 +316,20 @@ module.exports = Option =>
 		`,[Q,Q])
 			.FMap(() => Get(`select Size from Task where ? = Row`,[Q]))
 			.Map(V => V.Size),
+		NewSize : (Row,Part,File,Q) => Transaction(
+		[
+			[`
+				update Down set Size = ?
+				where ? = Task and ? = Part and ? = File
+			`,[Q,Row,Part,File]],
+			[`
+				update Task set
+					Size = (select sum(Size) from Down where ? = Task)
+				where ? = Row
+			`,[Row,Row]]
+		])
+			.FMap(() => Get(`select Size from Task where ? = Row`,[Row]))
+			.Map(V => V.Size),
 		Err : (Q,S,E) => Run('update Task set State = ?,Error = ? where ? = Row',[S,E,Q]),
 		TopErr : S => Get('select Error from Task where ? = State and 0 < Error order by Error limit 1',[S])
 			.Map(V => V && V.Error),

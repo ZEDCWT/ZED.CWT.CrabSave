@@ -2015,7 +2015,7 @@
 								{
 									if (null == Task) return
 									WV.ClsR(Running.R,WV.None)
-									Running.F(Q[1])
+									null == Q[1] || Running.F(Q[1])
 									OnSizeHas(Task.Size = Q[0],Task.Has)
 									OnTick()
 								}

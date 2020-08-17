@@ -27,6 +27,18 @@ module.exports = O =>
 				URL || O.Bad(T)
 				URL = O.M3U(URL)
 			}
+			else if (T = WW.MF(/WB_video .*action-data="([^"]+)/,B))
+			{
+				URL = WC.QSP(T).url
+				URL || O.Bad(T)
+				URL = WN.ReqB(O.Coke(URL)).FMap(function(B)
+				{
+					return WN.ReqB(O.Coke(WN.JoinU(WeiBo,WW.MF(/<iframe[^>]+src="([^"]+)/,B))))
+				}).FMap(function(B)
+				{
+					return O.M3U(WC.JTO(WW.MF(/play_url:(".*")/,B)))
+				})
+			}
 			else if (T = WW.MF(/li_story.*?action-data="([^"]+)/,B))
 				URL = WC.QSP(T).gif_ourl
 			else O.Bad('Contains no media')
@@ -38,7 +50,7 @@ module.exports = O =>
 					.replace(/<.*?>/g,''))),
 				Up : WC.HED(WW.MF(/face".*title="([^"]+)/,B)),
 				Date : +WW.MF(/date="(\d+)/,B),
-				Part : [{URL}]
+				Part : [WW.IsArr(URL) ? {URL} : URL]
 			}))
 		})
 	}

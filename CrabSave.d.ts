@@ -40,6 +40,7 @@ declare module CrabSaveNS
 			SaveInfo(Task : number,Info : Task) : WishNS.Provider<any>
 			SaveSize(Task : number,Part : number,File : number,Size : number) : WishNS.Provider<any>
 			FillSize(Task : number) : WishNS.Provider<number>
+			NewSize(Task : number,Part : number,File : number,Size : number) : WishNS.Provider<number>
 			Err(Task : number,State : number,Date : number) : WishNS.Provider<any>
 			TopErr(State : number) : WishNS.Provider<number>
 			TopQueue(Count : number,From : number,Online : number[]) : WishNS.Provider<Omit<Task,'Part' | 'Down'>[]>

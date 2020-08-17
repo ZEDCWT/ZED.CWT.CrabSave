@@ -489,7 +489,7 @@ module.exports = Option =>
 								WebSocketSend([ActionWebTaskPause,++DBVersion,V],true)
 								RecErrT(V)
 								Loop.Stop(V)
-							}))
+							}),Loop.Info)
 						break
 					case ActionAuthTaskRemove :
 						DBMulti(K,V =>

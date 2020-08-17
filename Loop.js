@@ -281,6 +281,15 @@ module.exports = Option =>
 										if (null == Down.First) Down.First = Work.Info.Start
 										Option.OnConn(Down.Task,Down.Part,Down.File,Down.First)
 										NotBigDeal(DB.SaveConn(Down.Task,Down.Part,Down.File,Down.First))
+									}).On('Size',Q =>
+									{
+										if (Q !== Down.Size)
+											NotBigDeal(DB.NewSize(Down.Task,Down.Part,Down.File,Q)
+												.Tap(S =>
+												{
+													Option.OnFile(Down.Task,Down.Part,Down.File,Q)
+													Option.OnSize(Down.Task,S,null)
+												}))
 									}).On('Path',P =>
 									{
 										P = WN.RelP(V.Root,P)
