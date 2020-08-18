@@ -14,6 +14,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	{
 		D[V] = WW.Top[V]
 	},{
+		document : {},
+		location : {href : '',protocol : ''},
 		navigator : {userAgent : ''}
 	},[
 		'Object',
@@ -22,7 +24,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		'String',
 		'Date',
 		'RegExp',
-		'JSON'
+		'JSON',
+		'parseInt',
 	]),
 	Sign,SignAt,
 	SolveSign = WX.CacheL(function(URL)
@@ -32,35 +35,43 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			CrabSave[T = WW.Key()] = Happy
 			try
 			{
-				Function('Function','return ' + WW.MF(/(function[^{]+{[^};]+;Function.+?\)}),function\(/,B))
+				if (/acrawler/.test(URL))
+				{
+					Function('window',"'use strict';" + B)(Happy)
+					B = Happy.byted_acrawler
+				}
+				else
+					Function('Function','return ' + WW.MF(/(function[^{]+{[^};]+;Function.+?\)}),function\(/,B))
 					(function(Q)
 					{
 						return Function(Q.replace(/=this/,'=CrabSave.' + T))
 					})
 					(null,B = {})
 			}
-			finally
-			{
-				WR.Del(T,CrabSave)
-			}
+			catch(_){}
+			WR.Del(T,CrabSave)
 			SignAt = WW.Now()
-			return Sign = B.sign || WR.Const('')
+			return Sign = B && B.sign
 		})
 	}),
 	ReqAPI = function(Q,Api)
 	{
 		return (Sign && WW.Now() < SignAt + 36E5 ? WX.Just(Sign) : O.Api(IXiGua).FMap(function(B)
 		{
-			Happy.tac = WC.JTO('"' + WW.MF(/tac='(.+?)'<\/scr/,B).replace(/"/g,'\\"') + '"')
-			return SolveSign(WW.MF(/="([^"]+vendors_index[^"]+js)"/,B))
+			Happy.tac = WC.JTOO(WW.MF(/tac='(.+?)'<\/scr/,B).replace(/"/g,'\\"'),{Ext : true})
+			return SolveSign
+			(
+				WW.MF(/="([^"]+acrawler.js)"/,B) ||
+				WW.MF(/="([^"]+vendors_index[^"]+js)"/,B)
+			)
 		})).FMap(function(S)
 		{
 			return (!Api && O.Coke() ? O.Req : O.Api)(
 			{
-				URL : Q + (/\?/.test(Q) ? '&' : '?') + '_signature=' + S(
+				URL : Q + (/\?/.test(Q) ? '&' : '?') + '_signature=' + (S ? S(
 				{
 					url : Q.slice(~-IXiGua.length).replace(/\?.*/,'')
-				}),
+				}) : ''),
 				Head :
 				{
 					Referer : IXiGua
