@@ -2962,6 +2962,15 @@
 					Map : Number
 				}),
 				20
+			],[
+				SA('SetSize'),
+				Key('Size'),
+				WV.Cho(
+				{
+					Set : [[false,SA('GenDisabled')],[true,SA('GenEnabled')]],
+					Inp : PC
+				}),
+				true
 			]/*,[
 				SA('SetMerge'),
 				Key('Merge'),

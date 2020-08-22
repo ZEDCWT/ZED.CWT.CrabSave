@@ -61,6 +61,7 @@ declare module CrabSaveNS
 		ProxyURL : boolean
 		ProxyView : boolean
 		Delay : number
+		Size : boolean
 		Merge : string
 		MergeExt : string
 	}
@@ -72,6 +73,7 @@ declare module CrabSaveNS
 		Proxy() : boolean
 		ProxyURL() : boolean
 		Delay() : number
+		Size() : boolean
 	}
 }
 declare var CrabSave : CrabSaveNS.Web

@@ -106,8 +106,8 @@ var Lang = // eslint-disable-line
 		SotGenProxy : 'General | Toggle proxy',
 		SotGenFocusKeywordInput : 'General | Focus the keyword input',
 		SotGenFocusAuth : 'General | Focus the auth token input',
-		SotBroSelAll : 'Browser | Add all non-downloaded displayed items to cold list',
-		SotBroSelClear : 'Browser | Removed all displayed items from cold list',
+		SotBroSelAll : 'Browser | Add all non-downloaded displayed items to the cold list',
+		SotBroSelClear : 'Browser | Remove all displayed items from the cold list',
 		SotBroHead : 'Browser | Jump to the first page',
 		SotBroPrev : 'Browser | Jump to the previous page',
 		SotBroNext : 'Browser | Jump to the next page',
@@ -135,6 +135,7 @@ var Lang = // eslint-disable-line
 		SetImgNo : 'No proxy',
 		SetImgDown : 'Follow downloader proxy',
 		SetDelay : 'Retry delay after download error (in seconds)',
+		SetSize : 'Resolve file sizes before downloading',
 		SetMerge : 'Merge command',
 
 		SocConn : 'Connecting...',
@@ -294,6 +295,7 @@ var Lang = // eslint-disable-line
 		SetImgNo : '不使用代理',
 		SetImgDown : '使用下載代理',
 		SetDelay : '下載失敗重試前的等待時間(秒)',
+		SetSize : '下載前解析文件大小',
 		SetMerge : '合併命令',
 
 		SocConn : '正在連接...',
@@ -452,6 +454,7 @@ var Lang = // eslint-disable-line
 		SetImgNo : '不使用代理',
 		SetImgDown : '使用下载代理',
 		SetDelay : '下载失败重试前的等待时间(秒)',
+		SetSize : '下载前解析文件大小',
 		SetMerge : '合并命令',
 
 		SocConn : '正在连接...',
@@ -582,7 +585,7 @@ var Lang = // eslint-disable-line
 		SotGenFocusKeywordInput : '全般 | キーワード入力にフォーカス',
 		SotGenFocusAuth : '全般 | 認証Token入力にフォーカス',
 		SotBroSelAll : 'ブラウザ | ダウンロードされていないすべての表示されだアイテムをコールドリストに追加する',
-		SotBroSelClear : 'ブラウザ | コールドリストからすべての表示されだアイテムを削除しました',
+		SotBroSelClear : 'ブラウザ | コールドリストからすべての表示されだアイテムを削除する',
 		SotBroHead : 'ブラウザ | 最初のページヘ',
 		SotBroPrev : 'ブラウザ | 前のページへ',
 		SotBroNext : 'ブラウザ | 次のページへ',
@@ -610,6 +613,7 @@ var Lang = // eslint-disable-line
 		SetImgNo : 'プロキシなし',
 		SetImgDown : 'ダウンローダープロキシを使用する',
 		SetDelay : 'エラー後の再試行遅延 (秒)',
+		SetSize : 'ダウンロードする前にファイルサイズを解決する',
 		SetMerge : 'マージコマンド',
 
 		SocConn : '接続中...',

@@ -126,9 +126,10 @@ module.exports = Option =>
 		Dir : SettingMake('Dir',WW.IsStr,PathSave),
 		Fmt : SettingMake('Fmt',WW.IsStr,'|Up|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?'),
 		Max : SettingMake('Max',Q => WW.IsIn(Q,1,25),4),
-		Proxy : SettingMake('Proxy',WR.Id,false),
+		Proxy : SettingMake('Proxy',WR.T,false),
 		ProxyURL : SettingMake('ProxyURL',WW.IsStr,undefined),
 		Delay : SettingMake('Delay',WW.IsNum,20),
+		Size : SettingMake('Size',WR.T,true),
 	},
 	SiteO =
 	{
@@ -399,7 +400,7 @@ module.exports = Option =>
 						WebSocketSend([ActionWebShortCut,DataShortCut.O(WR.Where(WR.Id,K))])
 						break
 					case ActionAuthSetting :
-						K = WR.Where(WR.Id,K)
+						K = WR.Where(V => null != V,K)
 						if ('Dir' in K && !Path.isAbsolute(K.Dir))
 							Err('ErrSetDir')
 						else

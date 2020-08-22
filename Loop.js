@@ -102,11 +102,15 @@ module.exports = Option =>
 											null != P.Ext ? P.Ext :
 											(L = WN.ExtN(L.replace(/\?.*/,''))) && L.length < 7 ? L :
 											'.mp4',
-										Size : P.Size ? P.Size[G] : null
+										Size : P.Size ? P.Size[G] :
+											Setting.Size() ? null :
+											1
 									})
 									null != Size && P.Size && null != P.Size[G] ?
 										Size += P.Size[G] :
-										Size = null
+										Setting.Size() ?
+											Size = null :
+											++Size
 								},P.URL)
 							},U.Part)
 							R =
@@ -264,7 +268,7 @@ module.exports = Option =>
 								return WN.MakeDir(WN.DirN(Dest)).FMap(() => WX.Provider(O =>
 								{
 									var
-									Work = WN.Download(
+									Work = WN.Down(
 									{
 										Req : Pack(Down.URL,V.Site),
 										Path : Dest,
