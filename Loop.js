@@ -82,6 +82,7 @@ module.exports = Option =>
 							Size = 0,
 							Part = [],
 							Down = [],
+							DownPre = WR.Reduce((D,V) => {D[V.Part + ' ' + V.File] = V},{},V.Down),
 							R;
 							WR.EachU((P,F) =>
 							{
@@ -102,15 +103,14 @@ module.exports = Option =>
 											null != P.Ext ? P.Ext :
 											(L = WN.ExtN(L.replace(/\?.*/,''))) && L.length < 7 ? L :
 											'.mp4',
-										Size : P.Size ? P.Size[G] :
+										Size : L = P.Size && null != P.Size[G] ? P.Size[G] :
+											(L = DownPre[F + ' ' + G]) && null != L.Done && null != L.Size ? L.Size :
 											Setting.Size() ? null :
-											1
+											WR.Default(1,L && L.Size)
 									})
-									null != Size && P.Size && null != P.Size[G] ?
-										Size += P.Size[G] :
-										Setting.Size() ?
-											Size = null :
-											++Size
+									Size = null == Size || null == L ?
+										null :
+										Size + L
 								},P.URL)
 							},U.Part)
 							R =
@@ -124,7 +124,6 @@ module.exports = Option =>
 								Down
 							}
 							WR.All(V => V.URL && WW.IsStr(V.URL),Down) || WW.Throw(['ErrLoopURL',WC.OTJ(R)])
-							// Optimize : We could omit full reading and size resolving for downloaded files
 							return DB.SaveInfo(V.Row,R)
 								.FMap(() => DB.Full(V.Row))
 								.Tap(R =>

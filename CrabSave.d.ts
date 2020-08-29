@@ -36,7 +36,7 @@ declare module CrabSaveNS
 			Play(Task : number) : WishNS.Provider<any>
 			Pause(Task : number) : WishNS.Provider<any>
 
-			TopNoSize(Count : number,From : number) : WishNS.Provider<Pick<Task,'Row' | 'Site' | 'ID' | 'State' | 'Error'>[]>
+			TopNoSize(Count : number,From : number) : WishNS.Provider<Pick<Task,'Row' | 'Site' | 'ID' | 'State' | 'Error' | 'Down'>[]>
 			SaveInfo(Task : number,Info : Task) : WishNS.Provider<any>
 			SaveSize(Task : number,Part : number,File : number,Size : number) : WishNS.Provider<any>
 			FillSize(Task : number) : WishNS.Provider<number>

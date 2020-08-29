@@ -119,7 +119,7 @@ module.exports = Option =>
 	},
 	NumberZip = WC.Rad(WR.Map(WR.CHR,WR.Range(33,127))),
 
-	SettingMake = (K,H,D) => R => H(R = DataSetting.D(K)) ? R : D,
+	SettingMake = (K,H,D) => R => null != (R = DataSetting.D(K)) && H(R) ? R : D,
 	Setting =
 	{
 		Lang : SettingMake('Lang',WW.IsStr,0),

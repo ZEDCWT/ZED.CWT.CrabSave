@@ -243,7 +243,11 @@ module.exports = Option =>
 				Error < ?
 			order by Row
 			limit ?
-		`,[Q,S]),
+		`,[Q,S]).FMap(R => WX.From(R)
+			.FMapO(1,V => All('select Part,File,Size,Done from Down where ? = Task order by Part,File',[V.Row])
+				.Tap(Down => V.Down = Down))
+			.Fin()
+			.Map(() => R)),
 		SaveInfo : (S,Q) => Transaction(
 		[
 			[`
@@ -297,7 +301,7 @@ module.exports = Option =>
 						URL = ?,
 						Ext = ?,
 						Size = ?
-					where ? = Task and ? = Part and ? = File and (Size is null or Has < Size)
+					where ? = Task and ? = Part and ? = File and Done is null
 				`,
 				[
 					V.URL,V.Ext,V.Size,
@@ -308,7 +312,7 @@ module.exports = Option =>
 		SaveSize : (Row,Part,File,Q) => Run(
 		`
 			update Down set Size = ?
-			where ? = Task and ? = Part and ? = File and (Size is null or Has < Size)
+			where ? = Task and ? = Part and ? = File and Done is null
 		`,[Q,Row,Part,File]),
 		FillSize : Q => Run(
 		`

@@ -95,7 +95,7 @@
 			Q = WW.MU(/^[^/]+\/\/[^/]+/,S) + Q
 		return Q
 	},
-	RemainS = function(V){return '-' + WW.StrS(V / 1000)},
+	RemainS = function(V){return '-' + WW.StrS(WR.Max(0,V / 1E3))},
 
 	ClassTitleSplit = WW.Key(),
 	ClassCount = WW.Key(),
@@ -681,7 +681,7 @@
 	{
 		return Rest && !Speed ?
 			'-99:59:59' :
-			'-' + WW.StrS(Rest / Speed / 1E3)
+			RemainS(Rest / Speed)
 	},
 	DetailIs = function(Row){return DetailUpdate && Row === DetailUpdate.O},
 	DetailUpdate,
