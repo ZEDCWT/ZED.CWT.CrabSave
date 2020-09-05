@@ -37,7 +37,7 @@ module.exports = Option =>
 				if (WW.IsArr(B.INF))
 				{
 					B = B.INF.map(V => WN.JoinU(Q,V[1]))
-					B = B.length < 16 ? B : {URL : B,Size : WR.RepA(1,B.length)}
+					B = B.length < 16 ? {URL : B} : {URL : B,Size : WR.RepA(1,B.length)}
 					return WX.Just(B)
 				}
 				WX.Throw(['ErrBadRes',B])
@@ -49,6 +49,7 @@ module.exports = Option =>
 		'BiliBili',
 		'YouTube',
 		'NicoNico',
+		'AcFun',
 		'Facebook',
 		'Instagram',
 		'IXiGua',

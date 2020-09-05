@@ -2107,7 +2107,7 @@
 			WSOnOnline.R(function()
 			{
 				DebugLog('HotBegin',HotVersion)
-				HotRead(WB.ReqB('Hot' + (HotVersion ? '?' + HotVersion : ''))
+				HotRead(WB.ReqB({URL : 'Hot' + (HotVersion ? '?' + HotVersion : ''),TO : false})
 					.RetryWhen(TaskBriefRetry(SA('Hot')))
 					.Now(function(B)
 					{
@@ -2392,7 +2392,7 @@
 			WSOnOnline.R(function()
 			{
 				DebugLog('HistBegin',HistoryVersion)
-				HistoryRead(WB.ReqB('Hist' + (HistoryVersion ? '?' + HistoryVersion : ''))
+				HistoryRead(WB.ReqB({URL : 'Hist' + (HistoryVersion ? '?' + HistoryVersion : ''),TO : false})
 					.RetryWhen(TaskBriefRetry(SA('His')))
 					.Now(function(B)
 					{
@@ -3228,6 +3228,7 @@
 			'BiliBili',
 			'YouTube',
 			'NicoNico',
+			'AcFun',
 			'Facebook',
 			'Instagram',
 			'IXiGua',

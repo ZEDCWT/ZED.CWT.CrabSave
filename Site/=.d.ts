@@ -68,7 +68,7 @@ declare module CrabSaveNS
 			Bad(Q : any) : never
 			JOM(S : RegExp,Q : string) : object
 			Text(Q : string) : string
-			M3U(Q : string) : WishNS.Provider<SitePart[]>
+			M3U(Q : string) : WishNS.Provider<SitePart>
 		}) : {
 			URL(ID : string) : WishNS.Provider<SiteURL>
 			Pack?(Q : string) : string | WishNS.ReqAccept

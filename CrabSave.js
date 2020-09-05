@@ -5,6 +5,7 @@ WW = require('@zed.cwt/wish'),
 HTTP = require('http'),
 Inspector = require('inspector'),
 Path = require('path'),
+ZLib = require('zlib'),
 
 ActionWebTaskNew = 'TaskN',
 ActionWebTaskOverview = 'TaskO',
@@ -211,7 +212,7 @@ module.exports = Option =>
 		var U = Q.url.replace(/\?.*/,'');
 		WebServerSetting(U,S) &&
 			WebServerProxy(Q.url,S,Q.headers) &&
-			WebServerDataBase(Q.url,S) &&
+			WebServerDataBase(Q.url,S,Q.headers) &&
 			(WR.Has(U,WebServerMap) ? WN.UR(U = WebServerMap[U]) :
 				/^\/Site\/\w+\.js$/.test(U) ? WN.UR(WN.JoinP(__dirname,U)) :
 				WX.Throw())
@@ -276,12 +277,14 @@ module.exports = Option =>
 		}
 		catch(_){S.destroy()}
 	},
-	WebServerDataBase = (Q,S) =>
+	WebServerDataBase = (Q,S,H) =>
 	{
 		var
 		Each = WR.StartW('/Hot',Q) ? DB.Hot :
 			WR.StartW('/Hist',Q) ? DB.Hist :
 			null,
+		GZip,
+		Write,
 		SiteCount = 0,
 		SiteMap = {};
 		if (!Each) return 9
@@ -290,10 +293,21 @@ module.exports = Option =>
 			S.end()
 			return
 		}
-		S.write(DBVersion + '\n')
+		GZip = H &&
+			WW.IsStr(H = H['accept-encoding']) &&
+			WR.Any(V => 'GZIP' === WR.Up(WR.Trim(V)),H.split(',')) &&
+			ZLib.createGzip()
+		if (GZip)
+		{
+			GZip.on('data',D => S.write(D))
+				.once('end',() => S.end())
+			S.setHeader('Content-Encoding','gzip')
+		}
+		Write = GZip || S
+		Write.write(DBVersion + '\n')
 		Each(V =>
 		{
-			S.write
+			Write.write
 			(
 				NumberZip.S(V.Row) + '\n' +
 				(SiteMap[V.Site] ? SiteMap[V.Site] : (SiteMap[V.Site] = ++SiteCount) + ' ' + V.Site) + '\n' +
@@ -301,7 +315,7 @@ module.exports = Option =>
 				(null == V.Size ? '' : NumberZip.S(V.Size)) + '\n' +
 				(null == V.Done ? '' : NumberZip.S(V.Done) + '\n')
 			)
-		},E => E ? S.destroy() : S.end('~'))
+		},E => E ? S.destroy() : Write.end('~'))
 	},
 	WebSocketPool = new Set,
 	WebSocketLast = {},
@@ -579,7 +593,7 @@ module.exports = Option =>
 			.use((Q,S,N) => '/' === Q.path && !/\/(\?.*)?$/.test(Q.originalUrl) ? S.redirect(302,Q.baseUrl + Q.url) : N())
 			.use((Q,S,N) => WebServerSetting(Q.path,S) &&
 				WebServerProxy(Q.url,S,Q.headers) &&
-				WebServerDataBase(Q.url,S) &&
+				WebServerDataBase(Q.url,S,Q.headers) &&
 				(WebServerMap[Q.path] ? S.sendFile(WebServerMap[Q.path]) :
 					/^\/Site\/\w+\.js$/.test(Q.path) ? S.sendFile(WN.JoinP(__dirname,Q.path)) :
 					N())),

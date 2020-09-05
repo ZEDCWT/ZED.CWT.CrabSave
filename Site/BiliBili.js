@@ -180,7 +180,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		ID : 'BiliBili',
 		Name : '\u55F6\u54E9\u55F6\u54E9',
 		Alias : 'B \u55F6\u54E9 \u54D4\u54E9\u54D4\u54E9 \u54D4\u54E9',
-		Judge : /\bBiliBili\b|\bAV\d+/i,
+		Judge : /\bBiliBili\b|\b[AB]V\d+/i,
 		Min : 'SESSDATA',
 		Sign : function()
 		{
