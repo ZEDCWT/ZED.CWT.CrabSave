@@ -738,15 +738,24 @@
 				{
 					return null != S.Done &&
 						WW.StrDate(S.Done) +
-							(null == Birth ? '' : ' (' + WW.StrMS(S.Done - Birth) + ')')
+							(null == Birth ? '' :
+								' (' +
+								WW.StrMS(S.Done - Birth) +
+								(Down ?
+									' ' + WW.StrMS(S = WR.Reduce(function(D,V){return D + V.Take},0,Down)) +
+									' ' + MakeSpeed(WR.Reduce(function(D,V){return D + V.Has},0,Down) / S) :
+									'') +
+								')')
 				}]
 			],
 			PartList = [],
 			Birth,
+			Down,
 			Update = function(S)
 			{
 				S = S || {}
 				Birth = S.Birth
+				Down = S.Down
 				WR.Has('Title',S) &&
 					WV.T(Title,S.Title)
 				WR.Each(function(V,T)

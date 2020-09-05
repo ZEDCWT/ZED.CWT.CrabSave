@@ -161,6 +161,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			]
 		}
 	},
+	SolveAUList = function(V)
+	{
+		V = Common(V) || {}
+		return {
+			Len : V.totalSize || 0,
+			Item : WR.Map(SolveAU,V.data || [])
+		}
+	},
 	SolveVC = function(V)
 	{
 		return {
@@ -331,28 +339,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Judge : O.Num('AudioMenu|AM'),
 			View : function(ID,Page)
 			{
-				return O.Api(BiliBiliAudioWebMenu(ID,-~Page)).Map(function(B)
-				{
-					B = Common(B)
-					return {
-						Len : B.totalSize,
-						Item : WR.Map(SolveAU,B.data)
-					}
-				})
+				return O.Api(BiliBiliAudioWebMenu(ID,-~Page))
+					.Map(SolveAUList)
 			}
 		},{
 			Name : 'UserAudio',
 			Judge : O.Num('UserAudio|Space(?=\\..*/Audio)'),
 			View : function(ID,Page)
 			{
-				return O.Api(BiliBiliAudioWebUp(ID,-~Page)).Map(function(B)
-				{
-					B = Common(B)
-					return {
-						Len : B.totalSize,
-						Item : WR.Map(SolveAU,B.data)
-					}
-				})
+				return O.Api(BiliBiliAudioWebUp(ID,-~Page))
+					.Map(SolveAUList)
 			}
 		},{
 			Name : 'VC',
