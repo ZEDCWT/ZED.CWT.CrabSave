@@ -3,9 +3,14 @@ var
 WW = require('@zed.cwt/wish'),
 {R : WR,X : WX,C : WC,N : WN} = WW,
 
-ShortVideoPrefix = 'vc',
+PrefixAudio = 'au',
+PrefixShortVideo = 'vc',
 
 BiliBili = 'https://www.bilibili.com/',
+BiliBiliAudio = BiliBili + 'audio/',
+BiliBiliAudioWeb = BiliBiliAudio + 'music-service-c/web/',
+BiliBiliAudioWebInfo = WW.Tmpl(BiliBiliAudioWeb,'song/info?sid=',undefined),
+BiliBiliAudioWebURL = WW.Tmpl(BiliBiliAudioWeb,'url?sid=',undefined,'&privilege=2&quality=2'),
 BiliBiliApi = 'https://api.bilibili.com/',
 BiliBiliApiWebView = WW.Tmpl(BiliBiliApi,'x/web-interface/view?aid=',undefined),
 BiliBiliApiPlayURL = WW.Tmpl(BiliBiliApi,'x/player/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=16&fourk=1'),
@@ -38,7 +43,27 @@ module.exports = O =>
 			ID = Q[0]
 			CID = Q[1]
 
-			if (WR.StartW(ShortVideoPrefix,ID)) return WN.ReqB(O.Coke(BiliBiliVCApiDetail(ID.slice(ShortVideoPrefix.length)))).Map(B =>
+			if (WR.StartW(PrefixAudio,ID)) return WN.ReqB(O.Coke(BiliBiliAudioWebInfo(ID = ID.slice(PrefixAudio.length)))).FMap(Audio =>
+			{
+				Audio = Common(Audio)
+				return WN.ReqB(O.Coke(BiliBiliAudioWebURL(ID))).Map(URL =>
+				{
+					URL = Common(URL)
+					return {
+						Title : (Audio.author && Audio.author !== Audio.uname ? Audio.author + '.' : '') +
+							Audio.title,
+						Up : Audio.uname,
+						Date : 1E3 * Audio.passtime,
+						Part : [
+						{
+							URL : [URL.cdns[0]],
+							Size : [URL.size]
+						}]
+					}
+				})
+			})
+
+			if (WR.StartW(PrefixShortVideo,ID)) return WN.ReqB(O.Coke(BiliBiliVCApiDetail(ID.slice(PrefixShortVideo.length)))).Map(B =>
 			{
 				B = Common(B)
 				return {

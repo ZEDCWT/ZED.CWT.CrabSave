@@ -10,6 +10,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliBgmSS = WW.Tmpl(BiliBili,'bangumi/play/ss',undefined),
 	BiliBiliBgmEP = WW.Tmpl(BiliBili,'bangumi/play/ep',undefined),
 	BiliBiliMyList = WW.Tmpl(BiliBili,'mylist/mylist-',undefined,'.js'),
+	BiliBiliAudio = BiliBili + 'audio/',
+	BiliBiliAudioURL = BiliBili + 'audio/au',
+	BiliBiliAudioWeb = BiliBiliAudio + 'music-service-c/web/',
+	BiliBiliAudioWebInfo = WW.Tmpl(BiliBiliAudioWeb,'song/info?sid=',undefined),
+	BiliBiliAudioWebUp = WW.Tmpl(BiliBiliAudioWeb,'song/upper?uid=',undefined,'&pn=',undefined,'&ps=',O.Size,'&order=1'),
+	BiliBiliAudioWebMenu = WW.Tmpl(BiliBiliAudioWeb,'song/of-menu?sid=',undefined,'&pn=',undefined,'&ps=',O.Size),
 	BiliBiliApi = 'https://api.bilibili.com/',
 	BiliBiliApiFav = WW.Tmpl(BiliBiliApi,'medialist/gateway/base/spaceDetail?media_id=',undefined,'&pn=',undefined,'&ps=20'),
 	BiliBiliApiWeb = BiliBiliApi + 'x/web-interface/',
@@ -19,8 +25,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliApiPlayerSo = WW.Tmpl(BiliBiliApi,'x/player.so?aid=',undefined,'&id=cid:',undefined),
 	BiliBiliApiSteinNode = WW.Tmpl(BiliBiliApi,'x/stein/nodeinfo?aid=',undefined,'&graph_version=',undefined,'&node_id=',undefined),
 	BiliBiliApiFo = WW.Tmpl(BiliBiliApi,'x/relation/followings?vmid=',undefined,'&ps=',O.Size,'&pn=',undefined),
-	BiliBiliApiChannel = WW.Tmpl(BiliBiliApi,'x/space/channel/video?mid=',undefined,'&cid=',undefined,'&pn=',undefined,'&ps=',O.Size),
-	BiliBiliApiSpaceUpload = WW.Tmpl(BiliBiliApi,'x/space/arc/search?mid=',undefined,'&ps=',O.Size,'&pn=',undefined),
+	BiliBiliApiSpace = BiliBiliApi + 'x/space/',
+	BiliBiliApiSpaceInfo = WW.Tmpl(BiliBiliApiSpace,'acc/info?mid=',undefined),
+	BiliBiliApiSpaceNavNum = WW.Tmpl(BiliBiliApiSpace,'navnum?mid=',undefined,'&callback='),
+	BiliBiliApiSpaceChannel = WW.Tmpl(BiliBiliApiSpace,'channel/video?mid=',undefined,'&cid=',undefined,'&pn=',undefined,'&ps=',O.Size),
+	BiliBiliApiSpaceUpload = WW.Tmpl(BiliBiliApiSpace,'arc/search?mid=',undefined,'&ps=',O.Size,'&pn=',undefined),
 	BiliBiliApiSearchTypeVideo = 'video',
 	BiliBiliApiSearchTypeBgm = 'media_bangumi',
 	BiliBiliApiSearchTypeFilm = 'media_ft',
@@ -33,6 +42,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliSearchS = 'https://s.search.bilibili.com/',
 	BiliBiliSearchSuggestion = WW.Tmpl(BiliBiliSearchS,'main/suggest?main_ver=v1&highlight&term=',undefined),
 	BiliBiliSpace = 'https://space.bilibili.com/',
+	BiliBiliSpaceAudio = WW.Tmpl(BiliBiliSpace,undefined,'/audio'),
+	BiliBiliSpaceDynamic = WW.Tmpl(BiliBiliSpace,undefined,'/dynamic'),
 	BiliBiliVC = 'https://vc.bilibili.com/',
 	BiliBiliVCVideo = WW.Tmpl(BiliBiliVC,'video/',undefined),
 	BiliBiliVCApi = 'https://api.vc.bilibili.com/',
@@ -131,6 +142,25 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				.Map(WR.Const(R))
 		})
 	},
+	SolveAU = function(V)
+	{
+		return {
+			ID : 'au' + V.id,
+			URL : BiliBiliAudioURL + V.id,
+			Img : V.cover,
+			Title : V.title,
+			UP : V.uname,
+			UPURL : BiliBiliSpace + V.uid,
+			Date : 1E3 * V.passtime,
+			Len : V.duration,
+			More :
+			[
+				V.author && V.author !== V.uname ? V.author + '\n' : '',
+				V.intro && V.intro + '\n',
+				O.Ah('Audio@' + V.uname,BiliBiliSpaceAudio(V.uid))
+			]
+		}
+	},
 	SolveVC = function(V)
 	{
 		return {
@@ -142,7 +172,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			UPURL : BiliBiliSpace + V.user.uid,
 			Date : V.item.upload_time,
 			Len : V.item.video_time,
-			More : O.Ah('VC@' + V.user.name,'BiliBili Ones ' + V.user.uid)
+			More : O.Ah('VC@' + V.user.name,BiliBiliSpaceDynamic(V.user.uid))
 		}
 	},
 	Menu;
@@ -284,6 +314,47 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				})
 			}
 		},{
+			Name : 'Audio',
+			Judge : O.Num('Audio|AU'),
+			View : function(ID)
+			{
+				return O.Req(BiliBiliAudioWebInfo(ID)).Map(function(B)
+				{
+					B = Common(B)
+					return {
+						Item : [SolveAU(B)]
+					}
+				})
+			}
+		},{
+			Name : 'AudioMenu',
+			Judge : O.Num('AudioMenu|AM'),
+			View : function(ID,Page)
+			{
+				return O.Api(BiliBiliAudioWebMenu(ID,-~Page)).Map(function(B)
+				{
+					B = Common(B)
+					return {
+						Len : B.totalSize,
+						Item : WR.Map(SolveAU,B.data)
+					}
+				})
+			}
+		},{
+			Name : 'UserAudio',
+			Judge : O.Num('UserAudio|Space(?=\\..*/Audio)'),
+			View : function(ID,Page)
+			{
+				return O.Api(BiliBiliAudioWebUp(ID,-~Page)).Map(function(B)
+				{
+					B = Common(B)
+					return {
+						Len : B.totalSize,
+						Item : WR.Map(SolveAU,B.data)
+					}
+				})
+			}
+		},{
 			Name : 'VC',
 			Judge : [O.Num('VC'),/\bVC\..*?Video\/(\d+)/i],
 			View : function(ID)
@@ -297,7 +368,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			}
 		},{
 			Name : 'Ones',
-			Judge : [O.Num('Ones')],
+			Judge : O.Num('Ones|Space(?=\\..*/Dynamic)'),
 			View : O.More(function(ID)
 			{
 				return O.Api(BiliBiliVCApiOnes(ID,0))
@@ -429,7 +500,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			View : function(ID,Page)
 			{
 				ID = WR.Match(/\d+/g,ID)
-				return O.Api(BiliBiliApiChannel(ID[0],ID[1],-~Page)).Map(function(B)
+				return O.Api(BiliBiliApiSpaceChannel(ID[0],ID[1],-~Page)).Map(function(B)
 				{
 					B = Common(B).list
 					return {
@@ -443,13 +514,43 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Judge : O.Num('Space|User'),
 			View : function(ID,Page)
 			{
-				return O.Api(BiliBiliApiSpaceUpload(ID,++Page)).Map(function(V)
+				return (Page ? WX.Just([]) : O.Api(BiliBiliApiSpaceInfo(ID)).FMap(function(UP)
 				{
-					V = Common(V)
-					return {
-						Len : V.page.count,
-						Item : WR.Map(SolveAV,V.list.vlist)
-					}
+					UP = Common(UP)
+					return O.Api(O.Head(BiliBiliApiSpaceNavNum(ID),'Referer',BiliBili)).Map(function(Nav)
+					{
+						Nav = Common(Nav)
+						return [
+						{
+							Non : true,
+							ID : ID,
+							URL : BiliBiliSpace + ID,
+							Img : UP.face,
+							UP : UP.name,
+							UPURL : BiliBiliSpace + ID,
+							More :
+							[
+								UP.sign,
+								O.Ah('Audio ' + Nav.audio,BiliBiliSpaceAudio(ID)),
+								O.Ah('VC',BiliBiliSpaceDynamic(ID))
+							]
+						}]
+					})
+				})).FMap(function(UP)
+				{
+					return O.Api(BiliBiliApiSpaceUpload(ID,-~Page)).Map(function(V)
+					{
+						V = Common(V)
+						return {
+							Len : V.page.count,
+							Item : WR.Concat(UP,WR.MapU(function(V,F)
+							{
+								V = SolveAV(V)
+								Page || (V.Index = F)
+								return V
+							},V.list.vlist))
+						}
+					})
 				})
 			}
 		},{
