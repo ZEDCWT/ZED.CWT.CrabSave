@@ -54,6 +54,7 @@ module.exports = Option =>
 		'Instagram',
 		'IXiGua',
 		'Twitter',
+		'Vimeo',
 		'WeiBo',
 	])
 	return {

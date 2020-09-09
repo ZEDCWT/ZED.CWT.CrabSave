@@ -3242,6 +3242,7 @@
 			'Instagram',
 			'IXiGua',
 			'Twitter',
+			'Vimeo',
 			'WeiBo'
 		]).length
 		SiteOnNoti()
