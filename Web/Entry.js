@@ -1995,6 +1995,7 @@
 									if (null == Task) return
 									return undefined === Q ?
 										PlayCurrent :
+										Task.State - Q &&
 									(
 										OnState(Task.State = Q),
 										WR.Del(V.O,ProgressMap),
