@@ -3142,7 +3142,9 @@
 				JOM : function(S,Q)
 				{
 					S = S.exec(Q)
-					return WC.JTO(Q.slice(S.index + S[0].length),{More : true})[0]
+					return S ?
+						WC.JTO(Q.slice(S.index + S[0].length),{More : true})[0] :
+						{}
 				},
 				NoRel : InpNoRel,
 				Less : function(Q)
@@ -3242,6 +3244,7 @@
 			'Facebook',
 			'Instagram',
 			'IXiGua',
+			'TikTok',
 			'Twitter',
 			'Vimeo',
 			'WeiBo'

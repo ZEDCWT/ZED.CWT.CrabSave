@@ -21,7 +21,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	FieldClipList = WR.Map(WR.Add('clip.'),FieldClip).join(),
 	VimeoAPI = 'https://api.vimeo.com/',
 	VimeoAPIVideo = WW.Tmpl(VimeoAPI,'videos/',undefined,'?fields=',FieldClip.join()),
-	VimeoAPIUserProfileVideo = WW.Tmpl(VimeoAPI,'users/',undefined,'/profile_sections/default/videos?page=',undefined,'&per_page=',O.Size,'&fields=',FieldClipList),
+	VimeoAPIUserProfile = WW.Tmpl(VimeoAPI,'users/',undefined,'/profile_sections?fields=uri'),
+	VimeoAPIUserProfileVideo = WW.Tmpl(VimeoAPI,'users/',undefined,'/profile_sections/',undefined,'/videos?page=',undefined,'&per_page=',O.Size,'&fields=',FieldClipList),
 	VimeoAPIFollow = WW.Tmpl(VimeoAPI,'me/following?page=',undefined,'&per_page=',O.Size,'&fields=',
 	[
 		'uri',
@@ -74,6 +75,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					Cookie : false
 				})
 			})
+			.Map(Common)
 	},
 	LastSlash = function(Q){return Q.replace(/^.*\//,'')},
 	SolveClip = function(V)
@@ -88,7 +90,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Len : V.duration,
 			Desc : V.description
 		}
-	};
+	},
+	SolveProfileID = WX.CacheM(function(Q)
+	{
+		return MakeAPI(VimeoAPIUserProfile(Q)).Map(function(B)
+		{
+			B = B.data
+			1 - B.length && O.Bad(B)
+			return LastSlash(B[0].uri)
+		})
+	});
 	return {
 		ID : 'Vimeo',
 		Alias : 'VM',
@@ -107,7 +118,6 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			{
 				return MakeAPI(VimeoAPISearch(WC.UE(ID),-~Page)).Map(function(B)
 				{
-					B = Common(B)
 					return {
 						Len : B.total,
 						Item : WR.Map(SolveClip,WR.Pluck('clip',B.data))
@@ -144,7 +154,6 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			{
 				return MakeAPI(VimeoAPIFollow(-~Page)).Map(function(B)
 				{
-					B = Common(B)
 					return {
 						Len : B.total,
 						Item : WR.Map(function(V)
@@ -178,7 +187,6 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			{
 				return MakeAPI(VimeoAPIVideo(ID)).Map(function(B)
 				{
-					B = Common(B)
 					return {
 						Item : [SolveClip(B)]
 					}
@@ -189,9 +197,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Judge : [O.Word('User'),/Vimeo\.[^/]+\/(\w+)\b/i],
 			View : function(ID,Page)
 			{
-				return MakeAPI(VimeoAPIUserProfileVideo(ID,-~Page)).Map(function(B)
+				return SolveProfileID(ID).FMap(function(B)
 				{
-					B = Common(B)
+					return MakeAPI(VimeoAPIUserProfileVideo(ID,B,-~Page))
+				}).Map(function(B)
+				{
 					return {
 						Len : B.total,
 						Item : WR.Map(SolveClip,WR.Pluck('clip',B.data))

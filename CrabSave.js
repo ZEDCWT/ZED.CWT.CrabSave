@@ -188,11 +188,6 @@ module.exports = Option =>
 		Q = WW.IsObj(Q) ? Q : {URL : Q}
 		if (WW.IsStr(Q.URL) && WR.StartW('https://www.googleapis.com/',Q.URL))
 			Q.URL = Q.URL.replace(/#GoogleAPIKey#/,Option.GoogleAPIKey || 'AIzaSyA_ltEFFYL4E_rOBYkQtA8aKHnL5QR_uMA')
-		RequestHead(Q,WW.UA,
-			WW.Key() + '/' + WW.Rnd(3E3,9E9) +
-			' Chrome/' + WW.Rnd(3E3,6E6) +
-			' Safari/' + WW.Rnd(3E3,6E6) +
-			' AppleWebKit/' + WW.Rnd(3E3,6E6))
 		Q.AC = false
 		Setting.Proxy() && Setting.ProxyURL() &&
 			(Q.Pro = Setting.ProxyURL())

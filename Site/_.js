@@ -53,6 +53,7 @@ module.exports = Option =>
 		'Facebook',
 		'Instagram',
 		'IXiGua',
+		'TikTok',
 		'Twitter',
 		'Vimeo',
 		'WeiBo',
