@@ -31,13 +31,9 @@ module.exports = O =>
 			{
 				URL = WC.QSP(T).url
 				URL || O.Bad(T)
-				URL = WN.ReqB(O.Coke(URL)).FMap(function(B)
-				{
-					return WN.ReqB(O.Coke(WN.JoinU(WeiBo,WW.MF(/<iframe[^>]+src="([^"]+)/,B))))
-				}).FMap(function(B)
-				{
-					return O.M3U(WC.JTO(WW.MF(/play_url:(".*")/,B)))
-				})
+				URL = WN.ReqB(O.Coke(URL))
+					.FMap(B => WN.ReqB(O.Coke(WN.JoinU(WeiBo,WW.MF(/<iframe[^>]+src="([^"]+)/,B)))))
+					.FMap(B => O.M3U(WC.JTO(WW.MF(/play_url:(".*")/,B))))
 			}
 			else if (T = WW.MF(/li_story.*?action-data="([^"]+)/,B))
 				URL = WC.QSP(T).gif_ourl

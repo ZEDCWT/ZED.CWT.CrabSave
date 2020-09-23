@@ -407,6 +407,7 @@
 			WebSocketSend = WebSocketNotConnected
 			WebSocketSendAuth = WebSocketNotConnected
 			Cipher = Decipher = false
+			CookieMap = {}
 			DebugLog('Offline',WebSocketRetry)
 			WebSocketNoti(SA('SocOff',[WW.StrDate(WebSocketSince),WebSocketRetry++]))
 			NotiAuth(false)

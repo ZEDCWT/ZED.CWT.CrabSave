@@ -10,36 +10,39 @@ TikTokAPI = TikTokT + 'api/',
 TikTokAPIItemDetail = WW.Tmpl(TikTokAPI,'item/detail/?itemId=',undefined),
 TikTokAPIMusicDetail = WW.Tmpl(TikTokAPI,'music/detail/?musicId=',undefined,'&language='),
 TikTokAcrawler = 'https://sf-tb-sg.ibytedtos.com/obj/rc-web-sdk-sg/acrawler.js',
-Happy = WR.Reduce((D,V) =>
-{
-	D[V] = WW.Top[V]
-},{
-	[Symbol.toStringTag] : 'Window',
-	Object : WW.Merge(function(){},{defineProperty : WW.O}),
-	document :
+Happy = WN.Evil(`
+(U =>
+	[
+		'String',
+		'Date',
+		'RegExp',
+		'JSON',
+		'parseInt',
+	].reduce((D,V) => (D[V] = this[V],D),
 	{
-		[Symbol.toStringTag] : 'Document',
-		createElement : WR.Const({toDataURL : WW.Key})
-	},
-	location : {href : '',protocol : ''},
-	navigator :
-	{
-		[Symbol.toStringTag] : 'Navigator',
-		userAgent : WW.RUA(),
-		plugins : [],
-		platform : ''
-	},
-	history : {[Symbol.toStringTag] : 'History'},
-	Image : WW.O,
-	console : {log : WW.O},
-	PluginArray : Array
-},[
-	'String',
-	'Date',
-	'RegExp',
-	'JSON',
-	'parseInt',
-]);
+		[Symbol.toStringTag] : 'Window',
+		Object : U.defineProperty = U,
+		document :
+		{
+			[Symbol.toStringTag] : 'Document',
+			createElement : () => ({toDataURL : () => '' + Math.random()})
+		},
+		location : {href : '',protocol : ''},
+		navigator :
+		{
+			[Symbol.toStringTag] : 'Navigator',
+			userAgent : '',
+			plugins : [],
+			platform : ''
+		},
+		history : {[Symbol.toStringTag] : 'History'},
+		Image : U,
+		console : {log : U},
+		PluginArray : Array
+	})
+)(function(){})
+`,WN.VMO());
+Happy.window = Happy
 
 /**@type {CrabSaveNS.SiteO}*/
 module.exports = O =>
@@ -50,7 +53,7 @@ module.exports = O =>
 	{
 		try
 		{
-			Function('window',`'use strict';` + B)(Happy)
+			WN.Evil(`'use strict';` + B,Happy)
 			B = Happy.byted_acrawler
 		}
 		catch(_){}

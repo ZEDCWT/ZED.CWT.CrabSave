@@ -54,7 +54,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			return Sign = B && B.sign
 		})
 	}),
-	ReqAPI = function(Q,Api)
+	ReqSign = function()
 	{
 		return (Sign && WW.Now() < SignAt + 36E5 ? WX.Just(Sign) : O.Api(IXiGua).FMap(function(B)
 		{
@@ -64,18 +64,56 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				WW.MF(/="([^"]+acrawler.js)"/,B) ||
 				WW.MF(/="([^"]+vendors_index[^"]+js)"/,B)
 			)
-		})).FMap(function(S)
+		}))
+	},
+	ReqAPI = function(Q,Api)
+	{
+		return ReqSign().FMap(function(S)
 		{
 			return (!Api && O.Coke() ? O.Req : O.Api)(
 			{
-				URL : Q + (/\?/.test(Q) ? '&' : '?') + '_signature=' + (S ? S(
+				URL : Q,
+				QS :
 				{
-					url : Q.slice(~-IXiGua.length).replace(/\?.*/,'')
-				}) : ''),
+					_signature : S ? S({url : Q}) : ''
+				},
 				Head :
 				{
 					Referer : IXiGua
 				}
+			})
+		})
+	},
+	ReqCokeAC = {},
+	Req = function(Q)
+	{
+		var U = function(H)
+		{
+			return O.Req(
+			{
+				URL : Q,
+				Cookie : false,
+				Head :
+				{
+					Cookie : WR.Where(WR.Id,[O.Coke(),WC.CokeS(ReqCokeAC)]).join('; ')
+				}
+			},H)
+		};
+		return ReqSign().FMap(function(S)
+		{
+			return U(true).FMap(function(B)
+			{
+				WR.Each(function(V)
+				{
+					if (WR.StartW('__ac_nonce=',V))
+					{
+						ReqCokeAC.__ac_signature = S('',ReqCokeAC.__ac_nonce = WC.CokeP(V).__ac_nonce)
+						B = 0
+					}
+				},B[2]['set-cookie'])
+				return B ?
+					WX.Just(B[1]) :
+					U()
 			})
 		})
 	},
@@ -185,8 +223,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			],
 			View : function(ID)
 			{
-				return (O.Coke() ? O.Req : O.Api)(IXiGua + ID).Map(function(B)
+				return Req(IXiGua + ID).Map(function(B)
 				{
+					B = B.replace(/([^\\]":)undefined/g,'$1null')
 					return {
 						Item : [
 						{

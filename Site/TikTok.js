@@ -41,7 +41,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		{
 			_ : 'Navigator',
 			toString : HappyToString,
-			userAgent : WW.RUA(),
+			userAgent : WW.RUA(true),
 			plugins : [],
 			platform : ''
 		},
@@ -81,11 +81,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		{
 			return (ForceReq || O.Coke() ? O.Req : O.Api)(
 			{
-				UA : Happy.navigator.userAgent = WW.RUA(),
-				URL : Q + (/\?/.test(Q) ? '&' : '?') + '_signature=' + (S ? S(
+				UA : Happy.navigator.userAgent = WW.RUA(true),
+				URL : Q,
+				QS :
 				{
-					url : Q
-				}) : ''),
+					_signature : S ? S({url : Q}) : ''
+				},
 				Head :
 				{
 					Referer : TikTok
@@ -209,7 +210,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						return {
 							Non : true,
 							ID : V.user.uniqueId,
-							IDURL : TikTokUser(V.user.uniqueId),
+							URL : TikTokUser(V.user.uniqueId),
 							Img : V.user.avatarLarger,
 							UP : V.user.nickname,
 							UPURL : TikTokUser(V.user.uniqueId),

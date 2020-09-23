@@ -14,11 +14,8 @@ NicoHistory = '';
 module.exports = O =>
 {
 	var
-	PadSM = function(Q)
-	{
-		return /^\d/.test(Q) ? 'sm' + Q : Q
-	},
-	Coke = function(Q)
+	PadSM = Q => /^\d/.test(Q) ? 'sm' + Q : Q,
+	Coke = Q =>
 	{
 		Q = O.Coke(Q)
 		Q.Head.Cookie += '; watch_flash=0'
