@@ -121,9 +121,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							R = WV.Pref({C : I});
 							R.S(WR.Map(function(V)
 							{
-								return [null,WV.Inp(
+								return [O.Pascal(V[0]).replace(/Video/,''),WV.Inp(
 								{
-									Hint : O.Pascal(V[0]).replace(/Video/,''),
 									Inp : R.C(V[0]),
 									NoRel : O.NoRel
 								}).Drop(WR.Map(function(V)

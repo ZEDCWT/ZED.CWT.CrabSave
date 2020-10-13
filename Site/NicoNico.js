@@ -108,9 +108,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 									])
 									return D
 								},[],/-label"[^">]*(?:"[^"]+\?([^=]+)=([^"]+))?[^>]*>([^<]+)/g,V)
-								R.S([[null,WV.Inp(
+								R.S([[WW.MF(/h\d+>([^<]+)/,V),WV.Inp(
 								{
-									Hint : WW.MF(/h\d+>([^<]+)/,V),
 									Inp : R.C(K),
 									NoRel : O.NoRel
 								}).Drop(D)]])

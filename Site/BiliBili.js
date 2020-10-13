@@ -288,9 +288,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								V = V[0] ?
 									WR.Ent(V).sort(function(Q,S){return H(Q[0]) - H(S[0])}) :
 									WR.Ent(V)
-								R.S([[null,WV.Inp(
+								R.S([[O.Pascal(F),WV.Inp(
 								{
-									Hint : O.Pascal(F),
 									Inp : R.C(F),
 									NoRel : O.NoRel
 								}).Drop(WR.Map(function(V)
