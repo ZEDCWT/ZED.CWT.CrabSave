@@ -8,7 +8,13 @@ module.exports = Option =>
 {
 	var
 	All = [],
-	Map = {};
+	Map = {},
+
+	Best = (S,Q) => WR.Reduce(
+		(D,V) => !D || (WW.IsArr(S) ? +WR.Path(S,D) < +WR.Path(S,V) : +D[S] < +V[S]) ? V : D,
+		null,Q) || {},
+	Bad = Q => WW.Throw(['ErrBadRes',WW.IsStr(Q) ? Q : WC.OTJ(Q)]);
+
 	WR.Each((V,S) =>
 	{
 		S = require(`./${V}=`)(
@@ -18,9 +24,8 @@ module.exports = Option =>
 			Req : Q => Option.Req(Q),
 			Coke : Q => Option.Coke(Option.Req(Q),V),
 			CokeRaw : () => Option.CokeRaw(V),
-			Best : (S,Q) => WR.Reduce(WR.MaxBy(V => WW.IsArr(S) ? +WR.Path(S,V) : +V[S]),
-				{[S] : -Infinity},Q),
-			Bad : Q => WW.Throw(['ErrBadRes',WW.IsStr(Q) ? Q : WC.OTJ(Q)]),
+			Best,
+			Bad,
 			JOM : (S,Q) =>
 			(
 				S = S.exec(Q),
@@ -31,17 +36,23 @@ module.exports = Option =>
 				.replace(/<.*?>/g,''))
 				.replace(/.+/g,WR.Trim)
 				.replace(/\r?\n/g,' '),
-			M3U : Q => WN.ReqB(Q).FMap(B =>
+			M3U : Q => WX.TCO((Q,I) => I < 10 ? WN.ReqB(Option.Req(Q)).Map(V =>
 			{
-				B = WC.M3U(B)
+				var B = WC.M3U(V);
+				if (WW.IsArr(B['STREAM-INF']))
+				{
+					B = Best([0,'BANDWIDTH'],B['STREAM-INF'])
+					B || Bad(V)
+					return [true,WN.JoinU(Q,B[1])]
+				}
 				if (WW.IsArr(B.INF))
 				{
 					B = B.INF.map(V => WN.JoinU(Q,V[1]))
 					B = B.length < 16 ? {URL : B} : {URL : B,Size : WR.RepA(1,B.length)}
-					return WX.Just(B)
+					return [false,B]
 				}
-				WX.Throw(['ErrBadRes',B])
-			})
+				Bad(V)
+			}) : Bad('Too many M3U | ' + Q),Q)
 		})
 		All.push(S)
 		Map[S.ID = V] = S

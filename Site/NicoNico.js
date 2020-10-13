@@ -66,7 +66,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		{
 			return O.Req({URL : NicoMy,RedX : 1}).Map(function(B)
 			{
-				return WC.JTO(WW.MF(/nickname[ =]+(".*");/,B))
+				return O.JOM(/\bnickname[ =:"]+(?=")/,WC.HED(B))
 			})
 		},
 		Map : [

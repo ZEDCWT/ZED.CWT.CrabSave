@@ -40,7 +40,7 @@ module.exports = O =>
 					WN.ReqB(O.Req(
 					{
 						URL : NicoDMCApi,
-						Form : WC.OTJ(
+						JSON :
 						{
 							session :
 							{
@@ -71,8 +71,9 @@ module.exports = O =>
 											{
 												http_output_download_parameters :
 												{
+													use_ssl : 'yes',
 													file_extension : 'flv',
-													use_well_known_port : 'no'
+													use_well_known_port : 'yes'
 												}
 											}
 										}
@@ -97,7 +98,7 @@ module.exports = O =>
 								client_info : {player_id : S.player_id},
 								priority : S.priority
 							}
-						})
+						}
 					})).Map(B =>
 					(
 						B = WC.JTO(B),
