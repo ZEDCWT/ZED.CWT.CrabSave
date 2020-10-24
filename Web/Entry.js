@@ -61,6 +61,7 @@
 	DebugClick = 10,
 	DebugInterval = 2000,
 	DebugLimit = 2048,
+	DebugLimitReq = 32,
 
 	URLSite = 'Site/',
 	URLApi = 'Api/',
@@ -3037,6 +3038,13 @@
 
 	WV.Ready(function()
 	{
+		var
+		Req = [],
+		ReqFeed = function(Q,S)
+		{
+			Req.unshift([Q,S])
+			Req.length < DebugLimitReq || Req.pop()
+		};
 		WV.Ap(Rainbow[0],WV.Body)
 		WS.H || WebSocketNoti(SA('GenNoSock'))
 		WS.C()
@@ -3058,6 +3066,7 @@
 						{
 							WSOnApi[T] = function(B)
 							{
+								ReqFeed(Q,B)
 								WR.Del(T,WSOnApi)
 								T = false
 								if (B[2] && H) O.D(B.slice(2)).F()
@@ -3071,12 +3080,17 @@
 						return function()
 						{
 							T && WebSocketSendAuth([ActionAuthApi,T,false])
+							T && WR.Del(T,WSOnApi)
 						}
 					})
 				},
 				Api : function(Q)
 				{
 					return WB.ReqB(URLApi + '~' + WC.UE(WW.IsObj(Q) ? WC.OTJ(Q) : Q))
+						.Tap(function(B)
+						{
+							ReqFeed(Q,B)
+						})
 				},
 				Head : function(Q,K,V)
 				{
@@ -3223,6 +3237,7 @@
 			SiteOnNoti(++SiteCount)
 		}
 		CrabSave.Err = RecordErrList
+		CrabSave.Req = Req
 		CrabSave.Inspect = function()
 		{
 			WebSocketSendAuth([ActionAuthInspect,WW.Arr(arguments)])
