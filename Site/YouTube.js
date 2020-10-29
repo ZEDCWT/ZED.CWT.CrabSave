@@ -226,7 +226,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							{
 								ID : V.videoId,
 								Img : V.thumbnail.thumbnails[0].url,
-								Title : V.title.simpleText,
+								Title : V.title.runs ? V.title.runs[0].text : V.title.simpleText,
 								UP : V.shortBylineText.runs[0].text,
 								UPURL : O.SolU(V.shortBylineText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata.url,YouTube),
 								Date : V.publishedTimeText && V.publishedTimeText.simpleText,
