@@ -59,8 +59,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			B = Common(B)
 			return [WR.Key(B.globalObjects.tweets).length && SolveCursor(B),
 			{
-				Item : WR.Map(function(V)
+				Item : WR.MapW(function(V)
 				{
+					if (/ads-api\.twitter/.test(V))
+						return null
 					return SolveTweet(V[0],V[1],B.globalObjects.users)
 				},WR.Ent(B.globalObjects.tweets).sort(function(Q,S)
 				{

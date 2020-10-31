@@ -73,7 +73,7 @@
 	{
 		LangNow = WR.Has(Q,Lang) ? Lang[Q] : LangNow
 	},
-	SA = function(/**@type {keyof Lang['EN']}*/Q,S)
+	SA = /**@type {<U extends keyof Lang['EN']>(Q : U,S? : any[]) => string}*/ function(Q,S)
 	{
 		WW.IsArr(Q) && (S = Q.slice(1),Q = Q[0])
 		return WR.Has(Q,LangNow) ? S ? WW.Fmt(LangNow[Q],S,'~') : LangNow[Q] :
