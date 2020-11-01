@@ -147,7 +147,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			}
 		},{
 			Name : 'User',
-			Judge : O.Word('User'),
+			Judge : O.Word('User|C'),
 			View : function(ID,Page)
 			{
 				return Channel2PlayList(GoogleAPIYouTubeChannel('forUsername',ID))
