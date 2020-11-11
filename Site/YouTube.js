@@ -5,6 +5,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	YouTube = 'https://www.youtube.com/',
 	YouTubeWatch = WW.Tmpl(YouTube,'watch?v=',undefined),
 	YouTubeChannel = WW.Tmpl(YouTube,'channel/',undefined),
+	YouTubeCustomURL = WW.Tmpl(YouTube,'c/',undefined),
 	YouTubeFollowing = YouTube + 'subscription_manager',
 	YouTubeSubscription = YouTube + 'feed/subscriptions',
 	YouTubeBrowse = WW.Tmpl(YouTube,'browse_ajax?ctoken=',undefined,'&continuation=',undefined,'&itct=',undefined),
@@ -85,6 +86,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			return CommonPath(['items',0,'contentDetails','relatedPlaylists','uploads'],B)
 		})
 	}),
+	SolveChannelIDByCustomURL = WX.CacheM(function(Q)
+	{
+		return O.Api(YouTubeCustomURL(Q)).Map(function(B)
+		{
+			return WW.MF(/(?:"canonical"[^>]+\/channel\/|prop="channelId"[^"]+")([^"]+)/,B)
+		})
+	}),
 	Menu =
 	[
 		['order',['relevance','date','viewCount','rating','title','videoCount']],
@@ -147,7 +155,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			}
 		},{
 			Name : 'User',
-			Judge : O.Word('User|C'),
+			Judge : O.Word('User'),
 			View : function(ID,Page)
 			{
 				return Channel2PlayList(GoogleAPIYouTubeChannel('forUsername',ID))
@@ -159,6 +167,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			View : function(ID,Page)
 			{
 				return Channel2PlayList(GoogleAPIYouTubeChannel('id',ID))
+					.FMap(function(ID){return SolvePlayList(ID,Page)})
+			}
+		},{
+			Name : 'CustomURL',
+			Judge : O.Word('CustomURL|C'),
+			View : function(ID,Page)
+			{
+				return SolveChannelIDByCustomURL(ID)
+					.FMap(function(ID){return Channel2PlayList(GoogleAPIYouTubeChannel('id',ID))})
 					.FMap(function(ID){return SolvePlayList(ID,Page)})
 			}
 		},{
