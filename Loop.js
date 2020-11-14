@@ -267,6 +267,16 @@ module.exports = Option =>
 								return WN.MakeDir(WN.DirN(Dest)).FMap(() => WX.Provider(O =>
 								{
 									var
+									OnSize = Q =>
+									{
+										Down.Size === (Down.Size = Q) ||
+											NotBigDeal(DB.NewSize(Down.Task,Down.Part,Down.File,Q)
+												.Tap(S =>
+												{
+													Option.OnFile(Down.Task,Down.Part,Down.File,Q)
+													Option.OnSize(Down.Task,S,null)
+												}))
+									},
 									Work = WN.Down(
 									{
 										Req : Pack(Down.URL,V.Site),
@@ -274,7 +284,8 @@ module.exports = Option =>
 										Last : Down.Path && WN.JoinP(V.Root,Down.Path),
 										Fresh : !Down.Path,
 										Only200 : true,
-										ForceRange : true,
+										ForceRange : WR.Default(true,Option.Site.D(V.Site).Range),
+										AutoUnlink : true,
 										Interval : 1E3
 									}).On('Connected',() =>
 									{
@@ -284,16 +295,7 @@ module.exports = Option =>
 										if (null == Down.First) Down.First = Work.Info.Start
 										Option.OnConn(Down.Task,Down.Part,Down.File,Down.First)
 										NotBigDeal(DB.SaveConn(Down.Task,Down.Part,Down.File,Down.First))
-									}).On('Size',Q =>
-									{
-										if (Q !== Down.Size)
-											NotBigDeal(DB.NewSize(Down.Task,Down.Part,Down.File,Q)
-												.Tap(S =>
-												{
-													Option.OnFile(Down.Task,Down.Part,Down.File,Q)
-													Option.OnSize(Down.Task,S,null)
-												}))
-									}).On('Path',P =>
+									}).On('Size',OnSize).On('Path',P =>
 									{
 										P = WN.RelP(V.Root,P)
 										if (P !== Down.Path)
@@ -310,6 +312,7 @@ module.exports = Option =>
 									}).On('Done',() =>
 									{
 										var Done = WW.Now();
+										OnSize(Work.Info.Total)
 										OnEnd()
 										Option.OnDone(Down.Task,Down.Part,Down.File,Done)
 										DB.SaveDone(Down.Task,Down.Part,Down.File,Done)

@@ -72,6 +72,7 @@ declare module CrabSaveNS
 		}) : {
 			URL(ID : string) : WishNS.Provider<SiteURL>
 			Pack?(Q : string) : string | WishNS.ReqAccept
+			Range? : boolean
 		}
 	}
 	interface SiteURL

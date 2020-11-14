@@ -51,6 +51,7 @@ module.exports = O =>
 					Part : Part
 				}
 			})
-		}
+		},
+		Range : false
 	}
 }
