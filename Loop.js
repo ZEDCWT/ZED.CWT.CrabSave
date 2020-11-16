@@ -312,7 +312,7 @@ module.exports = Option =>
 									}).On('Done',() =>
 									{
 										var Done = WW.Now();
-										OnSize(Work.Info.Total)
+										OnSize(Work.Info.Total || Work.Info.Saved)
 										OnEnd()
 										Option.OnDone(Down.Task,Down.Part,Down.File,Done)
 										DB.SaveDone(Down.Task,Down.Part,Down.File,Done)
