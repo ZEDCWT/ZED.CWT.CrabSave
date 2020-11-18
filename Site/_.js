@@ -68,6 +68,7 @@ module.exports = Option =>
 		'Twitter',
 		'Vimeo',
 		'WeiBo',
+		'Manual',
 	])
 	return {
 		A : All,

@@ -244,7 +244,7 @@ module.exports = Option =>
 									ID : WR.SafeFile(V.ID),
 									Title : WR.SafeFile(V.Title || '') ||
 										'[Untitled.' + WR.SafeFile(V.ID) + ']',
-									Up : WR.SafeFile(V.UP),
+									Up : WR.SafeFile(V.UP || '[Anonymous]'),
 									Date : WW.StrDate(UPAt,WW.DateDotS),
 									Y : UPAt.getFullYear(),
 									M : WW.Pad02(-~UPAt.getMonth()),

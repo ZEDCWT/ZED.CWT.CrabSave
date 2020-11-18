@@ -3263,7 +3263,8 @@
 			'TikTok',
 			'Twitter',
 			'Vimeo',
-			'WeiBo'
+			'WeiBo',
+			'Manual'
 		]).length
 		SiteOnNoti()
 		WW.To(TickInterval,function(F)
