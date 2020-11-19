@@ -15,6 +15,8 @@ var Lang = // eslint-disable-line
 		GenCancel : 'Cancel',
 		GenUnknown : '[Unknown:~0~]',
 		GenUntitle : '[Untitled]',
+		GenTitle : 'Title',
+		GenAuthor : 'Author',
 
 		Bro : 'Browser',
 		BroUnSite : 'Unknown site `~0~`',
@@ -177,6 +179,7 @@ var Lang = // eslint-disable-line
 		GenCancel : '取消',
 		GenUnknown : '[未知:~0~]',
 		GenUntitle : '[無標題]',
+		GenTitle : '標題',
 
 		Bro : '瀏覽',
 		BroUnSite : '未知站點 `~0~`',
@@ -336,6 +339,7 @@ var Lang = // eslint-disable-line
 		GenCancel : '取消',
 		GenUnknown : '[未知:~0~]',
 		GenUntitle : '[无标题]',
+		GenTitle : '标题',
 
 		Bro : '浏览',
 		BroUnSite : '未知站点 `~0~`',
@@ -495,6 +499,7 @@ var Lang = // eslint-disable-line
 		GenCancel : 'キャンセル',
 		GenUnknown : '[未知:~0~]',
 		GenUntitle : '[無題]',
+		GenTitle : 'タイトル',
 
 		Bro : 'ブラウザ',
 		BroUnSite : '未知なサイト `~0~`',
@@ -521,7 +526,7 @@ var Lang = // eslint-disable-line
 		LstBriefRead : '~0~リストをもう一度読み込み中...',
 		DetRow : 'タスクID',
 		DetBirth : '作成日',
-		DetUp : 'アップロード主',
+		DetUp : 'うp主',
 		DetDate : 'アップロード日',
 		DetPartC : 'チャプター数',
 		DetFileC : 'ファイル数',

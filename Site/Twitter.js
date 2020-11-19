@@ -190,7 +190,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 							View : '@' + V.screen_name,
 							URL : Twitter + V.screen_name,
 							Img : V.profile_image_url_https,
-							Title : V.name,
+							UP : V.name,
+							UPURL : Twitter + V.screen_name,
 							Desc : (V.location ? '[[' + V.location + ']]\n\n' : '') + V.description
 						}
 					},B.users)

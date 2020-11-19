@@ -6,8 +6,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	YouTubeWatch = WW.Tmpl(YouTube,'watch?v=',undefined),
 	YouTubeChannel = WW.Tmpl(YouTube,'channel/',undefined),
 	YouTubeCustomURL = WW.Tmpl(YouTube,'c/',undefined),
-	YouTubeFollowing = YouTube + 'subscription_manager',
-	YouTubeSubscription = YouTube + 'feed/subscriptions',
+	YouTubeFeed = YouTube + 'feed/',
+	YouTubeFeedSubscription = YouTubeFeed + 'subscriptions',
+	YouTubeFeedChannel = YouTubeFeed + 'channels',
 	YouTubeBrowse = WW.Tmpl(YouTube,'browse_ajax?ctoken=',undefined,'&continuation=',undefined,'&itct=',undefined),
 	YouTubeAccount = YouTube + 'account',
 	GoogleAPIKey = '#GoogleAPIKey#',
@@ -93,6 +94,50 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			return WW.MF(/(?:"canonical"[^>]+\/channel\/|prop="channelId"[^"]+")([^"]+)/,B)
 		})
 	}),
+	SolveFeedText = function(V)
+	{
+		return V && (V.runs ? V.runs[0].text : V.simpleText)
+	},
+	MakeFeed = function(Feed,Map)
+	{
+		return O.More(function(_,I)
+		{
+			return O.Req(Feed).Map(function(V)
+			{
+				I[0] =
+				{
+					'X-YouTube-Client-Name' : 1,
+					'X-YouTube-Client-Version' : WW.MF(/CLIENT_VERSION":"([^"]+)/,V),
+					'X-YouTube-Identity-Token' : WW.MF(/ID_TOKEN":"([^"]+)/,V)
+				}
+				return WW.MF(/ytInitialData[^\w{]+?({.*});/,V)
+			})
+		},function(I,Page)
+		{
+			return O.Req(
+			{
+				URL : YouTubeBrowse(I[Page][0],I[Page][0],I[Page][1]),
+				Head : I[0]
+			})
+		},function(B)
+		{
+			var
+			Token,
+			Item = [],
+			H = function(V,K)
+			{
+				'nextContinuationData' === K ?
+					Token = [WC.UE(V.continuation),WC.UE(V.clickTrackingParams)] :
+					Map(Item,V,K) ||
+						WW.IsObj(V) && WR.EachU(H,V)
+			};
+			H(WC.JTO(B))
+			return [Token,
+			{
+				Item : Item
+			}]
+		})
+	},
 	Menu =
 	[
 		['order',['relevance','date','viewCount','rating','title','videoCount']],
@@ -185,78 +230,35 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},{
 			Name : 'Following',
 			Judge : O.UP,
-			View : function()
+			View : MakeFeed(YouTubeFeedChannel,function(I,V,K)
 			{
-				return O.Req(YouTubeFollowing).Map(function(B)
+				return 'channelRenderer' === K && I.push(
 				{
-					return {
-						Max : 1,
-						Item : WW.MR(function(D,V,I)
-						{
-							D.push(
-							{
-								Non : true,
-								ID : I = WW.MF(/\/channel\/([^"]+)/,V),
-								URL : YouTubeChannel(I),
-								Img : WW.MF(/data-thumb="([^"]+)/,V),
-								UP : WC.HED(WW.MF(/title="([^"]+)/,V)),
-								UPURL : YouTubeChannel(I)
-							})
-							return D
-						},[],/tion-thumb[^]+?<\/div/g,B)
-					}
+					Non : true,
+					ID : V.channelId,
+					URL : YouTubeChannel(V.channelId),
+					Img : WR.Last(V.thumbnail.thumbnails).url,
+					UP : SolveFeedText(V.title),
+					UPURL : YouTubeChannel(V.channelId),
+					Desc : SolveFeedText(V.descriptionSnippet)
 				})
-			}
+			})
 		},{
 			Name : 'Subscription',
 			Judge : O.TL,
-			View : O.More(function(_,I)
+			View : MakeFeed(YouTubeFeedSubscription,function(I,V,K)
 			{
-				return O.Req(YouTubeSubscription).Map(function(V)
+				return 'gridVideoRenderer' === K && I.push(
 				{
-					I[0] =
-					{
-						'X-YouTube-Client-Name' : 1,
-						'X-YouTube-Client-Version' : WW.MF(/CLIENT_VERSION":"([^"]+)/,V),
-						'X-YouTube-Identity-Token' : WW.MF(/ID_TOKEN":"([^"]+)/,V)
-					}
-					return WW.MF(/ytInitialData[^\w{]+?({.*});/,V)
+					ID : V.videoId,
+					Img : V.thumbnail.thumbnails[0].url,
+					Title : SolveFeedText(V.title),
+					UP : SolveFeedText(V.shortBylineText),
+					UPURL : O.SolU(V.shortBylineText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata.url,YouTube),
+					Date : SolveFeedText(V.publishedTimeText),
+					More : V.upcomingEventData && O.DTS(1E3 * V.upcomingEventData.startTime),
+					Len : '' + WR.MapW(WR.Prop(['thumbnailOverlayTimeStatusRenderer','text','simpleText']),V.thumbnailOverlays)
 				})
-			},function(I,Page)
-			{
-				return O.Req(
-				{
-					URL : YouTubeBrowse(I[Page][0],I[Page][0],I[Page][1]),
-					Head : I[0]
-				})
-			},function(B)
-			{
-				var
-				Token,
-				Item = [],
-				H = function(V,K)
-				{
-					'nextContinuationData' === K ?
-						Token = [WC.UE(V.continuation),WC.UE(V.clickTrackingParams)] :
-						'gridVideoRenderer' === K ?
-							Item.push(
-							{
-								ID : V.videoId,
-								Img : V.thumbnail.thumbnails[0].url,
-								Title : V.title.runs ? V.title.runs[0].text : V.title.simpleText,
-								UP : V.shortBylineText.runs[0].text,
-								UPURL : O.SolU(V.shortBylineText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata.url,YouTube),
-								Date : V.publishedTimeText && V.publishedTimeText.simpleText,
-								More : V.upcomingEventData && O.DTS(1E3 * V.upcomingEventData.startTime),
-								Len : '' + WR.MapW(WR.Prop(['thumbnailOverlayTimeStatusRenderer','text','simpleText']),V.thumbnailOverlays)
-							}) :
-							WW.IsObj(V) && WR.EachU(H,V)
-				};
-				H(WC.JTO(B))
-				return [Token,
-				{
-					Item : Item
-				}]
 			})
 		},{
 			Name : 'Video',

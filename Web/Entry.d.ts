@@ -14,6 +14,7 @@ declare module CrabSaveNS
 	}
 	interface WebTool
 	{
+		SA(Q : string,S? : any[]) : string
 		Req(Q : string | WebReq) : WishNS.Provider<string>
 		Req(Q : string | WebReq,H : true) : WishNS.Provider<[number | false,string,WishNS.ReqH['H']]>
 		Api(Q : WishNS.ReqAccept) : WishNS.Provider<string>

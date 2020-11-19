@@ -3054,6 +3054,7 @@
 		{
 			var V = Q(
 			{
+				SA : SA,
 				Req : function(Q,H)
 				{
 					Q = WW.IsObj(Q) ? Q : {URL : Q}

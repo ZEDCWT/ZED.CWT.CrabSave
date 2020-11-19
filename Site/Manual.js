@@ -44,19 +44,19 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						R = WV.Pref({C : I});
 						R.S([
 						[
-							'Title',
+							O.SA('GenTitle'),
 							WV.Inp(
 							{
 								Inp : R.C('T')
 							}).V(Pref.T)
 						],[
-							'Up',
+							O.SA('DetUp'),
 							WV.Inp(
 							{
 								Inp : R.C('U')
 							}).V(WR.Default('',Pref.U))
 						],[
-							'Date',
+							O.SA('DetDate'),
 							WV.Inp(
 							{
 								Inp : R.C('D'),

@@ -354,7 +354,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 									ID : I = WW.MF(/\/u\/(\d+)/,V) || WW.MF(/name"[^>]+href="\/(\w+)/,V),
 									URL : WeiBo + I,
 									Img : WW.MF(/src="([^"]+)/,V),
-									Title : WC.HED(WW.MF(/title="([^"]+)/,V)),
+									UP : WC.HED(WW.MF(/title="([^"]+)/,V)),
+									UPURL : WeiBo + I,
 									More : WR.Trim(WR.Trim(WW.MF(/"text[^>]+>([^<]+)/,V)) + '\n' +
 										O.Text(WW.MF(/info_from[^>]+>([^]+?)<\/div/,V)))
 								})

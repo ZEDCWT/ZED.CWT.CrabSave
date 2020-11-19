@@ -170,7 +170,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 						ID : V.username,
 						URL : Instagram + V.username,
 						Img : V.profile_pic_url,
-						Title : V.full_name
+						UP : V.full_name,
+						UPURL : Instagram + V.username
 					}
 				},B.user.edge_follow)
 			})
