@@ -100,6 +100,6 @@ module.exports = O =>
 				Part : [{URL : [B.video.downloadAddr]}]
 			}))
 		},
-		Pack : Q => WN.ReqOH(Q,'Referer',TikTok)
+		Pack : Q => O.Coke(WN.ReqOH(Q,'Referer',TikTok))
 	}
 }

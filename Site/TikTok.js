@@ -129,7 +129,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		ID : 'TikTok',
 		Alias : 'TT',
 		Judge : /\bTikTok\b/i,
-		Min : 'sid_tt',
+		Min : 'sid_tt tt_webid_v2',
 		Sign : function()
 		{
 			return O.Req(TikTok).Map(function(B)
