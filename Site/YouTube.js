@@ -10,6 +10,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	YouTubeFeedSubscription = YouTubeFeed + 'subscriptions',
 	YouTubeFeedChannel = YouTubeFeed + 'channels',
 	YouTubeBrowse = WW.Tmpl(YouTube,'browse_ajax?ctoken=',undefined,'&continuation=',undefined,'&itct=',undefined),
+	/*
+	YouTubeKeyInner = 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8',
+	YouTubeI = YouTube + 'youtubei/v1/',
+	YouTubeIBrowse = YouTubeI + 'browse?key=' + YouTubeKeyInner,
+	*/
 	YouTubeAccount = YouTube + 'account',
 	GoogleAPIKey = '#GoogleAPIKey#',
 	GoogleAPI = 'https://www.googleapis.com/',
@@ -102,7 +107,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	{
 		return O.More(function(_,I)
 		{
-			return O.Req(Feed).Map(function(V)
+			return O.Req(
+			{
+				URL : Feed,
+				UA : ''
+			}).Map(function(V)
 			{
 				I[0] =
 				{
@@ -138,6 +147,37 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			}]
 		})
 	},
+	/*
+	SAPISID __Secure-3PAPISID
+	MakeI = function(URL,Req)
+	{
+		var
+		Now = WR.Floor(WW.Now() / 1E3),
+		K = WC.CokeP(O.Coke()).SAPISID;
+		if (!K) return WX.Throw('SAPISID field not found in the cookie')
+		return O.Req(
+		{
+			URL : URL,
+			Head :
+			{
+				Authorization : 'SAPISIDHASH ' +
+					Now + '_' +
+					WR.Low(WC.HEXS(WC.SHA1([Now,K,YouTube.slice(0,-1)].join(' '))))
+			},
+			JSON : WW.Merge(
+			{
+				context :
+				{
+					client :
+					{
+						clientName : 'WEB',
+						clientVersion : '2.' + WW.StrDate(null,'`Y``M``D`')
+					},
+				}
+			},Req)
+		})
+	},
+	*/
 	Menu =
 	[
 		['order',['relevance','date','viewCount','rating','title','videoCount']],
