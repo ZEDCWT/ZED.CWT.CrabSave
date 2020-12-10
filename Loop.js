@@ -319,8 +319,10 @@ module.exports = Option =>
 											.Now(null,O.E,O.F)
 									}).On('Die',E =>
 									{
+										E = /Status not satisfied/.test(E) ||
+											!Working && /Timeout/.test(E)
 										OnEnd()
-										;/Status not satisfied/.test(E) ?
+										E ?
 											O.E(DownloadErrRenew) :
 											Work.Info.Begin < Work.Info.Saved ?
 												O.E(DownloadErrRetry) :
