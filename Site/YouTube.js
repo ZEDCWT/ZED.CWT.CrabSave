@@ -190,7 +190,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		ID : 'YouTube',
 		Alias : 'Y',
 		Judge : /\bYouTube\b|\bY[\dA-Z]+\.be\b/i,
-		Min : 'SID SSID LOGIN_INFO PREF',
+		Min : 'SID SSID LOGIN_INFO __Secure-3PSID PREF',
 		Sign : function()
 		{
 			return O.Req({URL : YouTubeAccount,Red : false}).Map(function(B)
