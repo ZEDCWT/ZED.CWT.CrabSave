@@ -263,7 +263,8 @@ module.exports = Option =>
 										(Q,S) => WW.MR((D,V) => D && NameO[V[1]],true,/\|([^|]+)\|/,Q) ? S : ''),
 									NameO,'|'
 								).slice(0,220) + (Down.Ext || ''),
-								Dest = WN.JoinP(V.Root,Name);
+								Dest = WN.JoinP(V.Root,Name),
+								SizeChanged;
 								return WN.MakeDir(WN.DirN(Dest)).FMap(() => WX.Provider(O =>
 								{
 									var
@@ -282,7 +283,7 @@ module.exports = Option =>
 										Req : Pack(Down.URL,V.Site),
 										Path : Dest,
 										Last : Down.Path && WN.JoinP(V.Root,Down.Path),
-										Fresh : !Down.Path,
+										Fresh : SizeChanged || !Down.Path,
 										Only200 : true,
 										ForceRange : WR.Default(true,Option.Site.D(V.Site).Range),
 										AutoUnlink : true,
@@ -319,19 +320,24 @@ module.exports = Option =>
 											.Now(null,O.E,O.F)
 									}).On('Die',E =>
 									{
-										E = /Status not satisfied/.test(E) ||
-											!Working && /Timeout/.test(E)
+										var
+										ShouldRenew = /Status not satisfied/.test(E) ||
+											!Working && /Timeout/.test(E);
+										SizeChanged = /Size changed/.test(E)
 										OnEnd()
-										E ?
+										ShouldRenew ?
 											O.E(DownloadErrRenew) :
-											Work.Info.Begin < Work.Info.Saved ?
+											SizeChanged || Work.Info.Begin < Work.Info.Saved ?
 												O.E(DownloadErrRetry) :
 												O.E(E)
 									}),
 									OnEnd = () =>
 									{
-										Has += Down.Has = Work.Info.Saved
-										Working = 0
+										if (Working)
+										{
+											Has += Down.Has = Work.Info.Saved
+											Working = 0
+										}
 										if (Work.Info.Begin < Work.Info.Saved)
 										{
 											Down.Take += WW.Now() - Work.Info.Start
@@ -339,6 +345,7 @@ module.exports = Option =>
 											NotBigDeal(DB.SaveTake(Down.Task,Down.Part,Down.File,Down.Take))
 										}
 									};
+									SizeChanged = false
 									++Down.Play
 									Option.OnPlay(Down.Task,Down.Part,Down.File,Down.Play)
 									NotBigDeal(DB.SavePlay(Down.Task,Down.Part,Down.File,Down.Play))
