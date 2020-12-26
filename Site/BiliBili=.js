@@ -14,6 +14,12 @@ BiliBiliAudioWebURL = WW.Tmpl(BiliBiliAudioWeb,'url?sid=',undefined,'&privilege=
 BiliBiliApi = 'https://api.bilibili.com/',
 BiliBiliApiWebView = WW.Tmpl(BiliBiliApi,'x/web-interface/view?aid=',undefined),
 BiliBiliApiPlayURL = WW.Tmpl(BiliBiliApi,'x/player/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=16&fourk=1'),
+BiliBiliApiPlayURLPGC = WW.Tmpl(BiliBiliApi,'pgc/player/web/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=16&fourk=1'),
+BiliBiliApiPlayURLList =
+[
+	BiliBiliApiPlayURL,
+	BiliBiliApiPlayURLPGC,
+],
 BiliBiliApiPlayerSo = WW.Tmpl(BiliBiliApi,'x/player.so?aid=',undefined,'&id=cid:',undefined),
 BiliBiliApiSteinNode = WW.Tmpl(BiliBiliApi,'x/stein/nodeinfo?aid=',undefined,'&graph_version=',undefined,'&node_id=',undefined),
 BiliBiliVCApi = 'https://api.vc.bilibili.com/',
@@ -21,18 +27,21 @@ BiliBiliVCApiDetail = WW.Tmpl(BiliBiliVCApi,'clip/v1/video/detail?video_id=',und
 
 Common = V => (V = WC.JTO(V)).code ?
 	WW.Throw(V) :
-	V.data;
+	V.data || V.result;
 
 /**@type {CrabSaveNS.SiteO}*/
 module.exports = O =>
 {
 	var
-	PlayURL = (ID,CID,Quality) =>
-		WN.ReqB(O.Coke(BiliBiliApiPlayURL(ID,CID,Quality || 120)))
-			.Map(Common)
+	PlayURL = (ID,CID,Quality) => WX.TCO((_,F) =>
+		WN.ReqB(O.Coke(BiliBiliApiPlayURLList[F](ID,CID,Quality || 120)))
+			.Map(B => [0,Common(B)])
 			.RetryWhen(E => E.Map((V,F) =>
 				!F && V && -503 === V.code || WW.Throw(V))
-				.Delay(2E3));
+				.Delay(2E3))
+			.ErrAs(E => -~F < BiliBiliApiPlayURLList.length ?
+				WX.Just([true]) :
+				WX.Throw(E)));
 	return {
 		URL : Q =>
 		{

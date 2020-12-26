@@ -11,7 +11,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	TikTokAPI = TikTokT + 'api/',
 	TikTokAPIItemDetail = WW.Tmpl(TikTokAPI,'item/detail/?itemId=',undefined),
 	TikTokAPIItemList = WW.Tmpl(TikTokAPI,'item_list/?id=',undefined,'&count=',O.Size,'&maxCursor=',undefined,'&minCursor=&sourceType=8'),
-	TikTokAPIUserDetail = WW.Tmpl(TikTokAPI,'user/detail/?uniqueId=',undefined),
+	TikTokAPIItemListTL = WW.Tmpl(TikTokAPI,'item_list/?count=',O.Size,'&maxCursor=',undefined,'&minCursor=&sourceType=18&pullType=',undefined,'&level=',undefined),
+	// TikTokAPIUserDetail = WW.Tmpl(TikTokAPI,'user/detail/?uniqueId=',undefined),
 	TikTokAPIUserList = WW.Tmpl(TikTokAPI,'user/list/?count=',O.Size,'&maxCursor=',undefined,'&minCursor=',undefined),
 	TikTokAPIMusicDetail = WW.Tmpl(TikTokAPI,'music/detail/?musicId=',undefined,'&language='),
 	TikTokAcrawler = 'https://sf-tb-sg.ibytedtos.com/obj/rc-web-sdk-sg/acrawler.js',
@@ -25,10 +26,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	},{
 		_ : 'Window',
 		toString : HappyToString,
-		Object : WW.Merge(false,true,function(){},
+		Object : WW.Merge(false,true,function()
 		{
+			return Object.defineProperty({},'directSign',
+			{
+				set : WW.O,
+				get : WR.F
+			})
+		},{
 			defineProperty : WW.O,
-			prototype : {toString : HappyToString}
 		}),
 		document :
 		{
@@ -41,7 +47,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		{
 			_ : 'Navigator',
 			toString : HappyToString,
-			userAgent : WW.RUA(true),
+			userAgent : '',
 			plugins : [],
 			platform : ''
 		},
@@ -54,6 +60,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		console : {log : WW.O},
 		PluginArray : Array
 	},[
+		'Array',
 		'String',
 		'Date',
 		'RegExp',
@@ -65,9 +72,19 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	{
 		return O.Api(TikTokAcrawler).Map(function(B)
 		{
+			var
+			K = ['window'],V = [Happy];
 			try
 			{
-				Function('window',"'use strict';" + B)(Happy)
+				B = B.replace(/\beval\b/g,'window.eval')
+				WW.MR(function(_,T)
+				{
+					/^(eval)$/.test(T = T[1]) ||
+						WR.Include(T,K) ||
+						K.push(T) +
+						V.push(Happy[T])
+				},null,/typeof (\w+)/g,B)
+				WW.Ap(Function('' + K,"'use strict';" + B),Happy,V)
 				B = Happy.byted_acrawler
 			}
 			catch(_){}
@@ -81,7 +98,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		{
 			return (ForceReq || O.Coke() ? O.Req : O.Api)(
 			{
-				UA : Happy.navigator.userAgent = WW.RUA(true),
+				UA : Happy.navigator.userAgent = WW.RUA(),
 				URL : Q,
 				QS :
 				{
@@ -99,6 +116,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			return B
 		})
 	},
+	SolveUserID = WX.CacheM(function(ID)
+	{
+		return O.Api(TikTokUser(ID)).Map(function(B)
+		{
+			return WW.MF(/userInfo":{"user":{"id":"(\d+)"/,B) || WW.Throw('No such user `' + ID + '`')
+		})
+	}),
 	SolveVideo = function(V)
 	{
 		var
@@ -229,13 +253,29 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Judge : [/@([^/?]+)/,O.Word('User')],
 			View : O.More(function(ID,I)
 			{
-				return ReqAPI(TikTokAPIUserDetail(ID)).FMap(function(B)
+				return SolveUserID(ID).FMap(function(B)
 				{
-					return ReqAPI(TikTokAPIItemList(I[0] = B.userInfo.user.id,0))
+					return ReqAPI(TikTokAPIItemList(I[0] = B,0))
 				})
 			},function(I,Page)
 			{
 				return ReqAPI(TikTokAPIItemList(I[0],I[Page]))
+			},function(B)
+			{
+				return [B.hasMore && B.maxCursor,
+				{
+					Item : WR.Map(SolveVideo,B.items)
+				}]
+			})
+		},{
+			Name : 'Home',
+			Judge : O.TL,
+			View : O.More(function()
+			{
+				return ReqAPI(TikTokAPIItemListTL(0,1,1),true)
+			},function(I,Page)
+			{
+				return ReqAPI(TikTokAPIItemListTL(I[Page],2,3),true)
 			},function(B)
 			{
 				return [B.hasMore && B.maxCursor,

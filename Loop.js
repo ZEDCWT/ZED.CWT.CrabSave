@@ -322,7 +322,7 @@ module.exports = Option =>
 									{
 										var
 										ShouldRenew = /Status not satisfied/.test(E) ||
-											!Working && /Timeout/.test(E);
+											(!Working || Work.Info.Begin === Work.Info.Saved) && /Timeout/.test(E);
 										SizeChanged = /Size changed/.test(E)
 										OnEnd()
 										ShouldRenew ?
