@@ -6,6 +6,8 @@ WW = require('@zed.cwt/wish'),
 YouTube = 'https://www.youtube.com/',
 YouTubeWatch = WW.Tmpl(YouTube,'watch?v=',undefined),
 YouTubeGetVideoInfo = WW.Tmpl('https://www.youtube.com/get_video_info?video_id=',undefined,'&eurl=',undefined,'&el=detailpage'),
+// Example : B91P('?wmH{<|dG6`BhE')
+YouTubeGetWithBPCTR = WW.Tmpl(YouTube,'watch?v=',undefined,'&bpctr=',undefined,'&pbj=1'),
 GoogleAPIKey = '#GoogleAPIKey#',
 GoogleAPI = 'https://www.googleapis.com/',
 GoogleAPIYouTube = GoogleAPI + 'youtube/v3/',
@@ -15,6 +17,16 @@ GoogleAPIYouTubeVideo = WW.Tmpl(GoogleAPIYouTube,'videos?key=',GoogleAPIKey,'&pa
 module.exports = O =>
 {
 	var
+	MakeWebClient = (Ref,Target) => WN.ReqB(O.Coke(Ref)).FMap(B => WN.ReqB(O.Coke(
+	{
+		URL : Target,
+		Head :
+		{
+			'X-YouTube-Client-Name' : 1,
+			'X-YouTube-Client-Version' : WC.JTO(WW.MF(/CLIENT_VERSION":("[^"]+")/,B)),
+			'X-YouTube-Identity-Token' : WC.JTO(WW.MF(/ID_TOKEN":("[^"]+")/,B))
+		}
+	}))),
 	TransformParse = WX.CacheL(Q => WN.ReqB(O.Req(WN.JoinU(YouTube,Q)))
 		.Map(B =>
 		{
@@ -48,6 +60,21 @@ module.exports = O =>
 			return WN.ReqB(O.Coke(YouTubeGetVideoInfo(ID,WC.UE(YouTubeWatch(ID)))))
 				.FMap(B =>
 				{
+					var R;
+					B = WC.QSP(B)
+					R = B.player_response
+					R || O.Bad(B)
+					R = WC.JTO(R)
+					return 'CONTENT_CHECK_REQUIRED' === WR.Path(['playabilityStatus','status'],R) ?
+						MakeWebClient(YouTubeWatch(ID),YouTubeGetWithBPCTR(ID,0 | 4E3 + WW.Now() / 1E3)).Map(B =>
+						[
+							B = WC.JTO(B),
+							WR.Find(V => V.playerResponse,B).playerResponse
+						]) :
+						WX.Just([B,R])
+				})
+				.FMap(B =>
+				{
 					var
 					SortBest = Q => Q.sort((Q,S) => S.width * S.height - Q.width * Q.height ||
 						S.bitrate - Q.bitrate),
@@ -65,9 +92,8 @@ module.exports = O =>
 					},
 					URL = [],Size = [],Ext = [],
 					T;
-					B = WC.QSP(B)
-					B.player_response || O.Bad(B)
-					B = WC.JTO(B.player_response).streamingData
+					B[1] || O.Bad(B[0])
+					B = B[1].streamingData
 					if ((T = B.adaptiveFormats) && T.length)
 					{
 						T = SortBest(T)

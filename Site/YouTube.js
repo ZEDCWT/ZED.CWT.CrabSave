@@ -116,8 +116,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				I[0] =
 				{
 					'X-YouTube-Client-Name' : 1,
-					'X-YouTube-Client-Version' : WW.MF(/CLIENT_VERSION":"([^"]+)/,V),
-					'X-YouTube-Identity-Token' : WW.MF(/ID_TOKEN":"([^"]+)/,V)
+					'X-YouTube-Client-Version' : WC.JTO(WW.MF(/CLIENT_VERSION":("[^"]+")/,V)),
+					'X-YouTube-Identity-Token' : WC.JTO(WW.MF(/ID_TOKEN":("[^"]+")/,V))
 				}
 				return WW.MF(/ytInitialData[^\w{]+?({.*});/,V)
 			})
