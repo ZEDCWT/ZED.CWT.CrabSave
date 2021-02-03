@@ -260,7 +260,6 @@
 		Rect : false,
 		Beg : function()
 		{
-			WebSocketSince = WebSocketRetry ? WebSocketSince : WW.Now()
 			WebSocketRetry && WebSocketNoti(SA('SocConn') + ' ' + SA('SocRetry') + ' : ' + WebSocketRetry)
 		},
 		Hsk : function()
@@ -410,7 +409,10 @@
 			Cipher = Decipher = false
 			CookieMap = {}
 			DebugLog('Offline',WebSocketRetry)
-			WebSocketNoti(SA('SocOff',[WW.StrDate(WebSocketSince),WebSocketRetry++]))
+			if (Online)
+				WebSocketSince = WW.Now()
+			else
+				WebSocketNoti(SA('SocOff',[WW.StrDate(WebSocketSince),WebSocketRetry++]))
 			NotiAuth(false)
 			WSOnOffline.D()
 			WebSocketTick.F()
