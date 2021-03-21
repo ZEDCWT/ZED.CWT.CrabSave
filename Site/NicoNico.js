@@ -15,6 +15,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	NicoNVAPIMyList = WW.Tmpl(NicoNVAPI,'v2/mylists/',undefined,'?pageSize=',O.Size,'&page=',undefined),
 	NicoChannel = 'https://ch.nicovideo.jp/',
 	NicoChannelCH = NicoChannel + 'ch',
+	NicoChannelVideo = WW.Tmpl(NicoChannel,undefined,'/video?sort=f&order=d&page=',undefined),
 	NicoExt = 'https://ext.nicovideo.jp/',
 	NicoExtThumb = WW.Tmpl(NicoExt,'api/getthumbinfo/',undefined),
 	NicoSearchSug = 'http://sug.search.nicovideo.jp/',
@@ -26,6 +27,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	PadSM = function(Q)
 	{
 		return /^\d/.test(Q) ? 'sm' + Q : Q
+	},
+	PadCH = function(Q)
+	{
+		return /^\d/.test(Q) ? 'ch' + Q : Q
 	},
 	MakeNV = function(Q)
 	{
@@ -153,6 +158,40 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					return {
 						Len : B.totalCount,
 						Item : SolveNVItem(B)
+					}
+				})
+			}
+		},{
+			Name : 'Channel',
+			Judge :
+			[
+				O.Num('Channel|CH'),
+				/Ch\.Nico[^/]+\/([^ ?/]+)/i
+			],
+			View : function(ID,Page)
+			{
+				return O.Req(NicoChannelVideo(PadCH(ID),-~Page)).Map(function(B)
+				{
+					var
+					UP = WW.MF(/channel_name"[^]+?>([^<]+)</,B),
+					UPURL = NicoChannel + WW.MF(/channel_name"[^]+?href="\/([^"]+)/,B);
+					return {
+						Len : +WW.MF(/articles_total_number">(\d+)/,B),
+						Item : WW.MR(function(D,V)
+						{
+							D.push(
+							{
+								ID : WW.MF(/watch\/(\w+)/,V),
+								Img : WW.MF(/src="([^"]+)/,V),
+								Title : WC.HED(WW.MF(/title">[^]+?title="([^"]+)/,V)),
+								UP : UP,
+								UPURL : UPURL,
+								Date : WW.MF(/time>[^]+?title='([^']+)/,V),
+								Len : WW.MF(/length"[^>]+>([^<]+)/,V),
+								More : WR.Trim(WW.MF(/description">([^<]+)/,V)),
+							})
+							return D
+						},[],/"item">[^]+?\/time>/g,B)
 					}
 				})
 			}

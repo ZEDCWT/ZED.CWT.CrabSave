@@ -5,10 +5,9 @@ WW = require('@zed.cwt/wish'),
 
 Nico = 'https://www.nicovideo.jp/',
 NicoWatch = WW.Tmpl(Nico,'watch/',undefined),
-NicoWatchPC = WW.Tmpl(Nico,'watch/',undefined,'?mode=pc_html5&playlist_token=',undefined),
 NicoDMCApi = 'https://api.dmc.nico/api/sessions?_format=json',
-
-NicoHistory = '';
+NicoExt = 'https://ext.nicovideo.jp/',
+NicoExtThumb = WW.Tmpl(NicoExt,'api/getthumbinfo/',undefined);
 
 /**@type {CrabSaveNS.SiteO}*/
 module.exports = O =>
@@ -24,19 +23,15 @@ module.exports = O =>
 	return {
 		URL : ID => WN.ReqB(Coke(NicoWatch(PadSM(ID))))
 			.FMap(B =>
-			(
-				B = Coke(NicoWatchPC(PadSM(ID),WW.MF(/playlistToken&quot;:&quot;([^&]+)/,B))),
-				B.Head.Cookie = NicoHistory + '; ' + B.Head.Cookie,
-				WN.ReqU(B)
-			))
-			.FMap(([H,B],S) =>
 			{
-				WR.Each(
-					V => {/^nicohistory=/.test(V) && (NicoHistory = V.split('; ')[0])},
-					H.H['set-cookie'])
-				B = WC.JTO(B)
-				200 === B.status_code || O.Bad(B)
-				return ((H = B.video.dmcInfo) ?
+				var
+				Up,
+				S;
+				B = WC.JTO(WC.HED(WW.MF(/api-data="([^"]+)"/,B)))
+				S = B.media.delivery.movie
+				Up = B.owner ? B.owner.nickname :
+					B.channel && B.channel.name
+				return (B ?
 					WN.ReqB(O.Req(
 					{
 						URL : NicoDMCApi,
@@ -44,8 +39,8 @@ module.exports = O =>
 						{
 							session :
 							{
-								recipe_id : (S = H.session_api).recipe_id,
-								content_id : S.content_id,
+								recipe_id : S.session.recipeId,
+								content_id : S.session.contentId,
 								content_type : 'movie',
 								content_src_id_sets : [
 								{
@@ -53,13 +48,13 @@ module.exports = O =>
 									{
 										src_id_to_mux :
 										{
-											video_src_ids : [O.Best('bitrate',WR.Where(V => V.available,H.quality.videos)).id],
-											audio_src_ids : [O.Best('bitrate',WR.Where(V => V.available,H.quality.audios)).id]
+											video_src_ids : [O.Best(['metadata','bitrate'],WR.Where(V => V.isAvailable,S.videos)).id],
+											audio_src_ids : [O.Best(['metadata','bitrate'],WR.Where(V => V.isAvailable,S.audios)).id]
 										}
 									}]
 								}],
 								timing_constraint : 'unlimited',
-								keep_method : {heartbeat : {lifetime : S.heartbeat_lifetime}},
+								keep_method : {heartbeat : {lifetime : S.session.heartbeatLifetime}},
 								protocol :
 								{
 									name : 'http',
@@ -84,19 +79,19 @@ module.exports = O =>
 								{
 									session_operation_auth_by_signature :
 									{
-										token : S.token,
-										signature : S.signature
+										token : S.session.token,
+										signature : S.session.signature
 									}
 								},
 								content_auth :
 								{
-									auth_type : S.auth_types.hls,
-									content_key_timeout : S.content_key_timeout,
-									service_id : WC.JTO(S.token).service_id,
-									service_user_id : S.service_user_id
+									auth_type : S.session.authTypes.http,
+									content_key_timeout : S.session.contentKeyTimeout,
+									service_id : WC.JTO(S.session.token).service_id,
+									service_user_id : S.session.serviceUserId
 								},
-								client_info : {player_id : S.player_id},
-								priority : S.priority
+								client_info : {player_id : S.session.playerId},
+								priority : S.session.priority
 							}
 						}
 					})).Map(B =>
@@ -105,25 +100,22 @@ module.exports = O =>
 						B.data || O.Bad(B),
 						B.data.session.content_uri
 					)) :
-					WX.Just(B.video.smileInfo.url || WW.Throw('No provided url, a paid video?')))
-					.Map(U => (
-					{
-						Title : B.video.title,
-						Up : B.owner ? B.owner.nickname.replace(/ さん$/,'') : // 敬稱略
-							B.channel ? B.channel.name :
-							'{ナナシ}', // sm16963398
-						Date : +new Date(B.video.postedDateTime + '+0900'),
-						Part : [
+					WW.Throw('No provided url, a paid video?'))
+					.FMap(U => (Up ?
+						WX.Just(Up) :
+						WN.ReqB(O.Req(NicoExtThumb(PadSM(ID))))
+							.Map(B => WC.HED(WW.MF(/name>([^<]+)/,B))))
+						.Map(Up => (
 						{
-							URL : [U],
-							Ext : '.flv'
-						}]
-					}))
+							Title : B.video.title,
+							Up : Up.replace(/ さん$/,''), // 敬稱略
+							Date : +new Date(B.video.registeredAt),
+							Part : [
+							{
+								URL : [U],
+								Ext : '.flv'
+							}]
+						})))
 			}),
-		Pack : Q => (
-		{
-			URL : Q,
-			Head : {Cookie : NicoHistory}
-		})
 	}
 }
