@@ -32,7 +32,7 @@ module.exports = O =>
 		{
 			var
 			Process = WW.MU(/.split\(""[^{}]+.join\(""/,B),
-			Method = WW.MU(RegExp(`${WW.MU(/\w+(?=\.)/,Process)}={[^]*?}}`),B),
+			Method = WW.MU(RegExp(`${WW.MU(/\w+(?=\.)/,Process)}={([^{}]+{[^{}]+})+?}`),B),
 			Map = WW.MR((D,V) =>
 			{
 				D[V[1]] = /rev/.test(V) ? Q => Q.reverse() :

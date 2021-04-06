@@ -5,14 +5,17 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	Nico = 'https://www.nicovideo.jp/',
 	NicoWatch = WW.Tmpl(Nico,'watch/',undefined),
 	NicoUser = WW.Tmpl(Nico,'user/',undefined),
-	NicoMyList = WW.Tmpl(Nico,'mylist/',undefined),
+	// NicoMyList = WW.Tmpl(Nico,'mylist/',undefined),
+	NicoSeries = WW.Tmpl(Nico,'series/',undefined),
 	NicoMy = Nico + 'my',
-	NicoRepo = WW.Tmpl(Nico,'api/nicorepo/timeline/my/followingUser?cursor=',undefined,'&client_app=pc_myrepo'),
+	// NicoRepo = WW.Tmpl(Nico,'api/nicorepo/timeline/my/followingUser?cursor=',undefined,'&client_app=pc_myrepo'),
 	NicoSearch = WW.Tmpl(Nico,'search/',undefined,'?page=',undefined,undefined),
 	NicoNVAPI = 'https://nvapi.nicovideo.jp/',
 	NicoNVAPIUser = WW.Tmpl(NicoNVAPI,'v1/users/',undefined,'/videos?sortKey=registeredAt&sortOrder=desc&pageSize=',O.Size,'&page=',undefined),
 	NicoNVAPIFollowing = WW.Tmpl(NicoNVAPI,'v1/users/me/following/users?pageSize=',O.Size,'&cursor=',undefined),
 	NicoNVAPIMyList = WW.Tmpl(NicoNVAPI,'v2/mylists/',undefined,'?pageSize=',O.Size,'&page=',undefined),
+	NicoPublicAPI = 'https://public.api.nicovideo.jp/',
+	NicoPublicAPITop = WW.Tmpl(NicoPublicAPI,'v1/timelines/nicorepo/last-1-month/my/pc/entries.json?list=followingUser&untilId=',undefined),
 	NicoChannel = 'https://ch.nicovideo.jp/',
 	NicoChannelCH = NicoChannel + 'ch',
 	NicoChannelVideo = WW.Tmpl(NicoChannel,undefined,'/video?sort=f&order=d&page=',undefined),
@@ -36,12 +39,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	{
 		return O.Head(Q,'X-Frontend-Id',WW.Rnd(3389))
 	},
-	NVCommon = function(Q)
+	CommonMeta = function(Q)
 	{
 		Q = WC.JTO(Q)
 		Q.meta || O.Bad(Q)
 		200 === Q.meta.status || O.Bad(O.meta.status,Q.meta.errorCode)
-		return Q.data
+		return Q
+	},
+	CommonNV = function(Q)
+	{
+		return CommonMeta(Q).data
 	},
 	SolveNVItem = function(Q)
 	{
@@ -140,7 +147,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			{
 				return O.Req(MakeNV(NicoNVAPIMyList(ID,-~Page))).Map(function(B)
 				{
-					B = NVCommon(B).mylist
+					B = CommonNV(B).mylist
 					return {
 						Len : B.totalItemCount,
 						Item : SolveNVItem(B)
@@ -148,13 +155,35 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				})
 			}
 		},{
+			// It does not seem to be paged (3**3*2593)
+			Name : 'Series',
+			Judge : O.Num('Series'),
+			View : O.Less(function(ID)
+			{
+				return O.Api(NicoSeries(ID)).Map(function(B)
+				{
+					return WW.MR(function(D,V)
+					{
+						D.push(
+						{
+							ID : SolveSM(WW.MF(/video-id="(\w+)/,V)),
+							Img : WW.MF(/image="([^"]+)/,V),
+							Title : WC.HED(WW.MF(/alt="([^"]+)/,V)),
+							Date : WW.MF(/RegisteredAt">\s*(\S+ \S+)/,V),
+							Len : WW.MF(/VideoLength">([^<]+)/,V)
+						})
+						return D
+					},[],/class="MediaObject[^]+?videoMetaCount">/g,B)
+				})
+			})
+		},{
 			Name : 'User',
 			Judge : O.Num('User'),
 			View : function(ID,Page)
 			{
 				return O.Api(MakeNV(NicoNVAPIUser(ID,-~Page))).Map(function(B)
 				{
-					B = NVCommon(B)
+					B = CommonNV(B)
 					return {
 						Len : B.totalCount,
 						Item : SolveNVItem(B)
@@ -206,7 +235,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				return O.Req(MakeNV(NicoNVAPIFollowing(I[Page])))
 			},function(B)
 			{
-				B = NVCommon(B)
+				B = CommonNV(B)
 				return [B.summary.hasNext && B.summary.cursor,
 				{
 					Len : B.summary.followees,
@@ -260,46 +289,27 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Judge : O.TL,
 			View : O.More(function()
 			{
-				return O.Req(NicoRepo(''))
+				return O.Req(NicoPublicAPITop(''))
 			},function(I,Page)
 			{
-				return O.Req(NicoRepo(I[Page]))
+				return O.Req(NicoPublicAPITop(I[Page]))
 			},function(B)
 			{
-				B = WC.JTO(B)
-				'ok' === B.status || O.Bad(B.meta.status,B.status)
-				return [B.meta.minId,
+				B = CommonMeta(B)
+				return [B.meta.hasNext && B.meta.minId,
 				{
-					Item : WR.Reduce(function(D,V)
+					Item : WR.MapW(function(V)
 					{
-						switch (V.topic)
+						return 'video' === V.object.type ?
 						{
-							case 'nicovideo.user.video.upload' :
-								D.push(
-								{
-									ID : SolveSM(V.video.id),
-									Img : V.video.thumbnailUrl.normal,
-									Title : V.video.title,
-									UP : V.senderNiconicoUser.nickname,
-									UPURL : NicoUser(V.senderNiconicoUser.id),
-									Date : new Date(V.createdAt)
-								})
-								break
-							case 'nicovideo.user.mylist.add.video' :
-								D.push(
-								{
-									Non : true,
-									ID : 'MyList ' + V.mylist.id,
-									URL : NicoMyList(V.mylist.id),
-									Img : WR.Last(WR.Val(V.senderNiconicoUser.icons.tags.defaultValue.urls)),
-									Title : V.mylist.name,
-									UP : V.senderNiconicoUser.nickname,
-									UPURL : NicoUser(V.senderNiconicoUser.id),
-									Date : new Date(V.createdAt)
-								})
-								break
-						}
-					},[],B.data)
+							ID : SolveSM(V.object.url.split('/').pop()),
+							Img : V.object.image,
+							Title : V.object.name,
+							UP : V.actor.name,
+							UPURL : V.actor.url,
+							More : WV.Parse(V.title)
+						} : null
+					},B.data)
 				}]
 			})
 		}],
