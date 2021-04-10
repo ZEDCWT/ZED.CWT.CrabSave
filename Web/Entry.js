@@ -1940,6 +1940,16 @@
 						OnSizeHas(Task.Size,Task.Has = Q[0])
 						WV.T(Renew,RenewLast = MakeSpeed(Q[1]) +
 							' ' + MakeRemain(Task.Size - Q[0],Q[1]))
+					},
+					HotShownCurrent,
+					HotShownRelease = function()
+					{
+						if (Row)
+						{
+							if (HotShown[Row] === HotShownCurrent)
+								WR.Del(Row,HotShown)
+							Row = HotShownCurrent = false
+						}
 					};
 					WV.ClsA(Title,WV.Alt)
 					WV.On('click',WV.StopProp,Play.R)
@@ -1987,12 +1997,8 @@
 								LoadErr = SA('LstFail') + ' ' + ErrorS(E)
 								OnTick()
 							}))
-							if (Row)
-							{
-								WR.Del(Row,HotShown)
-								Row = false
-							}
-							HotShown[Row = V.O] =
+							HotShownRelease()
+							HotShown[Row = V.O] = HotShownCurrent =
 							{
 								S : function(Q)
 								{
@@ -2038,11 +2044,7 @@
 						E : function()
 						{
 							LoadO()
-							if (Row)
-							{
-								WR.Del(Row,HotShown)
-								Row = false
-							}
+							HotShownRelease()
 						}
 					}
 				}
