@@ -115,6 +115,7 @@ module.exports = Option =>
 					Size integer,
 					Root text,
 					Format text,
+					// 0 Paused 1 Online 2 Error
 					State integer,
 					Error integer not null,
 					Done integer
@@ -336,7 +337,13 @@ module.exports = Option =>
 		])
 			.FMap(() => Get(`select Size from Task where ? = Row`,[Row]))
 			.Map(V => V.Size),
-		Err : (Q,S,E) => Run('update Task set State = ?,Error = ? where ? = Row',[S,E,Q]),
+		Err : (Q,S,E) => Run(
+		`
+			update Task set
+				State = case when 0 = State then 0 else ? end,
+				Error = ?
+			where ? = Row
+		`,[S,E,Q]),
 		TopErr : S => Get('select Error from Task where ? = State and 0 < Error order by Error limit 1',[S])
 			.Map(V => V && V.Error),
 		TopQueue : (S,Q,O) => All(

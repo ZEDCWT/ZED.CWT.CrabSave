@@ -256,7 +256,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				/Weibo_ID=(\d+)/i,
 				/(?:^|\/|Post\s+)(\d+\/\w+)/i,
 				/Post\s+(\w+)\b/i,
-				/\bDetail\/(\d+)\b/i
+				/\bDetail\/(\d+)\b/i,
+				O.Num('Status')
 			],
 			View : function(ID)
 			{

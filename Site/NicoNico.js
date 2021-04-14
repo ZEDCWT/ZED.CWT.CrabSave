@@ -307,6 +307,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							Title : V.object.name,
 							UP : V.actor.name,
 							UPURL : V.actor.url,
+							Date : new Date(V.updated),
 							More : WV.Parse(V.title)
 						} : null
 					},B.data)
