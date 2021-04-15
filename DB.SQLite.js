@@ -115,7 +115,7 @@ module.exports = Option =>
 					Size integer,
 					Root text,
 					Format text,
-					// 0 Paused 1 Online 2 Error
+					-- 0 Paused 1 Online 2 Error
 					State integer,
 					Error integer not null,
 					Done integer
