@@ -215,6 +215,7 @@ module.exports = Option =>
 	DownloadDispatchOnErr = WX.EndL(),
 	DownloadErrRetry = new Error('Just Retry'),
 	DownloadErrRenew = new Error('Need To Renew'),
+	DownloadErrEmpty = new Error('Received No Bytes'),
 	DownloadStatus = new Map,
 	DownloadDispatch = () =>
 	{
@@ -312,8 +313,16 @@ module.exports = Option =>
 										NotBigDeal(DB.SaveHas(Down.Task,Down.Part,Down.File,Q.Saved,D))
 									}).On('Done',() =>
 									{
-										var Done = WW.Now();
-										OnSize(Work.Info.Total || Work.Info.Saved)
+										var
+										Done = WW.Now(),
+										Size = Work.Info.Total || Work.Info.Saved;
+										if (!Size)
+										{
+											OnEnd()
+											O.E(DownloadErrEmpty)
+											return
+										}
+										OnSize(Size)
 										OnEnd()
 										Option.OnDone(Down.Task,Down.Part,Down.File,Done)
 										DB.SaveDone(Down.Task,Down.Part,Down.File,Done)
