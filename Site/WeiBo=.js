@@ -11,7 +11,9 @@ module.exports = O =>
 	return {
 		URL : ID => WN.ReqB(O.Coke(WeiBo + ID)).FMap(B =>
 		{
-			var T;
+			var
+			URL,
+			T;
 			B = WC.JTO(WW.MU(/{"ns":"pl.content.weiboDetail.*}/,B)).html
 			B || O.Bad('Unable to resolve infomation')
 			B = B.replace(/"WB_feed_expand">[^]+/,'')
