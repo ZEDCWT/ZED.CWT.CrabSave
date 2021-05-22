@@ -513,7 +513,7 @@ module.exports = Option =>
 					case ActionAuthInspect :
 						if (WW.IsArr(K))
 						{
-							Inspector.open(...K)
+							Inspector.url() || Inspector.open(...K)
 							SendAuth([Q[0],Inspector.url()])
 						}
 						break

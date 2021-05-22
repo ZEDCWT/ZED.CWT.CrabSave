@@ -5,7 +5,7 @@ WW = require('@zed.cwt/wish'),
 
 YouTube = 'https://www.youtube.com/',
 YouTubeWatch = WW.Tmpl(YouTube,'watch?v=',undefined),
-YouTubeGetVideoInfo = WW.Tmpl('https://www.youtube.com/get_video_info?video_id=',undefined,'&eurl=',undefined,'&el=detailpage'),
+YouTubeIPlayer = WW.Tmpl(YouTube,'youtubei/v1/player?key=',undefined),
 // Example : B91P('?wmH{<|dG6`BhE')
 YouTubeGetWithBPCTR = WW.Tmpl(YouTube,'watch?v=',undefined,'&bpctr=',undefined,'&pbj=1'),
 GoogleAPIKey = '#GoogleAPIKey#',
@@ -17,16 +17,6 @@ GoogleAPIYouTubeVideo = WW.Tmpl(GoogleAPIYouTube,'videos?key=',GoogleAPIKey,'&pa
 module.exports = O =>
 {
 	var
-	MakeWebClient = (Ref,Target) => WN.ReqB(O.Coke(Ref)).FMap(B => WN.ReqB(O.Coke(
-	{
-		URL : Target,
-		Head :
-		{
-			'X-YouTube-Client-Name' : 1,
-			'X-YouTube-Client-Version' : WC.JTO(WW.MF(/CLIENT_VERSION":("[^"]+")/,B)),
-			'X-YouTube-Identity-Token' : WC.JTO(WW.MF(/ID_TOKEN":("[^"]+")/,B))
-		}
-	}))),
 	TransformParse = WX.CacheL(Q => WN.ReqB(O.Req(WN.JoinU(YouTube,Q)))
 		.Map(B =>
 		{
@@ -44,7 +34,7 @@ module.exports = O =>
 			Process = WW.MR((D,V) => D.push([V[1],+V[2]]) && D,[],/\.(\w+)[^)]+?(\d+)/g,Process)
 			return R
 		})),
-	TransformSolve = Q => WN.ReqB(O.Req(Q))
+	TransformSolve = Q => WX.Just(Q)
 		.FMap(B => TransformParse
 		(
 			WW.MF(/"([/\w]+player_ias[^"]+base.js)"/,B) ||
@@ -57,23 +47,80 @@ module.exports = O =>
 			Info = WC.JTO(Info)
 			Info.error && O.Bad('#' + (Info.code || Info.error.code) + ' ' + WC.OTJ(Info.error))
 			Info = Info.items[0].snippet
-			return WN.ReqB(O.Coke(YouTubeGetVideoInfo(ID,WC.UE(YouTubeWatch(ID)))))
-				.FMap(B =>
+			return WN.ReqB(O.Coke(YouTubeWatch(ID))).FMap(Watch =>
+			{
+				var
+				IDToken = WC.JTO(WW.MF(/ID_TOKEN":("[^"]+")/,Watch)),
+				APIKey = WC.JTO(WW.MF(/API_KEY":("[^"]+")/,Watch)),
+				ClientName = WC.JTO(WW.MF(/CLIENT_NAME":("[^"]+")/,Watch)),
+				ClientVersion = WC.JTO(WW.MF(/CLIENT_VERSION":("[^"]+")/,Watch)),
+				MakeI = (URL,Req,Now = WR.Floor(WW.Now() / 1E3)) => WN.ReqB(O.Coke(
 				{
-					var R;
-					B = WC.QSP(B)
-					R = B.player_response
-					R || O.Bad(B)
-					R = WC.JTO(R)
-					return 'CONTENT_CHECK_REQUIRED' === WR.Path(['playabilityStatus','status'],R) ?
-						MakeWebClient(YouTubeWatch(ID),YouTubeGetWithBPCTR(ID,0 | 4E3 + WW.Now() / 1E3)).Map(B =>
+					URL : URL,
+					Head :
+					{
+						Authorization : 'SAPISIDHASH ' +
+							Now + '_' +
+							WR.Low(WC.HEXS(WC.SHA1(
+							[
+								Now,
+								WC.CokeP(O.CokeRaw()).SAPISID,
+								YouTube.slice(0,-1)
+							].join(' ')))),
+						Origin : YouTube.slice(0,-1),
+					},
+					JSON : WW.Merge(
+					{
+						context :
+						{
+							client :
+							{
+								clientName : ClientName,
+								clientVersion : ClientVersion,
+							},
+							request :
+							{
+								useSsl : true,
+							},
+						},
+						...Req
+					},Req)
+				})),
+				MakeWebClient = Target => WN.ReqB(O.Coke(
+				{
+					URL : Target,
+					Head :
+					{
+						'X-YouTube-Client-Name' : 1,
+						'X-YouTube-Client-Version' : ClientVersion,
+						'X-YouTube-Identity-Token' : IDToken,
+					}
+				}));
+				return MakeI(YouTubeIPlayer(APIKey),
+				{
+					videoId : ID,
+					playbackContext :
+					{
+						contentPlaybackContext :
+						{
+							signatureTimestamp : 18768,
+						},
+					},
+				}).FMap(B =>
+				{
+					var
+					PlayStat = (B = WC.JTO(B)).playabilityStatus,
+					Stat = PlayStat && PlayStat.status;
+					return 'CONTENT_CHECK_REQUIRED' === Stat ?
+						MakeWebClient(YouTubeGetWithBPCTR(ID,0 | 4E3 + WW.Now() / 1E3)).Map(B =>
 						[
 							B = WC.JTO(B),
-							WR.Find(V => V.playerResponse,B).playerResponse
+							WR.Reduce((D,V) => D || V.playerResponse,null,B)
 						]) :
-						WX.Just([B,R])
-				})
-				.FMap(B =>
+						Stat ?
+							O.Bad(WR.Pick(['status','reason'],PlayStat)) :
+							WX.Just([B,B])
+				}).FMap(B =>
 				{
 					var
 					SortBest = Q => Q.sort((Q,S) => S.width * S.height - Q.width * Q.height ||
@@ -107,7 +154,7 @@ module.exports = O =>
 					}
 					else O.Bad(B)
 					return (WR.Any(WW.IsObj,URL) ?
-						TransformSolve(YouTubeWatch(ID)).Map(H => URL.map(V =>
+						TransformSolve(Watch).Map(H => URL.map(V =>
 							WW.IsObj(V) ? `${V.url}&${V.sp}=${H(V.s)}` : V)) :
 						WX.Just(URL)).Map(URL => (
 						{
@@ -117,6 +164,7 @@ module.exports = O =>
 							Part : [{URL,Size,Ext}]
 						}))
 				})
+			})
 		})
 	}
 }
