@@ -117,7 +117,7 @@ module.exports = O =>
 							B = WC.JTO(B),
 							WR.Reduce((D,V) => D || V.playerResponse,null,B)
 						]) :
-						Stat ?
+						Stat && 'OK' !== Stat ?
 							O.Bad(WR.Pick(['status','reason'],PlayStat)) :
 							WX.Just([B,B])
 				}).FMap(B =>
