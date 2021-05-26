@@ -54,6 +54,7 @@ module.exports = O =>
 				APIKey = WC.JTO(WW.MF(/API_KEY":("[^"]+")/,Watch)),
 				ClientName = WC.JTO(WW.MF(/CLIENT_NAME":("[^"]+")/,Watch)),
 				ClientVersion = WC.JTO(WW.MF(/CLIENT_VERSION":("[^"]+")/,Watch)),
+				SigTS = WC.JTO(WW.MF(/"STS":(\d+)/,Watch)),
 				MakeI = (URL,Req,Now = WR.Floor(WW.Now() / 1E3)) => WN.ReqB(O.Coke(
 				{
 					URL : URL,
@@ -103,7 +104,7 @@ module.exports = O =>
 					{
 						contentPlaybackContext :
 						{
-							signatureTimestamp : 18768,
+							signatureTimestamp : SigTS,
 						},
 					},
 				}).FMap(B =>
