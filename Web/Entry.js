@@ -1413,7 +1413,9 @@
 								U : S.Len = WR.Default(S.Item.length,S.Len),
 								G : SA('BroPage'),
 								A : S.At = WR.Default(Q,S.At),
-								P : S.Max = WR.Default(Math.ceil(S.Len / (S.Size || PageSize)) || 1,S.Max),
+								P : S.Max = S.Item.length - S.Len ?
+									WR.Default(Math.ceil(S.Len / (S.Size || PageSize)) || 1,S.Max) :
+									1,
 								D : WW.StrDate(),
 								M : WR.ToFix(3,(WW.Now() - N) / 1E3)
 							}
@@ -3265,6 +3267,7 @@
 			'Facebook',
 			'Instagram',
 			'IXiGua',
+			'ShenHaiJiaoYu',
 			'TikTok',
 			'Twitter',
 			'Vimeo',

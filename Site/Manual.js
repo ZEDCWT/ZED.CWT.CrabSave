@@ -25,6 +25,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				D = new Date(Pref.D)
 				if (+D !== +D)
 					(D = new Date).setMilliseconds(0)
+				Pref.D = +D
 
 				URL += '#' + WC.OTJ(Pref)
 				return WX.Just(
