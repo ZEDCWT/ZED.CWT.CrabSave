@@ -1413,9 +1413,11 @@
 								U : S.Len = WR.Default(S.Item.length,S.Len),
 								G : SA('BroPage'),
 								A : S.At = WR.Default(Q,S.At),
-								P : S.Max = S.Item.length - S.Len ?
-									WR.Default(Math.ceil(S.Len / (S.Size || PageSize)) || 1,S.Max) :
-									1,
+								P : S.Max = WR.Default(
+									S.Item.length - S.Len ?
+										Math.ceil(S.Len / (S.Size || PageSize)) || 1 :
+										1,
+									S.Max),
 								D : WW.StrDate(),
 								M : WR.ToFix(3,(WW.Now() - N) / 1E3)
 							}
