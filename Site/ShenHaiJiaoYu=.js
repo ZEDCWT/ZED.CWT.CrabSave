@@ -24,7 +24,10 @@ module.exports = O =>
 		;(false === B.success || false === B.scheduleAuth) &&
 			O.Bad(B.msg || B.message)
 		return B
-	};
+	},
+	Detail = WX.CacheL(Q => WN.ReqB(O.Req(ShenHaiJiaoYuDetail(Q)))),
+	ResLastID,
+	ResLast;
 
 	return {
 		URL : Q =>
@@ -32,7 +35,7 @@ module.exports = O =>
 			var
 			S = Q.split('/');
 
-			if (2 === S.length) return WN.ReqB(O.Req(ShenHaiJiaoYuDetail(S[0]))).FMap(B =>
+			if (2 === S.length) return Detail(S[0]).FMap(B =>
 			{
 				B = Common(B)
 				return WN.ReqB(O.Coke(ShenHaiJiaoYuLessonList(B.classTypeId)))
@@ -81,15 +84,19 @@ module.exports = O =>
 				})
 			})
 
-			if ('Res' === S[0]) return WN.ReqB(O.Req(ShenHaiJiaoYuDetail(S[1]))).FMap(Detail =>
+			if ('Res' === S[0]) return Detail(S[1]).FMap(Detail =>
 			{
+				var
+				L = ResLastID == S[1] && ResLast.data.find(V => S[2] == V.id);
 				Detail = Common(Detail)
-				return WX.TCO((R,I) => WN.ReqB(O.Req(ShenHaiJiaoYuClassRes(S[1],-~I))).Map(V =>
+				return (L ? WX.Just(L) : WX.TCO((R,I) => WN.ReqB(O.Req(ShenHaiJiaoYuClassRes(S[1],-~I))).Map(V =>
 				{
 					V = Common(V).data
+					ResLastID = S[1]
+					ResLast = V
 					R = V.data.find(N => S[2] == N.id)
 					return [!R && (-~I < V.pageCount || O.Bad('No such resource')),R]
-				})).FMap(Res => WN.ReqB(O.Req(ShenHaiJiaoYuResLink(S[2])))
+				}))).FMap(Res => WN.ReqB(O.Req(ShenHaiJiaoYuResLink(S[2])))
 					.Map(Link => (
 					{
 						Title : Res.name.replace(RegExp(WR.SafeRX(Res.format) + '$','i'),''),
@@ -120,7 +127,7 @@ module.exports = O =>
 						Title : Chapter.chapterName +
 							'.' + WW.Pad02(Lecture.lectureOrder) +
 							'.' + Lecture.lectureName,
-						Up : B.module.name,
+						Up : B.ct.name,
 						Date : +new Date(H.H['last-modified']),
 						Part : [
 						{

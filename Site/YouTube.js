@@ -89,7 +89,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	}),
 	SolveChannelIDByCustomURL = WX.CacheM(function(Q)
 	{
-		return O.Api(YouTubeCustomURL(Q)).Map(function(B)
+		return O.Api(Q).Map(function(B)
 		{
 			return WW.MF(/(?:"canonical"[^>]+\/channel\/|prop="channelId"[^"]+")([^"]+)/,B)
 		})
@@ -233,7 +233,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Judge : O.Word('CustomURL|C'),
 			View : function(ID,Page)
 			{
-				return SolveChannelIDByCustomURL(ID)
+				return SolveChannelIDByCustomURL(YouTubeCustomURL(ID))
 					.FMap(function(ID){return Channel2PlayList(GoogleAPIYouTubeChannel('id',ID))})
 					.FMap(function(ID){return SolvePlayList(ID,Page)})
 			}
@@ -281,6 +281,19 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			{
 				return O.Api(GoogleAPIYouTubeVideo('id,snippet,contentDetails',ID))
 					.Map(SolveSnippet)
+			}
+		},{
+			Name : 'DirectCustomURL',
+			Judge :
+			[
+				/YouTube[^/]+\/([^/]+)$/i,
+				O.Word('DirectCustomURL')
+			],
+			View : function(ID,Page)
+			{
+				return SolveChannelIDByCustomURL(YouTube + ID)
+					.FMap(function(ID){return Channel2PlayList(GoogleAPIYouTubeChannel('id',ID))})
+					.FMap(function(ID){return SolvePlayList(ID,Page)})
 			}
 		}],
 		IDURL : YouTubeWatch

@@ -36,7 +36,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 		Map : [
 		{
 			Name : 'LiveReplay',
-			Judge : O.Num('(?:Query)?Detail(?=.*#LiveReplay)'),
+			Judge : O.Num('LiveReplay|(?:Query)?Detail(?=.*#LiveReplay)'),
 			View : function(ID)
 			{
 				return O.Api(ShenHaiJiaoYuDetail(ID)).FMap(function(Detail)
@@ -64,7 +64,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 			}
 		},{
 			Name : 'Lecture',
-			Judge : O.Num('(?:Query)?Detail(?=.*#Lecture)'),
+			Judge : O.Num('Lecture|(?:Query)?Detail(?=.*#Lecture)'),
 			View : function(ID)
 			{
 				return O.Api(ShenHaiJiaoYuDetail(ID)).FMap(function(Detail)
@@ -87,7 +87,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 										Title : V.chapterName +
 											'.' + WW.Pad02(N.lectureOrder) +
 											'.' + N.lectureName,
-										UP : B.module.name,
+										UP : B.ct.name,
 										UPURL : ShenHaiJiaoYuPCCourse(B.comId,B.classTypeId)
 									}
 								},V.videoLectrueVo)
@@ -98,7 +98,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 			}
 		},{
 			Name : 'Resource',
-			Judge : O.Num('(?:Query)?Detail(?=.*#Resource)'),
+			Judge : O.Num('Resource|(?:Query)?Detail(?=.*#Resource)'),
 			View : function(ID,Page)
 			{
 				return O.Api(ShenHaiJiaoYuDetail(ID)).FMap(function(Detail)
@@ -127,7 +127,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 			}
 		},{
 			Name : 'Course',
-			Judge : O.Num('(?:Query)?Detail'),
+			Judge : O.Num('Course|(?:Query)?Detail'),
 			View : function(ID)
 			{
 				return O.Api(ShenHaiJiaoYuDetail(ID)).Map(function(B)
@@ -165,6 +165,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 		IDURL : function(V)
 		{
 			V = V.split('/')
+			'Res' === V[0] && V.shift()
 			return 3 === V.length ?
 				ShenHaiJiaoYuPCVideo(V[0],V[1],V[2]) :
 				ShenHaiJiaoYuMobileCourse(V[0])
