@@ -314,16 +314,15 @@ module.exports = Option =>
 									}).On('Done',() =>
 									{
 										var
-										Path = Down.Path,
+										Path = WN.JoinP(V.Root,Down.Path),
 										Done = WW.Now(),
 										Size = Work.Info.Total || Work.Info.Saved;
 										if (!Size)
 										{
 											OnEnd()
 											O.E(DownloadErrEmpty)
-											WN.Stat(Path)
-												.FMap(S => S.size ? WX.Empty : WN.Un(Path))
-												.Now(null,WW.O)
+											NotBigDeal(WN.Stat(Path)
+												.FMap(S => S.size ? WX.Empty : WN.Un(Path)))
 											return
 										}
 										OnSize(Size)

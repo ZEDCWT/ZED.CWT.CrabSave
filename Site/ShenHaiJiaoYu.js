@@ -127,7 +127,11 @@ CrabSave.Site(function(O,WW,WC,WR)
 			}
 		},{
 			Name : 'Course',
-			Judge : O.Num('Course|(?:Query)?Detail'),
+			Judge :
+			[
+				/^\d+$/,
+				O.Num('Course|(?:Query)?Detail')
+			],
 			View : function(ID)
 			{
 				return O.Api(ShenHaiJiaoYuDetail(ID)).Map(function(B)
