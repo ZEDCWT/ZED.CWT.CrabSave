@@ -114,7 +114,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					'X-YouTube-Client-Version' : WC.JTO(WW.MF(/CLIENT_VERSION":("[^"]+")/,V)),
 					'X-YouTube-Identity-Token' : WC.JTO(WW.MF(/ID_TOKEN":("[^"]+")/,V))
 				}
-				return WW.MF(/ytInitialData[^\w{]+?({.*});/,V)
+				return O.JOM(/ytInitialData[ =]+/,V)
 			})
 		},function(I,Page)
 		{
@@ -122,7 +122,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			{
 				URL : YouTubeBrowse(I[Page][0],I[Page][0],I[Page][1]),
 				Head : I[0]
-			})
+			}).Map(WC.JTO)
 		},function(B)
 		{
 			var
@@ -135,7 +135,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					Map(Item,V,K) ||
 						WW.IsObj(V) && WR.EachU(H,V)
 			};
-			H(WC.JTO(B))
+			H(B)
 			return [Token,
 			{
 				Item : Item
