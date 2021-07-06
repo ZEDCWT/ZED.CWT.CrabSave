@@ -9,7 +9,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	YouTubeFeed = YouTube + 'feed/',
 	YouTubeFeedSubscription = YouTubeFeed + 'subscriptions',
 	YouTubeFeedChannel = YouTubeFeed + 'channels',
-	YouTubeBrowse = WW.Tmpl(YouTube,'browse_ajax?ctoken=',undefined,'&continuation=',undefined,'&itct=',undefined),
+	YouTubeBrowse = WW.Tmpl(YouTube,'youtubei/v1/browse?key=',undefined),
 	YouTubeAccount = YouTube + 'account',
 	GoogleAPIKey = '#GoogleAPIKey#',
 	GoogleAPI = 'https://www.googleapis.com/',
@@ -100,7 +100,45 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	},
 	MakeFeed = function(Feed,Map)
 	{
-		return O.More(function(_,I)
+		var
+		ClientName,ClientVersion,
+		APIKey,
+		MakeI = function(URL,Req,Now)
+		{
+			Now = WR.Floor(WW.Now() / 1E3)
+			return O.Req(
+			{
+				URL : URL,
+				Head :
+				{
+					Authorization : 'SAPISIDHASH ' +
+						Now + '_' +
+						WR.Low(WC.HEXS(WC.SHA1(
+						[
+							Now,
+							WC.CokeP(O.Coke()).SAPISID,
+							YouTube.slice(0,-1)
+						].join(' ')))),
+					Origin : YouTube.slice(0,-1),
+				},
+				JSON : WW.Merge(
+				{
+					context :
+					{
+						client :
+						{
+							clientName : ClientName,
+							clientVersion : ClientVersion
+						},
+						request :
+						{
+							useSsl : true,
+						},
+					}
+				},Req)
+			})
+		};
+		return O.More(function()
 		{
 			return O.Req(
 			{
@@ -108,20 +146,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				UA : ''
 			}).Map(function(V)
 			{
-				I[0] =
-				{
-					'X-YouTube-Client-Name' : 1,
-					'X-YouTube-Client-Version' : WC.JTO(WW.MF(/CLIENT_VERSION":("[^"]+")/,V)),
-					'X-YouTube-Identity-Token' : WC.JTO(WW.MF(/ID_TOKEN":("[^"]+")/,V))
-				}
+				ClientName = WC.JTO(WW.MF(/CLIENT_NAME":("[^"]+")/,V))
+				ClientVersion = WC.JTO(WW.MF(/CLIENT_VERSION":("[^"]+")/,V))
+				APIKey = WC.JTO(WW.MF(/API_KEY":("[^"]+")/,V))
 				return O.JOM(/ytInitialData[ =]+/,V)
 			})
 		},function(I,Page)
 		{
-			return O.Req(
+			return MakeI(YouTubeBrowse(APIKey),
 			{
-				URL : YouTubeBrowse(I[Page][0],I[Page][0],I[Page][1]),
-				Head : I[0]
+				continuation : I[Page]
 			}).Map(WC.JTO)
 		},function(B)
 		{
@@ -130,8 +164,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Item = [],
 			H = function(V,K)
 			{
-				'nextContinuationData' === K ?
-					Token = [WC.UE(V.continuation),WC.UE(V.clickTrackingParams)] :
+				'continuationCommand' === K ?
+					Token = V.token :
 					Map(Item,V,K) ||
 						WW.IsObj(V) && WR.EachU(H,V)
 			};

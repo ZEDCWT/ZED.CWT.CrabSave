@@ -70,7 +70,7 @@ module.exports = O =>
 							].join(' ')))),
 						Origin : YouTube.slice(0,-1),
 					},
-					JSON : WW.Merge(
+					JSON :
 					{
 						context :
 						{
@@ -85,7 +85,7 @@ module.exports = O =>
 							},
 						},
 						...Req
-					},Req)
+					},
 				})),
 				MakeWebClient = Target => WN.ReqB(O.Coke(
 				{
