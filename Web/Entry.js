@@ -82,7 +82,11 @@
 	},
 	ErrorS = function(E)
 	{
-		WW.IsObj(E) && (E = E.stack || E)
+		if (WW.IsObj(E) && WW.IsStr(E.stack))
+			E = WR.StartW(E.name,E.stack) ?
+				E.stack :
+				'<' + E.name + '> ' + E.message + '\n' +
+					E.stack.replace(/^(?=\S)/mg,'    ')
 		WW.IsObj(E) && (E = WC.OTJ(E))
 		return '{ERR} ' + E
 	},
