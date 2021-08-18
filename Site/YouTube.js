@@ -57,10 +57,25 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				// .sort(function(Q,S){return S.Date - Q.Date})
 		}
 	},
+	GoogleAPIReq = function(Q)
+	{
+		return O.Api(Q,true).Map(function(U)
+		{
+			var T;
+			if (200 !== U[2].status)
+			{
+				T = WC.JTO(U[1]).error
+				T ?
+					O.Bad(T.code,T.message) :
+					O.Bad('Bad Status Code | ' + U[2].status)
+			}
+			return U[1]
+		})
+	},
 	SolveDetail = function(B)
 	{
 		B = Common(B)
-		return O.Api(GoogleAPIYouTubeVideo('id,contentDetails',WR.Map(function(V)
+		return GoogleAPIReq(GoogleAPIYouTubeVideo('id,contentDetails',WR.Map(function(V)
 		{
 			return (V.contentDetails || V.id).videoId
 		},B.items)))
@@ -77,12 +92,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	},
 	SolvePlayList = function(ID,Page)
 	{
-		return O.Api(GoogleAPIYouTubePlayList(ID,WC.PageToken(O.Size * Page)))
+		return GoogleAPIReq(GoogleAPIYouTubePlayList(ID,WC.PageToken(O.Size * Page)))
 			.FMap(SolveDetail)
 	},
 	Channel2PlayList = WX.CacheM(function(Q)
 	{
-		return O.Api(Q).Map(function(B)
+		return GoogleAPIReq(Q).Map(function(B)
 		{
 			return CommonPath(['items',0,'contentDetails','relatedPlaylists','uploads'],B)
 		})
@@ -212,7 +227,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Judge : O.Find,
 			View : function(ID,Page,Pref)
 			{
-				return O.Api(GoogleAPIYouTubeSearch(WC.UE(ID),WC.PageToken(O.Size * Page),Pref ? '&' + WC.QSS(Pref) : ''))
+				return GoogleAPIReq(GoogleAPIYouTubeSearch(WC.UE(ID),WC.PageToken(O.Size * Page),Pref ? '&' + WC.QSS(Pref) : ''))
 					.FMap(SolveDetail)
 					.Map(function(N)
 					{
@@ -313,7 +328,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Judge : [/^[-_\dA-Z]+$/i,O.Word('Embed|V|Video'),/\.be\/(\S+)/i],
 			View : function(ID)
 			{
-				return O.Api(GoogleAPIYouTubeVideo('id,snippet,contentDetails',ID))
+				return GoogleAPIReq(GoogleAPIYouTubeVideo('id,snippet,contentDetails',ID))
 					.Map(SolveSnippet)
 			}
 		},{

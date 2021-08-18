@@ -18,6 +18,7 @@ declare module CrabSaveNS
 		Req(Q : string | WebReq) : WishNS.Provider<string>
 		Req(Q : string | WebReq,H : true) : WishNS.Provider<[number | false,string,WishNS.ReqH['H']]>
 		Api(Q : WishNS.ReqAccept) : WishNS.Provider<string>
+		Api(Q : WishNS.ReqAccept,H : true) : WishNS.Provider<[object,string,XMLHttpRequest]>
 		Head<U extends keyof WishNS.ReqHead>(Q : WishNS.ReqAccept,K : U,V : string) : WishNS.ReqO
 		Head(Q : WishNS.ReqAccept,K : string,V : string) : WishNS.ReqO
 		Auth() : boolean

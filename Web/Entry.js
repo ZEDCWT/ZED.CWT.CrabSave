@@ -3097,9 +3097,11 @@
 						}
 					})
 				},
-				Api : function(Q)
+				Api : function(Q,H)
 				{
-					return WB.ReqB(URLApi + '~' + WC.UE(WW.IsObj(Q) ? WC.OTJ(Q) : Q))
+					var
+					URL = URLApi + '~' + WC.UE(WW.IsObj(Q) ? WC.OTJ(Q) : Q);
+					return (H ? WB.ReqU({URL : URL,AC : true}) : WB.ReqB(URL))
 						.Tap(function(B)
 						{
 							ReqFeed(Q,B)
