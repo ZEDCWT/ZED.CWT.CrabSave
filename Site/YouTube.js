@@ -57,6 +57,49 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				// .sort(function(Q,S){return S.Date - Q.Date})
 		}
 	},
+	PageToken = function(Q)
+	{
+		// The endpoint only responses the first 20000 items, thus the token pattern is unclear beyond that
+		// channel/UCPF-oYb2-xN5FbCXy0167Gg user/MrWebdriver channel/UCKvky_c4MzuFGfgspYlzjSA
+		var
+		Seq = WW.D + WW.AZ + WW.az + '$_',
+		TokenKeyPrefix = 0,
+		TokenKey0o4A = 1,
+		TokenKey0o4B = 2,
+		TokenKey0o14A = 3,
+		TokenKey0o14B = 4,
+		TokenKey7o6 = 5,
+		TokenKeySuffix = 6,
+		Token1 =
+		[
+			'EAAaB1BUOkN',
+			'QRSTUVWYZabcdMNO','QRSTUVWZabcdeMNO',
+			28,[0,0,0,0,0,0,0,34,34,34,34,34,34,48,48,48],
+			14,
+			''
+		],
+		Token2 =
+		[
+			'EAAaCVBUOkN',
+			'QRSTUVYZabcdeMNL','QRSTUVZabcdefMNL',
+			-2,[0,0,0,0,0,0,30,30,30,30,30,30,30,46,46,30],
+			15,
+			'BUQ'
+		],
+		Token0o14Diff = WR.Unnest(WR.Map(WR.Apply(WR.RepA),[[2,15],[3,11],[4,15],[5,11],[1,10],[0,1],[3,1]])),
+		Token7o6 = WR.Map(function(V){return 50 + Seq.indexOf(V)},WR.RepS(WR.RepS('EIMQUYcgkosw048A',2).slice(0,26),2) + 'AEIMQUYcgk08'),
+		CHR = function(Q){return Seq.charAt(63 & Q)},
+		Token = Q < 16384 ? Token1 : Token2;
+		Q = Q < 16384 ? Q : Q - 16384
+		return Token[TokenKeyPrefix] +
+			CHR(19 + (7 & Q >>> 4)) +
+			Token[8192 & Q ? TokenKey0o4B : TokenKey0o4A][15 & Q] +
+			CHR(Token[TokenKey0o14A] +
+				(8192 & Q && 16) +
+				Token0o14Diff[63 & Q >>> 7] + Token[TokenKey0o14B][15 & Q]) +
+			CHR(Token[TokenKey7o6] + Token7o6[63 & Q >>> 7]) +
+			Token[TokenKeySuffix]
+	},
 	GoogleAPIReq = function(Q)
 	{
 		return O.Api(Q,true).Map(function(U)
@@ -92,7 +135,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	},
 	SolvePlayList = function(ID,Page)
 	{
-		return GoogleAPIReq(GoogleAPIYouTubePlayList(ID,WC.PageToken(O.Size * Page)))
+		return GoogleAPIReq(GoogleAPIYouTubePlayList(ID,Page ? PageToken(O.Size * Page) : ''))
 			.FMap(SolveDetail)
 	},
 	Channel2PlayList = WX.CacheM(function(Q)
@@ -227,7 +270,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Judge : O.Find,
 			View : function(ID,Page,Pref)
 			{
-				return GoogleAPIReq(GoogleAPIYouTubeSearch(WC.UE(ID),WC.PageToken(O.Size * Page),Pref ? '&' + WC.QSS(Pref) : ''))
+				return GoogleAPIReq(GoogleAPIYouTubeSearch(WC.UE(ID),Page ? WC.PageToken(O.Size * Page) : '',Pref ? '&' + WC.QSS(Pref) : ''))
 					.FMap(SolveDetail)
 					.Map(function(N)
 					{
