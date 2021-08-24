@@ -348,7 +348,7 @@ module.exports = Option =>
 		Suicide = () => S.terminate(),
 		ApiPool = new Map;
 
-		S.on('message',Q =>
+		S.on('message',(Q,IsBuf) =>
 		{
 			var
 			Err = S => Send([ActionWebError,Q[0],S]),
@@ -363,6 +363,7 @@ module.exports = Option =>
 					}) :
 				Err('ErrBadReq'),
 			K,O;
+			false === IsBuf && (Q = Q.toString('UTF8'))
 			if (WW.IsBuff(Q))
 			{
 				Q = WC.JTOO(WC.U16S(Decipher.D(Q)))
