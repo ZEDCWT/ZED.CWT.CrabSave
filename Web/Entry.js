@@ -2023,6 +2023,11 @@
 								},
 								W : OnTick,
 								P : OnProgress,
+								R : function()
+								{
+									HasError = false
+									OnTick()
+								},
 								E : function(Q)
 								{
 									if (Q)
@@ -2181,7 +2186,7 @@
 						TaskRenewing[Row] = 9
 						WR.Del(Row,TaskErr)
 						WR.Has(Row,HotShown) &&
-							HotShown[Row].W()
+							HotShown[Row].R()
 					},WW.IsArr(Row) ? Row : [Row])
 				}
 				else
