@@ -12,66 +12,20 @@ module.exports = Option =>
 
 	DB,
 
-	DBLocked,
-	DBLockQueue = [],
-	DBGetLock = T => DBLocked ?
-		DBLockQueue.push(T = WX.Repeater()) && T :
-		WX.Just(0,WX.Sync),
-	DBQueue,
-	DBGetQueue = () => DBLocked ?
-		DBQueue = DBQueue || WX.Repeater() :
-		WX.Just(0,WX.Sync),
-	DBMake = H => (...Q) => DBGetQueue().FMap(() => H(...Q)),
+	DBMtx = WX.Mtx(),
+	DBMake = H => (...Q) => DBMtx(() => WX.Just(null,WX.Sync)).FP(H(...Q)),
 	Exec,
 	Run_,
 	Run,
 	Get,
 	All,
-	TransactionEnd = () =>
-	{
-		DBLocked = false
-		if (DBQueue)
-		{
-			DBQueue.D().F()
-			DBQueue = false
-		}
-		if (DBLockQueue.length)
-			DBLockQueue.shift().D().F()
-	},
-	Transaction = Q => WX.Provider(O =>
-	{
-		var
-		Locked,
-		E = DBGetLock()
-			.FMap(() =>
-			(
-				Locked = true,
-				DBLocked = true,
-				Run_('begin transaction')
-			))
-			.FMap(() => WX.From(Q)
-				.FMapO(1,V => Run_(V[0],V[1]))
-				.ErrAs(E => Run_('rollback')
-					.Map(() => WW.Throw(E)))
-				.Fin()
-				.FMap(() => Run_('commit')))
-			.Now(null,E =>
-			{
-				Locked = false
-				O.E(E)
-				TransactionEnd()
-			},() =>
-			{
-				Locked = false
-				O.D().F()
-				TransactionEnd()
-			})
-		return () =>
-		{
-			E()
-			Locked && DBLocked && TransactionEnd()
-		}
-	}),
+	Transaction = Q => DBMtx(() => Run_('begin transaction')
+		.FMap(() => WX.From(Q)
+		.FMapO(1,V => Run_(V[0],V[1]))
+		.ErrAs(E => Run_('rollback')
+			.Map(() => WW.Throw(E)))
+		.Fin()
+		.FMap(() => Run_('commit')))),
 
 	HotBrief = 'Row,Site,ID,Size',
 	HistBrief = HotBrief + ',Done',
