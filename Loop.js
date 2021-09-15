@@ -279,6 +279,8 @@ module.exports = Option =>
 													Option.OnSize(Down.Task,S,null)
 												}))
 									},
+									Site = Option.Site.D(V.Site),
+									LowSpeedCount = 0,
 									Work = WN.Down(
 									{
 										Req : Pack(Down.URL,V.Site),
@@ -286,7 +288,7 @@ module.exports = Option =>
 										Last : Down.Path && WN.JoinP(V.Root,Down.Path),
 										Fresh : SizeChanged || !Down.Path,
 										Only200 : true,
-										ForceRange : WR.Default(true,Option.Site.D(V.Site).Range),
+										ForceRange : WR.Default(true,Site.Range),
 										AutoUnlink : true,
 										Interval : 1E3
 									}).On('Connected',() =>
@@ -311,6 +313,18 @@ module.exports = Option =>
 										var D = Down.Take + WW.Now() - Work.Info.Start
 										Option.OnHas(Down.Task,Down.Part,Down.File,[Q.Saved,D])
 										NotBigDeal(DB.SaveHas(Down.Task,Down.Part,Down.File,Q.Saved,D))
+										if (Site.RefSpeed)
+										{
+											if (Q.Speed < 1024 * Site.RefSpeed / 1E3)
+											{
+												if (120 < ++LowSpeedCount)
+												{
+													OnEnd()
+													O.E(DownloadErrRenew)
+												}
+											}
+											else LowSpeedCount = 0
+										}
 									}).On('Done',() =>
 									{
 										var

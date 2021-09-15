@@ -166,6 +166,7 @@ module.exports = O =>
 						}))
 				})
 			})
-		})
+		}),
+		RefSpeed : 90,
 	}
 }
