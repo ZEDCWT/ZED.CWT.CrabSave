@@ -425,6 +425,7 @@
 	}),
 	WSOnProgress,
 	WSOnApi = {},
+	WSOnAuthing = WW.BusS(),
 	WSOnOnline = WW.BusS(),
 	WSOnOffline = WW.BusS(),
 	WSOnDiffHot,
@@ -2481,6 +2482,7 @@
 						Decipher = WC.AESDS(T,T,WC.CFB)
 						Token.V('').Fresh().Foc()
 						WebSocketSendAuth([ActionAuthHello])
+						WSOnAuthing.D()
 						NotiAuth(SA('AutAuthing'))
 						TokenEnt.Off()
 						TokenNew.On()
@@ -2882,11 +2884,13 @@
 			SetD = {},SetC = {},
 			PC,
 			Key = function(Q){return PC = Pref.C(Q),Q},
+			UnstableZone,
 			Pref = WV.Pref(
 			{
 				O : Setting,
 				C : function()
 				{
+					UnstableZone ||
 					WebSocketSendAuth([ActionAuthSetting,WR.WhereU(function(V,F){return V !== SetD[F]},Setting)])
 				}
 			}),
@@ -3011,10 +3015,15 @@
 				''
 			]*/])
 			WV.Ap(Pref.R,V)
+			WSOnAuthing.R(function()
+			{
+				UnstableZone = true
+			})
 			WSOnSetting = function(Q)
 			{
 				WR.EachU(function(V,F){V(Q[F])},SetC)
 				LangTo(Q.Lang)
+				UnstableZone = false
 			}
 			WR.Has(Top.LangS,Lang) && SetC.Lang(Top.LangS)
 			Top.Lang = null
