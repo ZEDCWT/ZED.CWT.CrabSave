@@ -172,14 +172,12 @@ module.exports = Option =>
 				})
 			}),
 		Del : Q => Get('select Done from Task where ? = Row',[Q])
-			.FMap(B => Exec(
-			`
-				begin transaction;
-					delete from Task where ${Q = String(Q).replace(/\D/g,'')} = Row;
-					delete from Part where ${Q} = Task;
-					delete from Down where ${Q} = Task;
-				commit
-			`).Map(() => B && B.Done)),
+			.FMap(B => Transaction(
+			[
+				['delete from Task where ? = Row',[Q]],
+				['delete from Part where ? = Task',[Q]],
+				['delete from Down where ? = Task',[Q]],
+			]).Map(() => B && B.Done)),
 
 		Hot : (Q,S) => DB.each(`select ${HotBrief} from Task where Done is null order by Row`,
 			(E,V) => E || Q(V),
