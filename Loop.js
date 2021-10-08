@@ -224,7 +224,7 @@ module.exports = Option =>
 		{
 			DownloadDispatchOnErr()
 			DownloadDispatching = true
-			DB.TopQueue(Max - DownloadRunning.size,WW.Now() - 1E3 * Setting.Delay(),[...DownloadRunning.keys()]).Now(Q =>
+			DB.TopQueue(Max - DownloadRunning.size,WW.Now() - 1E3 * Setting.Delay(),[...DownloadRunning.keys(),...InfoRunning.keys()]).Now(Q =>
 			{
 				WR.Each(V =>
 				{
