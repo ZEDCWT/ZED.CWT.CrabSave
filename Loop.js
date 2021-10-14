@@ -281,6 +281,7 @@ module.exports = Option =>
 									},
 									Site = Option.Site.D(V.Site),
 									LowSpeedCount = 0,
+									RefSpeed = Site.RefSpeed ? 1024 * Site.RefSpeed / 1E3 : 0,
 									Work = WN.Down(
 									{
 										Req : Pack(Down.URL,V.Site),
@@ -313,11 +314,12 @@ module.exports = Option =>
 										var D = Down.Take + WW.Now() - Work.Info.Start
 										Option.OnHas(Down.Task,Down.Part,Down.File,[Q.Saved,D])
 										NotBigDeal(DB.SaveHas(Down.Task,Down.Part,Down.File,Q.Saved,D))
-										if (Site.RefSpeed)
+										if (RefSpeed)
 										{
-											if (Q.Speed < 1024 * Site.RefSpeed / 1E3)
+											if (Q.Speed < RefSpeed)
 											{
-												if (120 < ++LowSpeedCount)
+												if (DownloadLowSpeedConfCount < ++LowSpeedCount &&
+													DownloadLowSpeedTrigger(V.Row))
 												{
 													OnEnd()
 													O.E(DownloadErrRenew)
@@ -469,6 +471,22 @@ module.exports = Option =>
 			DownloadDispatch()
 			Option.OnEnd()
 		}
+	},
+	DownloadLowSpeedConfCount = 120,
+	DownloadLowSpeedConfTrigger = 2,
+	DownloadLowSpeedConfRest = 18E5,
+	DownloadLowSpeedRec = new Map,
+	DownloadLowSpeedTrigger = ID =>
+	{
+		var
+		T = DownloadLowSpeedRec.get(ID);
+		T || DownloadLowSpeedRec.set(ID,T = [0,null])
+		return T[0] < DownloadLowSpeedConfTrigger &&
+		(
+			T[1] && T[1](),
+			T[1] = WW.To(DownloadLowSpeedConfRest,() => DownloadLowSpeedRec.delete(ID)).F,
+			++T[0]
+		)
 	};
 
 	return {
