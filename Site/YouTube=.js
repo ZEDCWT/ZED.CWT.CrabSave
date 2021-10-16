@@ -21,18 +21,22 @@ module.exports = O =>
 		.Map(B =>
 		{
 			var
-			Process = WW.MU(/.split\(""[^{}]+.join\(""/,B),
-			Method = WW.MU(RegExp(`${WW.MU(/\w+(?=\.)/,Process)}={([^{}]+{[^{}]+})+?}`),B),
-			Map = WW.MR((D,V) =>
+			SProcess = WW.MU(/.split\(""[^{}]+.join\(""/,B),
+			SMethod = WW.MU(RegExp(`${WW.MU(/\w+(?=\.)/,SProcess)}={([^{}]+{[^{}]+})+?}`),B),
+			SMap = WW.MR((D,V) =>
 			{
 				D[V[1]] = /rev/.test(V) ? Q => Q.reverse() :
 					/spl/.test(V) ? (Q,S) => Q.splice(0,S) :
 					(Q,S) => [Q[0],Q[S % Q.length]] = [Q[S % Q.length],Q[0]]
 				return D
-			},{},/(\w+):(.*?})/g,Method),
-			R = Q => Process.forEach(([V,B]) => Map[V] && Map[V](Q,B),Q = [...Q]) || Q.join``;
-			Process = WW.MR((D,V) => D.push([V[1],+V[2]]) && D,[],/\.(\w+)[^)]+?(\d+)/g,Process)
-			return R
+			},{},/(\w+):(.*?})/g,SMethod),
+			S = Q => SProcess.forEach(([V,B]) => SMap[V] && SMap[V](Q,B),Q = [...Q]) || Q.join``,
+			NProcess = WW.MF(/\.get\(.n.([^]+?)set\(.n./,B),
+			NMethod = WW.MU(/\w+(?=\()/,NProcess),
+			NFunc = WW.MF(RegExp(NMethod + '=(function[^]+?\\.join\\([^}]+})'),B),
+			N = WN.Evil(`(${NFunc})`);
+			SProcess = WW.MR((D,V) => D.push([V[1],+V[2]]) && D,[],/\.(\w+)[^)]+?(\d+)/g,SProcess)
+			return {S,N}
 		})),
 	TransformSolve = Q => WX.Just(Q)
 		.FMap(B => TransformParse
@@ -40,7 +44,11 @@ module.exports = O =>
 			WW.MF(/"([/\w]+player_ias[^"]+base.js)"/,B) ||
 			WC.JTO(WW.MF(/assets"[^}]+js":("[^"]+")/,B))
 		))
-		.ErrAs(() => WX.Just(WR.Id));
+		.ErrAs(() => WX.Just(
+		{
+			S : WR.Id,
+			N : WR.Id,
+		}));
 	return {
 		URL : ID => WN.ReqB(O.Req(GoogleAPIYouTubeVideo('snippet',ID))).FMap(Info =>
 		{
@@ -154,16 +162,19 @@ module.exports = O =>
 						SolveURL('video',T)
 					}
 					else O.Bad(B)
-					return (WR.Any(WW.IsObj,URL) ?
-						TransformSolve(Watch).Map(H => URL.map(V =>
-							WW.IsObj(V) ? `${V.url}&${V.sp}=${H(V.s)}` : V)) :
-						WX.Just(URL)).Map(URL => (
+					return TransformSolve(Watch).Map(H => (
+					{
+						Title : Info.title,
+						Up : Info.channelTitle,
+						Date : +new Date(Info.publishedAt),
+						Part : [
 						{
-							Title : Info.title,
-							Up : Info.channelTitle,
-							Date : +new Date(Info.publishedAt),
-							Part : [{URL,Size,Ext}]
-						}))
+							URL : URL.map(V => (WW.IsObj(V) ? `${V.url}&${V.sp}=${H.S(V.s)}` : V)
+								.replace(/(?<=[?&]n=)[^&]+/,N => H.N(N))),
+							Size,
+							Ext,
+						}]
+					}))
 				})
 			})
 		}),

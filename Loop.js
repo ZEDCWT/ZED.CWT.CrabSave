@@ -351,12 +351,12 @@ module.exports = Option =>
 										var
 										ShouldRenew = /Status not satisfied/.test(E) ||
 											(!Working || Work.Info.Begin === Work.Info.Saved) && /Timeout/.test(E);
-										SizeChanged = /Size changed/.test(E)
+										SizeChanged = /Size changed|Status not satisfied.*\b416\b/.test(E)
 										OnEnd()
-										ShouldRenew ?
-											O.E(DownloadErrRenew) :
-											SizeChanged || Work.Info.Begin < Work.Info.Saved ?
-												O.E(DownloadErrRetry) :
+										SizeChanged || Work.Info.Begin < Work.Info.Saved ?
+											O.E(DownloadErrRetry) :
+											ShouldRenew ?
+												O.E(DownloadErrRenew) :
 												O.E(E)
 									}),
 									OnEnd = () =>
