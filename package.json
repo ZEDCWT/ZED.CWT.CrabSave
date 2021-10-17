@@ -1,6 +1,6 @@
 {
 	"name" : "crabsave",
-	"version" : "1.3.6",
+	"version" : "1.3.7",
 	"description" : "Yet Another Video Downloader With GUI",
 	"main" : "CrabSave",
 	"bin" :
@@ -16,7 +16,7 @@
 	"license" : "MIT",
 	"dependencies" :
 	{
-		"@zed.cwt/wish" : ">=0.4.13",
+		"@zed.cwt/wish" : ">=0.5.0",
 		"sqlite3" : ">=5.0.2",
 		"xml2js" : ">=0.4.23",
 		"ws" : ">=8.2.0"
