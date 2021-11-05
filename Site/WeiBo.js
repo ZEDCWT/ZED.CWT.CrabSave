@@ -46,7 +46,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				{
 					B = WC.JTOO(WW.MF(/List\(.*?(\[.*])/,B))
 					return WW.IsArr(B) && B.length ?
-						O.Req({URL : B[0],Cookie : false},true) :
+						O.Req(
+						{
+							URL : B[0],
+							Head :
+							{
+								Referer : SinaLogin,
+							},
+							Cookie : false
+						},true) :
 						WX.Just()
 				}).Map(function(B)
 				{
