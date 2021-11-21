@@ -52,6 +52,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliVCApiDynamicType = 268435455,
 	BiliBiliVCApiDynamicNew = BiliBiliVCApi + 'dynamic_svr/v1/dynamic_svr/dynamic_new?uid=&type_list=' + BiliBiliVCApiDynamicType,
 	BiliBiliVCApiDynamicHistory = WW.Tmpl(BiliBiliVCApi,'dynamic_svr/v1/dynamic_svr/dynamic_history?uid=&type=',BiliBiliVCApiDynamicType,'&offset_dynamic_id=',undefined),
+	BiliBiliTimeline = 'https://t.bilibili.com/',
 	// Appkey = '20bee1f7a18a425c',
 	Common = function(V)
 	{
@@ -592,12 +593,24 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				B = Common(B)
 				return [B.history_offset || B.has_more && B.next_offset,
 				{
-					Item : WR.MapW(function(V,C)
+					Item : WR.MapW(function(V,C,T)
 					{
 						C = WC.JTO(V.card)
-						V = V.desc.type
-						return 16 === V ? SolveVC(C) :
-							8 === V || 512 === V ? SolveAV(C) :
+						V = V.desc
+						T = V.type
+						return 16 === T ? SolveVC(C) :
+							8 === T || 512 === T ? SolveAV(C) :
+							1 === T && (8 === V.origin.type || 512 === V.origin.type) ?
+							(
+								T = SolveAV(WC.JTO(C.origin)),
+								T.More.push
+								(
+									O.Ah(C.user.uname,BiliBiliSpace + C.user.uid),
+									O.Ah(O.DTS(1E3 * V.timestamp),BiliBiliTimeline + V.dynamic_id_str),
+									C.item.content
+								),
+								T
+							) :
 							null
 					},B.cards)
 				}]
