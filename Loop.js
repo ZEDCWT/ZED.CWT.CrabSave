@@ -349,7 +349,7 @@ module.exports = Option =>
 									}).On('Die',E =>
 									{
 										var
-										ShouldRenew = /Status not satisfied/.test(E) ||
+										ShouldRenew = /Status not satisfied|Close before end/.test(E) ||
 											(!Working || Work.Info.Begin === Work.Info.Saved) && /Timeout/.test(E);
 										SizeChanged = /Size changed|Status not satisfied.*\b416\b/.test(E)
 										OnEnd()
