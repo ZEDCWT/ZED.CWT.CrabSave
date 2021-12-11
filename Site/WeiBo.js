@@ -40,7 +40,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				O.Req(
 				{
 					URL : SinaLoginCross,
-					Head : {Cookie : WC.CokeS(T,WR.Id) + '; tgc=' + AT.tgc},
+					Head :
+					{
+						Referer : SinaLogin,
+						Cookie : WC.CokeS(T,WR.Id) + '; tgc=' + AT.tgc,
+					},
 					Cookie : false
 				}).FMap(function(B)
 				{
