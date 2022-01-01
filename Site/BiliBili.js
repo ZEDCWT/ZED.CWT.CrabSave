@@ -527,8 +527,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							More :
 							[
 								UP.sign,
-								O.Ah('Audio ' + Nav.audio,BiliBiliSpaceAudio(ID)),
-								O.Ah('VC',BiliBiliSpaceDynamic(ID))
+								O.Ah('Audio ' + Nav.audio,BiliBiliSpaceAudio(ID))
+								// O.Ah('VC',BiliBiliSpaceDynamic(ID))
 							]
 						}]
 					})
