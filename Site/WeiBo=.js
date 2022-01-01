@@ -12,6 +12,7 @@ module.exports = O =>
 		URL : ID => WN.ReqB(O.Coke(WeiBo + ID)).FMap(B =>
 		{
 			var
+			RegExpIsM3U = /\.m3u8?(\?.*)?$/,
 			URL,
 			T;
 			B = WC.JTO(WW.MU(/{"ns":"pl.content.weiboDetail.*}/,B)).html
@@ -40,7 +41,9 @@ module.exports = O =>
 			else if (T = WW.MF(/li_story.*?action-data="([^"]+)/,B))
 				URL = WC.QSP(T).gif_ourl
 			else O.Bad('Contains no media')
-			return (WW.IsStr(URL) ? WX.Just([URL]) : URL).Map(URL => (
+			return (WW.IsStr(URL) ?
+				RegExpIsM3U.test(URL) ? O.M3U(URL) : WX.Just([URL]) :
+				URL).Map(URL => (
 			{
 				Title : WR.Trim(WC.HED(WW.MU(/<[^>]+WB_text[^]+?<\/div>/,B)
 					.replace(/<a[^>]+ignore=.*?<\/a>/g,'')

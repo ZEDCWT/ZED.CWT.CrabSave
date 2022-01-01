@@ -209,7 +209,81 @@ module.exports = Option =>
 
 
 	NotBigDeal = Q => Q.Now(null,E => Option.Err(__filename + ':B',E)),
-
+	FormatNameCountByte = Q => Q < 0x80 ? 1 : Q < 0x0100 ? 2 : 3,
+	FormatNameCountChar = () => 1,
+	FormatNameSingle = (Format,O,Count,MaxLen) =>
+	{
+		var
+		CouldReduce = new Set(['Title','PartTitle','Up']),
+		Split = [],
+		MapName = [],
+		MapVal = [],
+		Len = 0,
+		R = '',
+		F,G;
+		Format.split`|`.forEach((V,F) =>
+		{
+			if (1 & F)
+			{
+				MapName.push(V)
+				V = WR.Default(V,O[V])
+				MapVal.push(V)
+			}
+			else
+			{
+				Split.push(V)
+			}
+			WR.Each(V => Len += Count(V.charCodeAt()),V)
+		})
+		for (F = MapName.length;MaxLen < Len && F;) if (CouldReduce.has(MapName[--F]))
+		{
+			G = MapVal[F].length
+			for (;MaxLen < Len && G;)
+				Len -= Count(MapVal[F].charCodeAt(--G))
+			MapVal[F] = MapVal[F].slice(0,G)
+		}
+		F = G = 0
+		for (;F < MapVal.length;++F)
+			R += Split[F] + MapVal[F]
+		if (F < Split.length) R += Split[F]
+		if (MaxLen < Len)
+		{
+			F = R.length
+			for (;MaxLen < Len;)
+				Len -= Count(R.charCodeAt(--F))
+			R = R.slice(0,F)
+		}
+		return R
+	},
+	FormatName = (Format,O,Count,MaxLen) => Format.split(/([\\\/])/)
+		.map((V,F) => 1 & F ? V : FormatNameSingle(V,O,Count,MaxLen)).join``,
+	SolveFileNameLimit = WX.CacheL(Root =>
+	{
+		var
+		Len = 240,
+		Prefix = '~CrabSaveCheck~',
+		Unicode = WN.JoinP(Root,Prefix + WR.CHR(...WR.Times(() => WW.Rnd(0x4E00,0x9FFF),Len - Prefix.length))),
+		ASCII = WN.JoinP(Root,Prefix + WW.Key(Len - Prefix.length));
+		return WN.UW(Unicode,'')
+			.FP(WN.Un(Unicode))
+			.Map(() => [true,Len])
+			.ErrAs(() => WN.UW(ASCII,'')
+				.FP(WN.Un(ASCII))
+				.Map(() => [false,Len]))
+			.ErrAs(() => [false,200])
+	}),
+	SolveName = (Format,O,Root,Ext) =>
+	{
+		Format = Format.replace(/\?([^?]+)\?/g,
+			(Q,S) => WW.MR((D,V) => D && O[V[1]],true,/\|([^|]+)\|/g,Q) ? S : '')
+		Ext = Ext || ''
+		return SolveFileNameLimit(Root).Map(([IsUnicode,Len]) => WN.JoinP(Root,FormatName
+		(
+			Format,O,
+			IsUnicode ? FormatNameCountChar : FormatNameCountByte,
+			Len - Ext.length
+		)) + Ext)
+	},
 	DownloadRunning = new Map,
 	DownloadDispatching,DownloadDispatchAgain,
 	DownloadDispatchOnErr = WX.EndL(),
@@ -258,15 +332,8 @@ module.exports = Option =>
 									PartTitle : WR.SafeFile(Part.Title || ''),
 									FileIndex : 1 < Part.File && WR.PadU(Down.File,Part.File),
 								},
-								Name = WW.Fmt
-								(
-									V.Format.replace(/\?([^?]+)\?/g,
-										(Q,S) => WW.MR((D,V) => D && NameO[V[1]],true,/\|([^|]+)\|/,Q) ? S : ''),
-									NameO,'|'
-								).slice(0,220) + (Down.Ext || ''),
-								Dest = WN.JoinP(V.Root,Name),
 								SizeChanged;
-								return WN.MakeDir(WN.DirN(Dest)).FMap(() => WX.Provider(O =>
+								return SolveName(V.Format,NameO,V.Root,Down.Ext).FMap(Dest => WN.MakeDir(WN.DirN(Dest)).FMap(() => WX.Provider(O =>
 								{
 									var
 									OnSize = Q =>
@@ -381,7 +448,7 @@ module.exports = Option =>
 								}).RetryWhen(E => E.Tap(E =>
 								{
 									E === DownloadErrRetry || WW.Throw(E)
-								})))
+								}))))
 							}).Fin().Map(() => [true]) :
 							WX.Just([false])))
 						.FMap(() =>
