@@ -29,9 +29,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		Media = WR.Path(['extended_entities','media'],Tweet),
 		NonVideo;
 		return {
-			Non : NonVideo = !Media || WR.All(function(V){return 'video' !== V.type},Media),
+			NonAV : NonVideo = !Media || WR.All(function(V){return !V.video_info},Media),
 			ID : ID,
-			Img : Media && Media[0] && Media[0].media_url_https,
+			Img : Media && WR.Pluck('media_url_https',Media),
 			Title : WR.Trim(Tweet.full_text.replace(/\n#.*$/g,'')),
 			UP : User[Tweet.user_id_str].name,
 			UPURL : Twitter + User[Tweet.user_id_str].screen_name,

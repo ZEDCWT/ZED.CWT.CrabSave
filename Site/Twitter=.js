@@ -17,41 +17,47 @@ module.exports = O =>
 		'Authorization','Bearer ' + TwitterAuth
 	]);
 	return {
-		URL : ID =>
+		URL : (ID,Ext) => Ext.ReqB(O.Coke(MakeHead(TwitterAPITimelineConversation(ID)))).Map(B =>
 		{
-			return WN.ReqB(O.Coke(MakeHead(TwitterAPITimelineConversation(ID)))).Map(B =>
+			var
+			Tweet,User,
+			Part = [],
+			T;
+			B = WC.JTO(B)
+			B.errors && O.Bad(B.errors[0])
+			B = B.globalObjects
+			Tweet = B.tweets[ID]
+			User = B.users[Tweet.user_id_str]
+			WR.Each(V =>
 			{
-				var
-				Tweet,User,
-				Media,
-				Part = [];
-				B = WC.JTO(B)
-				B.errors && O.Bad(B.errors[0])
-				B = B.globalObjects
-				Tweet = B.tweets[ID]
-				Media = WR.Where(V => 'video' === V.type,WR.Path(['extended_entities','media'],Tweet) || [])
-				Media.length || O.Bad('No media')
-				User = B.users[Tweet.user_id_str]
-				WR.Each(V =>
+				if (T = V.video_info)
 				{
-					V = V.video_info.variants.filter(V => +V.bitrate)
-					V = O.Best('bitrate',V)
+					T = T.variants
+					T = O.Best('bitrate',T.filter(V => WW.IsNum(V.bitrate)))
 					Part.push(
 					{
-						URL : [V.url],
-						Ext : ['.' + WW.MF(/\/(\w+)/,V.content_type)]
+						URL : [T.url],
+						Ext : ['.' + WW.MF(/\/(\w+)/,T.content_type)]
 					})
-				},Media)
-				return {
-					Title : WR.Trim(Tweet.full_text
-						.replace(/\n#.*$/g,'')
-						.replace(/\w+:\/\/t\.\w+\/\w+/g,'')),
-					Up : User.name,
-					Date : +new Date(Tweet.created_at),
-					Part : Part
 				}
-			})
-		},
+				else if (T = V.media_url_https)
+				{
+					Part.push(
+					{
+						URL : [T]
+					})
+				}
+				else WW.Throw('Unknown Media Type #' + V.type)
+			},WR.Path(['extended_entities','media'],Tweet) || [])
+			return {
+				Title : WR.Trim(Tweet.full_text
+					.replace(/\n#.*$/g,'')
+					.replace(/\w+:\/\/t\.\w+\/\w+/g,'')),
+				Up : User.name,
+				Date : +new Date(Tweet.created_at),
+				Part : Part
+			}
+		}),
 		Range : false
 	}
 }

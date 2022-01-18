@@ -9,7 +9,7 @@ WeiBo = 'https://weibo.com/';
 module.exports = O =>
 {
 	return {
-		URL : ID => WN.ReqB(O.Coke(WeiBo + ID)).FMap(B =>
+		URL : (ID,Ext) => Ext.ReqB(O.Coke(WeiBo + ID)).FMap(B =>
 		{
 			var
 			RegExpIsM3U = /\.m3u8?(\?.*)?$/,
@@ -28,21 +28,21 @@ module.exports = O =>
 			{
 				URL = WC.QSP(T).live_src
 				URL || O.Bad(T)
-				URL = O.M3U(URL)
+				URL = O.M3U(URL,Ext)
 			}
 			else if (T = WW.MF(/WB_video .*action-data="([^"]+)/,B))
 			{
 				URL = WC.QSP(T).url
 				URL || O.Bad(T)
-				URL = WN.ReqB(O.Coke(URL))
-					.FMap(B => WN.ReqB(O.Coke(WN.JoinU(WeiBo,WW.MF(/<iframe[^>]+src="([^"]+)/,B)))))
-					.FMap(B => O.M3U(WC.JTO(WW.MF(/play_url:(".*")/,B))))
+				URL = Ext.ReqB(O.Coke(URL))
+					.FMap(B => Ext.ReqB(O.Coke(WN.JoinU(WeiBo,WW.MF(/<iframe[^>]+src="([^"]+)/,B)))))
+					.FMap(B => O.M3U(WC.JTO(WW.MF(/play_url:(".*")/,B)),Ext))
 			}
 			else if (T = WW.MF(/li_story.*?action-data="([^"]+)/,B))
 				URL = WC.QSP(T).gif_ourl
 			else O.Bad('Contains no media')
 			return (WW.IsStr(URL) ?
-				RegExpIsM3U.test(URL) ? O.M3U(URL) : WX.Just([URL]) :
+				RegExpIsM3U.test(URL) ? O.M3U(URL,Ext) : WX.Just([URL]) :
 				URL).Map(URL => (
 			{
 				Title : WR.Trim(WC.HED(WW.MU(/<[^>]+WB_text[^]+?<\/div>/,B)

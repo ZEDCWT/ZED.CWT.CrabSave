@@ -47,6 +47,17 @@
 	ActionAuthErr = 'RErr',
 	ActionAuthErrT = 'RErrT',
 
+	PartSpecialType =
+	{
+		'-8000' : 'Meta',
+		'-7999' : 'Cover'
+	},
+	PartSpecialTypeLang =
+	{
+		Meta : 'GenMeta',
+		Cover : 'GenCover'
+	},
+
 	Retry = 1E4,
 	Padding = 20,
 	PaddingHalf = Padding / 2,
@@ -816,12 +827,14 @@
 							WV.Ap(WV.Con(WV.Rock(),
 							[
 								MakeHigh(SA('DetPart') + ' '),
-								WW.Fmt('`0` / `1` `2`',
-								[
-									V.Part,
-									PartMap[V.Part] ? PartMap[V.Part].Total : S.Part.length,
-									PartMap[V.Part] ? PartMap[V.Part].Title : ''
-								])
+								WR.Has(V.Part,PartSpecialType) ?
+									SA(PartSpecialTypeLang[PartSpecialType[V.Part]]) :
+									WW.Fmt('`0` / `1` `2`',
+									[
+										V.Part,
+										PartMap[V.Part] ? PartMap[V.Part].Total : S.Part.length,
+										PartMap[V.Part] ? PartMap[V.Part].Title : ''
+									])
 							]),Part)
 						}
 						WV.T(URL,V.URL)
@@ -1191,6 +1204,8 @@
 			ClassCard = WW.Key(),
 			ClassCardClick = WW.Key(),
 			ClassCardBar = WW.Key(),
+			ClassImgMulti = WW.Key(),
+			ClassImgMultiLR = WW.Key(),
 
 			GoKeyWord,
 			GoSite,GoAction,GoID,
@@ -1345,10 +1360,53 @@
 						WR.EachU(function(V,F)
 						{
 							var
+							NonDownload = V.Non || V.NonAV && !Setting.NonAV,
 							IDView = V.View || (V.Non ? V.ID : Site.IDView(V.ID)),
 							URL = V.URL || false !== V.URL && Site.IDURL && Site.IDURL(V.ID),
 							Click = WV.Rock(ClassCardClick),
-							Img;
+							Img = WV.A('img'),
+							ImgMulti = WV.Rock(ClassImgMulti),
+							ImgMultiShow = WV.Rock(),
+							ImgMultiL = WV.But(
+							{
+								The : WV.TheP,
+								C : function(){ImgTo(~-ImgCurrent)}
+							}),
+							ImgMultiR = WV.But(
+							{
+								The : WV.TheP,
+								C : function(){ImgTo(-~ImgCurrent)}
+							}),
+							ImgCurrent,
+							ImgTo = function(Q)
+							{
+								ImgCurrent = V.Img.length
+								ImgCurrent = (ImgCurrent + Q % ImgCurrent) % ImgCurrent
+								WV.Attr(Img,'src',SolveImgURL(V.Img[ImgCurrent]))
+								WV.T(ImgMultiShow,WR.PadU(ImgCurrent,~-V.Img.length) + ' / ' + V.Img.length)
+							},
+							SolveImgURL = function(V)
+							{
+								return Setting.ProxyView ?
+									URLApi + '~' + SolveURL(V)
+										.replace(/\/\/+/g,WC.UE) :
+									SolveURL(V)
+							};
+							if (WW.IsArr(V.Img) && V.Img.length < 2)
+								V.Img = V.Img[0]
+							if (V.Img)
+							{
+								if (WW.IsArr(V.Img))
+								{
+									ImgTo(0)
+									WV.CSS(ImgMultiL.R,'left',0)
+									WV.ClsA(ImgMultiL.R,ClassImgMultiLR)
+									WV.CSS(ImgMultiR.R,'right',0)
+									WV.ClsA(ImgMultiR.R,ClassImgMultiLR)
+								}
+								else
+									WV.Attr(Img,'src',SolveImgURL(V.Img))
+							}
 							WV.Ap(WV.Con(WV.Rock(ClassCard + ' ' + WV.S4,'fieldset'),
 							[
 								WV.Con(WV.A('legend'),
@@ -1359,16 +1417,14 @@
 								]),
 								WV.Con(Click,
 								[
-									V.Img && WV.Attr
-									(
-										Img = WV.A('img'),
-										'src',
-										Setting.ProxyView ?
-											URLApi + '~' + SolveURL(V.Img)
-												.replace(/\/\/+/g,WC.UE) :
-											SolveURL(V.Img)
-									)
+									V.Img && Img
 								]),
+								WW.IsArr(V.Img) && WV.ApR(
+								[
+									ImgMultiShow,
+									ImgMultiL,
+									ImgMultiR
+								],ImgMulti),
 								WW.IsNum(V.Len) ?
 									WV.X(WW.StrS(V.Len)) :
 									WW.IsStr(V.Len) &&
@@ -1400,8 +1456,8 @@
 								}).R,
 								!!V.More && WV.Con(WV.Rock(WV.FmtW),V.More)
 							]),List)
-							V.Non || MakeBar(Site,V,Click)
-							V.Non && Img && URL && WV.On('click',function()
+							NonDownload || MakeBar(Site,V,Click)
+							NonDownload && Img && URL && WV.On('click',function()
 							{
 								Keyword.V(URL)
 								Go()
@@ -1612,7 +1668,10 @@
 						'.`K`:hover .`S`,.`K`.`A` .`S`{background:rgba(102,175,224,.7)}' +
 						'.`K`.`O` .`S`{background:#66AFE0}' +
 						'.`C` img{width:100%;max-height:`m`px}' +
-						'.`C` .`B`{padding:0;min-width:0}',
+						'.`C` .`B`{padding:0;min-width:0}' +
+
+						'.`M`{position:relative;text-align:center}' +
+						'.`LR`{position:absolute;top:0;width:50%;height:100%}',
 						{
 							R : ID,
 							I : WV.InpW,
@@ -1632,7 +1691,9 @@
 							K : ClassCardClick,
 							S : ClassCardBar,
 							c : SizeCardWidth,
-							m : 2 * SizeCardWidth
+							m : 2 * SizeCardWidth,
+							M : ClassImgMulti,
+							LR : ClassImgMultiLR
 						}
 					)
 				}
@@ -2884,6 +2945,7 @@
 			SetD = {},SetC = {},
 			PC,
 			Key = function(Q){return PC = Pref.C(Q),Q},
+			ChoOF = [[false,SA('GenDisabled')],[true,SA('GenEnabled')]],
 			UnstableZone,
 			Pref = WV.Pref(
 			{
@@ -2947,7 +3009,11 @@
 				}).Drop(
 				[
 					'|Up|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?',
-					'|Up|/|Y|/|Up|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?'
+					'|Up|/|Y|/|Up|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?',
+					'|Up|.|Date|.|ID|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?',
+					'|Up|/|Y|/|Up|.|Date|.|ID|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?',
+					'|Site|/|Up|.|Date|.|ID|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?',
+					'|Site|/|Up|/|Y|/|Up|.|Date|.|ID|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?'
 				]),
 				'|Up|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?'
 			],[
@@ -2964,7 +3030,7 @@
 				Key('Proxy'),
 				OptionProxy = WV.Cho(
 				{
-					Set : [[false,SA('GenDisabled')],[true,SA('GenEnabled')]],
+					Set : ChoOF,
 					Inp : PC
 				}),
 				false
@@ -3000,10 +3066,37 @@
 				Key('Size'),
 				WV.Cho(
 				{
-					Set : [[false,SA('GenDisabled')],[true,SA('GenEnabled')]],
+					Set : ChoOF,
 					Inp : PC
 				}),
 				true
+			],[
+				SA('SetMeta'),
+				Key('Meta'),
+				WV.Cho(
+				{
+					Set : ChoOF,
+					Inp : PC
+				}),
+				true
+			],[
+				SA('SetCover'),
+				Key('Cover'),
+				WV.Cho(
+				{
+					Set : ChoOF,
+					Inp : PC
+				}),
+				true
+			],[
+				SA('SetNonAV'),
+				Key('NonAV'),
+				WV.Cho(
+				{
+					Set : ChoOF,
+					Inp : PC
+				}),
+				false
 			]/*,[
 				SA('SetMerge'),
 				Key('Merge'),

@@ -37,14 +37,21 @@ declare module CrabSaveNS
 			Pause(Task : number) : WishNS.Provider<any>
 
 			TopNoSize(Count : number,From : number) : WishNS.Provider<Pick<Task,'Row' | 'Site' | 'ID' | 'State' | 'Error' | 'Down'>[]>
-			SaveInfo(Task : number,Info : Task) : WishNS.Provider<any>
+			SaveInfo(Task : number,Info : Task &
+			{
+				Meta? : string
+				Cover? : string
+			}) : WishNS.Provider<any>
 			SaveSize(Task : number,Part : number,File : number,Size : number) : WishNS.Provider<any>
 			FillSize(Task : number) : WishNS.Provider<number>
 			NewSize(Task : number,Part : number,File : number,Size : number) : WishNS.Provider<number>
 			Err(Task : number,State : number,Date : number) : WishNS.Provider<any>
 			TopErr(State : number) : WishNS.Provider<number>
 			TopQueue(Count : number,From : number,Online : number[]) : WishNS.Provider<Omit<Task,'Part' | 'Down'>[]>
-			TopToDown(Task : number) : WishNS.Provider<Down>
+			TopToDown(Task : number) : WishNS.Provider<Down &
+			{
+				ExtCount : number
+			}>
 			ViewPart(Task : number,Part : number) : WishNS.Provider<Part>
 
 			SavePlay(Task : number,Part : number,File : number,Play : number) : WishNS.Provider<any>
@@ -52,7 +59,7 @@ declare module CrabSaveNS
 			SavePath(Task : number,Part : number,File : number,Path : string) : WishNS.Provider<any>
 			SaveHas(Task : number,Part : number,File : number,Has : number,Take : number) : WishNS.Provider<any>
 			SaveTake(Task : number,Part : number,File : number,Take : number) : WishNS.Provider<any>
-			SaveDone(Task : number,Part : number,File : number,Date : number) : WishNS.Provider<any>
+			SaveDone(Task : number,Part : number,File : number,Date : number,ResetURL : boolean) : WishNS.Provider<any>
 
 			Hist(Row : (Q : TaskBriefHist) => any,Down : (E? : any) => any) : any
 			Final(Task : number,Done : number) : WishNS.Provider<any>

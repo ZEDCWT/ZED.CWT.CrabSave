@@ -1,10 +1,12 @@
 'use strict'
 var
 WW = require('@zed.cwt/wish'),
-{R : WR,X : WX,C : WC,N : WN} = WW,
+{R : WR,X : WX,C : WC} = WW,
 
+PrefixTimeline = 'TL',
+// PrefixShortVideo = 'vc',
 PrefixAudio = 'au',
-PrefixShortVideo = 'vc',
+PrefixArticle = 'cv',
 
 BiliBili = 'https://www.bilibili.com/',
 BiliBiliAudio = BiliBili + 'audio/',
@@ -23,7 +25,10 @@ BiliBiliApiPlayURLList =
 BiliBiliApiPlayerSo = WW.Tmpl(BiliBiliApi,'x/player.so?aid=',undefined,'&id=cid:',undefined),
 BiliBiliApiSteinNode = WW.Tmpl(BiliBiliApi,'x/stein/nodeinfo?aid=',undefined,'&graph_version=',undefined,'&node_id=',undefined),
 BiliBiliVCApi = 'https://api.vc.bilibili.com/',
-BiliBiliVCApiDetail = WW.Tmpl(BiliBiliVCApi,'clip/v1/video/detail?video_id=',undefined,'&need_playurl=1'),
+// BiliBiliVCApiDetail = WW.Tmpl(BiliBiliVCApi,'clip/v1/video/detail?video_id=',undefined,'&need_playurl=1'),
+BiliBiliVCApiDynamicApiRoot = BiliBiliVCApi + 'dynamic_svr/v1/dynamic_svr/',
+BiliBiliVCApiDynamicDetail = WW.Tmpl(BiliBiliVCApiDynamicApiRoot,'get_dynamic_detail?dynamic_id=',undefined),
+BiliBiliArticleReadContent = WW.Tmpl(BiliBili,'read/native?id=',undefined),
 
 Common = V => (V = WC.JTO(V)).code ?
 	WW.Throw(V) :
@@ -33,46 +38,71 @@ Common = V => (V = WC.JTO(V)).code ?
 module.exports = O =>
 {
 	var
-	PlayURL = (ID,CID,Quality) => WX.TCO((_,F) =>
-		WN.ReqB(O.Coke(BiliBiliApiPlayURLList[F](ID,CID,Quality || 120)))
-			.Map(B => [0,Common(B)])
-			.RetryWhen(E => E.Map((V,F) =>
-				!F && V && -503 === V.code || WW.Throw(V))
-				.Delay(2E3))
-			.ErrAs(E => -~F < BiliBiliApiPlayURLList.length ?
-				WX.Just([true]) :
-				WX.Throw(E)));
+	SolveInitState = B => O.JOM(/__INITIAL_STATE__=/,B);
+
 	return {
-		URL : Q =>
+		URL : (Q,Ext) =>
 		{
 			var
-			ID,
-			CID;
-			Q = Q.split('#')
-			ID = Q[0]
-			CID = Q[1]
+			Prefix,ID,CID,
+			PlayURL = (ID,CID,Quality) => WX.TCO((_,F) =>
+				Ext.ReqB(O.Coke(BiliBiliApiPlayURLList[F](ID,CID,Quality || 120)))
+					.Map(B => [0,Common(B)])
+					.RetryWhen(E => E.Map((V,F) =>
+						!F && V && -503 === V.code || WW.Throw(V))
+						.Delay(2E3))
+					.ErrAs(E => -~F < BiliBiliApiPlayURLList.length ?
+						WX.Just([true]) :
+						WX.Throw(E)));
 
-			if (WR.StartW(PrefixAudio,ID)) return WN.ReqB(O.Coke(BiliBiliAudioWebInfo(ID = ID.slice(PrefixAudio.length)))).FMap(Audio =>
+			Q = Q.split('#')
+			ID = /^([A-Z]+)(\d+)$/i.exec(Q[0])
+			CID = Q[1]
+			if (ID)
 			{
-				Audio = Common(Audio)
-				return WN.ReqB(O.Coke(BiliBiliAudioWebURL(ID))).Map(URL =>
+				Prefix = ID[1]
+				ID = ID[2]
+			}
+			else ID = Q[0]
+
+			if (PrefixTimeline === Prefix) return Ext.ReqB(O.Coke(BiliBiliVCApiDynamicDetail(ID))).Map(B =>
+			{
+				var
+				Desc,Card,
+				R;
+				B = Common(B).card
+				Desc = B.desc
+				Card = WC.JTO(B.card)
+				R =
 				{
-					URL = Common(URL)
-					return {
-						Title : (Audio.author && Audio.author !== Audio.uname ? Audio.author + '.' : '') +
-							Audio.title,
-						Up : Audio.uname,
-						Date : 1E3 * Audio.passtime,
-						Part : [
+					Title : Card.item && (Card.item.description || Card.item.content),
+					Up : Desc.user_profile.info.uname,
+					Date : 1E3 * Desc.timestamp,
+				}
+				switch (Desc.type)
+				{
+					case 1 : // Forward
+						break
+					case 2 : // Picture
+						R.Part = Card.item.pictures.map(V => (
 						{
-							URL : [URL.cdns[0]],
-							Size : [URL.size]
-						}]
-					}
-				})
+							URL : [V.img_src]
+						}))
+						break
+					case 4 : // Text Only
+						break
+					case 2048 : // External
+						R.Title = Card.vest.content
+						R.Cover = Card.sketch.cover_url
+						break
+					default :
+						WX.Throw('Unsupported Type #' + Desc.type)
+				}
+				return R
 			})
 
-			if (WR.StartW(PrefixShortVideo,ID)) return WN.ReqB(O.Coke(BiliBiliVCApiDetail(ID.slice(PrefixShortVideo.length)))).Map(B =>
+			/*
+			if (PrefixShortVideo === Prefix) return Ext.ReqB(O.Coke(BiliBiliVCApiDetail(ID))).Map(B =>
 			{
 				B = Common(B)
 				return {
@@ -85,8 +115,52 @@ module.exports = O =>
 					}]
 				}
 			})
+			*/
 
-			return WN.ReqB(O.Coke(BiliBiliApiWebView(ID))).FMap(AV =>
+			if (PrefixAudio === Prefix) return Ext.ReqB(O.Coke(BiliBiliAudioWebInfo(ID))).FMap(Audio =>
+			{
+				Audio = Common(Audio)
+				return Ext.ReqB(O.Coke(BiliBiliAudioWebURL(ID))).Map(URL =>
+				{
+					URL = Common(URL)
+					return {
+						Title : (Audio.author && Audio.author !== Audio.uname ? Audio.author + '.' : '') +
+							Audio.title,
+						Up : Audio.uname,
+						Date : 1E3 * Audio.passtime,
+						Cover : Audio.cover,
+						Part : [
+						{
+							URL : [URL.cdns[0]],
+							Size : [URL.size]
+						}]
+					}
+				})
+			})
+
+			if (PrefixArticle === Prefix) return Ext.ReqB(O.Coke(BiliBiliArticleReadContent(ID))).Map(B =>
+			{
+				B = SolveInitState(B).readInfo
+				return {
+					Title : B.title,
+					Up : B.author.name,
+					Date : 1E3 * B.publish_time,
+					Cover : B.banner_url,
+					Part : [
+					{
+						URL : [BiliBiliArticleReadContent(ID)],
+						Ext : '.htm'
+					},...WW.MR((D,V) =>
+					{
+						D.push({URL : [V[2]]})
+						return D
+					},[],/<img[^>]+src=(['"])(.+?)\1/g,B.content)]
+				}
+			})
+
+			if (Prefix) return WX.Throw('Unexpected Prefix ' + Prefix)
+
+			return Ext.ReqB(O.Coke(BiliBiliApiWebView(ID))).FMap(AV =>
 			{
 				var
 				Part = [],
@@ -99,16 +173,17 @@ module.exports = O =>
 					Title : AV.title,
 					Up : AV.owner.name,
 					Date : 1E3 * AV.pubdate,
+					Cover : AV.pic,
 					Part
 				}
 				return (AV.stein_guide_cid ?
-					WN.ReqB(O.Coke(O.Head(BiliBiliApiPlayerSo(ID,CIDFirst),'Referer',BiliBili))).FMap(G =>
+					Ext.ReqB(O.Coke(O.Head(BiliBiliApiPlayerSo(ID,CIDFirst),'Referer',BiliBili))).FMap(G =>
 					{
 						var
 						Graph = WW.MF(/graph_version":(\d+)/,G),
 						CID2Node = {[CIDFirst] : ''};
 						return WX.Exp(I =>
-							WN.ReqB(O.Coke(BiliBiliApiSteinNode(ID,Graph,CID2Node[I])))
+							Ext.ReqB(O.Coke(BiliBiliApiSteinNode(ID,Graph,CID2Node[I])))
 								.Map(V =>
 								{
 									V = Common(V)
@@ -181,10 +256,16 @@ module.exports = O =>
 					.Map(() => R)
 			})
 		},
+		IDView : WR.RepL(
+		[
+			/^(?=\d)/,'av',
+			/#\d+$/,'',
+		]),
 		Pack : Q => (
 		{
 			URL : Q,
 			Head : {Referer : BiliBiliApi}
-		})
+		}),
+		Range : false,
 	}
 }

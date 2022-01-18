@@ -1,7 +1,7 @@
 'use strict'
 var
 WW = require('@zed.cwt/wish'),
-{R : WR,X : WX,C : WC,N : WN} = WW,
+{R : WR,X : WX,C : WC} = WW,
 
 Nico = 'https://www.nicovideo.jp/',
 NicoWatch = WW.Tmpl(Nico,'watch/',undefined),
@@ -21,7 +21,7 @@ module.exports = O =>
 		return Q
 	};
 	return {
-		URL : ID => WN.ReqB(Coke(NicoWatch(PadSM(ID))))
+		URL : (ID,Ext) => Ext.ReqB(Coke(NicoWatch(PadSM(ID))))
 			.FMap(B =>
 			{
 				var
@@ -32,7 +32,7 @@ module.exports = O =>
 				Up = B.owner ? B.owner.nickname :
 					B.channel && B.channel.name
 				return (B ?
-					WN.ReqB(O.Req(
+					Ext.ReqB(O.Req(
 					{
 						URL : NicoDMCApi,
 						JSON :
@@ -100,16 +100,18 @@ module.exports = O =>
 						B.data || O.Bad(B),
 						B.data.session.content_uri
 					)) :
-					WW.Throw('No provided url, a paid video?'))
+					WW.Throw('No provided url, require payment?'))
 					.FMap(U => (Up ?
 						WX.Just(Up) :
-						WN.ReqB(O.Req(NicoExtThumb(PadSM(ID))))
+						Ext.ReqB(O.Req(NicoExtThumb(PadSM(ID))))
 							.Map(B => WC.HED(WW.MF(/name>([^<]+)/,B))))
 						.Map(Up => (
 						{
 							Title : B.video.title,
 							Up : Up.replace(/ さん$/,''), // 敬稱略
 							Date : +new Date(B.video.registeredAt),
+							Cover : B.video.thumbnail.largeUrl,
+							CoverExt : '.jpg',
 							Part : [
 							{
 								URL : [U],
@@ -117,5 +119,6 @@ module.exports = O =>
 							}]
 						})))
 			}),
+		IDView : Q => 'sm' + Q,
 	}
 }

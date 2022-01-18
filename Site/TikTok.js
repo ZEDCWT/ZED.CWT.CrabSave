@@ -147,7 +147,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	},
 	MakeMusic = function(ID,Name,Author)
 	{
-		return WV.Ah('\u266B ' + Name + '@' + Author,TikTokMusic(ID))
+		return O.Ah('\u266B ' + Name + '@' + Author,TikTokMusic(ID))
 	};
 	return {
 		ID : 'TikTok',

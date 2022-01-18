@@ -58,6 +58,12 @@ module.exports = Option =>
 		/^2/.test(H.Code) && (T = +H.H['content-length']) === T ?
 			T :
 			WW.Throw(['ErrLoopSize',H.W.join('\n')])),
+	PartSpecialType =
+	{
+		Meta : -8000,
+		Cover : -7999,
+	},
+	PartSpecialTypeInv = WR.Inv(PartSpecialType),
 
 	InfoRunning = new Map,
 	InfoDispatching,InfoDispatchAgain,
@@ -72,18 +78,105 @@ module.exports = Option =>
 			{
 				WR.Each(V =>
 				{
+					var
+					ExtReqRecordCount = 0,
+					ExtReqRecord = [],
+					ExtReqRecordIndex = [],
+					ExtReqRecordHeadOmit = new Set(
+					[
+						'cookie',
+						'set-cookie'
+					]),
+					ExtReq = Q =>
+					{
+						var
+						ID = ExtReqRecordCount++,
+						Save = WW.IsObj(Q) ? WR.MapU((V,F) => 'Head' === F ?
+							WR.WhereU((_,F) => !ExtReqRecordHeadOmit.has(WR.Low(F)),V) :
+							V,Q) : Q;
+						ExtReqRecordIndex.push([ExtReqRecord.length,ID])
+						ExtReqRecord.push
+						(
+							WW.StrDate() + ' {Req} ',
+							WC.OTJ(Save)
+						)
+						return WN.ReqU(Q).Tap(([H,B]) =>
+						{
+							H = WR.Omit(['H'],H)
+							H.W = WR.SplitAll(2,H.W).filter(V => !ExtReqRecordHeadOmit.has(WR.Low(V[0]))).flat()
+							ExtReqRecordIndex.push([ExtReqRecord.length,ID])
+							ExtReqRecord.push
+							(
+								WW.StrDate() + ' {Res} ',
+								WC.OTJ(H),
+								B.length,
+								B
+							)
+						})
+					},
+					Ext =
+					{
+						ReqU : ExtReq,
+						ReqH : Q => ExtReq(Q).Map(V => V[0]),
+						ReqB : Q => ExtReq(Q).Map(V => V[1]),
+					};
 					V.Error && Option.ErrT(V.Row)
 					Option.OnRenew(V.Row)
 					InfoRunning.set(V.Row,Option.Site.P(V.Site)
-						.FMap(S => S.URL(V.ID))
+						.FMap(S => S.URL(V.ID,Ext))
 						.FMap(U =>
 						{
 							var
+							Meta,
+							Cover,
 							Size = 0,
 							Part = [],
 							Down = [],
 							DownPre = WR.Reduce((D,V) => {D[V.Part + ' ' + V.File] = V},{},V.Down),
+							SolveExt = Q => (Q = WN.ExtN(Q.replace(/\?.*/,''))) && Q.length < 7 && Q,
 							R;
+							if (Setting.Meta())
+							{
+								Meta = U.Meta || ''
+								if (ExtReqRecordCount)
+								{
+									ExtReqRecordIndex.forEach(V => ExtReqRecord[V[0]] +=
+										WR.PadU(V[1],ExtReqRecordCount) + '/' + ExtReqRecordCount)
+									Meta = Meta ?
+										Meta + '\n' + ExtReqRecord.join`\n` :
+										ExtReqRecord.join`\n`
+								}
+								if (Meta)
+								{
+									Down.push(
+									{
+										Part : PartSpecialType.Meta,
+										File : 0,
+										URL : Meta,
+										Ext : '.log',
+										Size : 1,
+									})
+									++Size
+								}
+							}
+							if (Setting.Cover())
+							{
+								Cover = U.Cover
+								if (Cover)
+								{
+									Down.push(
+									{
+										Part : PartSpecialType.Cover,
+										File : 0,
+										URL : Cover,
+										Ext : U.CoverExt || SolveExt(Cover) || '.jpg',
+										Size : Setting.Size() ? null : 1,
+									})
+									Setting.Size() ?
+										Size = null :
+										++Size
+								}
+							}
 							WR.EachU((P,F) =>
 							{
 								Part.push(
@@ -101,8 +194,7 @@ module.exports = Option =>
 										URL : L,
 										Ext : WW.IsArr(P.Ext) ? P.Ext[G] :
 											null != P.Ext ? P.Ext :
-											(L = WN.ExtN(L.replace(/\?.*/,''))) && L.length < 7 ? L :
-											'.mp4',
+											SolveExt(L) || '.mp4',
 										Size : L = P.Size && null != P.Size[G] ? P.Size[G] :
 											(L = DownPre[F + ' ' + G]) && null != L.Done && null != L.Size ? L.Size :
 											Setting.Size() ? null :
@@ -121,7 +213,9 @@ module.exports = Option =>
 								Size,
 								Part,
 								PartTotal : WR.Default(Part.length,U.PartTotal),
-								Down
+								Down,
+								Meta,
+								Cover,
 							}
 							WR.All(V => V.URL && WW.IsStr(V.URL),Down) || WW.Throw(['ErrLoopURL',WC.OTJ(R)])
 							return DB.SaveInfo(V.Row,R)
@@ -304,19 +398,24 @@ module.exports = Option =>
 				{
 					var
 					Has = V.Has,
+					SolvePart = (Row,Part) => Part < 0 ?
+						WX.Just({}) :
+						DB.ViewPart(Row,Part),
 					Working;
 					DownloadStatus.set(V.Row,H => ' ' + H(Working ? Has + Working.Calc().Saved : Has) +
 						' ' + H(Working ? Working.Info.Speed : 0))
 					V.Error && Option.ErrT(V.Row)
 					DownloadRunning.set(V.Row,WX.TCO(() =>
 						DB.TopToDown(V.Row).FMap(Down => Down ?
-							DB.ViewPart(V.Row,Down.Part).FMap(Part =>
+							SolvePart(V.Row,Down.Part).FMap(Part =>
 							{
 								var
+								Site = Option.Site.D(V.Site),
 								UPAt = new Date(V.UPAt),
 								NameO =
 								{
-									ID : WR.SafeFile(V.ID),
+									Site : V.Site,
+									ID : WR.SafeFile(Site.IDView ? Site.IDView(V.ID) : V.ID),
 									Title : WR.SafeFile(V.Title || '') ||
 										'[Untitled.' + WR.SafeFile(V.ID) + ']',
 									Up : WR.SafeFile(V.UP || '[Anonymous]'),
@@ -328,9 +427,12 @@ module.exports = Option =>
 									N : WW.Pad02(UPAt.getMinutes()),
 									S : WW.Pad02(UPAt.getSeconds()),
 									MS : WW.Pad03(UPAt.getMilliseconds()),
-									PartIndex : 1 < Part.Total && WR.PadU(Down.Part,Part.Total),
+									PartIndex : 1 < Part.Total && WR.PadU(Down.Part,~-Part.Total),
 									PartTitle : WR.SafeFile(Part.Title || ''),
-									FileIndex : 1 < Part.File && WR.PadU(Down.File,Part.File),
+									FileIndex : 1 < Part.File &&
+										Down.ExtCount !== Part.File &&
+										WR.PadU(Down.File,~-Part.File),
+									Type : PartSpecialTypeInv[Down.Part],
 								},
 								SizeChanged;
 								return SolveName(V.Format,NameO,V.Root,Down.Ext).FMap(Dest => WN.MakeDir(WN.DirN(Dest)).FMap(() => WX.Provider(O =>
@@ -346,12 +448,12 @@ module.exports = Option =>
 													Option.OnSize(Down.Task,S,null)
 												}))
 									},
-									Site = Option.Site.D(V.Site),
 									LowSpeedCount = 0,
 									RefSpeed = Site.RefSpeed ? 1024 * Site.RefSpeed / 1E3 : 0,
 									Work = WN.Down(
 									{
-										Req : Pack(Down.URL,V.Site),
+										Req : PartSpecialType.Meta !== Down.Part && Pack(Down.URL,V.Site),
+										Obs : PartSpecialType.Meta === Down.Part && WX.Just(Down.URL),
 										Path : Dest,
 										Last : Down.Path && WN.JoinP(V.Root,Down.Path),
 										Fresh : SizeChanged || !Down.Path,
@@ -411,7 +513,7 @@ module.exports = Option =>
 										OnSize(Size)
 										OnEnd()
 										Option.OnDone(Down.Task,Down.Part,Down.File,Done)
-										DB.SaveDone(Down.Task,Down.Part,Down.File,Done)
+										DB.SaveDone(Down.Task,Down.Part,Down.File,Done,PartSpecialType.Meta === Down.Part)
 											.Now(null,O.E,O.F)
 									}).On('Die',E =>
 									{

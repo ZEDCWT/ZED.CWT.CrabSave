@@ -318,7 +318,10 @@ module.exports = Option =>
 		`,[Q,S]),
 		TopToDown : Q => Get(
 		`
-			select * from Down
+			select
+				*,
+				(select count(distinct Ext) from Down where D.Task = Task and D.Part = Part) ExtCount
+			from Down D
 			where
 				? = Task
 				and
@@ -356,9 +359,11 @@ module.exports = Option =>
 			update Down set Take = ?
 			where ? = Task and ? = Part and ? = File
 		`,[S,Q,W,E]),
-		SaveDone : (Q,W,E,S) => Run(
+		SaveDone : (Q,W,E,S,ResetURL) => Run(
 		`
-			update Down set Done = ?
+			update Down set
+				${ResetURL ? 'URL = null,' : ''}
+				Done = ?
 			where ? = Task and ? = Part and ? = File
 		`,[S,Q,W,E]),
 

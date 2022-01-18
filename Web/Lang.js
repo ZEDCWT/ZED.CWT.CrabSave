@@ -17,6 +17,8 @@ var Lang = // eslint-disable-line
 		GenUntitle : '[Untitled]',
 		GenTitle : 'Title',
 		GenAuthor : 'Author',
+		GenMeta : 'Meta',
+		GenCover : 'Cover',
 
 		Bro : 'Browser',
 		BroUnSite : 'Unknown site `~0~`',
@@ -138,7 +140,10 @@ var Lang = // eslint-disable-line
 		SetImgDown : 'Follow downloader proxy',
 		SetDelay : 'Retry delay after download error (in seconds)',
 		SetSize : 'Resolve file sizes before downloading',
-		SetMerge : 'Merge command',
+		SetMeta : 'Save metadata',
+		SetCover : 'Save cover',
+		SetNonAV : 'Consider non audio or video contents as downloadable',
+		// SetMerge : 'Merge command',
 
 		SocConn : 'Connecting...',
 		SocOn : 'Connected',
@@ -180,6 +185,8 @@ var Lang = // eslint-disable-line
 		GenUnknown : '[未知:~0~]',
 		GenUntitle : '[無標題]',
 		GenTitle : '標題',
+		GenMeta : '元數據',
+		GenCover : '封面',
 
 		Bro : '瀏覽',
 		BroUnSite : '未知站點 `~0~`',
@@ -299,7 +306,10 @@ var Lang = // eslint-disable-line
 		SetImgDown : '使用下載代理',
 		SetDelay : '下載失敗重試前的等待時間(秒)',
 		SetSize : '下載前解析文件大小',
-		SetMerge : '合併命令',
+		SetMeta : '保存元數據',
+		SetCover : '保存封面圖',
+		SetNonAV : '將非音視頻內容也視為可下載內容',
+		// SetMerge : '合併命令',
 
 		SocConn : '正在連接...',
 		SocOn : '已連接',
@@ -340,6 +350,8 @@ var Lang = // eslint-disable-line
 		GenUnknown : '[未知:~0~]',
 		GenUntitle : '[无标题]',
 		GenTitle : '标题',
+		GenMeta : '元数据',
+		GenCover : '封面',
 
 		Bro : '浏览',
 		BroUnSite : '未知站点 `~0~`',
@@ -459,7 +471,10 @@ var Lang = // eslint-disable-line
 		SetImgDown : '使用下载代理',
 		SetDelay : '下载失败重试前的等待时间(秒)',
 		SetSize : '下载前解析文件大小',
-		SetMerge : '合并命令',
+		SetMeta : '保存元数据',
+		SetCover : '保存封面图',
+		SetNonAV : '将非音视频内容也视为可下载内容',
+		// SetMerge : '合并命令',
 
 		SocConn : '正在连接...',
 		SocOn : '已连接',
@@ -500,6 +515,8 @@ var Lang = // eslint-disable-line
 		GenUnknown : '[未知:~0~]',
 		GenUntitle : '[無題]',
 		GenTitle : 'タイトル',
+		GenMeta : 'メタデータ',
+		GenCover : 'カバー',
 
 		Bro : 'ブラウザ',
 		BroUnSite : '未知なサイト `~0~`',
@@ -619,7 +636,10 @@ var Lang = // eslint-disable-line
 		SetImgDown : 'ダウンローダープロキシを使用する',
 		SetDelay : 'エラー後の再試行遅延 (秒)',
 		SetSize : 'ダウンロードする前にファイルサイズを解決する',
-		SetMerge : 'マージコマンド',
+		SetMeta : 'メタデータを保存する',
+		SetCover : 'カバーを保存',
+		SetNonAV : 'オーディオまたはビデオ以外のコンテンツをダウンロード可能にする',
+		// SetMerge : 'マージコマンド',
 
 		SocConn : '接続中...',
 		SocOn : '接続済み',

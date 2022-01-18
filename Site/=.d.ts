@@ -18,6 +18,7 @@ declare module CrabSaveNS
 		Name : string
 		Judge? : RegExp | RegExp[]
 		Join? : string
+		Example? : string | string[]
 		View(ID : string,Page : number,Pref? : object) : WishNS.Provider<SitePage>
 		Hint?(Q : string) : SiteHint
 	}
@@ -33,11 +34,12 @@ declare module CrabSaveNS
 	interface SiteItem
 	{
 		Non? : boolean
+		NonAV? : boolean
 		Index? : number
 		ID : string
 		View? : WishNS.EleContent
 		URL? : string
-		Img? : string
+		Img? : string | string[]
 		Title? : string
 		TitleView? : WishNS.EleContent
 		UP? : string
@@ -45,7 +47,7 @@ declare module CrabSaveNS
 		Date? : string
 		Len? : number | string
 		Desc? : string
-		More? : string
+		More? : string | WishNS.EleContent[]
 	}
 	interface SiteHint
 	{
@@ -68,19 +70,29 @@ declare module CrabSaveNS
 			Bad(Q : any) : never
 			JOM(S : RegExp,Q : string) : object
 			Text(Q : string) : string
-			M3U(Q : string) : WishNS.Provider<SitePart>
+			M3U(Q : string,Ext? : SiteExt) : WishNS.Provider<SitePart>
 		}) : {
-			URL(ID : string) : WishNS.Provider<SiteURL>
-			Pack?(Q : string) : string | WishNS.ReqAccept
+			URL(ID : string,Ext : SiteExt) : WishNS.Provider<SiteURL>
+			IDView?(Q : string) : string
+			Pack?(Q : string) : WishNS.ReqAccept
 			Range? : boolean
 			RefSpeed? : number
 		}
+	}
+	interface SiteExt
+	{
+		ReqU : WishNS.N['ReqU']
+		ReqH : WishNS.N['ReqH']
+		ReqB : WishNS.N['ReqB']
 	}
 	interface SiteURL
 	{
 		Title? : string
 		Up? : string
 		Date? : number
+		Meta? : string
+		Cover? : string
+		CoverExt? : string
 		Part : SitePart[]
 		/** Specially used when parts count !== Part.length */
 		PartTotal? : number

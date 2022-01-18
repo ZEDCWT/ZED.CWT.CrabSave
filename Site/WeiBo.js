@@ -135,7 +135,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			Img = Img && Img.split(',')[0]
 		}
 		return {
-			Non : Non,
+			NonAV : Non,
 			AD : /blocktype=ad&/.test(B),
 			ID : SolveID(B),
 			Img : Img,
@@ -222,7 +222,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 							}
 							D.push(
 							{
-								Non : Non,
+								NonAV : Non,
 								ID : T = WW.MF(/from".*\s+.*href="[^"]+\/(\d+\/\w+)/,V),
 								Img : Img,
 								Title : Title.slice(0,128),

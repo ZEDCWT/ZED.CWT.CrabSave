@@ -1,6 +1,6 @@
-# CrabSave | Yet Another Video Downloader With GUI
+# CrabSave | Yet Another UGC Downloader With GUI
 
-CrabSave is a B/S application to download videos from several sites. With features like multitasking, breakpoint resume, and download history management.
+CrabSave is a B/S application to download UGC (User-generated content) from several sites, mainly focus on media contents. With features like multitasking, breakpoint resume, and download history management.
 
 
 
@@ -11,6 +11,7 @@ CrabSave is a B/S application to download videos from several sites. With featur
 + [Manual](#manual)
 + [Misc](#misc)
 + [Examples](#examples)
++ [Changelog](#changelog)
 
 
 
@@ -69,20 +70,20 @@ And then a local web server `localhost:8000` will be deployed and can be visited
 ### Basic usage
 The basic usage would be like
 + Paste the link or type in the keywords
-+ Select videos by clicking their cover images to download or `Ctrl+a` to select all shown videos, where selected videos could be viewed from the Cold list
++ Select posts by clicking their cover images to download or `Ctrl+a` to select all shown posts, where selected posts could be viewed from the Cold list
 + Commit tasks from the Cold list to the Hot list to start downloading
 
 Check folder `Site` for supported sites
 
 ### Keyword input
-We support multiple ways to locate the videos to download here
-+ Enter the link of the video (eg. `https://www.youtube.com/watch?v=kobvF5cs6xY`)
+We support multiple ways to locate the posts to download here
++ Enter the link of the post (eg. `https://www.youtube.com/watch?v=kobvF5cs6xY`)
 + Enter the link of the uploader (eg. `https://www.youtube.com/user/ChromeDevelopers`, `https://www.youtube.com/channel/UCnUYZLuoy1rq1aVMwx4aTzw`)
 + Enter keyword command (eg. `YouTube kobvF5cs6xY`, `YouTube User ChromeDevelopers`, `YouTube Channel UCnUYZLuoy1rq1aVMwx4aTzw`)
 + There are also several aliases for some supported sites, which means you can type it shorter (eg. `Y kobvF5cs6xY`, `y uSer ChromeDevelopers`, `y channel UCnUYZLuoy1rq1aVMwx4aTzw`)
 + As you may notice from examples above, site names and command names are case insensitive.
 + Providing Cookies will unlock more to do for each site (eg. `y subscription` or simply `y` to view the list just the same as browsing `https://www.youtube.com/feed/subscriptions`, `y fo` to view subscribed channels)
-+ We also embedded the searching feature since the input looks like those search bars (eg. `y find love` will ask YouTube to search for videos related to `love`)
++ We also embedded the searching feature since the input looks like those search bars (eg. `y find love` will ask YouTube to search for contents related to `love`)
 
 ### File name format
 The default format is `|Up|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?`  
@@ -90,7 +91,8 @@ Where `|FieldName|` will be replaced by its value. `?OptionalPart?` only effects
 All available fields are shown below
 |Field|Description|
 |---|---|
-|\|ID\||ID of a video|
+|\|ID\||ID of a post|
+|\|Site\||Site of a post|
 |\|Title\||The title|
 |\|Up\||Name of the uploader or channel|
 |\|Y\||The year of the created date (in local timezone)|
@@ -102,13 +104,15 @@ All available fields are shown below
 |\|Date\||Shortcut of `|Y|.|M|.|D|.|H|.|N|.|S|`|
 |\|PartIndex\||(Optional) The index of a subpart counted from 0|
 |\|PartTitle\||(Optional) The title of a subpart|
-|\|FileIndex\||(Optional) The index of a file in a part, counted from 0|
+|\|FileIndex\||(Optional) The index of a file in a part, counted from 0. It will be null when all files in a part having different extension (specially for DASH videos)|
+|\|Type\||(Optional) `Meta` for metadata, `Cover` for cover image, otherwise null|
 
 
 
 ## Misc
 
 ### Data Folder Structure
+Default location  
 Windows `%AppData%/ZED/CrabSave`  
 Unix `$HOME/.local/share/ZED/CrabSave`  
 Mac `$HOME/Library/Preferences/ZED/CrabSave`  
@@ -118,8 +122,15 @@ ZED/CrabSave
 +-- DB.db # The database of tasks
 +-- Setting.json
 +-- ShortCut.json
-+-- Cookie.json # Cookie settings 
++-- Cookie.json # Cookie settings
 ```
+
+
+
+## Changelog
+
+### v1.4.0
+From this version, we do NOT ONLY focusing on video or audio data, we also supported to save infomation related to posts including Metadata and Cover Images. Also, posts without video or audio (eg. text only) are able to be saved now.
 
 ### Updates from V0
 The current version is a rewrite of the previous version (on branch `V0`) with few major differences

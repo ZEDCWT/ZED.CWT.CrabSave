@@ -65,8 +65,9 @@ declare module CrabSaveNS
 		ProxyView : boolean
 		Delay : number
 		Size : boolean
-		Merge : string
-		MergeExt : string
+		Meta : boolean
+		Cover : boolean
+		// NonAV : boolean // Front end only
 	}
 	interface SettingO
 	{
@@ -77,6 +78,8 @@ declare module CrabSaveNS
 		ProxyURL() : boolean
 		Delay() : number
 		Size() : boolean
+		Meta() : boolean
+		Cover() : boolean
 	}
 }
 declare var CrabSave : CrabSaveNS.Web

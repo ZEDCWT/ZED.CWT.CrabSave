@@ -131,6 +131,8 @@ module.exports = Option =>
 		ProxyURL : SettingMake('ProxyURL',WW.IsStr,undefined),
 		Delay : SettingMake('Delay',WW.IsNum,20),
 		Size : SettingMake('Size',WR.T,true),
+		Meta : SettingMake('Meta',WR.T,true),
+		Cover : SettingMake('Cover',WR.T,true),
 	},
 	SiteO =
 	{
@@ -143,6 +145,7 @@ module.exports = Option =>
 		PathData
 	}),
 	DBVersion = WW.Now(),
+
 	LoopO =
 	{
 		Setting,
@@ -152,7 +155,23 @@ module.exports = Option =>
 		ErrT : RecErrT,
 		OnRenew : Task => WebSocketSend([ActionWebTaskRenew,Task,true],true),
 		OnRenewDone : Task => WebSocketSend([ActionWebTaskRenew,Task,false],true),
-		OnInfo : (Task,Q) => WebSocketSendAuth([ActionAuthTaskInfo,Task,Q],true),
+		OnInfo : (Task,Q) =>
+		{
+			var
+			Meta,MetaURL;
+			Q.Down.forEach(V =>
+			{
+				if (-8000 === V.Part)
+				{
+					Meta = V
+					MetaURL = V.URL
+					V.URL = ''
+				}
+			})
+			WebSocketSendAuth([ActionAuthTaskInfo,Task,Q],true)
+			if (Meta)
+				Meta.URL = MetaURL
+		},
 		OnTitle : (Task,Title) => WebSocketSend([ActionWebTaskTitle,Task,Title],true),
 		OnFile : (Task,Part,File,Size) => WebSocketSendAuth([ActionAuthDownFile,[Task,Part,File],Size],true),
 		OnSize : (Task,Q,N) => WebSocketSend([ActionWebTaskSize,Task,[Q,N]],true),
@@ -482,7 +501,7 @@ module.exports = Option =>
 							FullTrackingRow = false :
 							DB.Full(FullTrackingRow = K).Now
 							(
-								V => SendAuth([Q[0],K,V]),
+								V => LoopO.OnInfo(K,V),
 								E => SendAuth([Q[0],K,ErrorS(E)]),
 							)
 						break

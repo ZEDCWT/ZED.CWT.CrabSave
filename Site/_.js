@@ -36,7 +36,7 @@ module.exports = Option =>
 				.replace(/<.*?>/g,''))
 				.replace(/.+/g,WR.Trim)
 				.replace(/\r?\n/g,' '),
-			M3U : Q => WX.TCO((Q,I) => I < 10 ? WN.ReqB(Option.Req(Q)).Map(V =>
+			M3U : (Q,Ext = WN) => WX.TCO((Q,I) => I < 10 ? Ext.ReqB(Option.Req(Q)).Map(V =>
 			{
 				var B = WC.M3U(V);
 				if (WW.IsArr(B['STREAM-INF']))
