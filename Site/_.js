@@ -60,10 +60,12 @@ module.exports = Option =>
 		'BiliBili',
 		'YouTube',
 		'NicoNico',
+
 		'AcFun',
 		'Facebook',
 		'Instagram',
 		'IXiGua',
+		'Pixiv',
 		'ShenHaiJiaoYu',
 		'TikTok',
 		'Twitter',

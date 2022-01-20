@@ -36,7 +36,12 @@ declare module CrabSaveNS
 		Pascal(Q : string) : string
 		JOM(S : RegExp,Q : string) : object
 		NoRel(Q : string) : WishNS.EleContent
-		Less(Q : (ID : string) => WishNS.Provider<SiteItem[]>) : (ID : string,Page : number) => WishNS.Provider<SitePage>
+		Less(H : (ID : string) => WishNS.Provider<SiteItem[]>) : (ID : string,Page : number) => WishNS.Provider<SitePage>
+		Less<U>
+		(
+			H : (ID : string) => WishNS.Provider<U[]>,
+			ItemMap : (Q : U[],ID : string) => WishNS.Provider<SiteItem[]>
+		) : (ID : string,Page : number) => WishNS.Provider<SitePage>
 		More<U,N>
 		(
 			Q : (ID : string,I : U[]) => WishNS.Provider<N>,

@@ -1387,9 +1387,8 @@
 							},
 							SolveImgURL = function(V)
 							{
-								return Setting.ProxyView ?
-									URLApi + '~' + SolveURL(V)
-										.replace(/\/\/+/g,WC.UE) :
+								return WW.IsObj(V) ? URLApi + '~' + WC.UE(WC.OTJ(V)) :
+									Setting.ProxyView ? URLApi + '~' + SolveURL(V).replace(/\/\/+/g,WC.UE) :
 									SolveURL(V)
 							};
 							if (WW.IsArr(V.Img) && V.Img.length < 2)
@@ -3264,6 +3263,7 @@
 					/\b(?:Dynamic|Sub|Subscri(?:be|ption)|Timeline|TL)\b/i,
 					/\b(?:Home)\b/i,
 					/\b(?:Feed)\b/i,
+					/\b(?:Bookmark)\b/i,
 					/\b(?:Top|Repo)\b/i
 				],
 				UP : /\b(?:Up|Uploader|Fo|Follow|Following)\b/i,
@@ -3284,23 +3284,27 @@
 						{}
 				},
 				NoRel : InpNoRel,
-				Less : function(Q)
+				Less : function(H,ItemMap)
 				{
 					/**@type {CrabSaveNS.SiteItem[]}*/
 					var Cache;
 					return function(ID,Page)
 					{
-						return (Page && Cache ? WX.Just(Cache) : Q(ID)).Map(function(V)
+						return (Page && Cache ? WX.Just(Cache) : H(ID)).FMap(function(V)
 						{
 							var C = Math.ceil(V.length / PageSize);
 							Cache = V
-							return {
-								At : Page < C ? Page : Page = C && ~-C,
-								Max : C,
-								Len : V.length,
-								Size : PageSize,
-								Item : V.slice(Page * PageSize,-~Page * PageSize)
-							}
+							V = V.slice(Page * PageSize,-~Page * PageSize)
+							return (ItemMap ? ItemMap(V,ID) : WX.Just(V)).Map(function(V)
+							{
+								return {
+									At : Page < C ? Page : Page = C && ~-C,
+									Max : C,
+									Len : Cache.length,
+									Size : PageSize,
+									Item : V
+								}
+							})
 						})
 					}
 				},
@@ -3378,10 +3382,12 @@
 			'BiliBili',
 			'YouTube',
 			'NicoNico',
+
 			'AcFun',
 			'Facebook',
 			'Instagram',
 			'IXiGua',
+			'Pixiv',
 			'ShenHaiJiaoYu',
 			'TikTok',
 			'Twitter',

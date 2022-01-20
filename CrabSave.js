@@ -258,7 +258,7 @@ module.exports = Option =>
 		if (!WR.StartW('/Api/',Q)) return 9
 		try
 		{
-			Q = decodeURIComponent(Q.slice(5))
+			Q = WC.UD(Q.slice(5))
 			WR.StartW('~',Q) ?
 				Q = Q.slice(1) :
 				H = false
