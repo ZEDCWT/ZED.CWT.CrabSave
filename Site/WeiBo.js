@@ -7,15 +7,19 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	WeiBoUserAllSub = WW.Tmpl(WeiBo,'p/aj/v6/mblog/mbloglist?script_uri=/',undefined,'&id=',undefined,'&pl_name=Pl_Official_MyProfileFeed__20&domain=100505&is_all=1&page=',undefined,'&pre_page=',undefined,'&pagebar=',undefined),
 	WeiBoHome = WW.Tmpl(WeiBo,'aj/mblog/fsearch?',undefined),
 	WeiBoFollow = WW.Tmpl(WeiBo,undefined,'/follow'),
-	WeiBoFollowAPI = WW.Tmpl(WeiBo,'p/',undefined,'/myfollow?ajaxpagelet=1&pids=Pl_Official_RelationMyfollow__93&Pl_Official_RelationMyfollow__93_page=',undefined),
+	WeiBoFollowAPI = WW.Tmpl(WeiBo,'p/',undefined,'/myfollow?ajaxpagelet=1&pids=Pl_Official_RelationMyfollow__88&Pl_Official_RelationMyfollow__88_page=',undefined),
+	WeiBoAJAX = WeiBo + 'ajax/',
+	WeiBoAJAXStatusShow = WW.Tmpl(WeiBoAJAX,'statuses/show?id=',undefined),
+	WeiBoAJAXStatusLong = WW.Tmpl(WeiBoAJAX,'statuses/longtext?id=',undefined),
 	WeiBoSearch = 'https://s.weibo.com/',
 	WeiBoSearchSugg = WW.Tmpl(WeiBoSearch,'Ajax_Search/suggest?where=weibo&type=weibo&key=',undefined),
 	WeiBoSearchQuery = WW.Tmpl(WeiBoSearch,'weibo?xsort=hot&q=',undefined,'&page=',undefined),
 	SinaLogin = 'https://login.sina.com.cn/',
 	SinaLoginSSO = SinaLogin + 'sso/login.php',
 	SinaLoginCross = SinaLogin + 'crossdomain2.php?action=login',
-	WeiBoMobile = 'https://m.weibo.cn/',
-	WeiBoMobileDetail = WW.Tmpl(WeiBoMobile,'detail/',undefined),
+	// WeiBoMobile = 'https://m.weibo.cn/',
+	// WeiBoMobileDetail = WW.Tmpl(WeiBoMobile,'detail/',undefined),
+	/*
 	NumberZip = WC.Rad(WW.D + WW.az + WW.AZ),
 	Zip = function(Q)
 	{
@@ -27,6 +31,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		return WR.MapU(function(V,F){return V = NumberZip.P(V),F ? WR.PadS0(7,V) : V},
 			WR.SplitAll(4,WR.PadS0(4 * Math.ceil(Q.length / 4),Q))).join('')
 	},
+	*/
 	TryLogin = O.CokeC(function()
 	{
 		return O.Req(SinaLoginSSO,true).FMap(function(AT,T)
@@ -132,7 +137,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		else if (T = WW.MF(/WB_media_a.*?action-data="([^"]+)/,B))
 		{
 			Img = WC.QSP(T).clear_picSrc
-			Img = Img && Img.split(',')[0]
+			Img = Img && Img.split(',')
 		}
 		return {
 			NonAV : Non,
@@ -266,34 +271,104 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			[
 				/^\d{14,}/,
 				/Weibo_ID=(\d+)/i,
-				/(?:^|\/|Post\s+)(\d+\/\w+)/i,
+				/(?:^|\/|Post\s+)\d+\/(\w+)/i,
 				/Post\s+(\w+)\b/i,
 				/\bDetail\/(\d+)\b/i,
 				O.Num('Status')
 			],
 			View : function(ID)
 			{
-				ID = ID.split('/')
-				return (ID[1] ?
-					WX.Just([ID[0],/\D/.test(ID[1]) ? ID[1] : Zip(ID[1])]) :
-					Req(WeiBoMobileDetail(ID = /\D/.test(ID[0]) ? UnZip(ID[0]) : ID[0])).Map(function(B)
+				return Req(WeiBoAJAXStatusShow(ID)).FMap(function(B)
+				{
+					B = WC.JTO(B)
+					return (B.isLongText ? Req(WeiBoAJAXStatusLong(ID)) : WX.Just()).Map(function(Long)
 					{
-						return [
-							WW.MF(/"id"[: ]+(\d+),/,B),
-							Zip(ID)
-						]
-					}))
-					.FMap(function(I)
-					{
-						return Req(WeiBo + I.join('/'))
-					})
-					.Map(function(B)
-					{
-						B = WC.JTO(WW.MU(/{"ns":"pl.content.weiboDetail.*}/,B)).html
+						var
+						NonAV = true,
+						Img,
+						Len,
+						More = WR.Map(function(V)
+						{
+							return O.Ah(V.url_title || '<No Title>',V.long_url)
+						},B.url_struct),
+						Card,
+						T;
+						Long = Long && WC.JTO(Long).data
+						if (T = B.retweeted_status)
+						{
+							More.push
+							(
+								O.Ah(O.DTS(new Date(T.created_at)) + (T.user ? ' @' + T.user.screen_name : ''),
+									WeiBo + (T.user ? T.user.idstr : '_') + '/' + T.mblogid),
+								T.text_raw
+							)
+						}
+						if (B.pic_num)
+						{
+							Img = WR.Map(function(V)
+							{
+								return B.pic_infos[V].bmiddle.url
+							},B.pic_ids)
+						}
+						else if (T = B.page_info)
+						{
+							Card = T.card_info
+							Img = T.page_pic ||
+								Card && Card.pic_url
+							switch (T.object_type)
+							{
+								case undefined :
+									break
+								// 0 23
+								case 'webpage' :
+									More.push(T.page_desc)
+									break
+								// 2
+								case 'file' :
+									break
+								// 2 5
+								case 'article' :
+									break
+								// 5 11
+								case 'video' :
+								case 'live' :
+									NonAV = false
+									Len = WR.Path(['playback_list',0,'play_info','duration'],T) ||
+										T.media_info.duration
+									break
+								// 23
+								case 'hudongvote' :
+									T = Card.vote_object
+									More.push('[' + T.part_info + '] ' + T.content + '\n' +
+										O.DTS(1E3 * T.expire_date))
+									WR.EachU(function(V,F)
+									{
+										More.push('\n[' + F + '] ' +
+											V.part_num + ':' + (0 | 100 * V.part_ratio) + '% ' +
+											V.content)
+									},T.vote_list)
+									break
+								default :
+									More.push('Unknown Type #' + T.type + ':' + T.object_type)
+							}
+						}
 						return {
-							Item : [SolveCard(B)]
+							Item : [
+							{
+								NonAV : B.retweeted_status || NonAV,
+								ID : B.user.idstr + '/' + B.mblogid,
+								Img : Img,
+								Title : B.text_raw,
+								UP : B.user.screen_name,
+								UPURL : WeiBo + B.user.profile_url.replace(/^\//,''),
+								Date : new Date(B.created_at),
+								Len : Len,
+								Desc : Long && Long.longTextContent,
+								More : More
+							}]
 						}
 					})
+				})
 			}
 		},{
 			Name : 'User',

@@ -143,7 +143,7 @@ module.exports = Option =>
 									ExtReqRecordIndex.forEach(V => ExtReqRecord[V[0]] +=
 										WR.PadU(V[1],ExtReqRecordCount) + '/' + ExtReqRecordCount)
 									Meta = Meta ?
-										Meta + '\n' + ExtReqRecord.join`\n` :
+										Meta + '\n\n\n' + ExtReqRecord.join`\n` :
 										ExtReqRecord.join`\n`
 								}
 								if (Meta)
