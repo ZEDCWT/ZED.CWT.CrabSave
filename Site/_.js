@@ -67,10 +67,12 @@ module.exports = Option =>
 		'IXiGua',
 		'Pixiv',
 		'ShenHaiJiaoYu',
+		'ShonenMagazine',
 		'TikTok',
 		'Twitter',
 		'Vimeo',
 		'WeiBo',
+
 		'Manual',
 	])
 	return {

@@ -40,6 +40,7 @@ ActionAuthDownTake = 'DownT',
 ActionAuthDownDone = 'DownD',
 ActionAuthInspect = 'Ins',
 ActionAuthReload = 'Red',
+ActionAuthVacuum = 'Vac',
 ActionAuthErr = 'RErr',
 ActionAuthErrT = 'RErrT';
 
@@ -533,15 +534,30 @@ module.exports = Option =>
 					case ActionAuthInspect :
 						if (WW.IsArr(K))
 						{
-							Inspector.url() || Inspector.open(...K)
-							SendAuth([Q[0],Inspector.url()])
+							if (false === K[0])
+							{
+								Inspector.close()
+								SendAuth([Q[0],null])
+							}
+							else
+							{
+								Inspector.url() || Inspector.open(...K)
+								SendAuth([Q[0],Inspector.url()])
+							}
 						}
 						break
-
 					case ActionAuthReload :
 						Site.F()
 						LoopO.Site =
 						Site = require('./Site/_')(SiteO)
+						break
+					case ActionAuthVacuum :
+						K = WW.Now()
+						DB.Vacuum().Now
+						(
+							() => SendAuth([Q[0],WW.Now() - K]),
+							E => SendAuth([Q[0],WW.Now() - K,ErrorS(E)])
+						)
 						break
 				}
 				return

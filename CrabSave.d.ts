@@ -63,6 +63,8 @@ declare module CrabSaveNS
 
 			Hist(Row : (Q : TaskBriefHist) => any,Down : (E? : any) => any) : any
 			Final(Task : number,Done : number) : WishNS.Provider<any>
+
+			Vacuum() : WishNS.Provider<any>
 		}
 	}
 	interface Task

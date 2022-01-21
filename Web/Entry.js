@@ -44,6 +44,7 @@
 	ActionAuthDownDone = 'DownD',
 	ActionAuthInspect = 'Ins',
 	ActionAuthReload = 'Red',
+	ActionAuthVacuum = 'Vac',
 	ActionAuthErr = 'RErr',
 	ActionAuthErrT = 'RErrT',
 
@@ -406,7 +407,11 @@
 					break
 
 				case ActionAuthInspect :
-					console.log('Inspecting on',K)
+					console.log('Inspector',K)
+					break
+				case ActionAuthVacuum :
+					console.log('Vacuum',WW.StrMS(K))
+					null == O || console.log(O)
 					break
 
 				case ActionAuthErr :
@@ -3372,6 +3377,10 @@
 		{
 			WebSocketSendAuth([ActionAuthReload])
 		}
+		CrabSave.Vacuum = function()
+		{
+			WebSocketSendAuth([ActionAuthVacuum])
+		}
 		SiteBegin = WW.Now()
 		WW.To(1E3,function(){SiteCount < SiteTotal && SiteOnNoti()})
 		SiteTotal = WR.EachU(function(V,F)
@@ -3389,10 +3398,12 @@
 			'IXiGua',
 			'Pixiv',
 			'ShenHaiJiaoYu',
+			'ShonenMagazine',
 			'TikTok',
 			'Twitter',
 			'Vimeo',
 			'WeiBo',
+
 			'Manual'
 		]).length
 		SiteOnNoti()

@@ -378,6 +378,8 @@ module.exports = Option =>
 			where ? = Row
 		`,[S,Q]),
 
+		Vacuum : () => Exec('vacuum'),
+
 		Run
 	}
 }
