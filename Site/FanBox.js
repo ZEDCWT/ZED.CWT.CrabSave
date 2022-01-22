@@ -28,6 +28,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 	SolvePost = function(B)
 	{
 		return {
+			NonAV : null == B.body,
 			ID : B.id,
 			Img : B.coverImageUrl,
 			Title : B.title,
@@ -72,8 +73,8 @@ CrabSave.Site(function(O,WW,WC,WR)
 			Judge :
 			[
 				O.Word('User'),
-				/\b((?!www|api)[\dA-Z]+)\.FanBox/i,
-				/@(\w+)/
+				/\b((?!www|api)[-\dA-Z]+)\.FanBox/i,
+				/@([-\dA-Z]+)/i
 			],
 			View : O.More(function(ID,I)
 			{

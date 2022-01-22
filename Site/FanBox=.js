@@ -24,7 +24,7 @@ module.exports = O =>
 			URL = [],Ext = [],
 			Content = B.body;
 
-			switch (B.type)
+			if (Content) switch (B.type)
 			{
 				case 'article' :
 					Content.blocks.forEach(V =>

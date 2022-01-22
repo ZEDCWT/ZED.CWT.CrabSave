@@ -169,7 +169,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 						Item : [
 						{
 							Non : true,
-							ID : WW.MF(/(\w+)\.FanBox/i,B),
+							ID : WW.MF(/([-\dA-Z]+)\.FanBox/i,B),
 							URL : B,
 							UP : B,
 							UPURL : B

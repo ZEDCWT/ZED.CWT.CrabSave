@@ -12,6 +12,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	PrefixAudio = 'au',
 	PrefixArticle = 'cv',
 
+	PrefixUGCSeries = 'UGCSeries',
+	PrefixUGCSeason = 'UGCSeason',
+
 	BiliBili = 'https://www.bilibili.com/',
 	BiliBiliVideo = WW.Tmpl(BiliBili,'video/av',undefined),
 	BiliBiliBgmMD = WW.Tmpl(BiliBili,'bangumi/media/md',undefined),
@@ -40,9 +43,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliApiSpace = BiliBiliApi + 'x/space/',
 	BiliBiliApiSpaceInfo = WW.Tmpl(BiliBiliApiSpace,'acc/info?mid=',undefined),
 	BiliBiliApiSpaceNavNum = WW.Tmpl(BiliBiliApiSpace,'navnum?mid=',undefined,'&callback='),
-	BiliBiliApiSpaceChannel = WW.Tmpl(BiliBiliApiSpace,'channel/video?mid=',undefined,'&cid=',undefined,'&pn=',undefined,'&ps=',O.Size),
+	// BiliBiliApiSpaceChannel = WW.Tmpl(BiliBiliApiSpace,'channel/video?mid=',undefined,'&cid=',undefined,'&pn=',undefined,'&ps=',O.Size),
 	BiliBiliApiSpaceUpload = WW.Tmpl(BiliBiliApiSpace,'arc/search?mid=',undefined,'&ps=',O.Size,'&pn=',undefined),
 	BiliBiliApiSpaceArticle = WW.Tmpl(BiliBiliApiSpace,'article?mid=',undefined,'&pn=',undefined,'&ps=',O.Size),
+	BiliBiliApiPolymer = BiliBiliApi + 'x/polymer/',
+	BiliBiliApiPolymerSeries = WW.Tmpl(BiliBiliApiPolymer,'space/seasons_series_list?mid=',undefined,'&page_num=',undefined,'&page_size=20'),
+	BiliBiliApiPolymerArchive = WW.Tmpl(BiliBiliApiPolymer,'space/seasons_archives_list?mid=0&season_id=',undefined,'&page_num=',undefined,'&page_size=',O.Size),
+	BiliBiliApiSeries = BiliBiliApi + 'x/series/',
+	// BiliBiliApiSeriesDetail = WW.Tmpl(BiliBiliApiSeries,'series?series_id=',undefined),
+	BiliBiliApiSeriesArchive = WW.Tmpl(BiliBiliApiSeries,'archives?mid=',undefined,'&series_id=',undefined,'&pn=',undefined,'&ps=',O.Size),
 	BiliBiliApiSearchTypeVideo = 'video',
 	BiliBiliApiSearchTypeBgm = 'media_bangumi',
 	BiliBiliApiSearchTypeFilm = 'media_ft',
@@ -58,6 +67,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliSpaceDynamic = WW.Tmpl(BiliBiliSpace,undefined,'/dynamic'),
 	BiliBiliSpaceAudio = WW.Tmpl(BiliBiliSpace,undefined,'/audio'),
 	BiliBiliSpaceArticle = WW.Tmpl(BiliBiliSpace,undefined,'/article'),
+	BiliBiliSpaceChannelSeason = WW.Tmpl(BiliBiliSpace,undefined,'/channel/collectiondetail?sid=',undefined),
+	BiliBiliSpaceChannelSeries = WW.Tmpl(BiliBiliSpace,undefined,'/channel/seriesdetail?sid=',undefined),
 	// BiliBiliVC = 'https://vc.bilibili.com/',
 	// BiliBiliVCVideo = WW.Tmpl(BiliBiliVC,'video/',undefined),
 	BiliBiliVCApi = 'https://api.vc.bilibili.com/',
@@ -81,17 +92,19 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	SolveInitState = function(B){return O.JOM(/__INITIAL_STATE__=/,B)},
 	SolveCTime = function(V)
 	{
-		return null != V && 'CTime ' + O.DTS(1E3 * V)
+		return null != V && 'CTime ' + O.DTS(1E3 * V) + '\n'
 	},
-	SolveAV = function(V,E)
+	SolveAV = function(V)
 	{
+		var
+		UP,EP;
 		return {
 			ID : V.aid,
 			Img : V.pic || V.cover,
 			Title : V.title || V.new_desc,
 			UP : WR.Default(V.author,V.owner && V.owner.name) ||
 				V.apiSeasonInfo && V.apiSeasonInfo.title + ' ss' + V.apiSeasonInfo.season_id,
-			UPURL : (E = WR.Default(V.mid,V.owner && V.owner.mid)) ? BiliBiliSpace + E :
+			UPURL : (UP = WR.Default(V.mid,V.owner && V.owner.mid)) ? BiliBiliSpace + UP :
 				V.apiSeasonInfo ? BiliBiliBgmSS(V.apiSeasonInfo.season_id) :
 				null,
 			Date : 1E3 * WR.Default(V.created,V.pubdate),
@@ -103,9 +116,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				V.stein_guide_cid &&
 					O.Ah('Stein ' + V.stein_guide_cid + ' (' + V.videos + ')',
 						BiliBiliVideo(V.aid) + '#Stein'),
-				(E = V.redirect_url) && O.Ah(E = WW.MU(/ep\d+/,V.redirect_url),BiliBiliBgmEP(E = E.slice(2)))
+				(EP = V.redirect_url) && O.Ah(EP = WW.MU(/ep\d+/,V.redirect_url),BiliBiliBgmEP(EP = EP.slice(2))),
+				V.season_id && O.Ah(PrefixUGCSeason + V.season_id,BiliBiliSpaceChannelSeason(UP,V.season_id))
 			],
-			EP : E
+			EP : EP
 		}
 	},
 	SolveCV = function(V)
@@ -232,7 +246,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			return -403 === V.code && O.Auth() ?
 				O.Req(BiliBiliApiWebView(ID)) :
 				WX.Just(V)
-		}).FMap(function(V,R)
+		}).FMap(function(V,R,T)
 		{
 			V = Common(V)
 			R = SolveAV(V)
@@ -253,6 +267,34 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					CID : B.cid
 				}
 			},V.pages))
+			if (T = V.ugc_season)
+			{
+				R.push(
+				{
+					Non : true,
+					ID : PrefixUGCSeason + T.id,
+					URL : false,
+					Img : T.cover,
+					Title : T.title
+				})
+				WR.EachU(function(V,F)
+				{
+					R.push(
+					{
+						Non : true,
+						Index : PrefixUGCSeason + ' ' + WR.PadU(F,T.sections.length),
+						ID : 'Section' + V.id,
+						URL : false,
+						Title : V.title
+					})
+					WR.EachU(function(B,G)
+					{
+						R.push(B = SolveAV(B.arc))
+						B.Index = PrefixUGCSeason + ' '+ WR.PadU(F,T.sections.length) +
+							' Section ' + WR.PadU(G,V.episodes.length)
+					},V.episodes)
+				},T.sections)
+			}
 			return (R[0].EP ? EP2AV(R[0].EP).Tap(function(Q)
 			{
 				R[0].More.push(O.Ah('ss' + Q[1],BiliBiliBgmSS(Q[1])))
@@ -727,17 +769,71 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				})
 			}
 		},{
-			Name : 'Channel',
-			Judge : [/(\d+).*\bChannel\b.*?CID=(\d+)/i,/\bChannel\b\W+(\d+)#(\d+)/i],
+			Name : PrefixUGCSeason,
+			Judge : O.Num('UGCSeason|Channel.*Collection(?:Detail)'),
+			View : function(ID,Page)
+			{
+				return O.Api(BiliBiliApiPolymerArchive(ID,-~Page)).Map(function(B)
+				{
+					B = Common(B)
+					return {
+						Len : B.page.total,
+						Item : WR.Map(SolveAV,B.archives)
+					}
+				})
+			}
+		},{
+			Name : PrefixUGCSeries,
+			Judge :
+			[
+				/UGCSeries.*?(\d+)\D+(\d+)/i,
+				/\b(\d+)\b.*Series(?:Detail)?.*SID=(\d+)/i
+			],
+			Join : ' ',
 			View : function(ID,Page)
 			{
 				ID = WR.Match(/\d+/g,ID)
-				return O.Api(BiliBiliApiSpaceChannel(ID[0],ID[1],-~Page)).Map(function(B)
+				return O.Api(BiliBiliApiSeriesArchive(ID[0],ID[1],-~Page)).Map(function(B)
 				{
-					B = Common(B).list
+					B = Common(B)
 					return {
-						Len : B.count,
+						Len : B.page.total,
 						Item : WR.Map(SolveAV,B.archives)
+					}
+				})
+			}
+		},{
+			Name : 'Channel',
+			Judge :
+			[
+				/(\d+)\W*\bChannel\b/i,
+				O.Num('Channel')
+			],
+			View : function(ID,Page)
+			{
+				return O.Api(BiliBiliApiPolymerSeries(ID,-~Page)).Map(function(B)
+				{
+					B = Common(B).items_lists
+					return {
+						Len : B.page.total,
+						Size : 20,
+						Item : WR.Map(function(V)
+						{
+							V = V.meta
+							return {
+								Non : true,
+								ID : V.season_id ?
+									PrefixUGCSeason + V.season_id :
+									PrefixUGCSeries + V.series_id,
+								URL : V.season_id ?
+									BiliBiliSpaceChannelSeason(V.mid,V.season_id) :
+									BiliBiliSpaceChannelSeries(V.mid,V.series_id),
+								Img : V.cover,
+								Title : V.name,
+								Date : 1E3 * (V.mtime || V.ptime),
+								More : V.description
+							}
+						},WR.Concat(B.seasons_list,B.series_list))
 					}
 				})
 			}
