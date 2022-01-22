@@ -63,6 +63,7 @@ module.exports = Option =>
 
 		'AcFun',
 		'Facebook',
+		'FanBox',
 		'Instagram',
 		'IXiGua',
 		'Pixiv',

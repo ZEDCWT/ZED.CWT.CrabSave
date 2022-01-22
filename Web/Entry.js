@@ -158,6 +158,12 @@
 	{
 		return [SA('GenNoRel'),WV.X(Q,'span')]
 	},
+	MakeImgURL = function(V)
+	{
+		return WW.IsObj(V) ? URLApi + '~' + WC.UE(WC.OTJ(V)) :
+			Setting.ProxyView ? URLApi + '~' + SolveURL(V).replace(/\/\/+/g,WC.UE) :
+			SolveURL(V)
+	},
 
 	CrabSave = Top.CrabSave,
 
@@ -1387,14 +1393,8 @@
 							{
 								ImgCurrent = V.Img.length
 								ImgCurrent = (ImgCurrent + Q % ImgCurrent) % ImgCurrent
-								WV.Attr(Img,'src',SolveImgURL(V.Img[ImgCurrent]))
+								WV.Attr(Img,'src',MakeImgURL(V.Img[ImgCurrent]))
 								WV.T(ImgMultiShow,WR.PadU(ImgCurrent,~-V.Img.length) + ' / ' + V.Img.length)
-							},
-							SolveImgURL = function(V)
-							{
-								return WW.IsObj(V) ? URLApi + '~' + WC.UE(WC.OTJ(V)) :
-									Setting.ProxyView ? URLApi + '~' + SolveURL(V).replace(/\/\/+/g,WC.UE) :
-									SolveURL(V)
 							};
 							if (WW.IsArr(V.Img) && V.Img.length < 2)
 								V.Img = V.Img[0]
@@ -1409,7 +1409,7 @@
 									WV.ClsA(ImgMultiR.R,ClassImgMultiLR)
 								}
 								else
-									WV.Attr(Img,'src',SolveImgURL(V.Img))
+									WV.Attr(Img,'src',MakeImgURL(V.Img))
 							}
 							WV.Ap(WV.Con(WV.Rock(ClassCard + ' ' + WV.S4,'fieldset'),
 							[
@@ -3345,6 +3345,10 @@
 				{
 					return WV.X(WV.Ah(Q,S))
 				},
+				Img : function(Q)
+				{
+					return WV.Attr(WV.A('img'),'src',MakeImgURL(Q))
+				},
 				Text : function(Q,S)
 				{
 					Q = WC.HED(Q
@@ -3394,6 +3398,7 @@
 
 			'AcFun',
 			'Facebook',
+			'FanBox',
 			'Instagram',
 			'IXiGua',
 			'Pixiv',

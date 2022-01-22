@@ -140,7 +140,7 @@ module.exports = O =>
 							Title : Title.trim(),
 							Up : B.user.screen_name,
 							Date : +new Date(B.created_at),
-							Meta : Meta.join`\n`,
+							Meta,
 							Cover,
 							Part,
 						}))

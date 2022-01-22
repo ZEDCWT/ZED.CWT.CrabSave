@@ -6,6 +6,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 	PixivSetting = Pixiv + 'setting_user.php',
 	PixivIllust = WW.Tmpl(Pixiv,'artworks/',undefined),
 	PixivUser = WW.Tmpl(Pixiv,'users/',undefined),
+	PixivFanBox = WW.Tmpl(Pixiv,'fanbox/creator/',undefined),
 	PixivAJAX = Pixiv + 'ajax/',
 	PixivAJAXIllust = WW.Tmpl(PixivAJAX,'illust/',undefined),
 	PixivAJAXUserAll = WW.Tmpl(PixivAJAX,'user/',undefined,'/profile/all'),
@@ -152,6 +153,26 @@ CrabSave.Site(function(O,WW,WC,WR)
 							UPURL : PixivUser(B.userId),
 							Date : new Date(B.createDate),
 							Desc : B.description
+						}]
+					}
+				})
+			}
+		},{
+			Name : 'FanBox',
+			Judge : O.Num('FanBox'),
+			View : function(ID)
+			{
+				return O.Req({URL : PixivFanBox(ID),Red : 0},true).Map(function(B)
+				{
+					B = B[2].location
+					return {
+						Item : [
+						{
+							Non : true,
+							ID : WW.MF(/(\w+)\.FanBox/i,B),
+							URL : B,
+							UP : B,
+							UPURL : B
 						}]
 					}
 				})

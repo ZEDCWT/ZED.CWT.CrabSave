@@ -138,6 +138,8 @@ module.exports = Option =>
 							if (Setting.Meta())
 							{
 								Meta = U.Meta || ''
+								if (WW.IsArr(Meta))
+									Meta = Meta.join`\n`
 								if (ExtReqRecordCount)
 								{
 									ExtReqRecordIndex.forEach(V => ExtReqRecord[V[0]] +=
