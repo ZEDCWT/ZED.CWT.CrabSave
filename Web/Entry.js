@@ -85,7 +85,7 @@
 	{
 		LangNow = WR.Has(Q,Lang) ? Lang[Q] : LangNow
 	},
-	SA = /**@type {<U extends keyof Lang['EN']>(Q : U,S? : any[]) => string}*/ function(Q,S)
+	SA = /**@type {<U extends keyof Lang['EN']>(Q : U,S? : any[] | {[K : string] : any}) => string}*/ function(Q,S)
 	{
 		WW.IsArr(Q) && (S = Q.slice(1),Q = Q[0])
 		return WR.Has(Q,LangNow) ? S ? WW.Fmt(LangNow[Q],S,'~') : LangNow[Q] :
@@ -207,6 +207,7 @@
 	ShortCutGeneralTabPrev = 'GenTabPrev',
 	ShortCutGeneralTabNext = 'GenTabNext',
 	ShortCutGeneralProxy = 'GenProxy',
+	ShortCutGeneralNonAV = 'GenNonAV',
 	ShortCutGeneralFocus = 'GenFocusKeywordInput',
 	ShortCutGeneralFocusAuth = 'GenFocusAuth',
 	ShortCutBrowseSelAll = 'BroSelAll',
@@ -2845,7 +2846,7 @@
 				})()
 				WV.ApR(
 				[
-					WV.T(WV.Rock(ClassTitle),SA('Sot' + Key)),
+					WV.T(WV.Rock(ClassTitle),SA('Sot' + Key,LangNow)),
 					WV.But(
 					{
 						X : SA('SotAdd'),
@@ -2874,6 +2875,9 @@
 			],[
 				ShortCutGeneralProxy,
 				'Alt+p',WB.SCD | WB.SCI
+			],[
+				ShortCutGeneralNonAV,
+				'Alt+o',WB.SCD | WB.SCI
 			],[
 				ShortCutGeneralFocus,
 				'`',WB.SCD
@@ -2960,7 +2964,16 @@
 					WebSocketSendAuth([ActionAuthSetting,WR.WhereU(function(V,F){return V !== SetD[F]},Setting)])
 				}
 			}),
-			OptionProxy;
+			OptionProxy,
+			OptionNonAV,
+			MakeShortCutToggle = function(SCKey,Opt,Key)
+			{
+				ShortCut.On(SCKey,function(V)
+				{
+					Opt.V(V = !Opt.V())
+					Noti.S([SA('Set'),SA('Set' + Key),SA(V ? 'GenEnabled' : 'GenDisabled')].join(' | '))
+				})
+			};
 			WR.Each(function(V)
 			{
 				var
@@ -3095,7 +3108,7 @@
 			],[
 				SA('SetNonAV'),
 				Key('NonAV'),
-				WV.Cho(
+				OptionNonAV = WV.Cho(
 				{
 					Set : ChoOF,
 					Inp : PC
@@ -3125,11 +3138,8 @@
 			WR.Has(Top.LangS,Lang) && SetC.Lang(Top.LangS)
 			Top.Lang = null
 			WR.Del('LangS',Top)
-			ShortCut.On(ShortCutGeneralProxy,function(V)
-			{
-				OptionProxy.V(V = !OptionProxy.V())
-				Noti.S(V ? SA('SetProxyE') : SA('SetProxyD'))
-			})
+			MakeShortCutToggle(ShortCutGeneralProxy,OptionProxy,'Proxy')
+			MakeShortCutToggle(ShortCutGeneralNonAV,OptionNonAV,'NonAV')
 			return {
 				CSS : function(ID)
 				{

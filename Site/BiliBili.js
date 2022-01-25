@@ -181,6 +181,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			case 64 : // CV
 				R = SolveCV(Card)
 				break
+			case 256 : // Audio
+				R = SolveAU(Card)
+				break
 			case 2048 : // External
 				MakePost()
 				R.Img = Card.sketch.cover_url
@@ -304,19 +307,22 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	},
 	SolveAU = function(V)
 	{
+		var
+		UP = V.uname || V.upper,
+		UPID = V.uid || V.upId;
 		return {
 			ID : PrefixAudio + V.id,
 			Img : V.cover,
 			Title : V.title,
-			UP : V.uname,
-			UPURL : BiliBiliSpace + V.uid,
+			UP : UP,
+			UPURL : BiliBiliSpace + UPID,
 			Date : 1E3 * V.passtime,
 			Len : V.duration,
 			More :
 			[
-				V.author && V.author !== V.uname ? V.author + '\n' : '',
+				V.author && V.author !== UP ? V.author + '\n' : '',
 				V.intro && V.intro + '\n',
-				O.Ah('Audio@' + V.uname,BiliBiliSpaceAudio(V.uid))
+				O.Ah('Audio@' + UP,BiliBiliSpaceAudio(UPID))
 			]
 		}
 	},
@@ -482,7 +488,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			}
 		},{
 			Name : 'DynamicPost',
-			Judge : O.Num('DynamicPost|T(?:\\.\\w+)+|Dynamic(?=\\W+\\d{10})'),
+			Judge : O.Num('DynamicPost|T(?:\\.\\w+)+|Dynamic(?=\\W+\\d{10})|TL'),
 			Example : '2714420379649',
 			View : function(ID)
 			{
@@ -1042,8 +1048,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		}*/],
 		IDView : WR.RepL(
 		[
-			/^(?=\d)/,'av',
-			/^TL(?=\d)/,''
+			/^(?=\d)/,'av'
 		]),
 		IDURL : function(Q)
 		{

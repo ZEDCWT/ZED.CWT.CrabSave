@@ -122,7 +122,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 			})
 		},{
 			Name : 'Supporting',
-			Judge : /\bSupport(?:ing)?\b/i,
+			Judge : /\bSu(?:pp(?:ort(?:ing)?)?)?\b/i,
 			View : O.Less(function()
 			{
 				return API(FanBoxAPISupporting,true).Map(function(B)

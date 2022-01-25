@@ -95,6 +95,10 @@ module.exports = O =>
 						R.Title = Card.vest.content
 						R.Cover = Card.sketch.cover_url
 						break
+					case 8 : // Video
+					case 512 :
+					case 64 : // CV
+					case 256 : // Audio
 					default :
 						WX.Throw('Unsupported Type #' + Desc.type)
 				}
