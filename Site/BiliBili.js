@@ -11,7 +11,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	// PrefixShortVideo = 'vc',
 	PrefixAudio = 'au',
 	PrefixArticle = 'cv',
-
+	PrefixCheeseSeason = 'CheeseSeason',
+	PrefixCheeseEpisode = 'CheeseEpisode',
 	PrefixUGCSeries = 'UGCSeries',
 	PrefixUGCSeason = 'UGCSeason',
 
@@ -30,6 +31,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliArticleRead = BiliBili + 'read/cv',
 	BiliBiliArticleReadList = BiliBili + 'read/readlist/rl',
 	BiliBiliArticleReadContent = WW.Tmpl(BiliBili,'read/native?id=',undefined),
+	BiliBiliCheese = BiliBili + 'cheese/',
+	BiliBiliCheeseSeason = WW.Tmpl(BiliBiliCheese,'play/ss',undefined),
+	BiliBiliCheeseEpisode = WW.Tmpl(BiliBiliCheese,'play/ep',undefined),
 	BiliBiliApi = 'https://api.bilibili.com/',
 	BiliBiliArticleList = WW.Tmpl(BiliBiliApi,'x/article/list/articles?id=',undefined),
 	BiliBiliApiFav = WW.Tmpl(BiliBiliApi,'medialist/gateway/base/spaceDetail?media_id=',undefined,'&pn=',undefined,'&ps=20'),
@@ -60,6 +64,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliApiPGCMedia = WW.Tmpl(BiliBiliApiPGC,'view/web/media?media_id=',undefined),
 	BiliBiliApiPGCSeason = WW.Tmpl(BiliBiliApiPGC,'view/web/season?season_id=',undefined),
 	BiliBiliApiPGCSeasonSection = WW.Tmpl(BiliBiliApiPGC,'web/season/section?season_id=',undefined),
+	BiliBiliApiPUGV = BiliBiliApi + 'pugv/',
+	BiliBiliApiPUGVViewSeason = WW.Tmpl(BiliBiliApiPUGV,'view/web/season?season_id=',undefined),
+	BiliBiliApiPUGVViewSeasonByEP = WW.Tmpl(BiliBiliApiPUGV,'view/web/season?ep_id=',undefined),
+	BiliBiliApiPUGVByUser = WW.Tmpl(BiliBiliApiPUGV,'app/web/season/page?mid=',undefined,'&pn=',undefined,'&ps=',O.Size),
 	BiliBiliSearch = 'https://search.bilibili.com/',
 	BiliBiliSearchS = 'https://s.search.bilibili.com/',
 	BiliBiliSearchSuggestion = WW.Tmpl(BiliBiliSearchS,'main/suggest?main_ver=v1&highlight&term=',undefined),
@@ -67,8 +75,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliSpaceDynamic = WW.Tmpl(BiliBiliSpace,undefined,'/dynamic'),
 	BiliBiliSpaceAudio = WW.Tmpl(BiliBiliSpace,undefined,'/audio'),
 	BiliBiliSpaceArticle = WW.Tmpl(BiliBiliSpace,undefined,'/article'),
+	BiliBiliSpaceChannel = WW.Tmpl(BiliBiliSpace,undefined,'/channel/series'),
 	BiliBiliSpaceChannelSeason = WW.Tmpl(BiliBiliSpace,undefined,'/channel/collectiondetail?sid=',undefined),
 	BiliBiliSpaceChannelSeries = WW.Tmpl(BiliBiliSpace,undefined,'/channel/seriesdetail?sid=',undefined),
+	BiliBiliSpacePUGV = WW.Tmpl(BiliBiliSpace,undefined,'/pugv'),
 	// BiliBiliVC = 'https://vc.bilibili.com/',
 	// BiliBiliVCVideo = WW.Tmpl(BiliBiliVC,'video/',undefined),
 	BiliBiliVCApi = 'https://api.vc.bilibili.com/',
@@ -193,6 +203,19 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					O.Ah(Card.sketch.title,Card.sketch.target_url),
 					Card.sketch.desc_text
 				)
+				break
+			case 4303 : // Cheese
+				R =
+				{
+					Non : true,
+					ID : PrefixCheeseSeason + Card.id,
+					URL : BiliBiliCheeseSeason(Card.id),
+					Img : Card.cover,
+					Title : Card.title,
+					UP : Card.user_profile.info.uname,
+					UPURL : BiliBiliSpace + Card.user_profile.info.uid,
+					More : Card.subtitle
+				}
 				break
 			default :
 				R =
@@ -348,6 +371,29 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			More : O.Ah('VC@' + V.user.name,BiliBiliSpaceDynamic(V.user.uid))
 		}
 	},*/
+	SolveCheeseSeason = function(B)
+	{
+		B = Common(B)
+		return {
+			Item : WR.Map(function(V)
+			{
+				return {
+					ID : PrefixCheeseEpisode + V.id,
+					URL : BiliBiliCheeseEpisode(V.id),
+					Img : V.cover,
+					Title : V.title,
+					Len : V.duration,
+					Date : 1E3 * V.release_date,
+					More :
+					[
+						'av' + V.aid + '#' + V.cid + '\n',
+						V.label && V.label + '\n',
+						V.subtitle
+					]
+				}
+			},B.episodes)
+		}
+	},
 	Menu;
 	return {
 		ID : 'BiliBili',
@@ -844,6 +890,34 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				})
 			}
 		},{
+			Name : 'PUGV',
+			Judge :
+			[
+				/(\d+)\W*\bPUGV\b/i,
+				O.Num('PUGV')
+			],
+			View : function(ID,Page)
+			{
+				return O.Api(BiliBiliApiPUGVByUser(ID,-~Page)).Map(function(B)
+				{
+					B = Common(B)
+					return {
+						Len : B.page.total,
+						Item : WR.Map(function(V)
+						{
+							return {
+								Non : true,
+								ID : PrefixCheeseSeason + V.season_id,
+								URL : BiliBiliCheeseSeason(V.season_id),
+								Img : V.cover,
+								Title : V.title,
+								More : V.subtitle
+							}
+						},B.items)
+					}
+				})
+			}
+		},{
 			Name : 'User',
 			Judge : O.Num('Space|User'),
 			Example : '2',
@@ -869,6 +943,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								O.Ah('Dynamic',BiliBiliSpaceDynamic(ID)),
 								O.Ah('Audio ' + Nav.audio,BiliBiliSpaceAudio(ID)),
 								O.Ah('Article',BiliBiliSpaceArticle(ID)),
+								O.Ah('Channel',BiliBiliSpaceChannel(ID)),
+								O.Ah('PUGV',BiliBiliSpacePUGV(ID))
 							]
 						}]
 					})
@@ -929,6 +1005,20 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			{
 				return O.Req(BiliBiliVCApiDynamicHistory(I[Page]))
 			},SolveDynamicResponse)
+		},{
+			Name : PrefixCheeseSeason,
+			Judge : O.Num('CheeseSeason|Cheese.*SS'),
+			View : function(ID)
+			{
+				return O.Api(BiliBiliApiPUGVViewSeason(ID)).Map(SolveCheeseSeason)
+			}
+		},{
+			Name : PrefixCheeseEpisode,
+			Judge : O.Num('CheeseEpisode|Cheese.*EP'),
+			View : function(ID)
+			{
+				return O.Api(BiliBiliApiPUGVViewSeasonByEP(ID)).Map(SolveCheeseSeason)
+			}
 		},{
 			Name : 'Episode',
 			Judge : O.Num('Episode|EP'),

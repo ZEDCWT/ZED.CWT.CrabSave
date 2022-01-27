@@ -4,9 +4,10 @@ CrabSave.Site(function(O,WW,WC,WR)
 	var
 	FanBox = 'https://www.fanbox.cc/',
 	FanBoxUserSetting = FanBox + 'user/settings',
-	FanBoxPost = WW.Tmpl(FanBox,'@/posts/',undefined),
 	FanBoxUser = WW.Tmpl(FanBox,'@',undefined),
+	FanBoxUserPost = WW.Tmpl(FanBox,'@',undefined,'/posts/',undefined),
 	// FanBoxUserDomain = WW.Tmpl('https://',undefined,'.fanbox.cc/'),
+	// FanBoxUserDomainPost = WW.Tmpl('https://',undefined,'.fanbox.cc/posts/',undefined),
 	FanBoxAPI = 'https://api.fanbox.cc/',
 	FanBoxAPIPostInfo = WW.Tmpl(FanBoxAPI,'post.info?postId=',undefined),
 	FanBoxAPIUserPager = WW.Tmpl(FanBoxAPI,'post.paginateCreator?creatorId=',undefined),
@@ -30,6 +31,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 		return {
 			NonAV : null == B.body,
 			ID : B.id,
+			URL : FanBoxUserPost(B.creatorId,B.id),
 			Img : B.coverImageUrl,
 			Title : B.title,
 			UP : B.user.name,
@@ -164,6 +166,9 @@ CrabSave.Site(function(O,WW,WC,WR)
 				}]
 			})
 		}],
-		IDURL : FanBoxPost
+		IDURL : function(Q)
+		{
+			return FanBoxUserPost('owo',Q)
+		}
 	}
 })

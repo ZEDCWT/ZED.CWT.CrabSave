@@ -7,6 +7,7 @@ PrefixTimeline = 'TL',
 // PrefixShortVideo = 'vc',
 PrefixAudio = 'au',
 PrefixArticle = 'cv',
+PrefixCheeseEpisode = 'CheeseEpisode',
 
 BiliBili = 'https://www.bilibili.com/',
 BiliBiliAudio = BiliBili + 'audio/',
@@ -24,6 +25,9 @@ BiliBiliApiPlayURLList =
 ],
 BiliBiliApiPlayerSo = WW.Tmpl(BiliBiliApi,'x/player.so?aid=',undefined,'&id=cid:',undefined),
 BiliBiliApiSteinNode = WW.Tmpl(BiliBiliApi,'x/stein/nodeinfo?aid=',undefined,'&graph_version=',undefined,'&node_id=',undefined),
+BiliBiliApiPUGV = BiliBiliApi + 'pugv/',
+BiliBiliApiPUGVViewSeasonByEP = WW.Tmpl(BiliBiliApiPUGV,'view/web/season?ep_id=',undefined),
+BiliBiliApiPUGVPlayURL = WW.Tmpl(BiliBiliApiPUGV,'player/web/playurl?ep_id=',undefined,'&qn=',undefined,'&fnver=0&fnval=80&fourk=1'),
 BiliBiliVCApi = 'https://api.vc.bilibili.com/',
 // BiliBiliVCApiDetail = WW.Tmpl(BiliBiliVCApi,'clip/v1/video/detail?video_id=',undefined,'&need_playurl=1'),
 BiliBiliVCApiDynamicApiRoot = BiliBiliVCApi + 'dynamic_svr/v1/dynamic_svr/',
@@ -99,6 +103,7 @@ module.exports = O =>
 					case 512 :
 					case 64 : // CV
 					case 256 : // Audio
+					case 4303 : // Cheese
 					default :
 						WX.Throw('Unsupported Type #' + Desc.type)
 				}
@@ -160,6 +165,65 @@ module.exports = O =>
 						return D
 					},[],/<img[^>]+src=(['"])(.+?)\1/g,B.content)]
 				}
+			})
+
+			if (PrefixCheeseEpisode === Prefix) return Ext.ReqB(O.Coke(BiliBiliApiPUGVViewSeasonByEP(ID))).FMap(Season =>
+			{
+				var Episode;
+				Season = Common(Season)
+				Episode = Season.episodes.find(V => V.id == ID);
+				Episode || WX.Throw('Unexpected fatal | No such episode')
+				return Ext.ReqB(O.Coke(BiliBiliApiPUGVPlayURL(ID,120)))
+					.FMap((B,T) =>
+					{
+						B = Common(B)
+						T = B.accept_quality && Math.max(...B.accept_quality)
+						return T && B.quality < T ?
+							Ext.ReqB(O.Coke(BiliBiliApiPUGVPlayURL(ID,T)))
+								.Map(Common) :
+							WX.Just(B)
+					})
+					.Map(B =>
+					{
+						var
+						Part = [],
+						U,T;
+						if (T = B.durl)
+						{
+							WW.IsArr(T) || (T = [T])
+							Part.push(
+							{
+								URL : WR.Pluck('url',T),
+								Size : WR.Pluck('size',T),
+							})
+						}
+						else if (T = B.dash)
+						{
+							Part.push(U =
+							{
+								URL : [],
+								Ext : [],
+							})
+							if (T.video)
+							{
+								U.URL.push(O.Best('bandwidth',T.video).base_url)
+								U.Ext.push('.mp4')
+							}
+							if (T.audio)
+							{
+								U.URL.push(O.Best('bandwidth',T.audio).base_url)
+								U.Ext.push('.mp3')
+							}
+						}
+						else O.Bad(B)
+						return {
+							Title : Episode.title,
+							Up : Season.up_info.uname,
+							Date : 1E3 * Episode.release_date,
+							Cover : Episode.cover,
+							Part,
+						}
+					})
 			})
 
 			if (Prefix) return WX.Throw('Unexpected Prefix ' + Prefix)
