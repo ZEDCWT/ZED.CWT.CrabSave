@@ -6,6 +6,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	// /"[^"]+/main[^"]+/ https://abs.twimg.com/responsive-web/web/main.713ccc64.js
 	Twitter = 'https://twitter.com/',
 	TwitterTweet = WW.Tmpl(Twitter,'_/status/',undefined),
+	TwitterIAPIUserTweet = Twitter + 'i/api/graphql/UsDw2UjYF5JE6-KyC7MDGw/UserTweets',
 	TwitterAPI = 'https://api.twitter.com/',
 	TwitterAPITypeHome = 'timeline/home',
 	TwitterAPITypeConversation = 'timeline/conversation/',
@@ -23,25 +24,29 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		Q.errors && O.Bad(Q.errors[0].code,Q.errors[0].message)
 		return Q
 	},
-	SolveTweet = function(ID,Tweet,User)
+	SolveTweet = function(Tweet,User,ID)
 	{
 		var
 		Media = WR.Path(['extended_entities','media'],Tweet),
 		NonVideo;
 		return {
 			NonAV : NonVideo = !Media || WR.All(function(V){return !V.video_info},Media),
-			ID : ID,
+			ID : Tweet.id_str || ID,
 			Img : Media && WR.Pluck('media_url_https',Media),
-			Title : WR.Trim(Tweet.full_text.replace(/\n#.*$/g,'')),
-			UP : User[Tweet.user_id_str].name,
-			UPURL : Twitter + User[Tweet.user_id_str].screen_name,
+			Title : WR.Trim(WC.HED(Tweet.full_text).replace(/\n#.*$/g,'')),
+			UP : User.name,
+			UPURL : Twitter + User.screen_name,
 			Date : new Date(Tweet.created_at),
 			Len : !NonVideo && WW.StrMS(WR.Reduce(function(D,V)
 			{
 				return D += WR.Path(['video_info','duration_millis'],V) || 0
 			},0,Media)),
-			Desc : Tweet.full_text
+			Desc : WC.HED(Tweet.full_text)
 		}
+	},
+	SolveTweetUserMap = function(ID,Tweet,UserMap)
+	{
+		return SolveTweet(Tweet,UserMap[Tweet.user_id_str],ID)
 	},
 	MakeTimeline = function(H)
 	{
@@ -63,7 +68,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				{
 					if (/ads-api\.twitter/.test(V))
 						return null
-					return SolveTweet(V[0],V[1],B.globalObjects.users)
+					return SolveTweetUserMap(V[0],V[1],B.globalObjects.users)
 				},WR.Ent(B.globalObjects.tweets).sort(function(Q,S)
 				{
 					Q = WR.PadS0(32,Q[0])
@@ -73,17 +78,17 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			}]
 		})
 	},
-	SolveCursor = function(Q)
+	SolveCursor = function(B)
 	{
 		var
-		H = function(Q)
+		H = function(B)
 		{
-			'Bottom' === Q.cursorType ?
-				R = Q.value :
-				WR.Each(function(V){WW.IsObj(V) && H(V)},Q)
+			'Bottom' === B.cursorType ?
+				R = B.value :
+				WR.Each(function(V){WW.IsObj(V) && H(V)},B)
 		},
 		R = '';
-		H(Q.timeline)
+		H(B)
 		return R
 	},
 	MakeHead = function(Q)
@@ -93,6 +98,31 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			'X-CSRF-Token',WC.CokeP(O.Coke()).ct0,
 			'Authorization','Bearer ' + TwitterAuth
 		])
+	},
+	MakeUserTweet = function(User,Cursor)
+	{
+		return O.Req(MakeHead(
+		{
+			URL : TwitterIAPIUserTweet,
+			QS :
+			{
+				variables : WC.OTJ(
+				{
+					userId : User,
+					count : O.Size,
+					cursor : Cursor,
+					includePromotedContent : false,
+					withQuickPromoteEligibilityTweetFields : true,
+					withSuperFollowsUserFields : true,
+					withDownvotePerspective : true,
+					withReactionsMetadata : true,
+					withReactionsPerspective : true,
+					withSuperFollowsTweetFields : true,
+					withVoice : true,
+					withV2Timeline : false
+				})
+			}
+		}))
 	};
 	return {
 		ID : 'Twitter',
@@ -139,20 +169,43 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 					B = Common(B)
 					B = B.globalObjects
 					return {
-						Item : [SolveTweet(ID,B.tweets[ID],B.users)]
+						Item : [SolveTweetUserMap(ID,B.tweets[ID],B.users)]
 					}
 				})
 			}
 		},{
 			Name : 'User',
-			Judge : [/\.com\/([^/]+)/i,O.Word('User')],
-			View : MakeTimeline(function(ID)
+			Judge : [/\.com\/([^/]+)/i,O.Word('User|@')],
+			View : O.More(function(ID,I)
+			{
+				return O.Req(MakeHead(TwitterAPIUserByScreen(WC.UE(WC.OTJ(ID))))).FMap(function(U)
+				{
+					return MakeUserTweet(I[0] = Common(U).data.user.rest_id)
+				})
+			},function(I,Page)
+			{
+				return MakeUserTweet(I[0],I[Page])
+			},function(B)
+			{
+				var
+				R = [],
+				H = function(B)
+				{
+					'Tweet' === B.__typename ?
+						R.push(SolveTweet(B.legacy,B.core.user_results.result.legacy)) :
+						WR.Each(function(V){WW.IsObj(V) && H(V)},B)
+				};
+				B = Common(B)
+				H(B)
+				return [SolveCursor(B),{Item : R}]
+			})
+			/*View : MakeTimeline(function(ID)
 			{
 				return O.Req(MakeHead(TwitterAPIUserByScreen(WC.UE(WC.OTJ(ID))))).Map(function(U)
 				{
 					return TwitterAPIJSON(TwitterAPITypeMedia + Common(U).data.user.rest_id)
 				})
-			})
+			})*/
 		},{
 			Name : 'UserID',
 			Judge : O.Num('UserID'),

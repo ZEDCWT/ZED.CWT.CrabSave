@@ -100,7 +100,7 @@ module.exports = O =>
 						B.data || O.Bad(B),
 						B.data.session.content_uri
 					)) :
-					WW.Throw('No provided url, require payment?'))
+					WW.Throw('No provided url, requires payment?'))
 					.FMap(U => (Up ?
 						WX.Just(Up) :
 						Ext.ReqB(O.Req(NicoExtThumb(PadSM(ID))))
@@ -110,6 +110,7 @@ module.exports = O =>
 							Title : B.video.title,
 							Up : Up.replace(/ さん$/,''), // 敬稱略
 							Date : +new Date(B.video.registeredAt),
+							Meta : B.video.description,
 							Cover : B.video.thumbnail.largeUrl,
 							CoverExt : '.jpg',
 							Part : [

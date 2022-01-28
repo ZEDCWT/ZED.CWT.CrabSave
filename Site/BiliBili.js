@@ -1146,6 +1146,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			return PrefixTimeline === Q[1] ? BiliBiliTimeline + Q[2] :
 				PrefixAudio === Q[1] ? BiliBiliAudioURL + Q[2] :
 				PrefixArticle === Q[1] ? BiliBiliArticleRead + Q[2] :
+				PrefixCheeseEpisode === Q[1] ? BiliBiliCheeseEpisode(Q[2]) :
 				BiliBiliVideo(Q[2].replace(/#\d+$/,''))
 		}
 	}

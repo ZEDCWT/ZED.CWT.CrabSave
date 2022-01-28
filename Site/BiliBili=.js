@@ -83,6 +83,7 @@ module.exports = O =>
 					Up : Desc.user_profile.info.uname,
 					Date : 1E3 * Desc.timestamp,
 				}
+				R.Meta = R.Title
 				switch (Desc.type)
 				{
 					case 1 : // Forward
@@ -137,6 +138,7 @@ module.exports = O =>
 							Audio.title,
 						Up : Audio.uname,
 						Date : 1E3 * Audio.passtime,
+						Meta : Audio.intro,
 						Cover : Audio.cover,
 						Part : [
 						{
@@ -220,6 +222,11 @@ module.exports = O =>
 							Title : Episode.title,
 							Up : Season.up_info.uname,
 							Date : 1E3 * Episode.release_date,
+							Meta :
+							[
+								Season.title,
+								Season.subtitle,
+							],
 							Cover : Episode.cover,
 							Part,
 						}
@@ -241,6 +248,7 @@ module.exports = O =>
 					Title : AV.title,
 					Up : AV.owner.name,
 					Date : 1E3 * AV.pubdate,
+					Meta : AV.desc,
 					Cover : AV.pic,
 					Part
 				}

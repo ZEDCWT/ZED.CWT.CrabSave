@@ -50,11 +50,12 @@ module.exports = O =>
 				else WW.Throw('Unknown Media Type #' + V.type)
 			},WR.Path(['extended_entities','media'],Tweet) || [])
 			return {
-				Title : WR.Trim(Tweet.full_text
+				Title : WR.Trim(WC.HED(Tweet.full_text)
 					.replace(/\n#.*$/g,'')
 					.replace(/\w+:\/\/t\.\w+\/\w+/g,'')),
 				Up : User.name,
 				Date : +new Date(Tweet.created_at),
+				Meta : WC.HED(Tweet.full_text),
 				Part : Part
 			}
 		}),

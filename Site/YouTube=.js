@@ -168,6 +168,7 @@ module.exports = O =>
 						Title : Info.title,
 						Up : Info.channelTitle,
 						Date : +new Date(Info.publishedAt),
+						Meta : Info.description,
 						Cover : Info.thumbnails.high.url,
 						Part : [
 						{
