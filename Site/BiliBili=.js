@@ -104,6 +104,7 @@ module.exports = O =>
 					case 512 :
 					case 64 : // CV
 					case 256 : // Audio
+					case 4200 : // Live
 					case 4303 : // Cheese
 					default :
 						WX.Throw('Unsupported Type #' + Desc.type)

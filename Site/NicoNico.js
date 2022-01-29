@@ -2,6 +2,10 @@
 CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 {
 	var
+	PrefixVideo = 'sm',
+	PrefixChannel = 'ch',
+	PrefixSeiga = 'im',
+
 	Nico = 'https://www.nicovideo.jp/',
 	NicoWatch = WW.Tmpl(Nico,'watch/',undefined),
 	NicoUser = WW.Tmpl(Nico,'user/',undefined),
@@ -23,17 +27,28 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	NicoExtThumb = WW.Tmpl(NicoExt,'api/getthumbinfo/',undefined),
 	NicoSearchSug = 'http://sug.search.nicovideo.jp/',
 	NicoSearchSugComplete = WW.Tmpl(NicoSearchSug,'suggestion/complete/',undefined),
+	NicoSeiga = 'https://seiga.nicovideo.jp/',
+	NicoSeigaMy = WW.Tmpl(NicoSeiga + 'my/personalize?page=',undefined),
+	NicoSeigaSeiga = WW.Tmpl(NicoSeiga,'seiga/',undefined),
+	NicoSeigaUser = WW.Tmpl(NicoSeiga,'user/illust/',undefined),
+	NicoSeigaUserAll = WW.Tmpl(NicoSeiga,'user/illust/',undefined,'?target=illust_all&page=',undefined),
+	NicoSeigaAPI = NicoSeiga + 'api/',
+	// First 200 only
+	// NicoSeigaAPIUserData = WW.Tmpl(NicoSeigaAPI,'user/data?id=',undefined),
+	NicoSeigaAPIIllust = WW.Tmpl(NicoSeigaAPI,'illust/info?id=',undefined),
+	// NicoSeigaLohas = 'https://lohas.nicoseiga.jp/',
+	// NicoSeigaLohasThumb = WW.Tmpl(NicoSeigaLohas,'thumb/',undefined,'qz'),
 	SolveSM = function(Q)
 	{
 		return Q.replace(/^SM/i,'')
 	},
 	PadSM = function(Q)
 	{
-		return /^\d/.test(Q) ? 'sm' + Q : Q
+		return /^\d/.test(Q) ? PrefixVideo + Q : Q
 	},
 	PadCH = function(Q)
 	{
-		return /^\d/.test(Q) ? 'ch' + Q : Q
+		return /^\d/.test(Q) ? PrefixChannel + Q : Q
 	},
 	MakeNV = function(Q)
 	{
@@ -137,6 +152,84 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				{
 					return {
 						Item : WC.JTO(V).candidates
+					}
+				})
+			}
+		},{
+			Name : 'UserIllust',
+			Judge : O.Num('User\\W*Illust'),
+			View : function(ID,Page)
+			{
+				return O.Req(NicoSeigaUserAll(ID,-~Page)).Map(function(B)
+				{
+					return {
+						Size : 40,
+						Len : WW.MF(/<a[^>]+target=illust_all[^]+?>(\d+)</,B),
+						Item : WW.MR(function(D,V)
+						{
+							D.push(
+							{
+								ID : WW.MF(/\/(im\d+)/,V),
+								Img : WW.MF(/src="([^"]+)/,V),
+								Title : WC.HED(WW.MF(/"title">([^<]+)/,V))
+							})
+							return D
+						},[],/class="list_item[^]+?<\/li/g,B)
+					}
+				})
+			}
+		},{
+			Name : 'Seiga',
+			Judge : O.Num('Seiga|IM'),
+			View : function(ID)
+			{
+				return O.Req(NicoSeigaAPIIllust(ID)).Map(function(B)
+				{
+					return {
+						Item : [
+						{
+							ID : PrefixSeiga + ID,
+							Img : WW.MF(/thumbnail_url>([^<]+)/,B),
+							Title : WC.HED(WW.MF(/title>([^<]+)/,B)),
+							UP : 'User' + WW.MF(/user_id>(\d+)/,B),
+							UPURL : NicoSeigaUser(WW.MF(/user_id>(\d+)/,B)),
+							Date : new Date(WW.MF(/created>([^<]+)/,B) + '+0900'),
+							Desc : WC.HED(WW.MF(/description>(.*?)<\/description/,B))
+								.replace(/<br>\n?/g,'\n')
+						}]
+					}
+				})
+			}
+		},{
+			// /my/personalize
+			Name : 'SeigaMyPersonalize',
+			Judge :
+			[
+				/\bS\b/i,
+				/\bSeigaMyPersonalize\b/i,
+			],
+			View : function(_,Page)
+			{
+				return O.Req(NicoSeigaMy(-~Page)).Map(function(B)
+				{
+					return {
+						Size : 20,
+						Max : WW.MR(function(D,V)
+						{
+							return WR.Max(D,+V[1])
+						},1,/>(\d+)</g,WW.MU(/class="mg_pager.*/,B)),
+						Item : WW.MR(function(D,V)
+						{
+							D.push(
+							{
+								ID : WW.MF(/\/(im\d+)/,V),
+								Img : WW.MF(/src="([^"]+)/,V),
+								Title : WR.Trim(WC.HED(WW.MF(/<a[^>]+>([^<]+)/,V))),
+								UP : WC.HED(WW.MF(/class="user_name"[^>]+>([^<]+)/,V)),
+								UPURL : NicoSeigaUser(WW.MF(/User\/Illust\/(\d+)/i,V))
+							})
+							return D
+						},[],/class="illust_thumb[^]+?<\/p>\s*<\/div>/g,B)
 					}
 				})
 			}
@@ -315,6 +408,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			})
 		}],
 		IDView : PadSM,
-		IDURL : WR.Pipe(PadSM,NicoWatch)
+		IDURL : function(V)
+		{
+			V = PadSM(V)
+			return /^im/i.test(V) ?
+				NicoSeigaSeiga(V) :
+				NicoWatch(V)
+		}
 	}
 })

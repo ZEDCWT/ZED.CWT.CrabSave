@@ -1,13 +1,25 @@
 'use strict'
 var
 WW = require('@zed.cwt/wish'),
-{R : WR,X : WX,C : WC} = WW,
+{R : WR,X : WX,C : WC,N : WN} = WW,
+
+PrefixSeiga = 'im',
+PrefixVideoLike = new Set(
+[
+	'sm',
+	'ch', // Channel
+	'nm', // Movie Maker
+]),
 
 Nico = 'https://www.nicovideo.jp/',
 NicoWatch = WW.Tmpl(Nico,'watch/',undefined),
 NicoDMCApi = 'https://api.dmc.nico/api/sessions?_format=json',
 NicoExt = 'https://ext.nicovideo.jp/',
-NicoExtThumb = WW.Tmpl(NicoExt,'api/getthumbinfo/',undefined);
+NicoExtThumb = WW.Tmpl(NicoExt,'api/getthumbinfo/',undefined),
+NicoSeiga = 'https://seiga.nicovideo.jp/',
+NicoSeigaSeiga = WW.Tmpl(NicoSeiga,'seiga/',undefined),
+NicoSeigaAPI = NicoSeiga + 'api/',
+NicoSeigaAPIIllust = WW.Tmpl(NicoSeigaAPI,'illust/info?id=',undefined);
 
 /**@type {CrabSaveNS.SiteO}*/
 module.exports = O =>
@@ -17,12 +29,44 @@ module.exports = O =>
 	Coke = Q =>
 	{
 		Q = O.Coke(Q)
-		Q.Head.Cookie += '; watch_flash=0'
+		Q.Head.Cookie += '; watch_flash=0; skip_fetish_warning=1'
 		return Q
 	};
 	return {
-		URL : (ID,Ext) => Ext.ReqB(Coke(NicoWatch(PadSM(ID))))
-			.FMap(B =>
+		URL : (Q,Ext) =>
+		{
+			var
+			Prefix,ID;
+			Q = PadSM(Q)
+			ID = /^([A-Z]+)(\d+)$/i.exec(Q)
+			ID || WW.Throw('Bad ID ' + Q)
+			Prefix = ID[1]
+			ID = ID[2]
+
+			if (PrefixSeiga === Prefix) return Ext.ReqB(Coke(NicoSeigaAPIIllust(ID))).FMap(Illust =>
+				Ext.ReqB(Coke(NicoSeigaSeiga(Q))).FMap(Page =>
+				{
+					var
+					Source = WW.MF(/<a[^>]+href="([^"]+)"[^>]+id="illust_link/,Page);
+					Source || WW.Throw('Failed to solve source image')
+					return Ext.ReqU(Coke(WN.JoinU(NicoSeiga,Source))).Map(U => (
+					{
+						Title : WC.HED(WW.MF(/title>([^<]+)/,Illust)),
+						Up : WC.HED(WW.MF(/"user_name"[^]+?<strong>([^<]+)</,Page)),
+						Date : +new Date(WW.MF(/created>([^<]+)/,Illust) + '+0900'),
+						Meta : WC.HED(WW.MF(/description>([^]+?)<\/description/,Illust))
+							.replace(/<br>\n?/g,'\n'),
+						Part : [
+						{
+							URL : [WW.MF(/data-src="([^"]+)/,U)],
+							Ext : /id="gif_play_button"/.test(Page) ? '.gif' : '.jpg',
+						}]
+					}))
+				}))
+
+			PrefixVideoLike.has(Prefix) || WW.Throw('Unexpected Prefix ' + Prefix)
+
+			return Ext.ReqB(Coke(NicoWatch(Q))).FMap(B =>
 			{
 				var
 				Up,
@@ -103,7 +147,7 @@ module.exports = O =>
 					WW.Throw('No provided url, requires payment?'))
 					.FMap(U => (Up ?
 						WX.Just(Up) :
-						Ext.ReqB(O.Req(NicoExtThumb(PadSM(ID))))
+						Ext.ReqB(O.Req(NicoExtThumb(Q)))
 							.Map(B => WC.HED(WW.MF(/name>([^<]+)/,B))))
 						.Map(Up => (
 						{
@@ -119,7 +163,9 @@ module.exports = O =>
 								Ext : '.flv'
 							}]
 						})))
-			}),
-		IDView : Q => 'sm' + Q,
+			})
+		},
+		IDView : PadSM,
+		Range : false,
 	}
 }

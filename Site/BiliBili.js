@@ -91,6 +91,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliVCApiDynamicDetail = WW.Tmpl(BiliBiliVCApiDynamicApiRoot,'get_dynamic_detail?dynamic_id=',undefined),
 	BiliBiliVCApiDynamicUser = WW.Tmpl(BiliBiliVCApiDynamicApiRoot,'space_history?host_uid=',undefined,'&offset_dynamic_id=',undefined),
 	BiliBiliTimeline = 'https://t.bilibili.com/',
+	BiliBiliLive = 'https://live.bilibili.com/',
 	// Appkey = '20bee1f7a18a425c',
 	Common = function(V)
 	{
@@ -203,6 +204,24 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					O.Ah(Card.sketch.title,Card.sketch.target_url),
 					Card.sketch.desc_text
 				)
+				break
+			case 4200 : // Live
+				R =
+				{
+					Non : true,
+					ID : Card.roomid,
+					URL : BiliBiliLive + Card.roomid,
+					Img : Card.cover,
+					Title : Card.title,
+					UP : Card.uname,
+					UPURL : BiliBiliSpace + Card.uid,
+					Date : new Date(Card.live_time),
+					More :
+					[
+						Card.area_v2_parent_id + ':' + Card.area_v2_parent_name + '\n' +
+						Card.area_v2_id + ':' + Card.area_v2_name
+					]
+				}
 				break
 			case 4303 : // Cheese
 				R =

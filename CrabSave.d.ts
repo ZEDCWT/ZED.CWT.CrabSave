@@ -177,14 +177,14 @@ declare module CrabSaveNS
 
 			OnEnd() : any
 		}) : {
-			Info() : any
-			Down() : any
-			Del(Task : number) : any
+			Info() : void
+			Down() : void
+			Del(Task : number) : void
 			Renewing() : string[]
 			Downloading : Map<number,(H : (Q : number) => string) => string>
-			Stop(Task : number) : any
+			Stop(Task : number) : void
 
-			OnSet() : any
+			OnSet() : void
 		}
 	}
 }

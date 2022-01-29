@@ -494,8 +494,9 @@ module.exports = Option =>
 								Root : Setting.Dir(),
 								Format : Setting.Fmt()
 							}).Map(B =>
+								Loop.Info() ||
 								WebSocketSend([ActionWebTaskNew,++DBVersion,B],true)) :
-							WX.Throw(['ErrUnkSite',V.S]),Loop.Info)
+							WX.Throw(['ErrUnkSite',V.S]))
 						break
 					case ActionAuthTaskInfo :
 						false === K ?
