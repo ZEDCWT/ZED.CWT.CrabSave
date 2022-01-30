@@ -4,6 +4,7 @@ WW = require('@zed.cwt/wish'),
 {R : WR,X : WX,C : WC,N : WN} = WW,
 
 PrefixSeiga = 'im',
+PrefixMangaEpisode = 'mg',
 PrefixVideoLike = new Set(
 [
 	'sm',
@@ -13,30 +14,53 @@ PrefixVideoLike = new Set(
 
 Nico = 'https://www.nicovideo.jp/',
 NicoWatch = WW.Tmpl(Nico,'watch/',undefined),
-NicoDMCApi = 'https://api.dmc.nico/api/sessions?_format=json',
+NicoDMCAPI = 'https://api.dmc.nico/api/sessions?_format=json',
 NicoExt = 'https://ext.nicovideo.jp/',
 NicoExtThumb = WW.Tmpl(NicoExt,'api/getthumbinfo/',undefined),
 NicoSeiga = 'https://seiga.nicovideo.jp/',
 NicoSeigaSeiga = WW.Tmpl(NicoSeiga,'seiga/',undefined),
+NicoSeigaSource = WW.Tmpl(NicoSeiga,'image/source/',undefined),
 NicoSeigaAPI = NicoSeiga + 'api/',
-NicoSeigaAPIIllust = WW.Tmpl(NicoSeigaAPI,'illust/info?id=',undefined);
+NicoSeigaAPIIllust = WW.Tmpl(NicoSeigaAPI,'illust/info?id=',undefined),
+NicoSeigaAPIMangaEpisodeInfo = WW.Tmpl(NicoSeigaAPI,'theme/info?id=',undefined),
+NicoSeigaAPIMangaEpisodeDetail = WW.Tmpl(NicoSeigaAPI,'theme/data?theme_id=',undefined),
+NicoSeigaAPIMangaInfo = WW.Tmpl(NicoSeigaAPI,'manga/info?id=',undefined);
+// NicoMangaAPI = 'https://api.nicomanga.jp/',
+// NicoMangaAPIEpisodeFrame = WW.Tmpl(NicoMangaAPI,'api/v1/manga/episodes/',undefined,'/frames');
 
 /**@type {CrabSaveNS.SiteO}*/
 module.exports = O =>
 {
 	var
 	PadSM = Q => /^\d/.test(Q) ? 'sm' + Q : Q,
+	SolveXMLField = (Q,B) => WC.HED(WW.MF(RegExp(`<${Q}>([^]+?)</${Q}>`),B)),
+	SolveXMLDesc = B => SolveXMLField('description',B)
+		.replace(/<br>\n?/g,'\n'),
 	Coke = Q =>
 	{
 		Q = O.Coke(Q)
-		Q.Head.Cookie += '; watch_flash=0; skip_fetish_warning=1'
+		Q.Head.Cookie += '; watch_flash=0; skip_fetish_warning=1; webp_supported=true'
 		return Q
 	};
 	return {
 		URL : (Q,Ext) =>
 		{
 			var
-			Prefix,ID;
+			Prefix,ID,
+			SourceList = [],
+			SourceMake = (D,V,F = D.length) =>
+			{
+				D.push('')
+				SourceList.push(Ext.ReqH(Coke({URL : V,Red : 0}))
+					.FMap(H => /^\w+:\/\/[^/]+\/priv\//.test(H = H.H.location) ?
+						WX.Just(H) :
+						Ext.ReqB(Coke(H)).Map(B => WW.MF(/data-src="([^"]+)/,B)))
+					.Map(B => D[F] = B))
+			},
+			SourceSolve = R => WX.From(SourceList)
+				.FMapE(V => V)
+				.Fin()
+				.Map(() => R);
 			Q = PadSM(Q)
 			ID = /^([A-Z]+)(\d+)$/i.exec(Q)
 			ID || WW.Throw('Bad ID ' + Q)
@@ -47,22 +71,75 @@ module.exports = O =>
 				Ext.ReqB(Coke(NicoSeigaSeiga(Q))).FMap(Page =>
 				{
 					var
-					Source = WW.MF(/<a[^>]+href="([^"]+)"[^>]+id="illust_link/,Page);
+					Source = WW.MF(/<a[^>]+href="([^"]+)"[^>]+id="illust_link/,Page),
+					U = [];
 					Source || WW.Throw('Failed to solve source image')
-					return Ext.ReqU(Coke(WN.JoinU(NicoSeiga,Source))).Map(U => (
+					SourceMake(U,WN.JoinU(NicoSeiga,Source))
+					return SourceSolve(
 					{
-						Title : WC.HED(WW.MF(/title>([^<]+)/,Illust)),
+						Title : SolveXMLField('title',Illust),
 						Up : WC.HED(WW.MF(/"user_name"[^]+?<strong>([^<]+)</,Page)),
-						Date : +new Date(WW.MF(/created>([^<]+)/,Illust) + '+0900'),
-						Meta : WC.HED(WW.MF(/description>([^]+?)<\/description/,Illust))
-							.replace(/<br>\n?/g,'\n'),
+						Date : +new Date(SolveXMLField('created',Illust) + '+0900'),
+						Meta : SolveXMLDesc(Illust),
 						Part : [
 						{
-							URL : [WW.MF(/data-src="([^"]+)/,U)],
+							URL : U,
 							Ext : /id="gif_play_button"/.test(Page) ? '.gif' : '.jpg',
 						}]
-					}))
+					})
 				}))
+
+			if (PrefixMangaEpisode === Prefix) return Ext.ReqB(Coke(NicoSeigaAPIMangaEpisodeInfo(ID))).FMap(Episode =>
+				Ext.ReqB(Coke(NicoSeigaAPIMangaInfo(SolveXMLField('content_id',Episode)))).FMap(Manga =>
+					Ext.ReqB(Coke(NicoSeigaAPIMangaEpisodeDetail(ID))).FMap(B =>
+					{
+						var
+						Img,
+						BGM = [],BGMSet = new Set,
+						SE = [],SESet = new Set,
+						Part;
+						// 74015 | With both BGM & SE
+						Img = WW.MR((D,V) =>
+						{
+							var
+							U = SolveXMLField('source_url',V),
+							T;
+							if (T = SolveXMLField('bgm_path',V))
+							{
+								T = WN.JoinU(U,T)
+								BGMSet.size < BGMSet.add(T).size &&
+									BGM.push(T)
+							}
+							if (T = SolveXMLField('se_path',V))
+							{
+								T = WN.JoinU(U,T)
+								SESet.size < SESet.add(T).size &&
+									SE.push(T)
+							}
+							SourceMake(D,NicoSeigaSource(SolveXMLField('id',V)))
+							return D
+						},[],/<image>[^]+?<\/image>/g,B)
+						Part = WR.MapW(V => V[0].length ?
+						{
+							Title : V[2],
+							URL : V[0],
+							ExtDefault : V[1],
+						} : null,
+						[
+							[Img,'.jpg'],
+							[BGM,'.mp3','BGM'],
+							[SE,'.mp3','SE'],
+						])
+						return SourceSolve(
+						{
+							Title : SolveXMLField('title',Manga) + '.' +
+								SolveXMLField('episode_title',Episode),
+							Up : SolveXMLField('author_name',Manga),
+							Date : SolveXMLField('created',Episode),
+							Meta : SolveXMLDesc(Episode),
+							Part,
+						})
+					})))
 
 			PrefixVideoLike.has(Prefix) || WW.Throw('Unexpected Prefix ' + Prefix)
 
@@ -78,7 +155,7 @@ module.exports = O =>
 				return (B ?
 					Ext.ReqB(O.Req(
 					{
-						URL : NicoDMCApi,
+						URL : NicoDMCAPI,
 						JSON :
 						{
 							session :

@@ -126,7 +126,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			},
 			Hint : function(ID)
 			{
-				return O.Api(
+				return O.API(
 				{
 					URL : VimeoSearchSugg(WC.UE(ID)),
 					Head : {'X-Requested-With' : 'XMLHttpRequest'}
@@ -173,7 +173,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 									WV.X('Created ' + WW.StrDate(new Date(V.created_time))),
 									WV.X('LastActive ' + WW.StrDate(new Date(V.last_active_time))),
 									WV.X(V.bio),
-									WV.X(V.short_bio),
+									WV.X(V.short_bio)
 								]
 							}
 						},B.data)

@@ -50,8 +50,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					Date : new Date(V.snippet.publishedAt),
 					Len : WW.PTP(V.contentDetails.duration),
 					Desc : V.snippet.description,
-					More : WR.Up(V.contentDetails.dimension + ' ' + V.contentDetails.definition) +
-						('true' === V.contentDetails.caption ? '\nCaption On' : '')
+					More :
+					[
+						WR.Up(V.contentDetails.dimension + ' ' + V.contentDetails.definition),
+						'true' === V.contentDetails.caption && 'Caption On'
+					]
 				}
 			},B.items)
 				// .sort(function(Q,S){return S.Date - Q.Date})
@@ -102,7 +105,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	},
 	GoogleAPIReq = function(Q)
 	{
-		return O.Api(Q,true).Map(function(U)
+		return O.API(Q,true).Map(function(U)
 		{
 			var T;
 			if (200 !== U[2].status)
@@ -147,7 +150,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	}),
 	SolveChannelIDByCustomURL = WX.CacheM(function(Q)
 	{
-		return O.Api(Q).Map(function(B)
+		return O.API(Q).Map(function(B)
 		{
 			return WW.MF(/(?:"canonical"[^>]+\/channel\/|prop="channelId"[^"]+")([^"]+)/,B)
 		})
@@ -296,7 +299,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			},
 			Hint : function(ID)
 			{
-				return O.Api(GoogleClientYouTubeSuggestion(WC.UE(ID))).Map(function(B)
+				return O.API(GoogleClientYouTubeSuggestion(WC.UE(ID))).Map(function(B)
 				{
 					B = WC.JTO(B.replace(/^[^[]+|[^\]]+$/g,''))[1] || []
 					return {

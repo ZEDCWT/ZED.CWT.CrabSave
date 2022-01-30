@@ -40,7 +40,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 				C.title,
 				C.fileName,
 				V.description
-			].join('\n')
+			]
 		}
 	};
 	return {
@@ -61,7 +61,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 			Judge : O.Find,
 			View : function(ID,Page)
 			{
-				return O.Api(AcFunSearch(WC.UE(ID),-~Page)).Map(function(B)
+				return O.API(AcFunSearch(WC.UE(ID),-~Page)).Map(function(B)
 				{
 					B = CommonQuick(B)
 					return {
@@ -85,7 +85,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 			},
 			Hint : function(Q)
 			{
-				return O.Api(AcFunRestPCSugg(WC.UE(Q))).Map(function(B)
+				return O.API(AcFunRestPCSugg(WC.UE(Q))).Map(function(B)
 				{
 					B = Common(B.slice(2,-1))
 					return {
@@ -98,7 +98,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 			Judge : [/^\d+$/,O.Num('Video|AC')],
 			View : function(ID)
 			{
-				return O.Api(AcFunVideoView(ID)).Map(function(B)
+				return O.API(AcFunVideoView(ID)).Map(function(B)
 				{
 					B = O.JOM(/Info\s*=(?={)/,CommonQuick(B))
 					return {
@@ -111,9 +111,9 @@ CrabSave.Site(function(O,WW,WC,WR)
 			Judge : O.Num('User|U'),
 			View : function(ID,Page)
 			{
-				return O.Api(AcFunUser(ID)).FMap(function(User)
+				return O.API(AcFunUser(ID)).FMap(function(User)
 				{
-					return O.Api(AcFunUserVideo(ID,-~Page)).Map(function(B)
+					return O.API(AcFunUserVideo(ID,-~Page)).Map(function(B)
 					{
 						return {
 							Len : WW.MF(/video" *data-count="(\d+)/,User),

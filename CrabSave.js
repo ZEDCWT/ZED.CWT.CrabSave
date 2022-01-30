@@ -25,7 +25,7 @@ ActionAuthToken = 'Toke',
 ActionAuthCookie = 'Coke',
 ActionAuthShortCut = 'SC',
 ActionAuthSetting = 'Set',
-ActionAuthApi = 'Api',
+ActionAuthAPI = 'Api',
 ActionAuthTaskNew = 'TaskN',
 ActionAuthTaskInfo = 'TaskI',
 ActionAuthTaskPlay = 'TaskP',
@@ -366,7 +366,7 @@ module.exports = Option =>
 			try{S.send(Buffer.from(D))}catch(_){}
 		},
 		Suicide = () => S.terminate(),
-		ApiPool = new Map;
+		APIPool = new Map;
 
 		S.on('message',(Q,IsBuf) =>
 		{
@@ -440,16 +440,16 @@ module.exports = Option =>
 						}
 						break
 
-					case ActionAuthApi :
+					case ActionAuthAPI :
 						if (false === O)
 						{
-							if (ApiPool.has(K))
+							if (APIPool.has(K))
 							{
-								ApiPool.get(K)()
-								ApiPool.delete(K)
+								APIPool.get(K)()
+								APIPool.delete(K)
 							}
 						}
-						else if (!K || !WW.IsStr(K) || ApiPool.has(K))
+						else if (!K || !WW.IsStr(K) || APIPool.has(K))
 							Err('ErrBadReq')
 						else if (!WW.IsObj(O))
 							Err('ErrBadReq')
@@ -458,22 +458,22 @@ module.exports = Option =>
 							if (!/^\w+:\/\//.test(O.URL)) O.URL = 'http://' + O.URL
 							if (O.Cookie)
 								RequestCoke(O,O.Cookie)
-							ApiPool.set(K,WN.ReqU(RequestComm(O)).Now(B =>
+							APIPool.set(K,WN.ReqU(RequestComm(O)).Now(B =>
 							{
-								ApiPool.delete(K)
+								APIPool.delete(K)
 								SendAuth(
 								[
-									ActionAuthApi,K,
+									ActionAuthAPI,K,
 									B[0].Code,
 									B[1],
 									B[0].H
 								])
 							},E =>
 							{
-								ApiPool.delete(K)
+								APIPool.delete(K)
 								SendAuth(
 								[
-									ActionAuthApi,K,
+									ActionAuthAPI,K,
 									false,
 									ErrorS(E),
 									null
@@ -586,7 +586,7 @@ module.exports = Option =>
 			WebSocketPool.delete(Feed)
 			WebSocketPoolAuth.delete(SendAuth)
 			WebSocketPoolAuthSuicide.delete(Suicide)
-			ApiPool.forEach(V => V())
+			APIPool.forEach(V => V())
 		})
 
 		WR.Each(Send,WebSocketLast)

@@ -14,24 +14,24 @@ BiliBiliAudio = BiliBili + 'audio/',
 BiliBiliAudioWeb = BiliBiliAudio + 'music-service-c/web/',
 BiliBiliAudioWebInfo = WW.Tmpl(BiliBiliAudioWeb,'song/info?sid=',undefined),
 BiliBiliAudioWebURL = WW.Tmpl(BiliBiliAudioWeb,'url?sid=',undefined,'&privilege=2&quality=2'),
-BiliBiliApi = 'https://api.bilibili.com/',
-BiliBiliApiWebView = WW.Tmpl(BiliBiliApi,'x/web-interface/view?aid=',undefined),
-BiliBiliApiPlayURL = WW.Tmpl(BiliBiliApi,'x/player/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=16&fourk=1'),
-BiliBiliApiPlayURLPGC = WW.Tmpl(BiliBiliApi,'pgc/player/web/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=16&fourk=1'),
-BiliBiliApiPlayURLList =
+BiliBiliAPI = 'https://api.bilibili.com/',
+BiliBiliAPIWebView = WW.Tmpl(BiliBiliAPI,'x/web-interface/view?aid=',undefined),
+BiliBiliAPIPlayURL = WW.Tmpl(BiliBiliAPI,'x/player/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=16&fourk=1'),
+BiliBiliAPIPlayURLPGC = WW.Tmpl(BiliBiliAPI,'pgc/player/web/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=16&fourk=1'),
+BiliBiliAPIPlayURLList =
 [
-	BiliBiliApiPlayURL,
-	BiliBiliApiPlayURLPGC,
+	BiliBiliAPIPlayURL,
+	BiliBiliAPIPlayURLPGC,
 ],
-BiliBiliApiPlayerSo = WW.Tmpl(BiliBiliApi,'x/player.so?aid=',undefined,'&id=cid:',undefined),
-BiliBiliApiSteinNode = WW.Tmpl(BiliBiliApi,'x/stein/nodeinfo?aid=',undefined,'&graph_version=',undefined,'&node_id=',undefined),
-BiliBiliApiPUGV = BiliBiliApi + 'pugv/',
-BiliBiliApiPUGVViewSeasonByEP = WW.Tmpl(BiliBiliApiPUGV,'view/web/season?ep_id=',undefined),
-BiliBiliApiPUGVPlayURL = WW.Tmpl(BiliBiliApiPUGV,'player/web/playurl?ep_id=',undefined,'&qn=',undefined,'&fnver=0&fnval=80&fourk=1'),
-BiliBiliVCApi = 'https://api.vc.bilibili.com/',
-// BiliBiliVCApiDetail = WW.Tmpl(BiliBiliVCApi,'clip/v1/video/detail?video_id=',undefined,'&need_playurl=1'),
-BiliBiliVCApiDynamicApiRoot = BiliBiliVCApi + 'dynamic_svr/v1/dynamic_svr/',
-BiliBiliVCApiDynamicDetail = WW.Tmpl(BiliBiliVCApiDynamicApiRoot,'get_dynamic_detail?dynamic_id=',undefined),
+BiliBiliAPIPlayerSo = WW.Tmpl(BiliBiliAPI,'x/player.so?aid=',undefined,'&id=cid:',undefined),
+BiliBiliAPISteinNode = WW.Tmpl(BiliBiliAPI,'x/stein/nodeinfo?aid=',undefined,'&graph_version=',undefined,'&node_id=',undefined),
+BiliBiliAPIPUGV = BiliBiliAPI + 'pugv/',
+BiliBiliAPIPUGVViewSeasonByEP = WW.Tmpl(BiliBiliAPIPUGV,'view/web/season?ep_id=',undefined),
+BiliBiliAPIPUGVPlayURL = WW.Tmpl(BiliBiliAPIPUGV,'player/web/playurl?ep_id=',undefined,'&qn=',undefined,'&fnver=0&fnval=80&fourk=1'),
+BiliBiliVCAPI = 'https://api.vc.bilibili.com/',
+// BiliBiliVCAPIDetail = WW.Tmpl(BiliBiliVCAPI,'clip/v1/video/detail?video_id=',undefined,'&need_playurl=1'),
+BiliBiliVCAPIDynamicAPIRoot = BiliBiliVCAPI + 'dynamic_svr/v1/dynamic_svr/',
+BiliBiliVCAPIDynamicDetail = WW.Tmpl(BiliBiliVCAPIDynamicAPIRoot,'get_dynamic_detail?dynamic_id=',undefined),
 BiliBiliArticleReadContent = WW.Tmpl(BiliBili,'read/native?id=',undefined),
 
 Common = V => (V = WC.JTO(V)).code ?
@@ -50,12 +50,12 @@ module.exports = O =>
 			var
 			Prefix,ID,CID,
 			PlayURL = (ID,CID,Quality) => WX.TCO((_,F) =>
-				Ext.ReqB(O.Coke(BiliBiliApiPlayURLList[F](ID,CID,Quality || 120)))
+				Ext.ReqB(O.Coke(BiliBiliAPIPlayURLList[F](ID,CID,Quality || 120)))
 					.Map(B => [0,Common(B)])
 					.RetryWhen(E => E.Map((V,F) =>
 						!F && V && -503 === V.code || WW.Throw(V))
 						.Delay(2E3))
-					.ErrAs(E => -~F < BiliBiliApiPlayURLList.length ?
+					.ErrAs(E => -~F < BiliBiliAPIPlayURLList.length ?
 						WX.Just([true]) :
 						WX.Throw(E)));
 
@@ -69,7 +69,7 @@ module.exports = O =>
 			}
 			else ID = Q[0]
 
-			if (PrefixTimeline === Prefix) return Ext.ReqB(O.Coke(BiliBiliVCApiDynamicDetail(ID))).Map(B =>
+			if (PrefixTimeline === Prefix) return Ext.ReqB(O.Coke(BiliBiliVCAPIDynamicDetail(ID))).Map(B =>
 			{
 				var
 				Desc,Card,
@@ -113,7 +113,7 @@ module.exports = O =>
 			})
 
 			/*
-			if (PrefixShortVideo === Prefix) return Ext.ReqB(O.Coke(BiliBiliVCApiDetail(ID))).Map(B =>
+			if (PrefixShortVideo === Prefix) return Ext.ReqB(O.Coke(BiliBiliVCAPIDetail(ID))).Map(B =>
 			{
 				B = Common(B)
 				return {
@@ -170,19 +170,19 @@ module.exports = O =>
 				}
 			})
 
-			if (PrefixCheeseEpisode === Prefix) return Ext.ReqB(O.Coke(BiliBiliApiPUGVViewSeasonByEP(ID))).FMap(Season =>
+			if (PrefixCheeseEpisode === Prefix) return Ext.ReqB(O.Coke(BiliBiliAPIPUGVViewSeasonByEP(ID))).FMap(Season =>
 			{
 				var Episode;
 				Season = Common(Season)
 				Episode = Season.episodes.find(V => V.id == ID);
 				Episode || WX.Throw('Unexpected fatal | No such episode')
-				return Ext.ReqB(O.Coke(BiliBiliApiPUGVPlayURL(ID,120)))
+				return Ext.ReqB(O.Coke(BiliBiliAPIPUGVPlayURL(ID,120)))
 					.FMap((B,T) =>
 					{
 						B = Common(B)
 						T = B.accept_quality && Math.max(...B.accept_quality)
 						return T && B.quality < T ?
-							Ext.ReqB(O.Coke(BiliBiliApiPUGVPlayURL(ID,T)))
+							Ext.ReqB(O.Coke(BiliBiliAPIPUGVPlayURL(ID,T)))
 								.Map(Common) :
 							WX.Just(B)
 					})
@@ -236,7 +236,7 @@ module.exports = O =>
 
 			if (Prefix) return WX.Throw('Unexpected Prefix ' + Prefix)
 
-			return Ext.ReqB(O.Coke(BiliBiliApiWebView(ID))).FMap(AV =>
+			return Ext.ReqB(O.Coke(BiliBiliAPIWebView(ID))).FMap(AV =>
 			{
 				var
 				Part = [],
@@ -254,13 +254,13 @@ module.exports = O =>
 					Part
 				}
 				return (AV.stein_guide_cid ?
-					Ext.ReqB(O.Coke(O.Head(BiliBiliApiPlayerSo(ID,CIDFirst),'Referer',BiliBili))).FMap(G =>
+					Ext.ReqB(O.Coke(O.Head(BiliBiliAPIPlayerSo(ID,CIDFirst),'Referer',BiliBili))).FMap(G =>
 					{
 						var
 						Graph = WW.MF(/graph_version":(\d+)/,G),
 						CID2Node = {[CIDFirst] : ''};
 						return WX.Exp(I =>
-							Ext.ReqB(O.Coke(BiliBiliApiSteinNode(ID,Graph,CID2Node[I])))
+							Ext.ReqB(O.Coke(BiliBiliAPISteinNode(ID,Graph,CID2Node[I])))
 								.Map(V =>
 								{
 									V = Common(V)
@@ -341,7 +341,7 @@ module.exports = O =>
 		Pack : Q => (
 		{
 			URL : Q,
-			Head : {Referer : BiliBiliApi}
+			Head : {Referer : BiliBiliAPI}
 		}),
 		Range : false,
 	}

@@ -104,6 +104,7 @@ declare module CrabSaveNS
 		URL : string[]
 		Size? : number[]
 		Ext? : string | string[]
+		ExtDefault? : string
 	}
 
 	interface SiteAll

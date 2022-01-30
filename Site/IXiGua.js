@@ -30,7 +30,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	Sign,SignAt,
 	SolveSign = WX.CacheL(function(URL)
 	{
-		return O.Api(URL).Map(function(B,T)
+		return O.API(URL).Map(function(B,T)
 		{
 			CrabSave[T = WW.Key()] = Happy
 			try
@@ -56,7 +56,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	}),
 	ReqSign = function()
 	{
-		return (Sign && WW.Now() < SignAt + 36E5 ? WX.Just(Sign) : O.Api(IXiGua).FMap(function(B)
+		return (Sign && WW.Now() < SignAt + 36E5 ? WX.Just(Sign) : O.API(IXiGua).FMap(function(B)
 		{
 			Happy.tac = WC.JTOO(WW.MF(/tac='(.+?)'<\/scr/,B).replace(/"/g,'\\"'),{Ext : true})
 			return SolveSign
@@ -66,11 +66,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			)
 		}))
 	},
-	ReqAPI = function(Q,Api)
+	ReqAPI = function(Q,ForceAPI)
 	{
 		return ReqSign().FMap(function(S)
 		{
-			return (!Api && O.Coke() ? O.Req : O.Api)(
+			return (!ForceAPI && O.Coke() ? O.Req : O.API)(
 			{
 				URL : Q,
 				QS :
@@ -271,7 +271,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 								V.description,
 								V.followers_count_str + ' (' + V.followers_count + ')',
 								V.verified_content
-							].join('\n')
+							]
 						}
 					},B.data)
 				}]

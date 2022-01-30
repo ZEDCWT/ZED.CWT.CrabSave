@@ -5,6 +5,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	PrefixVideo = 'sm',
 	PrefixChannel = 'ch',
 	PrefixSeiga = 'im',
+	PrefixMangaEpisode = 'mg',
 
 	Nico = 'https://www.nicovideo.jp/',
 	NicoWatch = WW.Tmpl(Nico,'watch/',undefined),
@@ -32,10 +33,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	NicoSeigaSeiga = WW.Tmpl(NicoSeiga,'seiga/',undefined),
 	NicoSeigaUser = WW.Tmpl(NicoSeiga,'user/illust/',undefined),
 	NicoSeigaUserAll = WW.Tmpl(NicoSeiga,'user/illust/',undefined,'?target=illust_all&page=',undefined),
+	NicoSeigaComic = WW.Tmpl(NicoSeiga,'comic/',undefined),
+	NicoSeigaWatch = WW.Tmpl(NicoSeiga,'watch/',undefined),
+	NicoSeigaUserManga = WW.Tmpl(NicoSeiga,'manga/list?user_id=',undefined),
 	NicoSeigaAPI = NicoSeiga + 'api/',
 	// First 200 only
 	// NicoSeigaAPIUserData = WW.Tmpl(NicoSeigaAPI,'user/data?id=',undefined),
 	NicoSeigaAPIIllust = WW.Tmpl(NicoSeigaAPI,'illust/info?id=',undefined),
+	// NicoSeigaAPIMangaInfo = WW.Tmpl(NicoSeigaAPI,'manga/info?id=',undefined),
+	NicoSeigaAPIMangaEpisodeInfo = WW.Tmpl(NicoSeigaAPI,'theme/info?id=',undefined),
 	// NicoSeigaLohas = 'https://lohas.nicoseiga.jp/',
 	// NicoSeigaLohasThumb = WW.Tmpl(NicoSeigaLohas,'thumb/',undefined,'qz'),
 	SolveSM = function(Q)
@@ -78,10 +84,19 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				UPURL : B.owner && NicoUser(B.owner.id),
 				Date : O.DTS(B.registeredAt),
 				Len : +B.duration,
-				More : (V.addedAt ? 'Added at ' + O.DTS(V.addedAt) + '\n' : '') +
+				More : (V.addedAt ? 'Added at ' + O.DTS(V.addedAt) : '') +
 					B.latestCommentSummary
 			}
 		},Q.items)
+	},
+	SolveXMLField = function(Q,B)
+	{
+		return WC.HED(WW.MF(RegExp('<' + Q + '>([^]+?)</' + Q + '>'),B))
+	},
+	SolveXMLDesc = function(B)
+	{
+		return SolveXMLField('description',B)
+			.replace(/<br>\n?/g,'\n')
 	};
 	return {
 		ID : 'NicoNico',
@@ -102,7 +117,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Judge : O.Find,
 			View : function(ID,Page,Pref)
 			{
-				return O.Api(NicoSearch(WC.UE(ID),-~Page,Pref ? '&' + WC.UD(WC.QSS(Pref)) : '')).Map(function(B)
+				return O.API(NicoSearch(WC.UE(ID),-~Page,Pref ? '&' + WC.UD(WC.QSS(Pref)) : '')).Map(function(B)
 				{
 					return {
 						Len : +WW.MF(/"dataValue[^>]+>([\d,]+)/,B).replace(/,/g,''),
@@ -148,10 +163,94 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			},
 			Hint : function(ID)
 			{
-				return O.Api(NicoSearchSugComplete(WC.UE(ID))).Map(function(V)
+				return O.API(NicoSearchSugComplete(WC.UE(ID))).Map(function(V)
 				{
 					return {
 						Item : WC.JTO(V).candidates
+					}
+				})
+			}
+		},{
+			Name : 'UserManga',
+			Judge : O.Num('User\\W*Manga|Manga.*User(?:_ID)?'),
+			View : function(ID,Page)
+			{
+				// Examples where paging effects are not identified yet
+				return O.Req(NicoSeigaUserManga(ID,-~Page)).Map(function(B)
+				{
+					return {
+						Item : WW.MR(function(D,V)
+						{
+							D.push(
+							{
+								Non : true,
+								ID : WW.MF(/\/comic\/(\d+)/,V),
+								URL : NicoSeigaComic(WW.MF(/\/comic\/(\d+)/,V)),
+								Img : WW.MF(/thumb_image"[^<>]+src="([^"]+)/,V),
+								Title : WW.MF(/"title">(?:<[^>]+>)*([^<]+)/,V),
+								More :
+								[
+									WC.HED(WW.MF(/created">([^<]+)/,V)),
+									WC.HED(WW.MF(/updated">([^<]+)/,V)),
+									WR.Trim(WC.HED(WW.MF(/"description">([^<]+)/,V)))
+								]
+							})
+							return D
+						},[],/"mg_item[^]+?<\/li/g,B)
+					}
+				})
+			}
+		},{
+			Name : 'Manga',
+			Judge : O.Num('Manga|Comic'),
+			View : O.Less(function(ID)
+			{
+				return O.Req(NicoSeigaComic(ID)).Map(function(B)
+				{
+					var
+					UP = WC.HED(WW.MF(/"author_name">([^<]+)/,B)),
+					UPURL = NicoSeigaUserManga(WW.MF(/"author_list"[^]+?user_id=(\d+)/,B));
+					return WW.MR(function(D,V)
+					{
+						D.push(
+						{
+							ID : WW.MF(/\/(mg\d+)/,V),
+							Img : WW.MF(/data-original="([^"]+)/,V),
+							Title : WC.HED(WW.MF(/alt="([^"]+)/,V)),
+							UP : UP,
+							UPURL : UPURL,
+							More :
+							[
+								WC.HED(WW.MF(/"counter[^>]+>([^<]+)/,V)),
+								WC.HED(WW.MF(/"comment_summary[^>]+>([^<]+)/,V))
+							]
+						})
+						return D
+					},[],/"episode_item">[^]+?<\/li/g,B)
+				})
+			})
+		},{
+			Name : 'MangaEpisode',
+			Judge : O.Num('MangaEpisode|MG'),
+			View : function(ID)
+			{
+				return O.Req(NicoSeigaAPIMangaEpisodeInfo(ID)).Map(function(B)
+				{
+					return {
+						Item : [
+						{
+							ID : PrefixMangaEpisode + ID,
+							Img : SolveXMLField('thumbnail_url',B),
+							Title : SolveXMLField('episode_title',B),
+							UP : 'User' + SolveXMLField('user_id',B),
+							UPURL : NicoSeigaUserManga(SolveXMLField('user_id',B)),
+							Date : new Date(SolveXMLField('created',B)),
+							Desc : SolveXMLDesc(B),
+							More :
+							[
+								O.Ah(SolveXMLField('content_title',B),NicoSeigaComic(SolveXMLField('content_id',B)))
+							]
+						}]
 					}
 				})
 			}
@@ -189,13 +288,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						Item : [
 						{
 							ID : PrefixSeiga + ID,
-							Img : WW.MF(/thumbnail_url>([^<]+)/,B),
-							Title : WC.HED(WW.MF(/title>([^<]+)/,B)),
-							UP : 'User' + WW.MF(/user_id>(\d+)/,B),
-							UPURL : NicoSeigaUser(WW.MF(/user_id>(\d+)/,B)),
-							Date : new Date(WW.MF(/created>([^<]+)/,B) + '+0900'),
-							Desc : WC.HED(WW.MF(/description>(.*?)<\/description/,B))
-								.replace(/<br>\n?/g,'\n')
+							Img : SolveXMLField('thumbnail_url',B),
+							Title : SolveXMLField('title',B),
+							UP : 'User' + SolveXMLField('user_id',B),
+							UPURL : NicoSeigaUser(SolveXMLField('user_id',B)),
+							Date : new Date(SolveXMLField('created',B) + '+0900'),
+							Desc : SolveXMLDesc(B)
 						}]
 					}
 				})
@@ -253,7 +351,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Judge : O.Num('Series'),
 			View : O.Less(function(ID)
 			{
-				return O.Api(NicoSeries(ID)).Map(function(B)
+				return O.API(NicoSeries(ID)).Map(function(B)
 				{
 					return WW.MR(function(D,V)
 					{
@@ -274,7 +372,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Judge : O.Num('User'),
 			View : function(ID,Page)
 			{
-				return O.Api(MakeNV(NicoNVAPIUser(ID,-~Page))).Map(function(B)
+				return O.API(MakeNV(NicoNVAPIUser(ID,-~Page))).Map(function(B)
 				{
 					B = CommonNV(B)
 					return {
@@ -356,7 +454,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			View : function(ID)
 			{
 				ID = WR.Low(ID)
-				return O.Api(NicoExtThumb(PadSM(ID))).Map(function(B)
+				return O.API(NicoExtThumb(PadSM(ID))).Map(function(B)
 				{
 					var T;
 					/<error>/.test(B) && O.Bad(WW.MF(/code>([^<]+)/,B),WW.MF(/tion>([^<]+)/,B))
@@ -410,9 +508,17 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		IDView : PadSM,
 		IDURL : function(V)
 		{
+			var
+			ID,Prefix;
 			V = PadSM(V)
-			return /^im/i.test(V) ?
-				NicoSeigaSeiga(V) :
+			ID = /^([A-Z]+)(\d+)$/i.exec(V)
+			if (ID)
+			{
+				Prefix = ID[1]
+				ID = ID[2]
+			}
+			return PrefixSeiga === Prefix ? NicoSeigaSeiga(V) :
+				PrefixMangaEpisode === Prefix ? NicoSeigaWatch(V) :
 				NicoWatch(V)
 		}
 	}

@@ -17,7 +17,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 
 	API = function(Q,ForceReq)
 	{
-		return (ForceReq || O.Coke() ? O.Req : O.Api)(
+		return (ForceReq || O.Coke() ? O.Req : O.API)(
 		{
 			URL : Q,
 			Head : {Origin : FanBoxAPI.slice(0,-1)}
@@ -140,7 +140,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 							UPURL : FanBoxUser(V.creatorId),
 							More :
 							[
-								'[' + V.id + '] ' + V.title + '\n' +
+								'[' + V.id + '] ' + V.title,
 								'JPY ' + V.fee,
 								O.Img(V.coverImageUrl),
 								V.description

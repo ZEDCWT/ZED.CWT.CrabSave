@@ -11,7 +11,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 
 	SolveSeriesList = function(ID)
 	{
-		return O.Api(ShonenMagazinePocketSeriesRSS(ID)).Map(function(B)
+		return O.API(ShonenMagazinePocketSeriesRSS(ID)).Map(function(B)
 		{
 			return WW.MR(function(D,V)
 			{
@@ -44,7 +44,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 			Judge : O.Num('Episode'),
 			View : function(ID)
 			{
-				return O.Api(ShonenMagazinePocketEpisodeJSON(ID)).FMap(function(Episode)
+				return O.API(ShonenMagazinePocketEpisodeJSON(ID)).FMap(function(Episode)
 				{
 					Episode = WC.JTO(Episode).readableProduct
 					return SolveSeriesList(Episode.series.id).Map(function(Series)

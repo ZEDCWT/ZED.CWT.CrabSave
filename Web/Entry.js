@@ -29,7 +29,7 @@
 	ActionAuthCookie = 'Coke',
 	ActionAuthShortCut = 'SC',
 	ActionAuthSetting = 'Set',
-	ActionAuthApi = 'Api',
+	ActionAuthAPI = 'Api',
 	ActionAuthTaskNew = 'TaskN',
 	ActionAuthTaskInfo = 'TaskI',
 	ActionAuthTaskPlay = 'TaskP',
@@ -76,7 +76,7 @@
 	DebugLimitReq = 32,
 
 	URLSite = 'Site/',
-	URLApi = 'Api/',
+	URLAPI = 'Api/',
 
 	Lang = Top.Lang,
 	LangDefault = Lang.EN,
@@ -160,8 +160,8 @@
 	},
 	MakeImgURL = function(V)
 	{
-		return WW.IsObj(V) ? URLApi + '~' + WC.UE(WC.OTJ(V)) :
-			Setting.ProxyView ? URLApi + '~' + SolveURL(V).replace(/\/\/+/g,WC.UE) :
+		return WW.IsObj(V) ? URLAPI + '~' + WC.UE(WC.OTJ(V)) :
+			Setting.ProxyView ? URLAPI + '~' + SolveURL(V).replace(/\/\/+/g,WC.UE) :
 			SolveURL(V)
 	},
 
@@ -395,8 +395,8 @@
 					WSOnSetting(K)
 					break
 
-				case ActionAuthApi :
-					WR.Has(K,WSOnApi) && WSOnApi[K](Q)
+				case ActionAuthAPI :
+					WR.Has(K,WSOnAPI) && WSOnAPI[K](Q)
 					break
 
 				case ActionAuthTaskInfo :
@@ -447,7 +447,7 @@
 		}
 	}),
 	WSOnProgress,
-	WSOnApi = {},
+	WSOnAPI = {},
 	WSOnAuthing = WW.BusS(),
 	WSOnOnline = WW.BusS(),
 	WSOnOffline = WW.BusS(),
@@ -1459,7 +1459,18 @@
 										})
 									}
 								}).R,
-								!!V.More && WV.Con(WV.Rock(WV.FmtW),V.More)
+								!!V.More && WV.Con
+								(
+									WV.Rock(WV.FmtW),
+									WW.IsArr(V.More) ?
+										WR.MapU(function(B,F)
+										{
+											return B && -~F < V.More.length && WW.IsStr(B) ?
+												B + '\n' :
+												B
+										},V.More) :
+										V.More
+								)
 							]),List)
 							NonDownload || MakeBar(Site,V,Click)
 							NonDownload && Img && URL && WV.On('click',function()
@@ -3196,12 +3207,12 @@
 					return WX.Provider(function(O)
 					{
 						var T = WW.Key();
-						if (WebSocketSendAuth([ActionAuthApi,T,Q]))
+						if (WebSocketSendAuth([ActionAuthAPI,T,Q]))
 						{
-							WSOnApi[T] = function(B)
+							WSOnAPI[T] = function(B)
 							{
 								ReqFeed(Q,B)
-								WR.Del(T,WSOnApi)
+								WR.Del(T,WSOnAPI)
 								T = false
 								if (B[2] && H) O.D(B.slice(2)).F()
 								else if (B[2] && /^2/.test(B[2])) O.D(B[3]).F()
@@ -3213,15 +3224,15 @@
 						else T = WW.Throw(SA(Online ? 'ErrNoAuth' : 'ErrOff'))
 						return function()
 						{
-							T && WebSocketSendAuth([ActionAuthApi,T,false])
-							T && WR.Del(T,WSOnApi)
+							T && WebSocketSendAuth([ActionAuthAPI,T,false])
+							T && WR.Del(T,WSOnAPI)
 						}
 					})
 				},
-				Api : function(Q,H)
+				API : function(Q,H)
 				{
 					var
-					URL = URLApi + '~' + WC.UE(WW.IsObj(Q) ? WC.OTJ(Q) : Q);
+					URL = URLAPI + '~' + WC.UE(WW.IsObj(Q) ? WC.OTJ(Q) : Q);
 					return (H ? WB.ReqU({URL : URL,AC : true}) : WB.ReqB(URL))
 						.Tap(function(B)
 						{

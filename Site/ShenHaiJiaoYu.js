@@ -39,7 +39,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 			Judge : O.Num('LiveReplay|(?:Query)?Detail(?=.*#LiveReplay)'),
 			View : function(ID)
 			{
-				return O.Api(ShenHaiJiaoYuDetail(ID)).FMap(function(Detail)
+				return O.API(ShenHaiJiaoYuDetail(ID)).FMap(function(Detail)
 				{
 					Detail = Common(Detail)
 					return O.Req(ShenHaiJiaoYuLessonList(Detail.classTypeId)).Map(function(B)
@@ -67,12 +67,12 @@ CrabSave.Site(function(O,WW,WC,WR)
 			Judge : O.Num('Lecture|(?:Query)?Detail(?=.*#Lecture)'),
 			View : function(ID)
 			{
-				return O.Api(ShenHaiJiaoYuDetail(ID)).FMap(function(Detail)
+				return O.API(ShenHaiJiaoYuDetail(ID)).FMap(function(Detail)
 				{
 					Detail = Common(Detail)
-					return O.Api(ShenHaiJiaoYuLectureList(ID)).FMap(function(B)
+					return O.API(ShenHaiJiaoYuLectureList(ID)).FMap(function(B)
 					{
-						return O.Api(ShenHaiJiaoYuClassVideo(Common(B).data[0].moduleId,Detail.classTypeId))
+						return O.API(ShenHaiJiaoYuClassVideo(Common(B).data[0].moduleId,Detail.classTypeId))
 					}).Map(function(B)
 					{
 						B = Common(B).data
@@ -101,10 +101,10 @@ CrabSave.Site(function(O,WW,WC,WR)
 			Judge : O.Num('Resource|(?:Query)?Detail(?=.*#Resource)'),
 			View : function(ID,Page)
 			{
-				return O.Api(ShenHaiJiaoYuDetail(ID)).FMap(function(Detail)
+				return O.API(ShenHaiJiaoYuDetail(ID)).FMap(function(Detail)
 				{
 					Detail = Common(Detail)
-					return O.Api(ShenHaiJiaoYuClassRes(ID,-~Page)).Map(function(B)
+					return O.API(ShenHaiJiaoYuClassRes(ID,-~Page)).Map(function(B)
 					{
 						B = Common(B).data
 						return {
@@ -134,7 +134,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 			],
 			View : function(ID)
 			{
-				return O.Api(ShenHaiJiaoYuDetail(ID)).Map(function(B)
+				return O.API(ShenHaiJiaoYuDetail(ID)).Map(function(B)
 				{
 					var
 					URL,

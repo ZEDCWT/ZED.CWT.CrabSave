@@ -196,7 +196,7 @@ module.exports = Option =>
 										URL : L,
 										Ext : WW.IsArr(P.Ext) ? P.Ext[G] :
 											null != P.Ext ? P.Ext :
-											SolveExt(L) || '.mp4',
+											SolveExt(L) || P.ExtDefault || '.mp4',
 										Size : L = P.Size && null != P.Size[G] ? P.Size[G] :
 											(L = DownPre[F + ' ' + G]) && null != L.Done && null != L.Size ? L.Size :
 											Setting.Size() ? null :

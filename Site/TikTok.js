@@ -70,7 +70,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	Sign,SignAt,
 	SolveSign = function()
 	{
-		return O.Api(TikTokAcrawler).Map(function(B)
+		return O.API(TikTokAcrawler).Map(function(B)
 		{
 			var
 			K = ['window'],V = [Happy];
@@ -96,7 +96,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	{
 		return (Sign && WW.Now() < 36E5 + SignAt ? WX.Just(Sign) : SolveSign()).FMap(function(S)
 		{
-			return (ForceReq || O.Coke() ? O.Req : O.Api)(
+			return (ForceReq || O.Coke() ? O.Req : O.API)(
 			{
 				UA : Happy.navigator.userAgent = WW.RUA(),
 				URL : Q,
@@ -118,7 +118,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	},
 	SolveUserID = WX.CacheM(function(ID)
 	{
-		return O.Api(TikTokUser(ID)).Map(function(B)
+		return O.API(TikTokUser(ID)).Map(function(B)
 		{
 			return WW.MF(/userInfo":{"user":{"id":"(\d+)"/,B) || WW.Throw('No such user `' + ID + '`')
 		})
@@ -243,7 +243,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								V.user.signature,
 								'ID ' + V.user.id,
 								'Video ' + V.stats.videoCount
-							].join('\n')
+							]
 						}
 					},B.userList)
 				}]
