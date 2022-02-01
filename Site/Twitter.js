@@ -175,7 +175,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			}
 		},{
 			Name : 'User',
-			Judge : [/\.com\/([^/]+)/i,O.Word('User|@')],
+			Judge :
+			[
+				/(?:@|\.com\/)([^/]+)/i,
+				O.Word('User')
+			],
 			View : O.More(function(ID,I)
 			{
 				return O.Req(MakeHead(TwitterAPIUserByScreen(WC.UE(WC.OTJ(ID))))).FMap(function(U)

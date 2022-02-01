@@ -139,7 +139,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			})
 		},{
 			Name : 'User',
-			Judge : O.Word('Users?'),
+			Judge :
+			[
+				/@([^/]+)/i,
+				O.Word('Users?')
+			],
 			View : O.More(function(ID,I)
 			{
 				return SolveUserInfo(ID).FMap(function(B)

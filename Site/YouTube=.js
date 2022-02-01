@@ -16,33 +16,39 @@ GoogleAPIYouTubeVideo = WW.Tmpl(GoogleAPIYouTube,'videos?key=',GoogleAPIKey,'&pa
 /**@type {CrabSaveNS.SiteO}*/
 module.exports = O =>
 {
+	var
+	TransformParseExt,
+	TransformParse = WX.CacheL(Q => TransformParseExt.ReqB(O.Req(WN.JoinU(YouTube,Q))).Map(B =>
+	{
+		var
+		SProcess = WW.MU(/.split\(""[^{}]+.join\(""/,B),
+		SMethod = WW.MU(RegExp(`${WW.MU(/\w+(?=\.)/,SProcess)}={([^{}]+{[^{}]+})+?}`),B),
+		SMap = WW.MR((D,V) =>
+		{
+			D[V[1]] = /rev/.test(V) ? Q => Q.reverse() :
+				/spl/.test(V) ? (Q,S) => Q.splice(0,S) :
+				(Q,S) => [Q[0],Q[S % Q.length]] = [Q[S % Q.length],Q[0]]
+			return D
+		},{},/(\w+):(.*?})/g,SMethod),
+		S = Q => SProcess.forEach(([V,B]) => SMap[V] && SMap[V](Q,B),Q = [...Q]) || Q.join``,
+		NProcess = WW.MF(/\.get\(.n.([^]+?)set\(.n./,B),
+		NMethod = WW.MF(/=([^()]+)\(/,NProcess),
+		NFunc,
+		N;
+		if (NFunc = /(\w+)\[/.exec(NMethod))
+			NMethod = WW.MF(RegExp(NFunc[1] + '=\\[(\\w+)]'),B)
+		NFunc = WW.MF(RegExp(NMethod + '=(function[^]+?\\.join\\([^}]+})'),B)
+		N = WN.Evil(`(${NFunc})`)
+		SProcess = WW.MR((D,V) => D.push([V[1],+V[2]]) && D,[],/\.(\w+)[^)]+?(\d+)/g,SProcess)
+		return {S,N}
+	}));
+
 	return {
 		URL : (ID,Ext) => Ext.ReqB(O.Req(GoogleAPIYouTubeVideo('snippet',ID))).FMap(Info =>
 		{
 			var
-			TransformParse = WX.CacheL(Q => Ext.ReqB(O.Req(WN.JoinU(YouTube,Q)))
-				.Map(B =>
-				{
-					var
-					SProcess = WW.MU(/.split\(""[^{}]+.join\(""/,B),
-					SMethod = WW.MU(RegExp(`${WW.MU(/\w+(?=\.)/,SProcess)}={([^{}]+{[^{}]+})+?}`),B),
-					SMap = WW.MR((D,V) =>
-					{
-						D[V[1]] = /rev/.test(V) ? Q => Q.reverse() :
-							/spl/.test(V) ? (Q,S) => Q.splice(0,S) :
-							(Q,S) => [Q[0],Q[S % Q.length]] = [Q[S % Q.length],Q[0]]
-						return D
-					},{},/(\w+):(.*?})/g,SMethod),
-					S = Q => SProcess.forEach(([V,B]) => SMap[V] && SMap[V](Q,B),Q = [...Q]) || Q.join``,
-					NProcess = WW.MF(/\.get\(.n.([^]+?)set\(.n./,B),
-					NMethod = WW.MU(/\w+(?=\()/,NProcess),
-					NFunc = WW.MF(RegExp(NMethod + '=(function[^]+?\\.join\\([^}]+})'),B),
-					N = WN.Evil(`(${NFunc})`);
-					SProcess = WW.MR((D,V) => D.push([V[1],+V[2]]) && D,[],/\.(\w+)[^)]+?(\d+)/g,SProcess)
-					return {S,N}
-				})),
 			TransformSolve = Q => WX.Just(Q)
-				.FMap(B => TransformParse
+				.FMap(B => (TransformParseExt = Ext) && TransformParse
 				(
 					WW.MF(/"([/\w]+player_ias[^"]+base.js)"/,B) ||
 					WC.JTO(WW.MF(/assets"[^}]+js":("[^"]+")/,B))
@@ -52,7 +58,6 @@ module.exports = O =>
 					S : WR.Id,
 					N : WR.Id,
 				}));
-
 			Info = WC.JTO(Info)
 			Info.error && O.Bad('#' + (Info.code || Info.error.code) + ' ' + WC.OTJ(Info.error))
 			Info = Info.items[0].snippet
