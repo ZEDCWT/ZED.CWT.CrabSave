@@ -147,7 +147,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 							return {
 								Non : true,
 								ID : V.userId,
-								URL : AcFunUser(V.userId),
+								URL : AcFunUser,
 								Img : V.userImg,
 								UP : V.userName,
 								UPURL : AcFunUser(V.userId),

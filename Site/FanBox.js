@@ -107,7 +107,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 						return {
 							Non : true,
 							ID : V.creatorId,
-							URL : FanBoxUser(V.creatorId),
+							URL : FanBoxUser,
 							Img : V.user.iconUrl,
 							UP : '[' + V.user.userId + '] ' + V.user.name,
 							UPURL : FanBoxUser(V.creatorId),
@@ -134,7 +134,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 						return {
 							Non : true,
 							ID : V.creatorId,
-							URL : FanBoxUser(V.creatorId),
+							URL : FanBoxUser,
 							Img : V.user.iconUrl,
 							UP : '[' + V.user.userId + '] ' + V.user.name,
 							UPURL : FanBoxUser(V.creatorId),

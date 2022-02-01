@@ -66,6 +66,7 @@ module.exports = Option =>
 		'FanBox',
 		'Instagram',
 		'IXiGua',
+		'KakuYomu',
 		'Pixiv',
 		'ShenHaiJiaoYu',
 		'ShonenMagazine',

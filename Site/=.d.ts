@@ -38,7 +38,7 @@ declare module CrabSaveNS
 		Index? : number
 		ID : string
 		View? : WishNS.EleContent
-		URL? : string
+		URL? : string | ((Q : string) => string)
 		Img? : string | string[]
 		Title? : string
 		TitleView? : WishNS.EleContent

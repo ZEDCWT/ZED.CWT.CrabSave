@@ -185,7 +185,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							{
 								Non : true,
 								ID : WW.MF(/\/comic\/(\d+)/,V),
-								URL : NicoSeigaComic(WW.MF(/\/comic\/(\d+)/,V)),
+								URL : NicoSeigaComic,
 								Img : WW.MF(/thumb_image"[^<>]+src="([^"]+)/,V),
 								Title : WW.MF(/"title">(?:<[^>]+>)*([^<]+)/,V),
 								More :
@@ -435,7 +435,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						return {
 							Non : true,
 							ID : V.id,
-							URL : NicoUser(V.id),
+							URL : NicoUser,
 							Img : V.icons.large,
 							UP : V.nickname,
 							UPURL : NicoUser(V.id),

@@ -262,7 +262,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 						return {
 							Non : true,
 							ID : V.user_id,
-							URL : IXiGuaHome(V.user_id),
+							URL : IXiGuaHome,
 							Img : V.avatar_url,
 							UP : V.name,
 							UPURL : IXiGuaHome(V.user_id),

@@ -234,7 +234,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						return {
 							Non : true,
 							ID : V.user.uniqueId,
-							URL : TikTokUser(V.user.uniqueId),
+							URL : TikTokUser,
 							Img : V.user.avatarLarger,
 							UP : V.user.nickname,
 							UPURL : TikTokUser(V.user.uniqueId),

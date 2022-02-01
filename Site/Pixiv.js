@@ -119,7 +119,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 							return {
 								Non : true,
 								ID : V.userId,
-								URL : PixivUser(V.userId),
+								URL : PixivUser,
 								Img : PackImg(V.profileImageUrl),
 								Title : V.userName,
 								More : V.userComment

@@ -1374,7 +1374,7 @@
 							var
 							NonDownload = V.Non || V.NonAV && !Setting.NonAV,
 							IDView = V.View || (V.Non ? V.ID : Site.IDView(V.ID)),
-							URL = V.URL || false !== V.URL && Site.IDURL && Site.IDURL(V.ID),
+							URL = V.URL || false !== V.URL && Site.IDURL,
 							Click = WV.Rock(ClassCardClick),
 							Img = WV.A('img'),
 							ImgMulti = WV.Rock(ClassImgMulti),
@@ -1397,6 +1397,8 @@
 								WV.Attr(Img,'src',MakeImgURL(V.Img[ImgCurrent]))
 								WV.T(ImgMultiShow,WR.PadU(ImgCurrent,~-V.Img.length) + ' / ' + V.Img.length)
 							};
+							if (WW.IsFunc(URL))
+								URL = URL(V.ID)
 							if (WW.IsArr(V.Img) && V.Img.length < 2)
 								V.Img = V.Img[0]
 							if (V.Img)
@@ -3422,6 +3424,7 @@
 			'FanBox',
 			'Instagram',
 			'IXiGua',
+			'KakuYomu',
 			'Pixiv',
 			'ShenHaiJiaoYu',
 			'ShonenMagazine',

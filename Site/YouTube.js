@@ -42,7 +42,6 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				return {
 					Index : V.snippet.position,
 					ID : V.id,
-					URL : YouTubeWatch(V.id),
 					Img : V.snippet.thumbnails.medium.url,
 					Title : 'youtube#searchResult' === V.kind ? WC.HED(V.snippet.title) : V.snippet.title,
 					UP : V.snippet.channelTitle,

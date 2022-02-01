@@ -446,7 +446,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								Non : true,
 								ID : V.pgc_season_id,
 								View : 'ss' + V.pgc_season_id,
-								URL : BiliBiliBgmSS(V.pgc_season_id),
+								URL : BiliBiliBgmSS,
 								Img : V.cover,
 								Title : (V.org_title && V.org_title !== V.title ? V.org_title + '\n' : '') +
 									V.title,
