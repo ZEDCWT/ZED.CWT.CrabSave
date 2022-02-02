@@ -53,12 +53,17 @@ CrabSave.Site(function(O,WW,WC,WR)
 						return {
 							Item : [
 							{
+								NonAV : !Episode.isPublic,
 								ID : ID,
 								Title : Episode.title,
 								Img : Series && Series.Img,
 								UP : Series && Series.UP,
 								Date : new Date(Episode.publishedAt),
-								More : O.Ah(Episode.series.title,ShonenMagazinePocketSeriesRSS(Episode.series.id))
+								More :
+								[
+									O.Ah(Episode.series.title,ShonenMagazinePocketSeriesRSS(Episode.series.id)),
+									Episode.isPublic ? 'Public' : 'NonPublic'
+								]
 							}]
 						}
 					})
