@@ -142,8 +142,7 @@ module.exports = Option =>
 									Meta = Meta.join`\n`
 								if (ExtReqRecordCount)
 								{
-									ExtReqRecordIndex.forEach(V => ExtReqRecord[V[0]] +=
-										WR.PadU(V[1],ExtReqRecordCount) + '/' + ExtReqRecordCount)
+									ExtReqRecordIndex.forEach(V => ExtReqRecord[V[0]] += WW.ShowLI(ExtReqRecordCount,V[1]))
 									Meta = Meta ?
 										Meta + '\n\n\n' + ExtReqRecord.join`\n` :
 										ExtReqRecord.join`\n`
@@ -429,11 +428,11 @@ module.exports = Option =>
 									N : WW.Pad02(UPAt.getMinutes()),
 									S : WW.Pad02(UPAt.getSeconds()),
 									MS : WW.Pad03(UPAt.getMilliseconds()),
-									PartIndex : 1 < Part.Total && WR.PadU(Down.Part,~-Part.Total),
+									PartIndex : 1 < Part.Total && WR.PadL(Part.Total,Down.Part),
 									PartTitle : WR.SafeFile(Part.Title || ''),
 									FileIndex : 1 < Part.File &&
 										Down.ExtCount !== Part.File &&
-										WR.PadU(Down.File,~-Part.File),
+										WR.PadL(Part.File,Down.File),
 									Type : PartSpecialTypeInv[Down.Part],
 								},
 								SizeChanged;

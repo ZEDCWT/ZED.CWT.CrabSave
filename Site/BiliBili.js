@@ -236,6 +236,18 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					More : Card.subtitle
 				}
 				break
+			case 4308 : // Live
+				R =
+				{
+					Non : true,
+					ID : Card.room_id,
+					URL : BiliBiliLive + Card.room_id,
+					Img : Card.cover,
+					Title : Card.title,
+					Date : new Date(Card.live_start_time),
+					More : Card.area_id + ':' + Card.area_name
+				}
+				break
 			default :
 				R =
 				{
@@ -303,7 +315,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					View : 'av' + V.aid + '?p=' + B.page,
 					URL : BiliBiliVideo(V.aid + '?p=' + B.page),
 					Img : R.Img,
-					Title : R.Title + '.' + WR.PadU(F,~-V.pages.length) + (B.part ? '.' + B.part : ''),
+					Title : R.Title + '.' + WR.PadL(V.pages.length,F) + (B.part ? '.' + B.part : ''),
 					TitleView : B.part,
 					UP : R.UP,
 					UPURL : R.UPURL,
@@ -327,7 +339,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					R.push(
 					{
 						Non : true,
-						Index : PrefixUGCSeason + ' ' + WR.PadU(F,T.sections.length),
+						Index : PrefixUGCSeason + ' ' + WR.PadL(T.sections.length,F),
 						ID : 'Section' + V.id,
 						URL : false,
 						Title : V.title
@@ -335,8 +347,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					WR.EachU(function(B,G)
 					{
 						R.push(B = SolveAV(B.arc))
-						B.Index = PrefixUGCSeason + ' '+ WR.PadU(F,T.sections.length) +
-							' Section ' + WR.PadU(G,V.episodes.length)
+						B.Index = PrefixUGCSeason + ' '+ WR.PadL(T.sections.length,F) +
+							' Section ' + WR.PadL(V.episodes.length,G)
 					},V.episodes)
 				},T.sections)
 			}

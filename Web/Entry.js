@@ -1395,7 +1395,7 @@
 								ImgCurrent = V.Img.length
 								ImgCurrent = (ImgCurrent + Q % ImgCurrent) % ImgCurrent
 								WV.Attr(Img,'src',MakeImgURL(V.Img[ImgCurrent]))
-								WV.T(ImgMultiShow,WR.PadU(ImgCurrent,~-V.Img.length) + ' / ' + V.Img.length)
+								WV.T(ImgMultiShow,WW.ShowLI(V.Img.length,ImgCurrent))
 							};
 							if (WW.IsFunc(URL))
 								URL = URL(V.ID)
