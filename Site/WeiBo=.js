@@ -7,7 +7,14 @@ WeiBo = 'https://weibo.com/',
 WeiBoAJAX = WeiBo + 'ajax/',
 WeiBoAJAXStatusShow = WW.Tmpl(WeiBoAJAX,'statuses/show?id=',undefined),
 WeiBoAJAXStatusLong = WW.Tmpl(WeiBoAJAX,'statuses/longtext?id=',undefined),
-WeiBoLiveShow = WW.Tmpl(WeiBo,'l/!/2/wblive/room/show_pc_live.json?live_id=',undefined);
+WeiBoPostHistory = WW.Tmpl(WeiBo,'p/aj/v6/history?mid=',undefined,'&page_size=',undefined,'page=1'),
+WeiBoLiveShow = WW.Tmpl(WeiBo,'l/!/2/wblive/room/show_pc_live.json?live_id=',undefined),
+
+NumberZip = WC.Rad(WW.D + WW.az + WW.AZ),
+// Zip = Q => WR.MapU((V,F) => (V = NumberZip.S(V),F ? WR.PadS0(4,V) : V),
+// 		WR.SplitAll(7,WR.PadS0(7 * WR.Ceil(Q.length / 7),Q))).join``,
+UnZip = Q => WR.MapU((V,F) => (V = NumberZip.P(V),F ? WR.PadS0(7,V) : V),
+		WR.SplitAll(4,WR.PadS0(4 * WR.Ceil(Q.length / 4),Q))).join``;
 
 /*
 	1168377245/H9DtcoC7I	TextOnly
@@ -47,6 +54,7 @@ module.exports = O =>
 					Title,
 					Meta,
 					Cover,
+					PicIndex = {},
 					Part = [],
 					Card,
 					C,T;
@@ -62,9 +70,9 @@ module.exports = O =>
 						V.long_url && Meta.push('\t' + V.long_url)
 					},B.url_struct)
 					if (B.pic_num)
-						WR.Each(V => Part.push(
+						WR.Each(V => PicIndex[V] = ~-Part.push(
 						{
-							URL : [B.pic_infos[V].large.url]
+							URL : [B.pic_infos[V].largest.url]
 						}),B.pic_ids)
 					else if (Forwarded)
 						WR.Each(V => V.pic_infos && Part.push(
@@ -82,6 +90,9 @@ module.exports = O =>
 								break
 							// 0 23
 							case 'webpage' :
+								break
+							// 0
+							case 'audio' :
 								break
 							// 2
 							case 'file' :
@@ -129,7 +140,39 @@ module.exports = O =>
 								WW.Throw('Unknown Type #' + T.type + ':' + T.object_type)
 						}
 					}
-					return WX.From(Part)
+					return (B.edit_count ? Ext.ReqB(O.Coke(WeiBoPostHistory(UnZip(ID),-~B.edit_count))).Map(His =>
+					{
+						var
+						PicList = [],
+						HTS = Q => Q.split(/<[^>]+>/)
+							.map(V => WC.HED(V.trim()))
+							.filter(V => V)
+							.join` `;
+						WC.JTO(His).data.html
+							.split`WB_cardwrap`
+							.filter(V => /WB_detail/.test(V))
+							.forEach((V,F) => Meta.push
+							(
+								'',
+								'{History} ' + WW.ShowLI(-~B.edit_count,B.edit_count - F),
+								HTS(WW.MU(/<[^>]+WB_from[^]+?<\/span>/,V)),
+								HTS(WW.MU(/<[^>]+WB_text[^>]+>([^<>]+)/,V)),
+								...WW.MR((D,V) =>
+								{
+									V[1] = V[1].replace(/\/[a-z]+\d+\//,'/large/')
+									if (!WR.Has(V[2],PicIndex))
+										PicIndex[V[2]] = ~-Part.push(
+										{
+											URL : [V[1]]
+										})
+									PicList.push(V = [PicIndex[V[2]],V[1]])
+									D.push(V)
+									return D
+								},[],/<[^>]+WB_pic[^]+?src="([^"]+\/([^.]+)\.\w+)"/g,V)
+							))
+							PicList.forEach(V => V[0] = `	[${WR.PadL(Part.length,V[0])}] ${V.pop()}`)
+					}) : WX.Just())
+						.FP(WX.From(Part))
 						.FMapE(V => WX.Any(V).FMap(V =>
 							RegExpIsM3U.test(V.URL[0]) ?
 								O.M3U(V.URL[0],Ext) :

@@ -1333,7 +1333,8 @@
 					R : Reload,
 					A : function()
 					{
-						BarNone === State && Add()
+						(BarNone === State || CrabSave.AddHis && BarHistory === State) &&
+							Add()
 					},
 					D : function()
 					{

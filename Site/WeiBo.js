@@ -109,6 +109,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		Non = true,
 		Title = O.Text(WW.MU(/<[^>]+WB_text[^]+?<\/div>/,B)
 			.replace(/<a[^>]+ignore=.*?<\/a>/g,'')),
+		SpecialAction,
 		More,
 		Img,T;
 		T = B.split('"WB_feed_expand">')
@@ -139,9 +140,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			Img = WC.QSP(T).clear_picSrc
 			Img = Img && Img.split(',')
 		}
+		More = More && !WW.IsArr(More) ? [More] : More
+		More = More || []
+		SpecialAction = WW.MF(/<div[^>]+WB_cardtitle[^]+?class="subtitle">(?:<[^>]+>)*([^<]+)/,B) ||
+			WW.MU(/(<span[^>]+sp_kz[^>]+>)([^]*?\1)*[^<>]*/,B)
+		SpecialAction && More.unshift(WC.HED(SpecialAction.replace(/<[^>]+>/g,'')))
 		return {
 			NonAV : Non,
 			AD : /blocktype=ad&/.test(B),
+			SPA : SpecialAction,
 			ID : SolveID(B),
 			Img : Img,
 			Title : Title.slice(0,128),
@@ -392,7 +399,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 					return {
 						Max : +WW.MF(/"page".*countPage=(\d+)/,B),
 						Size : 45,
-						Item : SolveCardList(B)
+						Item : WR.Where(function(V){return !V.SPA},SolveCardList(B))
 					}
 				})
 			}
