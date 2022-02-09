@@ -331,7 +331,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 									More.push(T.page_desc)
 									break
 								// 2
+								case 'appItem' :
+									break
+								// 2
 								case 'file' :
+									break
+								// 2
+								case 'user' :
 									break
 								// 2 5
 								case 'article' :
@@ -354,6 +360,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 											V.part_num + ':' + (0 | 100 * V.part_ratio) + '% ' +
 											V.content)
 									},T.vote_list)
+									break
+								// 24
+								case 'wenda' :
+									WR.Key(T).sort()
+										.forEach(V => /^content\d+$/.test(V) && More.push(T[V]))
+									break
+								// 31
+								case 'story' :
 									break
 								default :
 									More.push('Unknown Type #' + T.type + ':' + T.object_type)

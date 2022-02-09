@@ -95,7 +95,13 @@ module.exports = O =>
 							case 'audio' :
 								break
 							// 2
+							case 'appItem' :
+								break
+							// 2
 							case 'file' :
+								break
+							// 2
+							case 'user' :
 								break
 							// 2 5
 							case 'article' :
@@ -116,13 +122,21 @@ module.exports = O =>
 											URL : [N.data.replay_origin_url]
 										}
 									}))
-								else if (C = T.media_info.playback_list)
-									Part.push(
-									{
-										URL : [1 - C.length ?
-											O.Best('bitrate',WR.Pluck('play_info',C)).url :
-											C[0].play_info.url]
-									})
+								else if (C = T.media_info)
+								{
+									if ((T = C.playback_list) && T.length)
+										T = 1 - T.length ?
+												O.Best('bitrate',WR.Pluck('play_info',T)).url :
+												T[0].play_info.url
+									else
+										T = C.h265_mp4_hd ||
+											C.mp4_hd_url ||
+											C.mp4_sd_url
+									if (T)
+										Part.push({URL : [T]})
+									else
+										WW.Throw('Unable to solve video URL')
+								}
 								break
 							// 23
 							case 'hudongvote' :
@@ -135,6 +149,20 @@ module.exports = O =>
 									V.part_num + ' ' +
 									(0 | 100 * V.part_ratio) + '% ' +
 									V.content),C.vote_list)
+								break
+							// 24
+							case 'wenda' :
+								Meta.push('')
+								WR.Key(T).sort()
+									.forEach(V => /^content\d+$/.test(V) && Meta.push(T[V]))
+								break
+							// 31
+							case 'story' :
+								C = WR.Pluck('play_info',T.slide_cover.playback_list)
+								Part.push(
+								{
+									URL : [O.Best('bitrate',C.filter(V => V.bitrate)).url]
+								})
 								break
 							default :
 								WW.Throw('Unknown Type #' + T.type + ':' + T.object_type)
