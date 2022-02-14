@@ -30,6 +30,9 @@ module.exports = O =>
 			User = B.users[Tweet.user_id_str]
 			WR.Each(V =>
 			{
+				if (V.source_status_id_str && V.source_status_id_str !== ID)
+					return
+
 				if (T = V.video_info)
 				{
 					T = T.variants

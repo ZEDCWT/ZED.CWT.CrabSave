@@ -519,9 +519,11 @@ module.exports = Option =>
 									}).On('Die',E =>
 									{
 										var
-										ShouldRenew = /Status not satisfied|Close before end/.test(E) ||
-											(!Working || Work.Info.Begin === Work.Info.Saved) && /Timeout/.test(E);
-										SizeChanged = /Size changed|Status not satisfied.*\b416\b/.test(E)
+										ShouldRenew = WW.ErrIs(WW.Err.NetBadStatus,E) ||
+											WW.ErrIs(WW.Err.ReqCloseBeforeEnd,E) ||
+											WW.ErrIs(WW.Err.NetTimeout,E) && (!Working || Work.Info.Begin === Work.Info.Saved);
+										SizeChanged = WW.ErrIs(WW.Err.DownSizeChange,E) ||
+											WW.ErrIs(WW.Err.NetBadStatus,E) && 416 == E.Arg[0];
 										OnEnd()
 										SizeChanged || Work.Info.Begin < Work.Info.Saved ?
 											O.E(DownloadErrRetry) :

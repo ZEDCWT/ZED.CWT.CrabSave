@@ -28,25 +28,31 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	{
 		var
 		Media = WR.Path(['extended_entities','media'],Tweet),
-		NonVideo;
+		Retweet = Tweet.retweeted_status_id_str ||
+			WR.Path(['retweeted_status_result','result','rest_id'],Tweet);
 		return {
-			NonAV : NonVideo = !Media || WR.All(function(V){return !V.video_info},Media),
+			NonAV : !Media || Retweet,
 			ID : Tweet.id_str || ID,
 			Img : Media && WR.Pluck('media_url_https',Media),
 			Title : WR.Trim(WC.HED(Tweet.full_text).replace(/\n#.*$/g,'')),
 			UP : User.name,
 			UPURL : Twitter + User.screen_name,
 			Date : new Date(Tweet.created_at),
-			Len : !NonVideo && WW.StrMS(WR.Reduce(function(D,V)
+			Len : WR.Reduce(function(D,V)
 			{
 				return D += WR.Path(['video_info','duration_millis'],V) || 0
-			},0,Media)),
-			Desc : WC.HED(Tweet.full_text)
+			},0,Media) / 1E3,
+			Desc : WC.HED(Tweet.full_text),
+			More :
+			[
+				Retweet && O.Ah('RT ' + Retweet,TwitterTweet(Retweet))
+			]
 		}
 	},
-	SolveTweetUserMap = function(ID,Tweet,UserMap)
+	SolveTweetIDB = function(ID,B)
 	{
-		return SolveTweet(Tweet,UserMap[Tweet.user_id_str],ID)
+		var Tweet = B.globalObjects.tweets[ID];
+		return SolveTweet(Tweet,B.globalObjects.users[Tweet.user_id_str],ID)
 	},
 	MakeTimeline = function(H)
 	{
@@ -61,34 +67,47 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			return O.Req(MakeHead(I[0] + '&cursor=' + WC.UE(I[Page])))
 		},function(B)
 		{
+			var
+			R = [],
+			SolveItem = function(V)
+			{
+				V = V.content.tweet
+				'Recommendation' !== WR.Path(['socialContext','topicContext','functionalityType'],V) &&
+					!V.promotedMetadata &&
+					R.push(SolveTweetIDB(V.id,B))
+			};
 			B = Common(B)
+			O.Walk(B.timeline,function(V,F)
+			{
+				return 'addEntries' === F && WR.Each(function(N)
+				{
+					N = N.content
+					if (V = N.item)
+						SolveItem(V)
+					else if (V = N.timelineModule)
+						SolveItem(V.items[0].item)
+					else N.operation || R.push(
+					{
+						Non : true,
+						ID : '',
+						Title : 'Unknown Timeline Entry ' + WC.OTJ(N,'\t',{Apos : true})
+					})
+				},V.entries)
+			})
 			return [WR.Key(B.globalObjects.tweets).length && SolveCursor(B),
 			{
-				Item : WR.MapW(function(V)
-				{
-					if (/ads-api\.twitter/.test(V))
-						return null
-					return SolveTweetUserMap(V[0],V[1],B.globalObjects.users)
-				},WR.Ent(B.globalObjects.tweets).sort(function(Q,S)
-				{
-					Q = WR.PadS0(32,Q[0])
-					S = WR.PadS0(32,S[0])
-					return Q < S || S < Q && -1
-				}))
+				Item : R
 			}]
 		})
 	},
 	SolveCursor = function(B)
 	{
 		var
-		H = function(B)
-		{
-			'Bottom' === B.cursorType ?
-				R = B.value :
-				WR.Each(function(V){WW.IsObj(V) && H(V)},B)
-		},
 		R = '';
-		H(B)
+		O.Walk(B,function(V)
+		{
+			return 'Bottom' === V.cursorType && (R = V.value)
+		})
 		return R
 	},
 	MakeHead = function(Q)
@@ -167,9 +186,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				return O.Req(MakeHead(TwitterAPIJSON(TwitterAPITypeConversation + ID))).Map(function(B)
 				{
 					B = Common(B)
-					B = B.globalObjects
 					return {
-						Item : [SolveTweetUserMap(ID,B.tweets[ID],B.users)]
+						Item : [SolveTweetIDB(ID,B)]
 					}
 				})
 			}
@@ -191,16 +209,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				return MakeUserTweet(I[0],I[Page])
 			},function(B)
 			{
-				var
-				R = [],
-				H = function(B)
-				{
-					'Tweet' === B.__typename ?
-						R.push(SolveTweet(B.legacy,B.core.user_results.result.legacy)) :
-						WR.Each(function(V){WW.IsObj(V) && H(V)},B)
-				};
+				var R = [];
 				B = Common(B)
-				H(B)
+				O.Walk(B,function(V)
+				{
+					return V.promotedMetadata ||
+						'Tweet' === V.__typename &&
+						R.push(SolveTweet(V.legacy,V.core.user_results.result.legacy))
+				})
 				return [SolveCursor(B),{Item : R}]
 			})
 			/*View : MakeTimeline(function(ID)

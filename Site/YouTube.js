@@ -221,15 +221,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		{
 			var
 			Token,
-			Item = [],
-			H = function(V,K)
+			Item = [];
+			O.Walk(B,function(V,F)
 			{
-				'continuationCommand' === K ?
+				return 'continuationCommand' === F ?
 					Token = V.token :
-					Map(Item,V,K) ||
-						WW.IsObj(V) && WR.EachU(H,V)
-			};
-			H(B)
+					Map(Item,V,F)
+			})
 			return [Token,
 			{
 				Item : Item

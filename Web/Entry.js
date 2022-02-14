@@ -851,7 +851,7 @@
 						}
 						WV.T(URL,V.URL)
 						WV.Ti(URL,V.URL)
-						WV.T(Name,V.Path)
+						WV.T(Name,V.Path || '\xA0')
 						Prog
 							.P(V.Play || '-')
 							.G(MakeProgress(V.Size,V.Has))
@@ -1128,7 +1128,7 @@
 		'#`O` .`W`{padding:`q`px 0}' +
 		'#`O` .`A`{display:inline-block;margin:`q`px 0;width:100%}' +
 		'.`S`{position:absolute;left:-2px;top:10%;width:2px;height:80%;background:#BBB}' +
-		'.`U`{float:right}' +
+		'.`U`{float:right;pointer-events:none}' +
 		'.`G`{margin:`p`px 0}' +
 		'.`P`{padding:`p`px}' +
 		'.`H`{color:#2672EC}' +
@@ -1433,7 +1433,7 @@
 									ImgMultiL,
 									ImgMultiR
 								],ImgMulti),
-								WW.IsNum(V.Len) ?
+								!!V.Len && WW.IsNum(V.Len) ?
 									WV.X(WW.StrS(V.Len)) :
 									WW.IsStr(V.Len) &&
 										WV.X(/^\d+(:\d+){1,2}$/.test(V.Len) ?
@@ -1482,6 +1482,12 @@
 								Go()
 							},Img)
 						},S.Item)
+						S.At = WR.Default(Q,S.At)
+						S.Max = WR.Default(
+							S.Item.length - S.Len ?
+								Math.ceil(S.Len / S.Size) || 1 :
+								1,
+							S.Max)
 						BriefKeyword.U(WW.Fmt
 						(
 							'`F`~`T`. `I` `L`/`U`. `G` `A`/`P`. `M`s (`D`)',
@@ -1490,14 +1496,10 @@
 								T : S.Item.length && WR.Last(S.Item).Index,
 								I : SA('BroItem'),
 								L : S.Item.length,
-								U : S.Len = WR.Default(S.Item.length,S.Len),
+								U : S.Len = WR.Default(~-S.Max * S.Size + S.Item.length,S.Len),
 								G : SA('BroPage'),
-								A : S.At = WR.Default(Q,S.At),
-								P : S.Max = WR.Default(
-									S.Item.length - S.Len ?
-										Math.ceil(S.Len / (S.Size || PageSize)) || 1 :
-										1,
-									S.Max),
+								A : S.At,
+								P : S.Max,
 								D : WW.StrDate(),
 								M : WR.ToFix(3,(WW.Now() - N) / 1E3)
 							}
@@ -3361,6 +3363,16 @@
 								return R
 							})
 					}
+				},
+				Walk : function(Q,S)
+				{
+					var
+					H = function(V,F)
+					{
+						if (WW.IsObj(V))
+							S(V,F) || WR.EachU(H,V)
+					};
+					H(Q)
 				},
 				SolU : SolveURL,
 				DTS : DTS,

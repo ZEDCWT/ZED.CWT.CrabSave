@@ -48,6 +48,7 @@ declare module CrabSaveNS
 			S : (I : U[],Page : number,ID : string) => WishNS.Provider<N>,
 			M : (Q : N,I : U[],Page : number) => [U,SitePage]
 		) : WishNS.Provider<SitePage>
+		Walk(Q : object,H : (V : object,F : string) => boolean) : void
 		SolU(Q : string,S? : string) : string
 		DTS(Q : string | number) : string
 		High(Q : string) : WishNS.EleContent

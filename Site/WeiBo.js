@@ -363,8 +363,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 									break
 								// 24
 								case 'wenda' :
-									WR.Key(T).sort()
-										.forEach(V => /^content\d+$/.test(V) && More.push(T[V]))
+									WR.Each(function(V)
+									{
+										/^content\d+$/.test(V) && More.push(T[V])
+									},WR.Key(T).sort())
 									break
 								// 31
 								case 'story' :
