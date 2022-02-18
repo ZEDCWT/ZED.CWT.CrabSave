@@ -92,6 +92,9 @@ module.exports = O =>
 							case 'webpage' :
 								break
 							// 0
+							case 'group' :
+								break
+							// 0
 							case 'audio' :
 								break
 							// 2
@@ -105,6 +108,9 @@ module.exports = O =>
 								break
 							// 2 5
 							case 'article' :
+								break
+							// 5
+							case 'event' :
 								break
 							// 5 11
 							case 'video' :

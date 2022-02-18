@@ -9,8 +9,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	YouTubeFeed = YouTube + 'feed/',
 	YouTubeFeedSubscription = YouTubeFeed + 'subscriptions',
 	YouTubeFeedChannel = YouTubeFeed + 'channels',
-	YouTubeBrowse = WW.Tmpl(YouTube,'youtubei/v1/browse?key=',undefined),
+	YouTubeI = YouTube + 'youtubei/v1/',
+	YouTubeIBrowse = YouTubeI + 'browse',
+	// YouTubeIGuide = YouTubeI + 'guide',
 	YouTubeAccount = YouTube + 'account',
+	YouTubeKey = YouTube + 'sw.js',
 	GoogleAPIKey = '#GoogleAPIKey#',
 	GoogleAPI = 'https://www.googleapis.com/',
 	GoogleAPIYouTube = GoogleAPI + 'youtube/v3/',
@@ -158,65 +161,80 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	{
 		return V && (V.runs ? V.runs[0].text : V.simpleText)
 	},
+	ClientName,ClientVersion,
+	APIKey,
+	APIKeyAt,
+	PageID,
+	MakeI = function(URL,Req,Now)
+	{
+		Now = WR.Floor(WW.Now() / 1E3)
+		return (APIKey && Now < APIKeyAt + 864E2 ?
+			WX.Just() :
+			O.API(YouTubeKey).Map(function(B)
+			{
+				ClientName = WC.JTO(WW.MF(/CLIENT_NAME":("[^"]+")/,B))
+				ClientVersion = WC.JTO(WW.MF(/CLIENT_VERSION":("[^"]+")/,B))
+				APIKey = WC.JTO(WW.MF(/API_KEY":("[^"]+")/,B))
+				APIKeyAt = Now
+			}))
+			.FMap(function()
+			{
+				return O.Req(
+				{
+					URL : URL,
+					QS : {key : APIKey},
+					Head :
+					{
+						Authorization : 'SAPISIDHASH ' +
+							Now + '_' +
+							WR.Low(WC.HEXS(WC.SHA1(
+							[
+								Now,
+								WC.CokeP(O.Coke()).SAPISID,
+								YouTube.slice(0,-1)
+							].join(' ')))),
+						'X-Goog-AuthUser' : '0',
+						'X-Goog-PageId' : PageID,
+						Origin : YouTube.slice(0,-1)
+					},
+					JSON : WW.Merge(
+					{
+						context :
+						{
+							client :
+							{
+								clientName : ClientName,
+								clientVersion : ClientVersion
+							},
+							request :
+							{
+								useSsl : true
+							}
+						}
+					},Req)
+				})
+			})
+			.Map(WC.JTO)
+	},
 	MakeFeed = function(Feed,Map)
 	{
-		var
-		ClientName,ClientVersion,
-		APIKey,
-		MakeI = function(URL,Req,Now)
-		{
-			Now = WR.Floor(WW.Now() / 1E3)
-			return O.Req(
-			{
-				URL : URL,
-				Head :
-				{
-					Authorization : 'SAPISIDHASH ' +
-						Now + '_' +
-						WR.Low(WC.HEXS(WC.SHA1(
-						[
-							Now,
-							WC.CokeP(O.Coke()).SAPISID,
-							YouTube.slice(0,-1)
-						].join(' ')))),
-					Origin : YouTube.slice(0,-1),
-				},
-				JSON : WW.Merge(
-				{
-					context :
-					{
-						client :
-						{
-							clientName : ClientName,
-							clientVersion : ClientVersion
-						},
-						request :
-						{
-							useSsl : true,
-						},
-					}
-				},Req)
-			})
-		};
 		return O.More(function()
 		{
 			return O.Req(
 			{
 				URL : Feed,
 				UA : ''
-			}).Map(function(V)
+			}).Map(function(B)
 			{
-				ClientName = WC.JTO(WW.MF(/CLIENT_NAME":("[^"]+")/,V))
-				ClientVersion = WC.JTO(WW.MF(/CLIENT_VERSION":("[^"]+")/,V))
-				APIKey = WC.JTO(WW.MF(/API_KEY":("[^"]+")/,V))
-				return O.JOM(/ytInitialData[ =]+/,V)
+				PageID = WC.JTO(WW.MF(/DELEGATED_SESSION_ID":("[^"]+")/,B))
+				return O.JOM(/ytInitialData[ =]+/,B)
 			})
 		},function(I,Page)
 		{
-			return MakeI(YouTubeBrowse(APIKey),
+			return MakeI(YouTubeIBrowse,
 			{
 				continuation : I[Page]
-			}).Map(WC.JTO)
+			})
 		},function(B)
 		{
 			var
@@ -343,7 +361,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					Non : true,
 					ID : V.channelId,
 					URL : YouTubeChannel(V.channelId),
-					Img : WR.Last(V.thumbnail.thumbnails).url,
+					Img : O.SolU(WR.Last(V.thumbnail.thumbnails).url,YouTube),
 					UP : SolveFeedText(V.title),
 					UPURL : YouTubeChannel(V.channelId),
 					Desc : SolveFeedText(V.descriptionSnippet)

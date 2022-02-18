@@ -71,10 +71,23 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			R = [],
 			SolveItem = function(V)
 			{
-				V = V.content.tweet
-				'Recommendation' !== WR.Path(['socialContext','topicContext','functionalityType'],V) &&
-					!V.promotedMetadata &&
-					R.push(SolveTweetIDB(V.id,B))
+				var
+				CS,
+				U,T;
+				if (V = V.content.tweet)
+				{
+					CS = V.socialContext
+					if (!V.promotedMetadata &&
+						'Recommendation' !== WR.Path(['topicContext','functionalityType'],CS))
+					{
+						R.push(U = SolveTweetIDB(V.id,B))
+						if (CS)
+						{
+							if (T = CS.generalContext)
+								U.More.push(WW.Quo(T.contextType) + T.text)
+						}
+					}
+				}
 			};
 			B = Common(B)
 			O.Walk(B.timeline,function(V,F)
@@ -85,7 +98,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 					if (V = N.item)
 						SolveItem(V)
 					else if (V = N.timelineModule)
-						SolveItem(V.items[0].item)
+						/^(VerticalConversation)$/.test(V.displayType) ||
+							SolveItem(V.items[0].item)
 					else N.operation || R.push(
 					{
 						Non : true,

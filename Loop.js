@@ -382,9 +382,9 @@ module.exports = Option =>
 	DownloadRunning = new Map,
 	DownloadDispatching,DownloadDispatchAgain,
 	DownloadDispatchOnErr = WX.EndL(),
-	DownloadErrRetry = new Error('Just Retry'),
-	DownloadErrRenew = new Error('Need To Renew'),
-	DownloadErrEmpty = new Error('Received No Bytes'),
+	DownloadErrRetry = WW.ErrTmpl('Just Retry'),
+	DownloadErrRenew = WW.ErrTmpl('Need To Renew | ',undefined),
+	DownloadErrEmpty = WW.ErrTmpl('Received No Bytes'),
 	DownloadStatus = new Map,
 	DownloadDispatch = () =>
 	{
@@ -492,7 +492,7 @@ module.exports = Option =>
 													DownloadLowSpeedTrigger(V.Row))
 												{
 													OnEnd()
-													O.E(DownloadErrRenew)
+													O.E(DownloadErrRenew('Low Speed'))
 												}
 											}
 											else LowSpeedCount = 0
@@ -506,7 +506,7 @@ module.exports = Option =>
 										if (!Size)
 										{
 											OnEnd()
-											O.E(DownloadErrEmpty)
+											O.E(DownloadErrEmpty())
 											NotBigDeal(WN.Stat(Path)
 												.FMap(S => S.size ? WX.Empty : WN.Un(Path)))
 											return
@@ -526,9 +526,9 @@ module.exports = Option =>
 											WW.ErrIs(WW.Err.NetBadStatus,E) && 416 == E.Arg[0];
 										OnEnd()
 										SizeChanged || Work.Info.Begin < Work.Info.Saved ?
-											O.E(DownloadErrRetry) :
+											O.E(DownloadErrRetry()) :
 											ShouldRenew ?
-												O.E(DownloadErrRenew) :
+												O.E(DownloadErrRenew(String(E))) :
 												O.E(E)
 									}),
 									OnEnd = () =>
@@ -552,7 +552,7 @@ module.exports = Option =>
 									return Work.Stop
 								}).RetryWhen(E => E.Tap(E =>
 								{
-									E === DownloadErrRetry || WW.Throw(E)
+									WW.ErrIs(DownloadErrRetry,E) || WW.Throw(E)
 								}))))
 							}).Fin().Map(() => [true]) :
 							WX.Just([false])))
@@ -566,7 +566,7 @@ module.exports = Option =>
 						{
 							var
 							At = WW.Now(),
-							Next = DownloadErrRenew === E ? 2 : 1;
+							Next = WW.ErrIs(DownloadErrRenew,E) ? 2 : 1;
 							DownloadRunning.set(V.Row,DB.Err(V.Row,Next,At).Now(null,O =>
 							{
 								DownloadRunning.delete(V.Row)

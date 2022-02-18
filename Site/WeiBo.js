@@ -330,6 +330,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 								case 'webpage' :
 									More.push(T.page_desc)
 									break
+								// 0
+								case 'group' :
+									break
 								// 2
 								case 'appItem' :
 									break
@@ -341,6 +344,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 									break
 								// 2 5
 								case 'article' :
+									break
+								// 5
+								case 'event' :
 									break
 								// 5 11
 								case 'video' :

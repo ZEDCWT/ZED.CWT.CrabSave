@@ -107,7 +107,7 @@
 	SolveURL = function(Q,S)
 	{
 		if (WR.StartW('//',Q))
-			Q = 'http:' + Q
+			Q = (WW.MU(/^\w+:(?=\/\/)/,S) || 'http:') + Q
 		if (S && WR.StartW('/',Q))
 			Q = WW.MU(/^[^/]+\/\/[^/]+/,S) + Q
 		return Q
@@ -1496,7 +1496,7 @@
 								T : S.Item.length && WR.Last(S.Item).Index,
 								I : SA('BroItem'),
 								L : S.Item.length,
-								U : S.Len = WR.Default(~-S.Max * S.Size + S.Item.length,S.Len),
+								U : S.Len = WR.Default(WR.Max(0,~-S.Max) * S.Size + S.Item.length,S.Len),
 								G : SA('BroPage'),
 								A : S.At,
 								P : S.Max,
