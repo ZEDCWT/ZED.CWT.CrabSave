@@ -52,6 +52,7 @@ declare module CrabSaveNS
 		SolU(Q : string,S? : string) : string
 		DTS(Q : string | number) : string
 		High(Q : string) : WishNS.EleContent
+		RepCon(Q : string,S : {[K : string] : (Q : string) => WishNS.EleContent}) : WishNS.EleContent
 		Ah(Title : string,URL : string) : WishNS.Ele
 		Img(URL : WishNS.ReqAccept) : WishNS.Ele
 		Text(Q : string,Trim? : boolean) : string

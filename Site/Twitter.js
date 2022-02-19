@@ -29,12 +29,32 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		var
 		Media = WR.Path(['extended_entities','media'],Tweet),
 		Retweet = Tweet.retweeted_status_id_str ||
-			WR.Path(['retweeted_status_result','result','rest_id'],Tweet);
+			WR.Path(['retweeted_status_result','result','rest_id'],Tweet) ||
+			Tweet.quoted_status_id_str,
+		Title = WC.HED(Tweet.full_text),
+		TitleMap = {};
+		WR.EachU(function(V,F)
+		{
+			WR.Each(function(B)
+			{
+				if (B.url)
+				{
+					Title = Title.replace(RegExp('\\s*' + WR.SafeRX(B.url) + '\\s*','g'),'_')
+					TitleMap[B.url] = function()
+					{
+						return 'media' === F || Retweet && RegExp(Twitter + '[^/]+/status/' + Retweet).test(B.expanded_url) ?
+							'' :
+							O.Ah(B.expanded_url,B.expanded_url)
+					}
+				}
+			},V)
+		},Tweet.entities)
 		return {
 			NonAV : !Media || Retweet,
 			ID : Tweet.id_str || ID,
 			Img : Media && WR.Pluck('media_url_https',Media),
-			Title : WR.Trim(WC.HED(Tweet.full_text).replace(/\n#.*$/g,'')),
+			Title : Title,
+			TitleView : O.RepCon(WC.HED(Tweet.full_text),TitleMap),
 			UP : User.name,
 			UPURL : Twitter + User.screen_name,
 			Date : new Date(Tweet.created_at),

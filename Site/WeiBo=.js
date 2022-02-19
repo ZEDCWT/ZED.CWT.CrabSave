@@ -65,7 +65,7 @@ module.exports = O =>
 						Title = Title.replace(/\/\/@.*/,'')
 					WR.EachU((V,F) =>
 					{
-						Title = Title.replace(RegExp(`\\s*${WR.SafeRX(V.short_url)}\\s*`),' ')
+						Title = Title.replace(RegExp(`\\s*${WR.SafeRX(V.short_url)}\\s*`,'g'),' ')
 						Meta.push(`URL [${WW.ShowLI(B.url_struct.length,F)}] ${V.url_title} ${V.short_url}`)
 						V.long_url && Meta.push('\t' + V.long_url)
 					},B.url_struct)
@@ -86,35 +86,9 @@ module.exports = O =>
 							Card && Card.pic_url
 						switch (T.object_type)
 						{
-							case undefined :
-								break
-							// 0 23
-							case 'webpage' :
-								break
-							// 0
-							case 'group' :
-								break
-							// 0
-							case 'audio' :
-								break
-							// 2
-							case 'appItem' :
-								break
-							// 2
-							case 'file' :
-								break
-							// 2
-							case 'user' :
-								break
-							// 2 5
-							case 'article' :
-								break
-							// 5
-							case 'event' :
-								break
-							// 5 11
-							case 'video' :
+							case 'adFeedVideo' :
 							case 'live' :
+							case 'video' : // 5 11
 								if ('live' === T.object_type)
 									Part.push(Ext.ReqB(O.Coke(
 									{
@@ -144,8 +118,8 @@ module.exports = O =>
 										WW.Throw('Unable to solve video URL')
 								}
 								break
-							// 23
-							case 'hudongvote' :
+
+							case 'hudongvote' : // 23
 								C = Card.vote_object
 								Meta.push(
 									C.content + ' ' +
@@ -156,22 +130,33 @@ module.exports = O =>
 									(0 | 100 * V.part_ratio) + '% ' +
 									V.content),C.vote_list)
 								break
-							// 24
-							case 'wenda' :
-								Meta.push('')
-								WR.Key(T).sort()
-									.forEach(V => /^content\d+$/.test(V) && Meta.push(T[V]))
-								break
-							// 31
-							case 'story' :
+							case 'story' : // 31
 								C = WR.Pluck('play_info',T.slide_cover.playback_list)
 								Part.push(
 								{
 									URL : [O.Best('bitrate',C.filter(V => V.bitrate)).url]
 								})
 								break
+							case 'wenda' : // 24
+								Meta.push('')
+								WR.Key(T).sort()
+									.forEach(V => /^content\d+$/.test(V) && Meta.push(T[V]))
+								break
+
 							default :
-								WW.Throw('Unknown Type #' + T.type + ':' + T.object_type)
+								WR.Include(T.object_type,
+								[
+									'appItem', // 2
+									'article', // 2 5
+									'audio', // 0
+									'event', // 5
+									'file', // 2
+									'group', // 0
+									'topic', // 0
+									'user', // 2
+									'webpage', // 0 23
+									undefined
+								]) || WW.Throw('Unknown Type #' + T.type + ':' + T.object_type)
 						}
 					}
 					return (B.edit_count ? Ext.ReqB(O.Coke(WeiBoPostHistory(UnZip(ID),-~B.edit_count))).Map(His =>

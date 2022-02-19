@@ -324,39 +324,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 								Card && Card.pic_url
 							switch (T.object_type)
 							{
-								case undefined :
-									break
-								// 0 23
-								case 'webpage' :
-									More.push(T.page_desc)
-									break
-								// 0
-								case 'group' :
-									break
-								// 2
-								case 'appItem' :
-									break
-								// 2
-								case 'file' :
-									break
-								// 2
-								case 'user' :
-									break
-								// 2 5
-								case 'article' :
-									break
-								// 5
-								case 'event' :
-									break
-								// 5 11
-								case 'video' :
+								case 'adFeedVideo' :
 								case 'live' :
+								case 'video' : // 5 11
 									NonAV = false
 									Len = WR.Path(['playback_list',0,'play_info','duration'],T) ||
 										T.media_info.duration
 									break
-								// 23
-								case 'hudongvote' :
+
+								case 'hudongvote' : // 23
 									T = Card.vote_object
 									More.push('[' + T.part_info + '] ' + T.content,
 										O.DTS(1E3 * T.expire_date))
@@ -367,18 +343,30 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 											V.content)
 									},T.vote_list)
 									break
-								// 24
-								case 'wenda' :
+								case 'webpage' : // 0 23
+									More.push(T.page_desc)
+									break
+								case 'wenda' : // 24
 									WR.Each(function(V)
 									{
 										/^content\d+$/.test(V) && More.push(T[V])
 									},WR.Key(T).sort())
 									break
-								// 31
-								case 'story' :
-									break
+
 								default :
-									More.push('Unknown Type #' + T.type + ':' + T.object_type)
+									WR.Include(T.object_type,
+									[
+										'appItem', // 2
+										'article', // 2 5
+										'audio', // 0
+										'event', // 5
+										'file', // 2
+										'group', // 0
+										'story', // 31
+										'topic', // 0
+										'user', // 2
+										undefined
+									]) || More.push('Unknown Type #' + T.type + ':' + T.object_type)
 							}
 						}
 						return {

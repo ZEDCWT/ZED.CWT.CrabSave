@@ -3377,6 +3377,16 @@
 				SolU : SolveURL,
 				DTS : DTS,
 				High : MakeHigh,
+				RepCon : function(Q,S,K)
+				{
+					K = WR.Key(S)
+					return K.length ?
+						WR.MapU(function(V,F)
+						{
+							return 1 & F ? S[V](V) : V
+						},Q.split(RegExp(WW.QuoP(WR.Map(WR.SafeRX,K).join('|'),true)))) :
+						Q
+				},
 				Ah : function(Q,S)
 				{
 					return WV.X(WV.Ah(Q,S))

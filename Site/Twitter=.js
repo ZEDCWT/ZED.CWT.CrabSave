@@ -21,6 +21,7 @@ module.exports = O =>
 		{
 			var
 			Tweet,User,
+			Title,Meta,
 			Part = [],
 			T;
 			B = WC.JTO(B)
@@ -28,6 +29,21 @@ module.exports = O =>
 			B = B.globalObjects
 			Tweet = B.tweets[ID]
 			User = B.users[Tweet.user_id_str]
+			Title = WC.HED(Tweet.full_text)
+			Meta = [Title]
+			WR.EachU((V,F) =>
+			{
+				WR.EachU((B,G) =>
+				{
+					if (B.url)
+					{
+						Title = Title.replace(RegExp(`\\s*${WR.SafeRX(B.url)}\\s*`,'g'),'_')
+						Meta.push(
+							WR.Pascal(F).replace(/s$/,'') + ' ' + WW.Quo(WW.ShowLI(V.length,G)) + ' ' + B.url,
+							'\t' + B.expanded_url)
+					}
+				},V)
+			},Tweet.entities)
 			WR.Each(V =>
 			{
 				if (V.source_status_id_str && V.source_status_id_str !== ID)
@@ -53,13 +69,11 @@ module.exports = O =>
 				else WW.Throw('Unknown Media Type #' + V.type)
 			},WR.Path(['extended_entities','media'],Tweet) || [])
 			return {
-				Title : WR.Trim(WC.HED(Tweet.full_text)
-					.replace(/\n#.*$/g,'')
-					.replace(/\w+:\/\/t\.\w+\/\w+/g,'')),
+				Title : WR.Trim(Title),
 				Up : User.name,
 				Date : +new Date(Tweet.created_at),
-				Meta : WC.HED(Tweet.full_text),
-				Part : Part
+				Meta,
+				Part
 			}
 		}),
 		Range : false
