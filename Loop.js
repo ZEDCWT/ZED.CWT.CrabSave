@@ -100,7 +100,7 @@ module.exports = Option =>
 							WW.StrDate() + ' {Req} ',
 							WC.OTJ(Save)
 						)
-						return WN.ReqU(Q).Tap(([H,B]) =>
+						return WN.ReqU({...Q,AC : true}).Tap(([H,B]) =>
 						{
 							H = WR.Omit(['H'],H)
 							H.W = WR.SplitAll(2,H.W).filter(V => !ExtReqRecordHeadOmit.has(WR.Low(V[0]))).flat()
@@ -112,6 +112,8 @@ module.exports = Option =>
 								B.length,
 								B
 							)
+							if (!Q.AC && !/^[23]/.test(H.Code))
+								WW.Throw(WW.Err.NetBadStatus(H.Code))
 						})
 					},
 					Ext =

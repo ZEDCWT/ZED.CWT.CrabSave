@@ -417,8 +417,9 @@
 					console.log('Inspector',K)
 					break
 				case ActionAuthVacuum :
-					console.log('Vacuum',WW.StrMS(K))
-					null == O || console.log(O)
+					WR.Has('Err',O) ?
+						console.log('Vacuum',WW.StrMS(K),WR.ToSize(O.From),O.Err) :
+						console.log('Vacuum',WW.StrMS(K),WR.ToSize(O.From),WR.ToSize(O.To),WR.ToSize(O.To - O.From))
 					break
 
 				case ActionAuthErr :
@@ -3395,14 +3396,14 @@
 				{
 					return WV.Attr(WV.A('img'),'src',MakeImgURL(Q))
 				},
-				Text : function(Q,S)
+				Text : function(Q)
 				{
-					Q = WC.HED(Q
-						.replace(/<br(\s[^>]+)?>/g,'\n')
+					return WC.HED(Q
+						.split(/<br\b[^>]*>|<\/(?:figure|h\d+|p)\b>/)
+						.map(WR.Rep(/\s*(\r?\n|\r)\s*/g,' '))
+						.join('\n')
 						.replace(/<.*?>/g,''))
-					return S ?
-						Q.replace(/.+/g,WR.Trim) :
-						WR.Trim(Q)
+						.replace(/.+/g,WR.Trim)
 				},
 				Progress : BrowserOnProgress
 			},WW,WC,WR,WX,WV);

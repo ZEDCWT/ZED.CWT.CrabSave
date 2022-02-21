@@ -9,6 +9,7 @@ module.exports = Option =>
 {
 	var
 	PathData = Option.PathData,
+	PathDB = WN.JoinP(PathData,'DB.db'),
 
 	DB,
 
@@ -39,7 +40,7 @@ module.exports = Option =>
 	return {
 		Init : WX.Provider(O =>
 		{
-			DB = new SQLite.Database(WN.JoinP(PathData,'DB.db'),E =>
+			DB = new SQLite.Database(PathDB,E =>
 			{
 				if (E) O.E(E)
 				else
@@ -379,6 +380,7 @@ module.exports = Option =>
 		`,[S,Q]),
 
 		Vacuum : () => Exec('vacuum'),
+		Stat : () => WN.Exist(PathDB),
 
 		Run
 	}

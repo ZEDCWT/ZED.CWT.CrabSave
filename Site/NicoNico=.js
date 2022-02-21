@@ -34,8 +34,7 @@ module.exports = O =>
 	var
 	PadSM = Q => /^\d/.test(Q) ? 'sm' + Q : Q,
 	SolveXMLField = (Q,B) => WC.HED(WW.MF(RegExp(`<${Q}>([^]+?)</${Q}>`),B)),
-	SolveXMLDesc = B => SolveXMLField('description',B)
-		.replace(/<br>\n?/g,'\n'),
+	SolveXMLDesc = B => O.Text(SolveXMLField('description',B)),
 	Coke = Q =>
 	{
 		Q = O.Coke(Q)
@@ -231,7 +230,7 @@ module.exports = O =>
 							Title : B.video.title,
 							Up : Up.replace(/ さん$/,''), // 敬稱略
 							Date : +new Date(B.video.registeredAt),
-							Meta : B.video.description,
+							Meta : O.Text(B.video.description),
 							Cover : B.video.thumbnail.largeUrl,
 							CoverExt : '.jpg',
 							Part : [

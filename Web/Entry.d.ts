@@ -55,7 +55,7 @@ declare module CrabSaveNS
 		RepCon(Q : string,S : {[K : string] : (Q : string) => WishNS.EleContent}) : WishNS.EleContent
 		Ah(Title : string,URL : string) : WishNS.Ele
 		Img(URL : WishNS.ReqAccept) : WishNS.Ele
-		Text(Q : string,Trim? : boolean) : string
+		Text(Q : string) : string
 		Progress(Q : string) : any
 	}
 	interface WebReq extends WishNS.ReqO

@@ -95,8 +95,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	},
 	SolveXMLDesc = function(B)
 	{
-		return SolveXMLField('description',B)
-			.replace(/<br>\n?/g,'\n')
+		return O.Text(SolveXMLField('description',B))
 	};
 	return {
 		ID : 'NicoNico',

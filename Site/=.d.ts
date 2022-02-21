@@ -71,6 +71,7 @@ declare module CrabSaveNS
 			JOM(S : RegExp,Q : string) : object
 			Text(Q : string) : string
 			M3U(Q : string,Ext? : SiteExt) : WishNS.Provider<SitePart>
+			Part(Q : SitePart[],Ext? : SiteExt) : WishNS.Provider<SitePart[]>
 		}) : {
 			URL(ID : string,Ext : SiteExt) : WishNS.Provider<SiteURL>
 			IDView?(Q : string) : string

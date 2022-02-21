@@ -554,11 +554,18 @@ module.exports = Option =>
 						break
 					case ActionAuthVacuum :
 						K = WW.Now()
-						DB.Vacuum().Now
-						(
-							() => SendAuth([Q[0],WW.Now() - K]),
-							E => SendAuth([Q[0],WW.Now() - K,ErrorS(E)])
-						)
+						DB.Stat().FMap(From => DB.Vacuum()
+							.FMap(DB.Stat)
+							.Tap(To => SendAuth([Q[0],WW.Now() - K,
+							{
+								From : From?.size,
+								To : To?.size
+							}]),E => SendAuth([Q[0],WW.Now() - K,
+							{
+								From : From?.size,
+								Err : ErrorS(E)
+							}])))
+							.Now(null,WW.O)
 						break
 				}
 				return

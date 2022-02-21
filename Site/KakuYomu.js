@@ -105,7 +105,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 							UP : WC.HED(WW.MF(/header-author">([^<]+)/,B)),
 							Desc : WW.MR(function(D,V)
 							{
-								D.push(V[1].replace(/<br[^>]*>/g,''))
+								D.push(O.Text(V[1]))
 								return D
 							},[],/id="p\d+"[^>]*>([^]+?)<\/p>/g,B).join('\n'),
 							More : O.Ah(WC.HED(WW.MF(/header-workTitle">([^<]+)/,B)) || 'Work' + ID[0],

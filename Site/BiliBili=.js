@@ -237,13 +237,22 @@ module.exports = O =>
 
 			if (Prefix) return WX.Throw('Unexpected Prefix ' + Prefix)
 
-			return Ext.ReqB(O.Coke(BiliBiliAPIWebView(ID))).FMap(AV =>
+			return WX.TCO((_,I) => Ext.ReqB(O.Coke(BiliBiliAPIWebView(ID))).FMap(B =>
+			{
+				B = Common(B)
+				if (!B.owner.name && !B.owner.face)
+				{
+					if (3 < I)
+						WW.Throw('Unexpected Fatal | Empty Owner Response')
+					return WX.Just([true]).Delay(1E3)
+				}
+				return WX.Just([false,B])
+			})).FMap(AV =>
 			{
 				var
 				Part = [],
 				CIDFirst,
 				R;
-				AV = Common(AV)
 				CIDFirst = AV.pages[0].cid
 				R =
 				{

@@ -673,10 +673,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								UP : B.author.name,
 								UPURL : BiliBiliSpace + B.author.mid,
 								Date : 1E3 * B.publish_time,
-								Desc : WR.RepL(
-								[
-									/(<br>|<\/(?:figure|h\d+|p)>)+/g,'$&\n'
-								],B.content),
+								Desc : O.Text(B.content),
 								More :
 								[
 									SolveCTime(B.ctime),

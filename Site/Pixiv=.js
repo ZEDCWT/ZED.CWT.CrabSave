@@ -53,8 +53,7 @@ module.exports = O =>
 				Title : Illust.title,
 				Up : Illust.userName,
 				Date : +new Date(Illust.createDate),
-				Meta : WC.HED(Illust.description
-					.replace(/<br[^>]*>/g,'\n')),
+				Meta : O.Text(Illust.description),
 				...R
 			}))
 		}),

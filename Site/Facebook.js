@@ -48,7 +48,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 				Non : !Video,
 				ID : ID[1] + ID[2],
 				Img : WC.HED(WW.MF(/src="([^"]+)/,Img)),
-				Title : O.Text(WC.TagM('p',0,T),true),
+				Title : O.Text(WC.TagM('p',0,T)),
 				UP : WC.HED(WW.MF(/>([^<]+)<\/a><\/span/,T)),
 				UPURL : Facebook + ID[1],
 				Date : ID[4] ? 1E3 * ID[4] : WC.HED(ID[5] || '')

@@ -33,7 +33,7 @@ module.exports = O =>
 						Title : Work.title + '.' + EpisodeMeta.title,
 						Up : Work.author.activity_name,
 						Date : 1E3 * EpisodeMeta.published_at,
-						Meta : WW.MR((D,V) => D.push(V[1].replace(/<br[^>]*>/g,'')) && D,
+						Meta : WW.MR((D,V) => D.push(O.Text(V[1])) && D,
 							[],/id="p\d+"[^>]*>([^]+?)<\/p>/g,Episode),
 						Cover : Work.cover_image_url,
 						Part : [],

@@ -65,6 +65,7 @@ declare module CrabSaveNS
 			Final(Task : number,Done : number) : WishNS.Provider<any>
 
 			Vacuum() : WishNS.Provider<any>
+			Stat() : WishNS.Provider<import('fs').Stats?>
 		}
 	}
 	interface Task

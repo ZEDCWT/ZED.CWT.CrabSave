@@ -1,13 +1,13 @@
 'use strict'
 var
 WW = require('@zed.cwt/wish'),
-{R : WR,X : WX,C : WC} = WW,
+{R : WR,X : WX,C : WC,N : WN} = WW,
 
 WeiBo = 'https://weibo.com/',
 WeiBoAJAX = WeiBo + 'ajax/',
 WeiBoAJAXStatusShow = WW.Tmpl(WeiBoAJAX,'statuses/show?id=',undefined),
 WeiBoAJAXStatusLong = WW.Tmpl(WeiBoAJAX,'statuses/longtext?id=',undefined),
-WeiBoPostHistory = WW.Tmpl(WeiBo,'p/aj/v6/history?mid=',undefined,'&page_size=',undefined,'page=1'),
+WeiBoPostHistory = WW.Tmpl(WeiBo,'p/aj/v6/history?mid=',undefined,'&page_size=',undefined,'&page=1'),
 WeiBoLiveShow = WW.Tmpl(WeiBo,'l/!/2/wblive/room/show_pc_live.json?live_id=',undefined),
 
 NumberZip = WC.Rad(WW.D + WW.az + WW.AZ),
@@ -32,22 +32,21 @@ UnZip = Q => WR.MapU((V,F) => (V = NumberZip.P(V),F ? WR.PadS0(7,V) : V),
 	5044281310/H9EEP6pbF	Article 2309351002454323012466853424
 	1195054531/FCdU2kOPH	Article
 	7031421269/Lbwq466Xs	Vote
+	1678843974/5KD0tWN9TiG	Ancient
 */
 
 /**@type {CrabSaveNS.SiteO}*/
 module.exports = O =>
 {
-	var
-	RegExpIsM3U = /\.m3u8?(\?.*)?$/i;
 	return {
 		URL : (ID,Ext) =>
 		{
 			ID = /^\d+\/(\w+)$/.exec(ID) || [ID]
 			if (!ID[1]) return WX.Throw('Bad ID ' + ID[0])
-			return Ext.ReqB(O.Coke(WeiBoAJAXStatusShow(ID = ID[1]))).FMap(B =>
+			return Ext.ReqB(O.Coke(WeiBoAJAXStatusShow(ID[1]))).FMap(B =>
 			{
 				B = WC.JTO(B)
-				return (B.isLongText ? Ext.ReqB(O.Coke(WeiBoAJAXStatusLong(ID))) : WX.Just()).FMap(Long =>
+				return (B.isLongText ? Ext.ReqB(O.Coke(WeiBoAJAXStatusLong(ID[1]))) : WX.Just()).FMap(Long =>
 				{
 					var
 					Forwarded = B.retweeted_status,
@@ -159,7 +158,7 @@ module.exports = O =>
 								]) || WW.Throw('Unknown Type #' + T.type + ':' + T.object_type)
 						}
 					}
-					return (B.edit_count ? Ext.ReqB(O.Coke(WeiBoPostHistory(UnZip(ID),-~B.edit_count))).Map(His =>
+					return (B.edit_count ? Ext.ReqB(O.Coke(WeiBoPostHistory(UnZip(ID[1]),-~B.edit_count))).Map(His =>
 					{
 						var
 						PicList = [],
@@ -191,12 +190,7 @@ module.exports = O =>
 							))
 							PicList.forEach(V => V[0] = `	[${WR.PadL(Part.length,V[0])}] ${V.pop()}`)
 					}) : WX.Just())
-						.FP(WX.From(Part))
-						.FMapE(V => WX.Any(V).FMap(V =>
-							RegExpIsM3U.test(V.URL[0]) ?
-								O.M3U(V.URL[0],Ext) :
-								WX.Just(V)))
-						.Reduce((D,V) => D.push(V) && D,[])
+						.FP(O.Part(Part,Ext))
 						.Map(Part => (
 						{
 							Title : Title.trim(),
@@ -205,6 +199,59 @@ module.exports = O =>
 							Meta,
 							Cover,
 							Part,
+						}))
+				})
+			}).ErrAs(E =>
+			{
+				WW.ErrIs(WW.Err.NetBadStatus,E) &&
+					400 == E.Arg[0] ||
+					WW.Throw(E)
+				return Ext.ReqB(O.Coke(WeiBo + ID[0])).FMap(B =>
+				{
+					var
+					Title,
+					URL,
+					T;
+					B = O.JOM(/\((?={"ns":"pl.content.weiboDetail)/,B).html
+						.replace(/"WB_feed_expand">[^]+/,'')
+					Title = O.Text(WW.MU(/<[^>]+WB_text[^]+?<\/div>/,B)
+						.replace(/<a[^>]+ignore=.*?<\/a>/g,''))
+					if (T = WW.MF(/WB_video_mini.*sources="([^"]+)/,B))
+					{
+						URL = WR.Ent(WC.QSP(T)).filter(V => !/\D/.test(V[0]) && V[1]).sort((Q,S) => S[0] - Q[0])
+						URL[0] && URL[0][1] || O.Bad(URL)
+						URL = URL[0][1]
+					}
+					else if (T = WW.MF(/WB_video_mini.*action-data="([^"]+)/,B))
+					{
+						URL = WC.QSP(T).live_src
+						URL || O.Bad(T)
+					}
+					else if (T = WW.MF(/WB_video .*action-data="([^"]+)/,B))
+					{
+						URL = WC.QSP(T).url
+						URL || O.Bad(T)
+						URL = Ext.ReqB(O.Coke(URL))
+							.FMap(B => Ext.ReqB(O.Coke(WN.JoinU(WeiBo,WW.MF(/<iframe[^>]+src="([^"]+)/,B)))))
+							.Map(B => WC.JTO(WW.MF(/play_url:(".*")/,B)),Ext)
+					}
+					else if (T = WW.MF(/li_story.*?action-data="([^"]+)/,B))
+						URL = WC.QSP(T).gif_ourl
+					else if (T = WW.MF(/WB_media_a.*?action-data="([^"]+)/,B))
+					{
+						URL = WC.QSP(T).clear_picSrc
+						URL = URL && URL.split`,`
+							.map(V => V.replace(/(?<=\.sinaimg\.cn\/)\w+(?=\/)/,'large'))
+					}
+					return (WX.IsP(URL) ? URL : WX.Just(URL))
+						.FMap(U => O.Part(null == U ? [] : [{URL : WW.IsArr(U) ? U : [U]}],Ext))
+						.Map(Part => (
+						{
+							Title,
+							Up : WC.HED(WW.MF(/face".*title="([^"]+)/,B)),
+							Date : +WW.MF(/date="(\d+)/,B),
+							Meta : Title,
+							Part
 						}))
 				})
 			})
