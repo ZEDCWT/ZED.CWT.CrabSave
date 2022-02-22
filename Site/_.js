@@ -58,10 +58,10 @@ module.exports = Option =>
 			Part : (Q,Ext = WN) => WX.From(Q)
 				.FMapE(V => WX.Any(V).FMap(V =>
 				{
-					if (/\.m3u8?(\?.*)?$/i.test(V[0]))
+					if (/\.m3u8?(\?.*)?$/i.test(V.URL[0]))
 					{
 						1 < V.length && Bad('Unexpected content following M3U')
-						return M3U(V[0],Ext)
+						return M3U(V.URL[0],Ext)
 					}
 					return WX.Just(V)
 				}))

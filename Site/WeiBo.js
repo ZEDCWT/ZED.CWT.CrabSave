@@ -8,6 +8,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	WeiBoHome = WW.Tmpl(WeiBo,'aj/mblog/fsearch?',undefined),
 	WeiBoFollow = WW.Tmpl(WeiBo,undefined,'/follow'),
 	WeiBoFollowAPI = WW.Tmpl(WeiBo,'p/',undefined,'/myfollow?ajaxpagelet=1&pids=Pl_Official_RelationMyfollow__88&Pl_Official_RelationMyfollow__88_page=',undefined),
+	// WeiBoArticle = WW.Tmpl(WeiBo,'ttarticle/p/show?id=',undefined),
 	WeiBoAJAX = WeiBo + 'ajax/',
 	WeiBoAJAXStatusShow = WW.Tmpl(WeiBoAJAX,'statuses/show?id=',undefined),
 	WeiBoAJAXStatusLong = WW.Tmpl(WeiBoAJAX,'statuses/longtext?id=',undefined),
@@ -19,13 +20,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	SinaLoginCross = SinaLogin + 'crossdomain2.php?action=login',
 	// WeiBoMobile = 'https://m.weibo.cn/',
 	// WeiBoMobileDetail = WW.Tmpl(WeiBoMobile,'detail/',undefined),
-	/*
+	WeiBoCard = 'https://card.weibo.com/',
+	WeiBoCardArticleDetail = WW.Tmpl(WeiBoCard,'article/m/aj/detail?id=',undefined),
 	NumberZip = WC.Rad(WW.D + WW.az + WW.AZ),
 	Zip = function(Q)
 	{
 		return WR.MapU(function(V,F){return V = NumberZip.S(V),F ? WR.PadS0(4,V) : V},
 			WR.SplitAll(7,WR.PadS0(7 * Math.ceil(Q.length / 7),Q))).join('')
 	},
+	/*
 	UnZip = function(Q)
 	{
 		return WR.MapU(function(V,F){return V = NumberZip.P(V),F ? WR.PadS0(7,V) : V},
@@ -98,7 +101,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	Common = function(B)
 	{
 		B = WC.JTO(B)
-		B.msg && O.Bad(B.code,B.msg)
+		B.msg && 'success' !== B.msg && O.Bad(B.code,B.msg)
 		return B.data
 	},
 	SolveID = function(B){return WW.MF(/href="\/(\d+\/\w+).*?date="/,B)},
@@ -110,20 +113,21 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		Title = O.Text(WW.MU(/<[^>]+WB_text[^]+?<\/div>/,B)
 			.replace(/<a[^>]+ignore=.*?<\/a>/g,'')),
 		SpecialAction,
-		More,
+		More = [],
 		Img,T;
+		SpecialAction = WW.MF(/<div[^>]+WB_cardtitle[^]+?class="subtitle">(?:<[^>]+>)*([^<]+)/,B) ||
+			WW.MU(/(<span[^>]+sp_kz[^>]+>)([^]*?\1)*[^<>]*/,B)
+		SpecialAction && More.push(WC.HED(SpecialAction.replace(/<[^>]+>/g,'')))
 		T = B.split('"WB_feed_expand">')
 		if (T[1])
 		{
 			B = T[0]
 			T = T[1]
-			More = WC.HED(WW.MF(/nick-name="([^"]+)/,T))
+			More.push(WC.HED(WW.MF(/nick-name="([^"]+)/,T)))
 			T = SolveID(T)
-			More =
-			[
+			More.push(
 				O.Ah(T,WeiBo + T),
-				O.Ah('@' + More,WeiBo + T.replace(/\/.*/,''))
-			]
+				O.Ah('@' + More,WeiBo + T.replace(/\/.*/,'')))
 		}
 		if (T = WW.MF(/WB_video.*action-data="([^"]+)/,B)) // Video
 		{
@@ -140,11 +144,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			Img = WC.QSP(T).clear_picSrc
 			Img = Img && Img.split(',')
 		}
-		More = More && !WW.IsArr(More) ? [More] : More
-		More = More || []
-		SpecialAction = WW.MF(/<div[^>]+WB_cardtitle[^]+?class="subtitle">(?:<[^>]+>)*([^<]+)/,B) ||
-			WW.MU(/(<span[^>]+sp_kz[^>]+>)([^]*?\1)*[^<>]*/,B)
-		SpecialAction && More.unshift(WC.HED(SpecialAction.replace(/<[^>]+>/g,'')))
+		if (T = WW.MF(/widget_articleLayer[^<>]+action-data="([^"]+)/,B))
+			More.push(O.Ah(WC.HED(WW.MF(/WB_feed_spec_tit[^>]+>([^<]+)/,B)),WC.QSP(T).url))
 		return {
 			NonAV : Non,
 			AD : /blocktype=ad&/.test(B),
@@ -152,7 +153,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			ID : SolveID(B),
 			Img : Img,
 			Title : Title.slice(0,128),
-			UP : WC.HED(WW.MF(/face".*title="([^"]+)/,B)),
+			UP : ShowName(WC.HED(WW.MF(/face".*title="([^"]+)/,B)),
+				WC.HED(WW.MF(/S_txt2[^<>]+usercard[^<>]+>\(([^<]+)\)/,B))),
 			UPURL : WeiBo + WW.MF(/WB_info.*\s+.*?href=".*?(\w+)[^/"]*"/,B),
 			Date : +WW.MF(/date="(\d+)/,B),
 			Desc : Title,
@@ -174,7 +176,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	SolveFollowPageID = WX.CacheL(function(UID)
 	{
 		return Req(WeiBoFollow(UID)).Map(SolvePageID)
-	});
+	}),
+	ShowName = function(Real,Alias)
+	{
+		return Alias ?
+			Alias + WW.QuoP(Real) :
+			Real
+	};
 	return {
 		ID : 'WeiBo',
 		Name : '\u65B0\u6D6A\u5FAE\u535A',
@@ -388,6 +396,36 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				})
 			}
 		},{
+			Name : 'Article',
+			Judge : O.Num('(?:TT)?Article'),
+			View : function(ID)
+			{
+				return O.Req(
+				{
+					URL : WeiBoCardArticleDetail(ID),
+					Head : {Referer : WeiBo}
+				}).Map(function(B)
+				{
+					B = Common(B)
+					return {
+						Item : [
+						{
+							ID : B.uid + '/' + Zip('' + B.mid),
+							Img : B.cover_img.image.url,
+							Title : B.title,
+							UP : B.userinfo.screen_name,
+							UPURL : B.userinfo.url,
+							Date : B.create_at,
+							Desc : O.Text(B.content),
+							More :
+							[
+								O.Ah(B.writer.screen_name,WeiBo + B.writer.uid)
+							]
+						}]
+					}
+				})
+			}
+		},{
 			Name : 'User',
 			Judge : [/\.com\/(?:u\/(?=\d))?(\w+)/,O.Word('User')],
 			View : function(ID,Page)
@@ -451,18 +489,24 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 							{
 								return WR.Max(D,+V[1])
 							},1,/"page"[^>]+>(\d+)</g,B),
-							Item : WW.MR(function(D,V,I)
+							Item : WW.MR(function(D,V,C,I)
 							{
+								I = WW.MF(/_name"[^>]+href="(?:\/u)?\/(\w+)/,V)
+								// Why dont they escape profile_image_url
+								C = WC.QSP(WW.MF(/action-data="([^"]+)/,V).replace(/\?/g,''))
 								D.push(
 								{
 									Non : true,
-									ID : I = WW.MF(/\/u\/(\d+)/,V) || WW.MF(/name"[^>]+href="\/(\w+)/,V),
+									ID : /\D/.test(I) ? I + WW.QuoP(C.uid) : I,
 									URL : WeiBo + I,
 									Img : WW.MF(/src="([^"]+)/,V),
-									UP : WC.HED(WW.MF(/title="([^"]+)/,V)),
+									UP : ShowName(C.screen_name,C.remark),
 									UPURL : WeiBo + I,
-									More : WR.Trim(WR.Trim(WW.MF(/"text[^>]+>([^<]+)/,V)) + '\n' +
-										O.Text(WW.MF(/info_from[^>]+>([^]+?)<\/div/,V)))
+									More :
+									[
+										O.Text(WW.MF(/"text[^>]+>([^<]+)/,V)),
+										O.Text(WW.MF(/info_from[^>]+>([^]+?)<\/div/,V))
+									]
 								})
 								return D
 							},[],/member_li[^]+?<\/li/g,B)

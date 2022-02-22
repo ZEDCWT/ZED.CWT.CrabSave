@@ -9,12 +9,18 @@ WeiBoAJAXStatusShow = WW.Tmpl(WeiBoAJAX,'statuses/show?id=',undefined),
 WeiBoAJAXStatusLong = WW.Tmpl(WeiBoAJAX,'statuses/longtext?id=',undefined),
 WeiBoPostHistory = WW.Tmpl(WeiBo,'p/aj/v6/history?mid=',undefined,'&page_size=',undefined,'&page=1'),
 WeiBoLiveShow = WW.Tmpl(WeiBo,'l/!/2/wblive/room/show_pc_live.json?live_id=',undefined),
+WeiBoCard = 'https://card.weibo.com/',
+WeiBoCardArticle = WeiBoCard + 'article/m/aj/',
+WeiBoCardArticleDetail = WW.Tmpl(WeiBoCardArticle,'detail?id=',undefined),
+WeiBoCardArticleHistoryList = WW.Tmpl(WeiBoCardArticle,'history/list?id=',undefined),
+WeiBoCardArticleHistoryShow = WW.Tmpl(WeiBoCardArticle,'history/show?id=',undefined),
 
 NumberZip = WC.Rad(WW.D + WW.az + WW.AZ),
 // Zip = Q => WR.MapU((V,F) => (V = NumberZip.S(V),F ? WR.PadS0(4,V) : V),
 // 		WR.SplitAll(7,WR.PadS0(7 * WR.Ceil(Q.length / 7),Q))).join``,
 UnZip = Q => WR.MapU((V,F) => (V = NumberZip.P(V),F ? WR.PadS0(7,V) : V),
-		WR.SplitAll(4,WR.PadS0(4 * WR.Ceil(Q.length / 4),Q))).join``;
+		WR.SplitAll(4,WR.PadS0(4 * WR.Ceil(Q.length / 4),Q))).join``,
+ImgEnlarge = V => V.replace(/(?<=\.sinaimg\.cn\/)(?:\w+|crop[\d.]+)(?=\/\w+\.\w+$)/,'large');
 
 /*
 	1168377245/H9DtcoC7I	TextOnly
@@ -38,6 +44,14 @@ UnZip = Q => WR.MapU((V,F) => (V = NumberZip.P(V),F ? WR.PadS0(7,V) : V),
 /**@type {CrabSaveNS.SiteO}*/
 module.exports = O =>
 {
+	var
+	Common = B =>
+	{
+		B = WC.JTO(B)
+		B.msg && 'success' !== B.msg && O.Bad(WW.Quo(B.code) + B.msg)
+		return B.data
+	};
+
 	return {
 		URL : (ID,Ext) =>
 		{
@@ -49,17 +63,31 @@ module.exports = O =>
 				return (B.isLongText ? Ext.ReqB(O.Coke(WeiBoAJAXStatusLong(ID[1]))) : WX.Just()).FMap(Long =>
 				{
 					var
+					ReqWithRef = V => Ext.ReqB(O.Coke(WN.ReqOH(V,'Referer',WeiBo))),
 					Forwarded = B.retweeted_status,
 					Title,
-					Meta,
+					Meta = [],
 					Cover,
 					PicIndex = {},
+					PicAll = [],
+					PicID = URL => WW.MF(/\/([^./]+)\.\w+$/,URL) || URL,
+					PicPush = URL =>
+					{
+						var ID = PicID(URL);
+						if (!WR.Has(ID,PicIndex))
+						{
+							PicIndex[ID] = PicAll.length
+							PicAll.push(URL)
+						}
+					},
+					PicMeta = [],
+					PicShow = URL => PicMeta.push(URL = [PicIndex[PicID(URL)],URL]) && URL,
 					Part = [],
 					Card,
 					C,T;
 					Long = Long && WC.JTO(Long).data
 					Title = B.text_raw
-					Meta = [Long ? Long.longTextContent : Title]
+					Meta.push(Long ? Long.longTextContent : Title)
 					if (Forwarded)
 						Title = Title.replace(/\/\/@.*/,'')
 					WR.EachU((V,F) =>
@@ -69,10 +97,7 @@ module.exports = O =>
 						V.long_url && Meta.push('\t' + V.long_url)
 					},B.url_struct)
 					if (B.pic_num)
-						WR.Each(V => PicIndex[V] = ~-Part.push(
-						{
-							URL : [B.pic_infos[V].largest.url]
-						}),B.pic_ids)
+						WR.Each(V => PicPush(B.pic_infos[V].largest.url),B.pic_ids)
 					else if (Forwarded)
 						WR.Each(V => V.pic_infos && Part.push(
 						{
@@ -89,11 +114,7 @@ module.exports = O =>
 							case 'live' :
 							case 'video' : // 5 11
 								if ('live' === T.object_type)
-									Part.push(Ext.ReqB(O.Coke(
-									{
-										URL : WeiBoLiveShow(T.page_id),
-										Head : {Referer : WeiBo}
-									})).Map(N =>
+									Part.push(ReqWithRef(WeiBoLiveShow(T.page_id)).Map(N =>
 									{
 										N = WC.JTO(N)
 										N.error_code && O.Bad(N)
@@ -113,11 +134,67 @@ module.exports = O =>
 											C.mp4_sd_url
 									if (T)
 										Part.push({URL : [T]})
-									else
+									else if (!/\/\/[^/]*(acg\.tv)\//.test(C.h5_url))
 										WW.Throw('Unable to solve video URL')
 								}
 								break
 
+							case 'article' : // 2 5
+								Part.push(ReqWithRef(WeiBoCardArticleDetail(T.page_id)).FMap(B =>
+								{
+									var
+									AllCount = 1,
+									SolveContent = (B,F) =>
+									{
+										Meta.push
+										(
+											'',
+											'{Article} ' +
+												WW.ShowLI(AllCount,AllCount + ~F) +
+												' ' +
+												(B.update_at || B.create_at),
+											B.title,
+											B.writer.screen_name,
+											...B.content.split(/<img[^>]* src="([^"]+)"[^>]*>/g)
+												.map((V,F) => 1 & F ?
+													PicPush(V = ImgEnlarge(V)) ||
+													PicShow(V) :
+													O.Text(V).trim())
+										)
+									};
+									B = Common(B)
+									Meta.push('')
+									return B.history ?
+										ReqWithRef(WeiBoCardArticleHistoryList(T.page_id))
+											.FMap(B =>
+											(
+												B = Common(B),
+												AllCount = B.length,
+												WX.From(B)
+											))
+											.FMapE((N,F) => ReqWithRef(WeiBoCardArticleHistoryShow(N.id))
+												.FMap(V =>
+												{
+													V = WW.Try(Common,[V])
+													if (WW.TryE === V && !F)
+														V = B
+													if (WW.TryE === V)
+														Meta.push
+														(
+															'',
+															'{Article} ' +
+																WW.ShowLI(AllCount,AllCount + ~F) +
+																' ' +
+																N.create_at,
+															V[0]
+														)
+													else
+														SolveContent(V,F)
+													return WX.Empty
+												})) :
+										SolveContent(B,0) || WX.Empty
+								}))
+								break
 							case 'hudongvote' : // 23
 								C = Card.vote_object
 								Meta.push(
@@ -146,7 +223,6 @@ module.exports = O =>
 								WR.Include(T.object_type,
 								[
 									'appItem', // 2
-									'article', // 2 5
 									'audio', // 0
 									'event', // 5
 									'file', // 2
@@ -161,7 +237,6 @@ module.exports = O =>
 					return (B.edit_count ? Ext.ReqB(O.Coke(WeiBoPostHistory(UnZip(ID[1]),-~B.edit_count))).Map(His =>
 					{
 						var
-						PicList = [],
 						HTS = Q => Q.split(/<[^>]+>/)
 							.map(V => WC.HED(V.trim()))
 							.filter(V => V)
@@ -177,29 +252,27 @@ module.exports = O =>
 								HTS(WW.MU(/<[^>]+WB_text[^>]+>([^<>]+)/,V)),
 								...WW.MR((D,V) =>
 								{
-									V[1] = V[1].replace(/\/[a-z]+\d+\//,'/large/')
-									if (!WR.Has(V[2],PicIndex))
-										PicIndex[V[2]] = ~-Part.push(
-										{
-											URL : [V[1]]
-										})
-									PicList.push(V = [PicIndex[V[2]],V[1]])
-									D.push(V)
+									V = ImgEnlarge(V[1])
+									PicPush(V)
+									D.push(PicShow(V))
 									return D
-								},[],/<[^>]+WB_pic[^]+?src="([^"]+\/([^.]+)\.\w+)"/g,V)
+								},[],/<[^>]+WB_pic[^]+?src="([^"]+)"/g,V)
 							))
-							PicList.forEach(V => V[0] = `	[${WR.PadL(Part.length,V[0])}] ${V.pop()}`)
 					}) : WX.Just())
 						.FP(O.Part(Part,Ext))
-						.Map(Part => (
+						.Map(Part =>
 						{
-							Title : Title.trim(),
-							Up : B.user.screen_name,
-							Date : +new Date(B.created_at),
-							Meta,
-							Cover,
-							Part,
-						}))
+							PicMeta.forEach(V => V[0] = `	[${WR.PadL(PicAll.length,V[0])}] ${V.pop()}`)
+							PicAll && Part.unshift({URL : PicAll,ExtDefault : '.jpg'})
+							return {
+								Title : Title.trim(),
+								Up : B.user.screen_name,
+								Date : +new Date(B.created_at),
+								Meta,
+								Cover : Cover && ImgEnlarge(Cover),
+								Part,
+							}
+						})
 				})
 			}).ErrAs(E =>
 			{
@@ -240,8 +313,7 @@ module.exports = O =>
 					else if (T = WW.MF(/WB_media_a.*?action-data="([^"]+)/,B))
 					{
 						URL = WC.QSP(T).clear_picSrc
-						URL = URL && URL.split`,`
-							.map(V => V.replace(/(?<=\.sinaimg\.cn\/)\w+(?=\/)/,'large'))
+						URL = URL && URL.split`,`.map(ImgEnlarge)
 					}
 					return (WX.IsP(URL) ? URL : WX.Just(URL))
 						.FMap(U => O.Part(null == U ? [] : [{URL : WW.IsArr(U) ? U : [U]}],Ext))
