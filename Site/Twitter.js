@@ -229,7 +229,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			Name : 'User',
 			Judge :
 			[
-				/(?:@|\.com\/)([^/]+)/i,
+				/(?:@|\.com\/)([^/?]+)/i,
 				O.Word('User')
 			],
 			View : O.More(function(ID,I)
@@ -241,17 +241,23 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			},function(I,Page)
 			{
 				return MakeUserTweet(I[0],I[Page])
-			},function(B)
+			},function(B,I,Page)
 			{
 				var R = [];
 				B = Common(B)
-				O.Walk(B,function(V)
+				O.Walk(B,function(V,F)
 				{
-					return V.promotedMetadata ||
-						'Tweet' === V.__typename &&
-						R.push(SolveTweet(V.legacy,V.core.user_results.result.legacy))
+					return 'instructions' === F && !O.Walk(WR.Where(function(V)
+					{
+						return !Page || 'TimelinePinEntry' !== V.type
+					},WR.Rev(V)),function(V)
+					{
+						return V.promotedMetadata ||
+							'Tweet' === V.__typename &&
+							R.push(SolveTweet(V.legacy,V.core.user_results.result.legacy))
+					})
 				})
-				return [SolveCursor(B),{Item : R}]
+				return [R.length && SolveCursor(B),{Item : R}]
 			})
 			/*View : MakeTimeline(function(ID)
 			{

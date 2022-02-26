@@ -91,7 +91,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 			})
 		},{
 			Name : 'UserAll',
-			Judge : O.Num('UserAll'),
+			Judge : O.Num('UserAll|UA'),
 			View : function(ID)
 			{
 				return SolveUserAll(ID).Map(function(V)

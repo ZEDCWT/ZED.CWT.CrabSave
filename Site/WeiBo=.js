@@ -263,7 +263,7 @@ module.exports = O =>
 						.Map(Part =>
 						{
 							PicMeta.forEach(V => V[0] = `	[${WR.PadL(PicAll.length,V[0])}] ${V.pop()}`)
-							PicAll && Part.unshift({URL : PicAll,ExtDefault : '.jpg'})
+							PicAll.length && Part.unshift({URL : PicAll,ExtDefault : '.jpg'})
 							return {
 								Title : Title.trim(),
 								Up : B.user.screen_name,
