@@ -2,8 +2,6 @@
 var
 WW = require('@zed.cwt/wish'),
 {R : WR,X : WX,C : WC,N : WN} = WW,
-XML2JS = require('xml2js'),
-XMLParse = WX.WrapNode(XML2JS.parseString),
 
 Facebook = 'https://www.facebook.com/',
 FacebookVideoTahoeAsync = WW.Tmpl(Facebook,'video/tahoe/async/',undefined,'?payloadtype=primary'),

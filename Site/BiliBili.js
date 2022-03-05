@@ -36,6 +36,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliCheeseEpisode = WW.Tmpl(BiliBiliCheese,'play/ep',undefined),
 	BiliBiliAPI = 'https://api.bilibili.com/',
 	BiliBiliArticleList = WW.Tmpl(BiliBiliAPI,'x/article/list/articles?id=',undefined),
+	BiliBiliAPIFavList = WW.Tmpl(BiliBiliAPI,'x/v3/fav/folder/created/list-all?up_mid=',undefined),
 	BiliBiliAPIFav = WW.Tmpl(BiliBiliAPI,'medialist/gateway/base/spaceDetail?media_id=',undefined,'&pn=',undefined,'&ps=20'),
 	BiliBiliAPIWeb = BiliBiliAPI + 'x/web-interface/',
 	BiliBiliAPIWebNav = BiliBiliAPIWeb + 'nav',
@@ -79,6 +80,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliSpaceChannelSeason = WW.Tmpl(BiliBiliSpace,undefined,'/channel/collectiondetail?sid=',undefined),
 	BiliBiliSpaceChannelSeries = WW.Tmpl(BiliBiliSpace,undefined,'/channel/seriesdetail?sid=',undefined),
 	BiliBiliSpacePUGV = WW.Tmpl(BiliBiliSpace,undefined,'/pugv'),
+	BiliBiliSpaceFavList = WW.Tmpl(BiliBiliSpace,undefined,'/favlist'),
+	BiliBiliSpaceFav = WW.Tmpl(BiliBiliSpace,undefined,'/favlist?fid=',undefined),
 	// BiliBiliVC = 'https://vc.bilibili.com/',
 	// BiliBiliVCVideo = WW.Tmpl(BiliBiliVC,'video/',undefined),
 	BiliBiliVCAPI = 'https://api.vc.bilibili.com/',
@@ -850,6 +853,28 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				})
 			}
 		},{
+			Name : 'FavList',
+			Judge : [O.NumR('FavList'),O.Num('FavList')],
+			View : function(ID)
+			{
+				return O.API(BiliBiliAPIFavList(ID)).Map(function(B)
+				{
+					B = Common(B)
+					return {
+						Item : WR.Map(function(V)
+						{
+							return {
+								Non : true,
+								ID : V.id,
+								URL : BiliBiliSpaceFav(ID,V.id),
+								Title : V.title,
+								More : V.media_count
+							}
+						},B && B.list)
+					}
+				})
+			}
+		},{
 			Name : PrefixUGCSeason,
 			Judge : O.Num('UGCSeason|Channel.*Collection(?:Detail)'),
 			View : function(ID,Page)
@@ -887,7 +912,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Name : 'Channel',
 			Judge :
 			[
-				/(\d+)\W*\bChannel\b/i,
+				O.NumR('Channel'),
 				O.Num('Channel')
 			],
 			View : function(ID,Page)
@@ -922,7 +947,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Name : 'PUGV',
 			Judge :
 			[
-				/(\d+)\W*\bPUGV\b/i,
+				O.NumR('PUGV'),
 				O.Num('PUGV')
 			],
 			View : function(ID,Page)
@@ -973,7 +998,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								O.Ah('Audio ' + Nav.audio,BiliBiliSpaceAudio(ID)),
 								O.Ah('Article',BiliBiliSpaceArticle(ID)),
 								O.Ah('Channel',BiliBiliSpaceChannel(ID)),
-								O.Ah('PUGV',BiliBiliSpacePUGV(ID))
+								O.Ah('PUGV',BiliBiliSpacePUGV(ID)),
+								O.Ah('Fav',BiliBiliSpaceFavList(ID))
 							]
 						}]
 					})

@@ -31,24 +31,31 @@ module.exports = O =>
 					{
 						switch (V.type)
 						{
-							case 'p' :
-								Meta.push(V.text)
-								break
-							case 'image' :
-								V = Content.imageMap[V.imageId]
-								Meta.push('<img> ' + V.originalUrl)
-								URL.push(V.originalUrl)
-								Ext.push('.' + V.extension)
-								break
 							case 'file' :
 								V = Content.fileMap[V.fileId]
-								Meta.push('<file> ' + V.name)
+								Meta.push('<File> ' + V.name)
 								Part.push(
 								{
 									Title : V.name,
 									URL : [V.url],
 									Ext : '.' + V.extension,
 								})
+								break
+							case 'header' :
+								Meta.push(`#### ${V.text} ####`)
+								break
+							case 'image' :
+								V = Content.imageMap[V.imageId]
+								Meta.push('<Img> ' + V.originalUrl)
+								URL.push(V.originalUrl)
+								Ext.push('.' + V.extension)
+								break
+							case 'p' :
+								Meta.push(V.text)
+								break
+							case 'url_embed' :
+								V = Content.urlEmbedMap[V.urlEmbedId]
+								Meta.push('<URL> ' + V.html)
 								break
 							default :
 								WW.Throw('Unknown Article Block Type #' + V.type)

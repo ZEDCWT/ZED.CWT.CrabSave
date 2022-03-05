@@ -28,6 +28,7 @@ declare module CrabSaveNS
 		Bad(Code? : any,Message : any) : never
 		BadR(Q : any) : never
 		Num(Q : string) : RegExp
+		NumR(Q : string) : RegExp
 		Word(Q : string) : RegExp
 		TL : RegExp | RegExp[]
 		UP : RegExp | RegExp[]

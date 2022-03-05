@@ -3285,6 +3285,10 @@
 				{
 					return RegExp('\\b(?:' + Q + ')(?![A-Z])(?:\\D*\\b)?(\\d+)\\b','i')
 				},
+				NumR : function(Q)
+				{
+					return RegExp('\\b(\\d+)\\b[^\\dA-Z]*(?:' + Q + ')\\b','i')
+				},
 				Word : function(Q)
 				{
 					return RegExp('\\b(?:' + Q + ')[\\s/=]+([^&?#\\s/]+)','i')

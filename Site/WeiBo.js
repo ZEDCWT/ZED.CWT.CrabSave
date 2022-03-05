@@ -118,16 +118,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		SpecialAction = WW.MF(/<div[^>]+WB_cardtitle[^]+?class="subtitle">(?:<[^>]+>)*([^<]+)/,B) ||
 			WW.MU(/(<span[^>]+sp_kz[^>]+>)([^]*?\1)*[^<>]*/,B)
 		SpecialAction && More.push(WC.HED(SpecialAction.replace(/<[^>]+>/g,'')))
-		T = B.split('"WB_feed_expand">')
+		T = B.split(/<div[^<>]+WB_feed_expand/)
 		if (T[1])
 		{
-			B = T[0]
-			T = T[1]
-			More.push(WC.HED(WW.MF(/nick-name="([^"]+)/,T)))
-			T = SolveID(T)
+			B = SolveID(T[1])
 			More.push(
-				O.Ah(T,WeiBo + T),
-				O.Ah('@' + More,WeiBo + T.replace(/\/.*/,'')))
+				O.Ah(B,WeiBo + B),
+				O.Ah('@' + WC.HED(WW.MF(/nick-name="([^"]+)/,T[1])),WeiBo + B.replace(/\/.*/,'')))
+			B = T[0]
 		}
 		if (T = WW.MF(/WB_video.*action-data="([^"]+)/,B)) // Video
 		{
