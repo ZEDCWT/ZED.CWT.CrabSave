@@ -10,6 +10,7 @@
 	WX = WW.X,
 	Top = Wish.Top,
 	RegExp = Top.RegExp,
+	TopSet = Top.Set,
 
 	ActionWebTaskNew = 'TaskN',
 	ActionWebTaskOverview = 'TaskO',
@@ -211,6 +212,8 @@
 	ShortCutGeneralFocus = 'GenFocusKeywordInput',
 	ShortCutGeneralFocusAuth = 'GenFocusAuth',
 	ShortCutBrowseSelAll = 'BroSelAll',
+	ShortCutBrowseSelAllHis = 'BroSelAllHis',
+	ShortCutBrowseSelAllFocus = 'BroSelAllFoc',
 	ShortCutBrowseSelClear = 'BroSelClear',
 	ShortCutBrowseHead = 'BroHead',
 	ShortCutBrowsePrev = 'BroPrev',
@@ -237,6 +240,23 @@
 		})
 	},
 	Setting = {},
+	SettingIsSPUPLast,SettingIsSPUPSet,
+	SettingIsSPUPNormalize = function(V){return WR.Trim(V).replace(/^\w+:\/\//,'')},
+	SettingIsSPUP = function(V)
+	{
+		if (!V || !WW.IsStr(V)) return
+		if (SettingIsSPUPLast !== (SettingIsSPUPLast = Setting.SPUP))
+		{
+			SettingIsSPUPSet = TopSet ? WW.Set() : {}
+			WR.Each(function(V)
+			{
+				V = SettingIsSPUPNormalize(V)
+				TopSet ? WW.SetAdd(SettingIsSPUPSet,V) : SettingIsSPUPSet[V] = 9
+			},SettingIsSPUPLast.split('\n'))
+		}
+		V = SettingIsSPUPNormalize(V)
+		return TopSet ? WW.SetHas(SettingIsSPUPSet,V) : WR.Has(V,SettingIsSPUPSet)
+	},
 	BrowserOnProgress,
 	TickQueue = [],
 	Tick = function(Q){TickQueue.push(Q)},
@@ -1273,6 +1293,8 @@
 			BarCold = 1,
 			BarHot = 2,
 			BarHistory = 3,
+			BarAddOptHis = 1,
+			BarAddOptFocus = 2,
 			MakeBar = function(Site,Q,V)
 			{
 				var
@@ -1332,9 +1354,10 @@
 				Bar.push(BarMap.D(ID,
 				{
 					R : Reload,
-					A : function()
+					A : function(Opt)
 					{
-						(BarNone === State || CrabSave.AddHis && BarHistory === State) &&
+						(BarNone === State || BarHistory === State && BarAddOptHis & Opt) &&
+							(!(BarAddOptFocus & Opt) || SettingIsSPUP(Q.UP) || SettingIsSPUP(Q.UPURL)) &&
 							Add()
 					},
 					D : function()
@@ -1638,6 +1661,14 @@
 			ShortCutOnPage(K,ShortCutBrowseSelAll,function()
 			{
 				WR.Each(function(V){V.A()},Bar)
+			})
+			ShortCutOnPage(K,ShortCutBrowseSelAllHis,function()
+			{
+				WR.Each(function(V){V.A(BarAddOptHis)},Bar)
+			})
+			ShortCutOnPage(K,ShortCutBrowseSelAllFocus,function()
+			{
+				WR.Each(function(V){V.A(BarAddOptFocus)},Bar)
 			})
 			ShortCutOnPage(K,ShortCutBrowseSelClear,function()
 			{
@@ -2905,6 +2936,12 @@
 				ShortCutBrowseSelAll,
 				'Ctrl+a',WB.SCD
 			],[
+				ShortCutBrowseSelAllHis,
+				'Ctrl+Alt+a',WB.SCD
+			],[
+				ShortCutBrowseSelAllFocus,
+				'Ctrl+s',WB.SCD
+			],[
 				ShortCutBrowseSelClear,
 				'Ctrl+Shift+a',WB.SCD
 			],[
@@ -2983,6 +3020,11 @@
 			}),
 			OptionProxy,
 			OptionNonAV,
+			OptionSPUP,
+			OptionSPUPUpdateStat = function(V)
+			{
+				OptionSPUP.Stat(WW.MR(WR.Inc,0,/.+/g,V),V ? V.length : 0)
+			},
 			MakeShortCutToggle = function(SCKey,Opt,Key)
 			{
 				ShortCut.On(SCKey,function(V)
@@ -2995,14 +3037,18 @@
 			{
 				var
 				Key = V[1],
+				Inp = V[2],
 				Default = WR.Default('',V[3]);
-				Pref.S([[V[0],V[2]]])
-				'' === Default || V[2].V(Setting[Key] = SetD[Key] = Default,true)
+				Pref.S([[V[0],Inp]])
+				'' === Default || Inp.V(Setting[Key] = SetD[Key] = Default,true)
 				SetC[Key] = function(Q)
 				{
 					if (Setting[Key] !== (Q = undefined === Q ? Default : Q))
 					{
-						V[2].V(Setting[Key] = Q,true)
+						Inp.V(Setting[Key] = Q,true)
+
+						if (Inp === OptionSPUP)
+							OptionSPUPUpdateStat(Q)
 					}
 				}
 			},[
@@ -3131,6 +3177,17 @@
 					Inp : PC
 				}),
 				false
+			],[
+				SA('SetSPUP'),
+				Key('SPUP'),
+				OptionSPUP = WV.Inp(
+				{
+					Row : 6,
+					InpU : PC,
+					Stat : true,
+					Inp : WR.Throttle(2E2,OptionSPUPUpdateStat)
+				}),
+				''
 			]/*,[
 				SA('SetMerge'),
 				Key('Merge'),

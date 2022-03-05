@@ -374,6 +374,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			{
 				return 'gridVideoRenderer' === K && I.push(
 				{
+					Non : V.upcomingEventData,
 					ID : V.videoId,
 					Img : V.thumbnail.thumbnails[0].url,
 					Title : SolveFeedText(V.title),

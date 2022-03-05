@@ -77,6 +77,7 @@ declare module CrabSaveNS
 		Meta : boolean
 		Cover : boolean
 		// NonAV : boolean // Front end only
+		// SPUP : string // Front end only
 	}
 	interface SettingO
 	{
