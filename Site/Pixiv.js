@@ -76,7 +76,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 			}
 		},{
 			Name : 'User',
-			Judge : O.Num('Users?|Member'),
+			Judge : O.Num('Users?|Member(?!\\D*Illust)'),
 			View : O.Less(SolveUserAll,function(Q,ID)
 			{
 				return O.Req(

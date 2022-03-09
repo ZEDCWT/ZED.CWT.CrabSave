@@ -138,10 +138,10 @@
 	SingleFill = function(Q,W,A)
 	{
 		WV.Con(Q,A ?
-			[W,MakeHigh(' @ '),A] :
+			[W,MakeHigh(' ● '),A] :
 			W)
 		WV.Ti(Q,A ?
-			W + ' @ ' + A :
+			W + ' ● ' + A :
 			WW.IsObj(W) ? '' : W)
 	},
 	MakeCount = function()
@@ -1871,8 +1871,8 @@
 					return {
 						U : function(V)
 						{
-							SingleFill(ID,V.I,V.S)
-							SingleFill(Title,V.T,V.U)
+							SingleFill(ID,V.S,V.I)
+							SingleFill(Title,V.U,V.T)
 						}
 					}
 				}

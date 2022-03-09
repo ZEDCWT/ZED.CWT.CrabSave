@@ -387,7 +387,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			})
 		},{
 			Name : 'Video',
-			Judge : [/^[-_\dA-Z]+$/i,O.Word('Embed|V|Video'),/\.be\/(\S+)/i],
+			Judge : [/^[-_\dA-Z]+$/i,O.Word('Embed|V|Video'),/\.be\/([-_\dA-Z]+)/i],
 			View : function(ID)
 			{
 				return GoogleAPIReq(GoogleAPIYouTubeVideo('id,snippet,contentDetails',ID))

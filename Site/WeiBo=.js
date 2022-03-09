@@ -14,6 +14,7 @@ WeiBoCardArticle = WeiBoCard + 'article/m/aj/',
 WeiBoCardArticleDetail = WW.Tmpl(WeiBoCardArticle,'detail?id=',undefined),
 WeiBoCardArticleHistoryList = WW.Tmpl(WeiBoCardArticle,'history/list?id=',undefined),
 WeiBoCardArticleHistoryShow = WW.Tmpl(WeiBoCardArticle,'history/show?id=',undefined),
+WeiBoCardArticleShow = WW.Tmpl(WeiBoCard,'article/aj/articleshow?cid=',undefined),
 
 NumberZip = WC.Rad(WW.D + WW.az + WW.AZ),
 // Zip = Q => WR.MapU((V,F) => (V = NumberZip.S(V),F ? WR.PadS0(4,V) : V),
@@ -47,8 +48,11 @@ module.exports = O =>
 	var
 	Common = B =>
 	{
-		B = WC.JTO(B)
-		B.msg && 'success' !== B.msg && O.Bad(WW.Quo(B.code) + B.msg)
+		B = WW.IsObj(B) ? B : WC.JTO(B)
+		B.msg &&
+			'success' !== B.msg &&
+			'ok' !== B.msg &&
+			O.Bad(WW.Quo(B.code) + B.msg)
 		return B.data
 	};
 
@@ -134,7 +138,7 @@ module.exports = O =>
 											C.mp4_sd_url
 									if (T)
 										Part.push({URL : [T]})
-									else if (!/\/\/[^/]*(acg\.tv)\//.test(C.h5_url))
+									else if (!/\/\/[^/]*(acg\.tv|letv\.com)\//.test(C.h5_url))
 										WW.Throw('Unable to solve video URL')
 								}
 								break
@@ -142,10 +146,39 @@ module.exports = O =>
 							case 'article' : // 2 5
 								Part.push(ReqWithRef(WeiBoCardArticleDetail(T.page_id)).FMap(B =>
 								{
+									B = WC.JTO(B)
+									return 100002 === B.code ?
+										ReqWithRef(WeiBoCardArticleShow(T.page_id)).Map(N =>
+										{
+											N = WC.JTO(N)
+											if ('100010' === N.code) return {
+												title : '#',
+												update_at : '-',
+												writer :
+												{
+													screen_name : ''
+												},
+												content : N.msg,
+											}
+											N = Common(N)
+											return {
+												title : N.title,
+												update_at : WW.MF(/"time">([^<]+)/,N = N.article),
+												writer :
+												{
+													screen_name : O.Text(WW.MF(/class="t [^>]+>([^<]+)/,N)),
+												},
+												content : WW.MF(/WBA_content[^>]+>([^]+)<\/div><\/div>/,N),
+											}
+										}) :
+										WX.Just(Common(B))
+								}).FMap(B =>
+								{
 									var
 									AllCount = 1,
 									SolveContent = (B,F) =>
 									{
+										B.content || O.Bad(B)
 										Meta.push
 										(
 											'',
@@ -162,7 +195,6 @@ module.exports = O =>
 													O.Text(V).trim())
 										)
 									};
-									B = Common(B)
 									Meta.push('')
 									return B.history ?
 										ReqWithRef(WeiBoCardArticleHistoryList(T.page_id))
@@ -222,6 +254,8 @@ module.exports = O =>
 							default :
 								WR.Include(T.object_type,
 								[
+									'adFeedEvent', // 5
+									'app', // 0
 									'appItem', // 2
 									'audio', // 0
 									'event', // 5

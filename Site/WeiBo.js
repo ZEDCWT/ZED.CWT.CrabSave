@@ -362,6 +362,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 								default :
 									WR.Include(T.object_type,
 									[
+										'adFeedEvent', // 5
+										'app', // 0
 										'appItem', // 2
 										'article', // 2 5
 										'audio', // 0
