@@ -37,7 +37,7 @@ declare module CrabSaveNS
 			Pause(Task : number) : WishNS.Provider<any>
 
 			TopNoSize(Count : number,From : number) : WishNS.Provider<Pick<Task,'Row' | 'Site' | 'ID' | 'State' | 'Error' | 'Down'>[]>
-			SaveInfo(Task : number,Info : Task &
+			SaveInfo(Task : number,Info : Omit<Task,'Size'> &
 			{
 				Meta? : string
 				Cover? : string

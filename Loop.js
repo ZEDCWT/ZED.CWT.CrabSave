@@ -213,7 +213,7 @@ module.exports = Option =>
 								Title : U.Title || '',
 								UP : U.Up,
 								UPAt : WR.Default(WW.Now(),U.Date),
-								Size,
+								// Size,
 								Part,
 								PartTotal : WR.Default(Part.length,U.PartTotal),
 								Down,
@@ -223,25 +223,22 @@ module.exports = Option =>
 							WR.All(V => V.URL && WW.IsStr(V.URL),Down) || WW.Throw(['ErrLoopURL',WC.OTJ(R)])
 							return DB.SaveInfo(V.Row,R)
 								.FMap(() => DB.Full(V.Row))
-								.Tap(R =>
+								.FMap(R =>
 								{
 									Option.OnInfo(V.Row,R)
 									V.Title === R.Title || Option.OnTitle(V.Row,R.Title)
+									return null == Size ?
+										WX.From(Down)
+											.FMapE(W => null == W.Size ?
+												SolveSize(W.URL,V.Site)
+													.FMap(Z => DB.SaveSize(V.Row,W.Part,W.File,Z)
+														.Tap(() => Option.OnFile(V.Row,W.Part,W.File,Z))) :
+												WX.Empty)
+											.Fin()
+											.FMap(() => DB.FillSize(V.Row)) :
+										WX.Just(R.Size)
 								})
-								.FMap(() => null == Size ?
-									WX.From(Down)
-										.FMapO(1,W => null == W.Size ?
-											SolveSize(W.URL,V.Site)
-												.FMap(Z => DB.SaveSize(V.Row,W.Part,W.File,Z)
-													.Tap(() => Option.OnFile(V.Row,W.Part,W.File,Z))) :
-											WX.Empty)
-										.Fin()
-										.FMap(() => DB.FillSize(V.Row))
-										.Tap(Z => Option.OnSize(V.Row,Z,Down.length)) :
-									(
-										Option.OnSize(V.Row,Size,Down.length),
-										WX.Empty
-									))
+								.Tap(Z => Option.OnSize(V.Row,Z,Down.length))
 						})
 						.Now(null,E =>
 						{

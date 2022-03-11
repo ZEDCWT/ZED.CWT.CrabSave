@@ -1,10 +1,26 @@
 'use strict'
 CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 {
+	var
+	MangledURL =
+	[
+		'b23.tv',
+		't.cn',
+		'url.cn'
+	],
+	WrappedURL =
+	[
+		['link.zhihu','target']
+	];
 	return {
 		ID : 'Manual',
 		Alias : 'Man',
-		Judge : /\bM3U8?\b/i,
+		Judge : RegExp(WR.Unnest(
+		[
+			'\\bM3U8?\\b',
+			WR.Map(WR.SafeRX,MangledURL),
+			WR.Map(WR.SafeRX,WR.Pluck(0,WrappedURL))
+		]).join('|'),'i'),
 		Map : [
 		{
 			Name : 'M3U8',
@@ -69,6 +85,60 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						]])
 						return R
 					}
+				})
+			}
+		},{
+			Name : 'MangledURL',
+			Judge :
+			[
+				RegExp('(?:\\w+://)?[^/]*(?:' +
+					WR.Map(WR.SafeRX,MangledURL).join('|') +
+					')[^/]*/.+','i')
+			],
+			View : function(ID)
+			{
+				/^\w+:\/\//.test(ID) || (ID = 'https://' + ID)
+				return O.Req(ID,true).Map(function(B)
+				{
+					B = B[2]
+					B = B.location
+					return {
+						Item : [
+						{
+							Non : true,
+							ID : ID,
+							URL : ID,
+							UP : B,
+							UPURL : B
+						}]
+					}
+				})
+			}
+		},{
+			Name : 'WrappedURL',
+			Judge :
+			[
+				RegExp('(?:\\w+://)?[^/]*(?:' + WR.Map(function(V)
+				{
+					return WR.SafeRX(V[0]) + '.*[?&]' + WR.SafeRX(V[1]) + '='
+				},WrappedURL) + ').+','i')
+			],
+			View : function(ID)
+			{
+				var T = WR.Find(function(V)
+				{
+					return ~ID.indexOf(V[0])
+				},WrappedURL);
+				return WX.Just(
+				{
+					Item : [
+					{
+						Non : true,
+						ID : ID,
+						URL : ID,
+						UP : T = WC.QSP(ID)[T[1]],
+						UPURL : T
+					}]
 				})
 			}
 		}]

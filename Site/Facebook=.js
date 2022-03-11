@@ -49,7 +49,7 @@ module.exports = O =>
 				return N
 			}) : WX.Just(WN.Evil(PageData)))
 				.FMap(Video => WW.IsArr(Video) ? WX.From(Video) : O.Bad('Contains no videos'))
-				.FMapO(1,V => V.dash_manifest ?
+				.FMapE(V => V.dash_manifest ?
 					SolveDash(V.dash_manifest) :
 					WX.Just({URL : [V.hd_src || V.sd_src]}))
 				.Reduce((D,V) => D.push({...V,Title : VideoTitle}) && D,[])

@@ -295,7 +295,7 @@ module.exports = O =>
 						}
 						return WX.From(V)
 					})
-					.FMapO(1,V =>
+					.FMapE(V =>
 						PlayURL(ID,V[0],120).FMap((B,T) =>
 						{
 							T = B.accept_quality && Math.max(...B.accept_quality)

@@ -374,7 +374,7 @@ module.exports = Option =>
 			Err = S => Send([ActionWebError,Q[0],S]),
 			DBMulti = (Q,S,E) => WW.IsArr(Q) ?
 				WX.From(Q)
-					.FMapO(1,V => S(V).FinErr())
+					.FMapE(V => S(V).FinErr())
 					.Reduce(WR.Or)
 					.Now(B =>
 					{

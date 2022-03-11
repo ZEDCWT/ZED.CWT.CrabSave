@@ -23,7 +23,7 @@ module.exports = O =>
 		{
 			B = B.shortcode_media
 			return WX.From([B].concat(WR.Pluck('node',WR.Path(['edge_sidecar_to_children','edges'],B) || [])))
-				.FMapO(1,V => V.is_video ?
+				.FMapE(V => V.is_video ?
 					V.dash_info && V.dash_info.is_dash_eligible ?
 						Facebook.Dash(V.dash_info.video_dash_manifest) :
 						WX.Just({URL : [V.video_url]}) :

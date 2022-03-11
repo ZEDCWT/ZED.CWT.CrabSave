@@ -107,7 +107,7 @@ DBSQL.Init
 					R[Key.File][T],
 					R[Key.Sizes][T++]
 				]],Part[Key.URL]),R[Key.Part]))
-			]).FMapO(1,V => DBSQL.Run(V[0],V[1]))
+			]).FMapE(V => DBSQL.Run(V[0],V[1]))
 				.Fin()
 				.Map(() => [true,-~N]) :
 			WX.Just([false])

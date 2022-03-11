@@ -22,7 +22,7 @@ module.exports = Option =>
 	All,
 	Transaction = Q => DBMtx(() => Run_('begin transaction')
 		.FMap(() => WX.From(Q)
-		.FMapO(1,V => Run_(V[0],V[1]))
+		.FMapE(V => Run_(V[0],V[1]))
 		.ErrAs(E => Run_('rollback')
 			.Map(() => WW.Throw(E)))
 		.Fin()
@@ -198,7 +198,7 @@ module.exports = Option =>
 			order by Row
 			limit ?
 		`,[Q,S]).FMap(R => WX.From(R)
-			.FMapO(1,V => All('select Part,File,Size,Done from Down where ? = Task order by Part,File',[V.Row])
+			.FMapE(V => All('select Part,File,Size,Done from Down where ? = Task order by Part,File',[V.Row])
 				.Tap(Down => V.Down = Down))
 			.Fin()
 			.Map(() => R)),
@@ -211,7 +211,7 @@ module.exports = Option =>
 					UP = ?,
 					UPAt = ?,
 					File = ?,
-					Size = ?,
+					-- Size = ?,
 					Error = 0
 				where ? = Row
 			`,[
@@ -219,7 +219,7 @@ module.exports = Option =>
 				Q.UP,
 				Q.UPAt,
 				Q.Down.length,
-				Q.Size,
+				// Q.Size,
 				S
 			]],
 			...WR.Map(V =>
@@ -261,7 +261,12 @@ module.exports = Option =>
 					V.URL,V.Ext,V.Size,
 					S,V.Part,V.File
 				]
-			],Q.Down)
+			],Q.Down),
+			[`
+				update Task set
+					Size = (select sum(Size) from Down where ? = Task)
+				where ? = Row
+			`,[S,S]],
 		]),
 		SaveSize : (Row,Part,File,Q) => Run(
 		`

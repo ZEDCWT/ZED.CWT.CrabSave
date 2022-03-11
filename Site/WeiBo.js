@@ -431,7 +431,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			View : function(ID,Page)
 			{
 				var PageID;
-				return WX.Range(0,3).FMapO(1,function(N)
+				return WX.Range(0,3).FMapE(function(N)
 				{
 					return N ?
 						WX.Just().FMap(function(){return Req(WeiBoUserAllSub(ID,PageID,-~Page,-~Page,~-N))})
