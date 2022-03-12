@@ -208,6 +208,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					Card.sketch.desc_text
 				)
 				break
+			case 4099 : // Series
+				R = SolveAV(Card)
+				break
 			case 4200 : // Live
 				R =
 				{
@@ -226,6 +229,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					]
 				}
 				break
+			case 4302 : // Cheese
 			case 4303 : // Cheese
 				R =
 				{
@@ -234,8 +238,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					URL : BiliBiliCheeseSeason(Card.id),
 					Img : Card.cover,
 					Title : Card.title,
-					UP : Card.user_profile.info.uname,
-					UPURL : BiliBiliSpace + Card.user_profile.info.uid,
+					UP : WR.Path(['up_info','name'],Card) ||
+						WR.Path(['user_profile','info','uname'],Card),
+					UPURL : BiliBiliSpace +
+					(
+						Card.up_id ||
+						WR.Path(['user_profile','info','uid'],Card)
+					),
 					More : Card.subtitle
 				}
 				break
@@ -255,6 +264,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				R =
 				{
 					Non : true,
+					Unk : true,
 					ID : PrefixTimeline + Desc.dynamic_id_str,
 					Title : 'Unknown Type #' + Desc.type
 				}
@@ -271,10 +281,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		return [B.history_offset ||
 			B.has_more && WR.Last(B.cards).desc.dynamic_id_str, // B.next_offset
 			{
-				Item : WR.Where(function(V)
+				Item : WR.WhereU(function(V,F)
 				{
+					V.F = F
 					return B !== (B = V.ID)
 				},WR.Flatten(WR.Map(SolveDynamic,B.cards)))
+					.sort(function(Q,S)
+					{
+						return !Q.Unk - !S.Unk || Q.F - S.F
+					})
 			}]
 	},
 	SolveHighLightRaw,
@@ -412,6 +427,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Item : WR.Map(function(V)
 			{
 				return {
+					Non : V.ep_status,
 					ID : PrefixCheeseEpisode + V.id,
 					URL : BiliBiliCheeseEpisode(V.id),
 					Img : V.cover,
@@ -420,7 +436,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					Date : 1E3 * V.release_date,
 					More :
 					[
-						'av' + V.aid + '#' + V.cid,
+						!!V.aid && 'av' + V.aid + '#' + V.cid,
 						V.label,
 						V.subtitle
 					]

@@ -370,6 +370,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 										'event', // 5
 										'file', // 2
 										'group', // 0
+										'shop', // 2
 										'story', // 31
 										'topic', // 0
 										'user', // 2

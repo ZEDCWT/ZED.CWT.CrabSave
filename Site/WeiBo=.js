@@ -138,7 +138,7 @@ module.exports = O =>
 											C.mp4_sd_url
 									if (T)
 										Part.push({URL : [T]})
-									else if (!/\/\/[^/]*(acg\.tv|letv\.com)\//.test(C.h5_url))
+									else if (!/\/\/[^/]*(acg\.tv|letv\.com|qq\.com)\//.test(C.h5_url))
 										WW.Throw('Unable to solve video URL')
 								}
 								break
@@ -261,6 +261,7 @@ module.exports = O =>
 									'event', // 5
 									'file', // 2
 									'group', // 0
+									'shop', // 2
 									'topic', // 0
 									'user', // 2
 									'webpage', // 0 23
