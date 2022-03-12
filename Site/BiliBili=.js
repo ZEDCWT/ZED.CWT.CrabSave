@@ -38,6 +38,11 @@ Common = V => (V = WC.JTO(V)).code ?
 	WW.Throw(V) :
 	V.data || V.result;
 
+/*
+	av6777232
+	Having two parts cid11114072 & cid11036876, since it is redirected to ep278253, the second part seems vanished.
+*/
+
 /**@type {CrabSaveNS.SiteO}*/
 module.exports = O =>
 {

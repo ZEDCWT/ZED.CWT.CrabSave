@@ -8,6 +8,8 @@ SQLite = require('sqlite3');
 module.exports = Option =>
 {
 	var
+	DebugPerformance = false,
+
 	PathData = Option.PathData,
 	PathDB = WN.JoinP(PathData,'DB.db'),
 
@@ -42,14 +44,41 @@ module.exports = Option =>
 		{
 			DB = new SQLite.Database(PathDB,E =>
 			{
+				var
+				WrapCount = 0,
+				WrapOnLog,
+				WrapLog = (...Q) => WrapOnLog(WW.StrDate(),WW.Tick(),'|',...Q),
+				Wrap = H =>
+				{
+					var
+					Count = 0,
+					R = WX.WrapNode(DB[H],DB);
+					if (!DebugPerformance) return R
+
+					WrapOnLog = WrapOnLog || WN.RollLog(
+					{
+						Pre : WN.JoinP(Option.PathData,'DBPerformance'),
+					})
+					return (...Q) => WX.P(O =>
+					{
+						var
+						Prefix = `[${WrapCount++}] ${H} {${Count++}}`,
+						Begin = WW.Now();
+						WrapLog(Prefix,WW.C.OTJ(Q,{Apos : 9}))
+						return R(...Q)
+							.Tap(B => WrapLog(Prefix,WW.Now() - Begin,WW.StrMS(WW.Now() - Begin),WW.Tag(B)),
+								E => WrapLog(Prefix,WW.Now() - Begin,WW.StrMS(WW.Now() - Begin),E))
+							.Now(O)
+					})
+				}
 				if (E) O.E(E)
 				else
 				{
-					Exec = DBMake(WX.WrapNode(DB.exec,DB)),
-					Run_ = WX.WrapNode(DB.run,DB),
+					Exec = DBMake(Wrap('exec')),
+					Run_ = Wrap('run'),
 					Run = DBMake(Run_),
-					Get = DBMake(WX.WrapNode(DB.get,DB)),
-					All = DBMake(WX.WrapNode(DB.all,DB)),
+					Get = DBMake(Wrap('get')),
+					All = DBMake(Wrap('all')),
 					O.D().F()
 				}
 			})
@@ -75,6 +104,13 @@ module.exports = Option =>
 					Error integer not null,
 					Done integer
 				);
+				-- Maybe too much? --
+				create index if not exists TaskSiteID on Task(Site,ID);
+				create index if not exists TaskState on Task(State);
+				create index if not exists TaskDone on Task(Done);
+				create index if not exists TaskSize on Task(Size);
+				create index if not exists TaskError on Task(Error);
+				-- --
 				create table if not exists Part
 				(
 					Task integer not null,

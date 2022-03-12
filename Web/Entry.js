@@ -3182,7 +3182,7 @@
 				Key('SPUP'),
 				OptionSPUP = WV.Inp(
 				{
-					Row : 6,
+					Row : 16,
 					InpU : PC,
 					Stat : true,
 					Inp : WR.Throttle(2E2,OptionSPUPUpdateStat)
