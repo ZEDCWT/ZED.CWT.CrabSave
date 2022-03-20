@@ -101,11 +101,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	Common = function(B)
 	{
 		B = WC.JTO(B)
-		B.msg && 'success' !== B.msg && O.Bad(B.code,B.msg)
+		B.msg &&
+			'success' !== B.msg &&
+			'succ' !== B.msg &&
+			O.Bad(B.code,B.msg)
 		return B.data
 	},
 	SolveID = function(B){return WW.MF(/href="\/(\d+\/\w+).*?date="/,B)},
 	SolvePageID = function(B){return WW.MF(/page_id']='(\d+)/,B)},
+	SolvePost,
 	SolveCard = function(B)
 	{
 		var
@@ -283,13 +287,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			Judge :
 			[
 				/^\d{14,}/,
+				/^[\dA-Z]{8,}$/i,
 				/Weibo_ID=(\d+)/i,
 				/(?:^|\/|Post\s+)\d+[/_](\w+)/i,
 				/Post\s+(\w+)\b/i,
 				/\bDetail\/(\d+)\b/i,
 				O.Num('Status')
 			],
-			View : function(ID)
+			View : SolvePost = function(ID)
 			{
 				return Req(WeiBoAJAXStatusShow(ID)).FMap(function(B)
 				{
@@ -424,6 +429,30 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 							]
 						}]
 					}
+				})
+			}
+		},{
+			Name : 'TVShow',
+			Judge : O.Num('TV\\W*Show(?:\\W+\\d+:)?'),
+			View : function(ID)
+			{
+				return O.Req(
+				{
+					URL : 'https://weibo.com/tv/api/component',
+					Form :
+					{
+						data : WC.OTJ(
+						{
+							Component_Play_Playinfo :
+							{
+								oid : ID
+							}
+						})
+					},
+					Head : {Referer : WeiBo}
+				}).FMap(function(B)
+				{
+					return SolvePost(Common(B).Component_Play_Playinfo.mid)
 				})
 			}
 		},{
