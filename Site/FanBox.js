@@ -29,7 +29,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 	SolvePost = function(B)
 	{
 		return {
-			NonAV : null == B.body,
+			NonAV : B.isRestricted,
 			ID : B.id,
 			URL : FanBoxUserPost(B.creatorId,B.id),
 			Img : B.coverImageUrl,
@@ -40,7 +40,8 @@ CrabSave.Site(function(O,WW,WC,WR)
 			Desc : B.excerpt,
 			More :
 			[
-				!!B.feeRequired && 'JPY ' + B.feeRequired
+				(B.isRestricted ? '[Restricted] ' : '') +
+				(B.feeRequired ? 'JPY ' + B.feeRequired : '')
 			]
 		}
 	};

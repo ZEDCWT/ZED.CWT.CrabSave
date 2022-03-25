@@ -102,7 +102,7 @@ module.exports = O =>
 					},B.url_struct)
 					if (B.pic_num)
 						WR.Each(V => PicPush(B.pic_infos[V].largest.url),B.pic_ids)
-					else if (Forwarded)
+					if (Forwarded)
 						WR.Each(V => V.pic_infos && Part.push(
 						{
 							URL : V.pic_ids.map(B => V.pic_infos[B].large.url)
