@@ -91,7 +91,7 @@ module.exports = O =>
 					C,T;
 					Long = Long && WC.JTO(Long).data
 					Title = B.text_raw
-					Meta.push(Long ? Long.longTextContent : Title)
+					Meta.push(Long ? WC.HED(Long.longTextContent) : Title)
 					if (Forwarded)
 						Title = Title.replace(/\/\/@.*/,'')
 					WR.EachU((V,F) =>

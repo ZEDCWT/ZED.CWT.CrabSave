@@ -10,7 +10,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	],
 	WrappedURL =
 	[
-		['link.zhihu','target']
+		['link.zhihu','target'],
+		['pixiv.net'],
 	];
 	return {
 		ID : 'Manual',
@@ -120,8 +121,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			[
 				RegExp('(?:\\w+://)?[^/]*(?:' + WR.Map(function(V)
 				{
-					return WR.SafeRX(V[0]) + '.*[?&]' + WR.SafeRX(V[1]) + '='
-				},WrappedURL) + ').+','i')
+					return WR.SafeRX(V[0]) + (V[1] ? '.*[?&]' + WR.SafeRX(V[1]) + '=' : '.*\\?')
+				},WrappedURL).join('|') + ').+','i')
 			],
 			View : function(ID)
 			{
@@ -136,7 +137,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						Non : true,
 						ID : ID,
 						URL : ID,
-						UP : T = WC.QSP(ID)[T[1]],
+						UP : T = T[1] ? WC.QSP(ID)[T[1]] : WC.UD(ID.replace(/.*\?/,'')),
 						UPURL : T
 					}]
 				})

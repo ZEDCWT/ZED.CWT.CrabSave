@@ -1,7 +1,7 @@
 'use strict'
 var
 WW = require('@zed.cwt/wish'),
-{C : WC} = WW,
+{R : WR,C : WC} = WW,
 
 FanBoxAPI = 'https://api.fanbox.cc/',
 FanBoxAPIPostInfo = WW.Tmpl(FanBoxAPI,'post.info?postId=',undefined);
@@ -81,6 +81,11 @@ module.exports = O =>
 					break
 				case 'text' :
 					Meta.push(Content.text)
+					break
+				case 'video' :
+					Meta.push(
+						Content.text,
+						'<Video> ' + WR.Pascal(Content.video.serviceProvider) + ' ' + Content.video.videoId)
 					break
 				default :
 					WW.Throw('Unknown Post Type #' + B.type)

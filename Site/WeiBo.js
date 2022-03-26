@@ -433,7 +433,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			}
 		},{
 			Name : 'TVShow',
-			Judge : O.Num('(?:TV|Video(?:\\.WeiBo\\.com)?)\\W*Show(?:\\W+\\d+:)?'),
+			Judge : O.Num('(?:TV|Video(?:\\.WeiBo\\.com)?)\\W*Show(?:.*?\\b\\d{3,5}:(?=\\d{6}))?'),
 			View : function(ID)
 			{
 				return O.Req(
