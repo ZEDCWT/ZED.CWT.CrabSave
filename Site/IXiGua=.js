@@ -98,7 +98,7 @@ module.exports = O =>
 				O.Bad(B.videoResource)
 			return {
 				Title : B.title,
-				Up : B.user_info.name,
+				UP : B.user_info.name,
 				Date : 1E3 * B.video_publish_time,
 				Part : [U]
 			}

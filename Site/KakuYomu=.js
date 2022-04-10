@@ -31,7 +31,7 @@ module.exports = O =>
 						.episodes.find(V => V.id === ID[1]);
 					return {
 						Title : Work.title + '.' + EpisodeMeta.title,
-						Up : Work.author.activity_name,
+						UP : Work.author.activity_name,
 						Date : 1E3 * EpisodeMeta.published_at,
 						Meta : WW.MR((D,V) => D.push(O.Text(V[1])) && D,
 							[],/id="p\d+"[^>]*>([^]+?)<\/p>/g,Episode),

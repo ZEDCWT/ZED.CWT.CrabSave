@@ -34,7 +34,7 @@ module.exports = O =>
 					Part.length || O.Bad('Contains no videos'),
 					{
 						Title : B.title || WR.Path(['edge_media_to_caption','edges',0,'node','text'],B),
-						Up : B.owner.full_name,
+						UP : B.owner.full_name,
 						Date : 1E3 * B.taken_at_timestamp,
 						Part
 					}

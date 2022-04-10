@@ -21,7 +21,7 @@ module.exports = O =>
 				{
 					if (WW.MF(/episode\/(\d+)/,V) === ID) R =
 					{
-						Up : WC.HED(WW.MF(/author>([^<]+)/,V)),
+						UP : WC.HED(WW.MF(/author>([^<]+)/,V)),
 						Cover : WC.HED(WW.MF(/ url="([^"]+)/,V)),
 					}
 				},null,/<item>[^]+?<\/item>/g,Series)

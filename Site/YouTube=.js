@@ -171,7 +171,7 @@ module.exports = O =>
 					return TransformSolve(Watch).Map(H => (
 					{
 						Title : Info.title,
-						Up : Info.channelTitle,
+						UP : Info.channelTitle,
 						Date : +new Date(Info.publishedAt),
 						Meta : Info.description,
 						Cover : Info.thumbnails.high.url,

@@ -3,10 +3,15 @@ var
 WW = require('@zed.cwt/wish'),
 {R : WR,X : WX,C : WC,N : WN} = WW,
 
+PrefixSketch = 'S',
+
 Pixiv = 'https://www.pixiv.net/',
 PixivAJAX = Pixiv + 'ajax/',
 PixivAJAXIllust = WW.Tmpl(PixivAJAX,'illust/',undefined),
-PixivAJAXUgoiraMeta = WW.Tmpl(PixivAJAX,'illust/',undefined,'/ugoira_meta');
+PixivAJAXUgoiraMeta = WW.Tmpl(PixivAJAX,'illust/',undefined,'/ugoira_meta'),
+PixivSketch = 'https://sketch.pixiv.net/',
+PixivSketchAPI = PixivSketch + 'api/',
+PixivSketchAPIReply = WW.Tmpl(PixivSketchAPI,'replies/',undefined,'.json');
 
 /**@type {CrabSaveNS.SiteO}*/
 module.exports = O =>
@@ -17,46 +22,110 @@ module.exports = O =>
 		B = WC.JTO(B)
 		B.error && O.Bad(B.message)
 		return B.body
+	},
+	CommonSketch = function(B)
+	{
+		B = WC.JTO(B)
+		B.error && B.error.length && O.Bad(B.error)
+		return B.data
 	};
 
 	return {
-		URL : (ID,Ext) => Ext.ReqB(O.Coke(PixivAJAXIllust(ID))).FMap(Illust =>
+		URL : (Q,Ext) =>
 		{
 			var
-			R;
-			Illust = Common(Illust)
-			switch (Illust.illustType)
+			Prefix,ID;
+			ID = /^([A-Z]+)(\d+)$/i.exec(Q)
+			if (ID)
 			{
-				case 0 :
-				case 1 : // 59408913
-					R = WX.Just(
-					{
-						Part : [
-						{
-							URL : WR.Times(P => Illust.urls.original.replace(/(?<=_p)0(?=\.\w+$)/,P),
-								Illust.pageCount)
-						}],
-					})
-					break
-				case 2 :
-					R = Ext.ReqB(O.Coke(PixivAJAXUgoiraMeta(ID))).Map(B => (
-					{
-						Cover : Illust.urls.original,
-						Part : [{URL : [Common(B).originalSrc]}],
-					}))
-					break
-				default :
-					WW.Throw('Unknown Illust Type #' + Illust.illustType)
+				Prefix = ID[1]
+				ID = ID[2]
 			}
-			return R.Map(R => (
+			else ID = Q
+
+			if (PrefixSketch === Prefix) return Ext.ReqB(O.Coke(PixivSketchAPIReply(ID))).Map(B =>
 			{
-				Title : Illust.title,
-				Up : Illust.userName,
-				Date : +new Date(Illust.createDate),
-				Meta : O.Text(Illust.description),
-				...R
-			}))
-		}),
+				var
+				U = [],E = [];
+				B = CommonSketch(B).item
+				B.media.forEach(V =>
+				{
+					var R;
+					switch (V.type)
+					{
+						case 'photo' :
+							U.push(V.photo.original.url2x)
+							E.push(null)
+							break
+						default :
+							WW.Throw('Unknown Sketch Media Type #' + V.type)
+					}
+					return R
+				})
+				return {
+					Title : B.text,
+					UP : B.user.name,
+					Date : +new Date(B.published_at),
+					Meta : B.text_fragments.map(V =>
+					{
+						var R;
+						switch (V.type)
+						{
+							case 'plain' :
+								R = V.body
+								break
+							case 'tag' :
+								R = '	<Tag> ' + V.body
+								break
+							default :
+								WW.Throw('Unknown Sketch Text Type #' + V.type)
+						}
+						return R
+					}),
+					Part : [{URL : U,Ext : E}]
+				}
+			})
+
+			if (Prefix) return WX.Throw('Unexpected Prefix ' + Prefix)
+
+			return Ext.ReqB(O.Coke(PixivAJAXIllust(ID))).FMap(Illust =>
+			{
+				var
+				R;
+				Illust = Common(Illust)
+				switch (Illust.illustType)
+				{
+					case 0 :
+					case 1 : // 59408913
+						R = WX.Just(
+						{
+							Part : [
+							{
+								URL : WR.Times(P => Illust.urls.original.replace(/(?<=_p)0(?=\.\w+$)/,P),
+									Illust.pageCount)
+							}],
+						})
+						break
+					case 2 :
+						R = Ext.ReqB(O.Coke(PixivAJAXUgoiraMeta(ID))).Map(B => (
+						{
+							Cover : Illust.urls.original,
+							Part : [{URL : [Common(B).originalSrc]}],
+						}))
+						break
+					default :
+						WW.Throw('Unknown Illust Type #' + Illust.illustType)
+				}
+				return R.Map(R => (
+				{
+					Title : Illust.title,
+					UP : Illust.userName,
+					Date : +new Date(Illust.createDate),
+					Meta : O.Text(Illust.description),
+					...R
+				}))
+			})
+		},
 		Pack : Q => WN.ReqOH(Q,'Referer',Pixiv),
 		Range : false,
 	}

@@ -77,7 +77,7 @@ module.exports = O =>
 					return SourceSolve(
 					{
 						Title : SolveXMLField('title',Illust),
-						Up : WC.HED(WW.MF(/"user_name"[^]+?<strong>([^<]+)</,Page)),
+						UP : WC.HED(WW.MF(/"user_name"[^]+?<strong>([^<]+)</,Page)),
 						Date : +new Date(SolveXMLField('created',Illust) + '+0900'),
 						Meta : SolveXMLDesc(Illust),
 						Part : [
@@ -133,7 +133,7 @@ module.exports = O =>
 						{
 							Title : SolveXMLField('title',Manga) + '.' +
 								SolveXMLField('episode_title',Episode),
-							Up : SolveXMLField('author_name',Manga),
+							UP : SolveXMLField('author_name',Manga),
 							Date : SolveXMLField('created',Episode),
 							Meta : SolveXMLDesc(Episode),
 							Part,
@@ -145,11 +145,11 @@ module.exports = O =>
 			return Ext.ReqB(Coke(NicoWatch(Q))).FMap(B =>
 			{
 				var
-				Up,
+				UP,
 				S;
 				B = WC.JTO(WC.HED(WW.MF(/api-data="([^"]+)"/,B)))
 				S = B.media.delivery.movie
-				Up = B.owner ? B.owner.nickname :
+				UP = B.owner ? B.owner.nickname :
 					B.channel && B.channel.name
 				return (B ?
 					Ext.ReqB(O.Req(
@@ -221,14 +221,14 @@ module.exports = O =>
 						B.data.session.content_uri
 					)) :
 					WW.Throw('No provided url, requires payment?'))
-					.FMap(U => (Up ?
-						WX.Just(Up) :
+					.FMap(U => (UP ?
+						WX.Just(UP) :
 						Ext.ReqB(O.Req(NicoExtThumb(Q)))
 							.Map(B => WC.HED(WW.MF(/name>([^<]+)/,B))))
-						.Map(Up => (
+						.Map(UP => (
 						{
 							Title : B.video.title,
-							Up : Up.replace(/ さん$/,''), // 敬稱略
+							UP : UP.replace(/ さん$/,''), // 敬稱略
 							Date : +new Date(B.video.registeredAt),
 							Meta : O.Text(B.video.description),
 							Cover : B.video.thumbnail.largeUrl,

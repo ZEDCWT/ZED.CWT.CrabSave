@@ -94,7 +94,7 @@ module.exports = O =>
 
 			return {
 				Title : B.title,
-				Up : B.user.name,
+				UP : B.user.name,
 				Date : +new Date(B.publishedDatetime),
 				Meta,
 				Cover : B.coverImageUrl,

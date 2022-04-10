@@ -23,7 +23,7 @@ module.exports = O =>
 				return O.M3U(URL).Map(URL => (
 				{
 					Title : Pref.T,
-					Up : Pref.U,
+					UP : Pref.U,
 					Date : D,
 					Part : [URL]
 				}))

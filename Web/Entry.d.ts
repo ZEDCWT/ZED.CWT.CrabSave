@@ -33,6 +33,12 @@ declare module CrabSaveNS
 		TL : RegExp | RegExp[]
 		UP : RegExp | RegExp[]
 		Find : RegExp | RegExp[]
+		MakeRX(Prefix? : string) :
+		{
+			TL : RegExp | RegExp[]
+			UP : RegExp | RegExp[]
+			Find : RegExp | RegExp[]
+		}
 		Size : number
 		Pascal(Q : string) : string
 		JOM(S : RegExp,Q : string) : object

@@ -40,7 +40,7 @@ module.exports = O =>
 			Best = O.Best('size',B.download)
 			return {
 				Title : B.name,
-				Up : B.user.name,
+				UP : B.user.name,
 				Date : +new Date(B.created_time),
 				Part : [
 				{

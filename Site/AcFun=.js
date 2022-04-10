@@ -26,7 +26,7 @@ module.exports = O =>
 			return O.M3U(Play.url).Map(URL => (
 			{
 				Title : B.title,
-				Up : B.user.name,
+				UP : B.user.name,
 				Date : B.createTimeMillis,
 				Part : [
 				{

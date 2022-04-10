@@ -89,7 +89,7 @@ declare module CrabSaveNS
 	interface SiteURL
 	{
 		Title? : string
-		Up? : string
+		UP? : string
 		Date? : number
 		Meta? : string
 		Cover? : string

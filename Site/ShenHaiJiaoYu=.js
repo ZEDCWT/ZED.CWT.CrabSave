@@ -61,7 +61,7 @@ module.exports = O =>
 						{
 							Title : Lesson.modelName + '.' + Lesson.lessonName +
 								'.' + Lesson.teachersName,
-							Up : B.classType.name,
+							UP : B.classType.name,
 							Date : Start,
 							Part : WW.MR((D,V) =>
 							{
@@ -100,7 +100,7 @@ module.exports = O =>
 					.Map(Link => (
 					{
 						Title : Res.name.replace(RegExp(WR.SafeRX(Res.format) + '$','i'),''),
-						Up : Detail.name,
+						UP : Detail.name,
 						Date : Res.uploadTime,
 						Part : [
 						{
@@ -127,7 +127,7 @@ module.exports = O =>
 						Title : Chapter.chapterName +
 							'.' + WW.Pad02(Lecture.lectureOrder) +
 							'.' + Lecture.lectureName,
-						Up : B.ct.name,
+						UP : B.ct.name,
 						Date : +new Date(H.H['last-modified']),
 						Part : [
 						{

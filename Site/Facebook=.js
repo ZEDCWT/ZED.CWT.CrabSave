@@ -59,7 +59,7 @@ module.exports = O =>
 					T = WC.TagM('div',/<div[^>]+userContentWrapper/.exec(B).index,B)
 					return {
 						Title : O.Text(WC.TagM('p',0,T)),
-						Up : WC.HED(WW.MF(/>([^<]+)<\/a><\/span/,T)),
+						UP : WC.HED(WW.MF(/>([^<]+)<\/a><\/span/,T)),
 						Date : 1E3 * WW.MF(/-utime="(\d+)/,T),
 						Part
 					}

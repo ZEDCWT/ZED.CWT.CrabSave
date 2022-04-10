@@ -3251,6 +3251,51 @@
 		{
 			Req.unshift([Q,S])
 			Req.length < DebugLimitReq || Req.pop()
+		},
+		MakeRegExpCachePrefix = false,MakeRegExpCache,
+		MakeRegExp = function(Prefix)
+		{
+			var
+			Make = function(Q,W,E)
+			{
+				return RegExp(Q + (Prefix || '') + '(?:' + W.join('|') + ')' + E,'i')
+			};
+			return MakeRegExpCachePrefix === (MakeRegExpCachePrefix = Prefix) ?
+				MakeRegExpCache :
+				MakeRegExpCache =
+				{
+					TL :
+					[
+						Make('^',[''],'$'),
+						Make('\\b',
+						[
+							'Bookmark',
+							'Dynamic',
+							'Feed',
+							'Home',
+							'Repo',
+							'Sub',
+							'Subscri(?:be|ption)',
+							'TL',
+							'Timeline',
+							'Top'
+						],'\\b')
+					],
+					UP : Make('\\b',
+					[
+						'Fo',
+						'Follow',
+						'Following',
+						'UP',
+						'Uploader',
+					],'\\b'),
+					Find : Make('^',
+					[
+						'\\?',
+						'Find',
+						'Search',
+					],'\\s+(?!\\s)(.+)$')
+				}
 		};
 		WV.Ap(Rainbow[0],WV.Body)
 		WS.H || WebSocketNoti(SA('GenNoSock'))
@@ -3348,19 +3393,12 @@
 				},
 				Word : function(Q)
 				{
-					return RegExp('\\b(?:' + Q + ')[\\s/=]+([^&?#\\s/]+)','i')
+					return RegExp('\\b(?:' + Q + ')(?:[\\s/=]+|\\b)([^&?#\\s/]+)','i')
 				},
-				TL :
-				[
-					/^$/,
-					/\b(?:Dynamic|Sub|Subscri(?:be|ption)|Timeline|TL)\b/i,
-					/\b(?:Home)\b/i,
-					/\b(?:Feed)\b/i,
-					/\b(?:Bookmark)\b/i,
-					/\b(?:Top|Repo)\b/i
-				],
-				UP : /\b(?:Up|Uploader|Fo|Follow|Following)\b/i,
-				Find : /^(?:\?|Find|Search)\s+(?!\s)(.+)$/i,
+				TL : MakeRegExp().TL,
+				UP : MakeRegExp().UP,
+				Find : MakeRegExp().Find,
+				MakeRX : MakeRegExp,
 				Size : PageSize,
 				Pascal : function(Q)
 				{

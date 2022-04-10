@@ -70,7 +70,7 @@ module.exports = O =>
 			},WR.Path(['extended_entities','media'],Tweet) || [])
 			return {
 				Title : WR.Trim(Title),
-				Up : User.name,
+				UP : User.name,
 				Date : +new Date(Tweet.created_at),
 				Meta,
 				Part

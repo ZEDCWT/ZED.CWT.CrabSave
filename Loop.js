@@ -109,9 +109,9 @@ module.exports = Option =>
 							(
 								WW.StrDate() + ' {Res} ',
 								WC.OTJ(H),
-								B.length,
-								B
+								B.length
 							)
+							WW.IsStr(B) && ExtReqRecord.push(B)
 							if (!Q.AC && !/^[23]/.test(H.Code))
 								WW.Throw(WW.Err.NetBadStatus(H.Code))
 						})
@@ -195,8 +195,7 @@ module.exports = Option =>
 										Part : F,
 										File : G,
 										URL : L,
-										Ext : WW.IsArr(P.Ext) ? P.Ext[G] :
-											null != P.Ext ? P.Ext :
+										Ext : (WW.IsArr(P.Ext) ? P.Ext[G] : P.Ext) ||
 											SolveExt(L) || P.ExtDefault || '.mp4',
 										Size : L = P.Size && null != P.Size[G] ? P.Size[G] :
 											(L = DownPre[F + ' ' + G]) && null != L.Done && null != L.Size ? L.Size :
@@ -211,7 +210,7 @@ module.exports = Option =>
 							R =
 							{
 								Title : U.Title || '',
-								UP : U.Up,
+								UP : U.UP,
 								UPAt : WR.Default(WW.Now(),U.Date),
 								// Size,
 								Part,

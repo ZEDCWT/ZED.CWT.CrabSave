@@ -2,6 +2,8 @@
 CrabSave.Site(function(O,WW,WC,WR)
 {
 	var
+	PrefixSketch = 'S',
+
 	Pixiv = 'https://www.pixiv.net/',
 	PixivSetting = Pixiv + 'setting_user.php',
 	PixivIllust = WW.Tmpl(Pixiv,'artworks/',undefined),
@@ -13,11 +15,37 @@ CrabSave.Site(function(O,WW,WC,WR)
 	PixivAJAXUserIllust = WW.Tmpl(PixivAJAX,'user/',undefined,'/profile/illusts?work_category=illustManga&is_first_page=0'),
 	PixivAJAXUserFollowing = WW.Tmpl(PixivAJAX,'user/',undefined,'/following?offset=',undefined,'&limit=',O.Size,'&rest=show'),
 	PixivBookmark = WW.Tmpl(PixivAJAX,'follow_latest/illust?p=',undefined,'&mode=all'),
+	PixivSketch = 'https://sketch.pixiv.net/',
+	PixivSketchItem = WW.Tmpl(PixivSketch,'items/',undefined),
+	PixivSketchUser = WW.Tmpl(PixivSketch,'@',undefined),
+	PixivSketchUser = WW.Tmpl(PixivSketch,'@',undefined),
+	PixivSketchAPI = PixivSketch + 'api/',
+	PixivSketchAPIHome = PixivSketchAPI + 'walls/home.json',
+	PixivSketchAPIPublic = WW.Tmpl(PixivSketchAPI,'walls/@',undefined,'/posts/public.json'),
+	PixivSketchAPIUserCurrent = PixivSketchAPI + 'users/current.json',
+	PixivSketchAPIUserFollowing = WW.Tmpl(PixivSketchAPI + 'users/@',undefined,'/followings.json'),
+	PixivSketchAPIReply = WW.Tmpl(PixivSketchAPI,'replies/',undefined,'.json'),
 	Common = function(B)
 	{
 		B = WC.JTO(B)
 		B.error && O.Bad(B.message)
 		return B.body
+	},
+	ReqSketch = function(Q)
+	{
+		return O.Req(WW.N.ReqOH(Q,'Accept','application/vnd.sketch-v4+json'))
+	},
+	SketchMoreNext = function(I,Page)
+	{
+		return ReqSketch(PixivSketch + I[Page])
+	},
+	CommonSketchNext,
+	CommonSketch = function(B)
+	{
+		B = WC.JTO(B)
+		B.error && B.error.length && O.Bad(WR.Pluck('message',B.error).join('\n'))
+		CommonSketchNext = WR.Path(['_links','next','href'],B)
+		return B.data
 	},
 	PackImg = function(V){return {URL : V,Head : {Referer : Pixiv}}},
 	SolveIllustBrief = function(V)
@@ -45,7 +73,23 @@ CrabSave.Site(function(O,WW,WC,WR)
 		{
 			return WW.MF(/var dataLayer[^}]+user_id\D+(\d+)/,B)
 		})
-	});
+	}),
+	SketchRX = O.MakeRX('(?:Sketch|SK?)'),
+	SolveSketchItem = function(V)
+	{
+		return {
+			ID : PrefixSketch + V.id,
+			URL : PixivSketchItem(V.id),
+			Img : WR.Map(function(B)
+			{
+				return B.photo.w240.url
+			},V.media),
+			Title : V.text,
+			UP : V.user.name,
+			UPURL : PixivSketchUser(V.user.unique_name),
+			Date : new Date(V.published_at)
+		}
+	};
 	return {
 		ID : 'Pixiv',
 		Alias : 'P',
@@ -59,6 +103,79 @@ CrabSave.Site(function(O,WW,WC,WR)
 			})
 		},
 		Map : [
+		{
+			Name : 'SketchHome',
+			Judge : SketchRX.TL,
+			View : O.More(function()
+			{
+				return ReqSketch(PixivSketchAPIHome)
+			},SketchMoreNext,function(B)
+			{
+				B = CommonSketch(B)
+				return [CommonSketchNext,
+				{
+					Item : WR.Map(SolveSketchItem,B.items)
+				}]
+			})
+		},
+		{
+			Name : 'SketchUser',
+			Judge : O.Word('SketchUser|Sketch\\b.*@'),
+			View : O.More(function(ID)
+			{
+				return ReqSketch(PixivSketchAPIPublic(ID))
+			},SketchMoreNext,function(B)
+			{
+				B = CommonSketch(B)
+				return [CommonSketchNext,
+				{
+					Item : WR.Map(SolveSketchItem,B.items)
+				}]
+			})
+		},
+		{
+			Name : 'SketchFollowing',
+			Judge : SketchRX.UP,
+			View : O.More(function()
+			{
+				return ReqSketch(PixivSketchAPIUserCurrent).FMap(function(B)
+				{
+					return ReqSketch(PixivSketchAPIUserFollowing(CommonSketch(B).unique_name))
+				})
+			},SketchMoreNext,function(B)
+			{
+				B = CommonSketch(B)
+				return [CommonSketchNext,
+				{
+					Item : WR.Map(function(V)
+					{
+						return {
+							Non : true,
+							ID : V.unique_name,
+							URL : PixivSketchUser,
+							Img : V.icon.photo.w240.url,
+							UP : V.name,
+							UPURL : PixivSketchUser(V.unique_name),
+							More : O.Ah('Pixiv ' + V.pixiv_user_id,PixivUser(V.pixiv_user_id))
+						}
+					},B.users)
+				}]
+			})
+		},
+		{
+			Name : 'SketchItem',
+			Judge : O.Num('SketchItem|Sketch\\b.*Items?'),
+			View : function(ID)
+			{
+				return ReqSketch(PixivSketchAPIReply(ID)).Map(function(B)
+				{
+					B = CommonSketch(B)
+					return {
+						Item : [SolveSketchItem(B.item)]
+					}
+				})
+			}
+		},
 		{
 			Name : 'Bookmark',
 			Judge : O.TL,

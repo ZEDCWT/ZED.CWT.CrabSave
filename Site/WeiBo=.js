@@ -64,6 +64,7 @@ module.exports = O =>
 			return Ext.ReqB(O.Coke(WeiBoAJAXStatusShow(ID[1]))).FMap(B =>
 			{
 				B = WC.JTO(B)
+				// LlJq26YJu	Unexpected `isLongText` flag
 				return (B.isLongText ? Ext.ReqB(O.Coke(WeiBoAJAXStatusLong(ID[1]))) : WX.Just()).FMap(Long =>
 				{
 					var
@@ -89,9 +90,9 @@ module.exports = O =>
 					Part = [],
 					Card,
 					C,T;
-					Long = Long && WC.JTO(Long).data
+					Long = Long && WR.Path(['data','longTextContent'],WC.JTO(Long))
 					Title = B.text_raw
-					Meta.push(Long ? WC.HED(Long.longTextContent) : Title)
+					Meta.push(Long ? WC.HED(Long) : Title)
 					if (Forwarded)
 						Title = Title.replace(/\/\/@.*/,'')
 					WR.EachU((V,F) =>
@@ -301,7 +302,7 @@ module.exports = O =>
 							PicAll.length && Part.unshift({URL : PicAll,ExtDefault : '.jpg'})
 							return {
 								Title : Title.trim(),
-								Up : B.user.screen_name,
+								UP : B.user.screen_name,
 								Date : +new Date(B.created_at),
 								Meta,
 								Cover : Cover && ImgEnlarge(Cover),
@@ -355,7 +356,7 @@ module.exports = O =>
 						.Map(Part => (
 						{
 							Title,
-							Up : WC.HED(WW.MF(/face".*title="([^"]+)/,B)),
+							UP : WC.HED(WW.MF(/face".*title="([^"]+)/,B)),
 							Date : +WW.MF(/date="(\d+)/,B),
 							Meta : Title,
 							Part

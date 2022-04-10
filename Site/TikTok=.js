@@ -87,7 +87,7 @@ module.exports = O =>
 					.FMap(Music => ReqAPI(TikTokShareItemList(Q)).Map(Share => (
 					{
 						Title : (Music = Music.musicInfo.music).title,
-						Up : Music.authorName,
+						UP : Music.authorName,
 						Date : 1E3 * Share.body.itemListData[0].itemInfos.createTime,
 						Part : [{URL : [Music.playUrl]}]
 					})))
@@ -95,7 +95,7 @@ module.exports = O =>
 			return ReqAPI(TikTokAPIItemDetail(Q)).Map(B => (
 			{
 				Title : (B = B.itemInfo.itemStruct).desc,
-				Up : B.author.nickname,
+				UP : B.author.nickname,
 				Date : 1E3 * B.createTime,
 				Part : [{URL : [B.video.downloadAddr]}]
 			}))
