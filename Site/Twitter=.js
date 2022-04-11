@@ -68,6 +68,19 @@ module.exports = O =>
 				}
 				else WW.Throw('Unknown Media Type #' + V.type)
 			},WR.Path(['extended_entities','media'],Tweet) || [])
+			Part.forEach(V =>
+			{
+				V.URL = V.URL.map(V =>
+				{
+					if (/\/\/pbs.twimg.com/.test(V))
+					{
+						V = V.split('?')
+						V = V[0] + '?' +
+							WC.QSS(V = WC.QSP(V[1] || ''),V.name = 'orig')
+					}
+					return V
+				})
+			})
 			return {
 				Title : WR.Trim(Title),
 				UP : User.name,
