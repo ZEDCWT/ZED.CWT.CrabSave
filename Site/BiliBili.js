@@ -92,6 +92,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliVCAPIDynamicNew = BiliBiliVCAPIDynamicAPIRoot + 'dynamic_new?uid=&type_list=' + BiliBiliVCAPIDynamicType,
 	BiliBiliVCAPIDynamicHistory = WW.Tmpl(BiliBiliVCAPIDynamicAPIRoot,'dynamic_history?uid=&type=',BiliBiliVCAPIDynamicType,'&offset_dynamic_id=',undefined),
 	BiliBiliVCAPIDynamicDetail = WW.Tmpl(BiliBiliVCAPIDynamicAPIRoot,'get_dynamic_detail?dynamic_id=',undefined),
+	BiliBiliVCAPIDynamicDetailType2 = WW.Tmpl(BiliBiliVCAPIDynamicAPIRoot,'get_dynamic_detail?type=2&rid=',undefined),
 	BiliBiliVCAPIDynamicUser = WW.Tmpl(BiliBiliVCAPIDynamicAPIRoot,'space_history?host_uid=',undefined,'&offset_dynamic_id=',undefined),
 	BiliBiliTimeline = 'https://t.bilibili.com/',
 	BiliBiliLive = 'https://live.bilibili.com/',
@@ -584,11 +585,18 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			}
 		},{
 			Name : 'DynamicPost',
-			Judge : O.Num('DynamicPost|T(?:\\.\\w+)+|Dynamic(?=\\W+\\d{10})|TL'),
+			Judge :
+			[
+				/\bT(?:\.\w+)+\/(\d+).*?\b(Type=2)\b/i,
+				O.Num('DynamicPost|T(?:\\.\\w+)+|Dynamic(?=\\W+\\d{10})|TL')
+			],
 			Example : '2714420379649',
 			View : function(ID)
 			{
-				return O.API(BiliBiliVCAPIDynamicDetail(ID))
+				ID = ID.split('#')
+				return O.API(1 < ID.length ?
+					BiliBiliVCAPIDynamicDetailType2(ID[0]) :
+					BiliBiliVCAPIDynamicDetail(ID[0]))
 					.Map(function(B)
 					{
 						B = Common(B)
