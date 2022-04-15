@@ -40,6 +40,7 @@ ImgEnlarge = V => V.replace(/(?<=\.sinaimg\.cn\/)(?:\w+|crop[\d.]+)(?=\/\w+\.\w+
 	1195054531/FCdU2kOPH	Article
 	7031421269/Lbwq466Xs	Vote
 	1678843974/5KD0tWN9TiG	Ancient
+	5833359023/Gu8F2rS5y	Movie
 */
 
 /**@type {CrabSaveNS.SiteO}*/
@@ -117,6 +118,7 @@ module.exports = O =>
 						{
 							case 'adFeedVideo' :
 							case 'live' :
+							case 'movie' :
 							case 'video' : // 5 11
 								if ('live' === T.object_type)
 									Part.push(ReqWithRef(WeiBoLiveShow(T.page_id)).Map(N =>
@@ -131,7 +133,11 @@ module.exports = O =>
 								{
 									if ((T = C.playback_list) && T.length)
 										T = 1 - T.length ?
-												O.Best('bitrate',WR.Pluck('play_info',T)).url :
+												O.Best('bitrate',WR.Where(function(V)
+												{
+													// KuTqsBzth | meta.label = scrubber_hd & play_info.type = 3
+													return !/^image\//.test(V.mime)
+												},WR.Pluck('play_info',T))).url :
 												T[0].play_info.url
 									else
 										T = C.h265_mp4_hd ||
@@ -169,10 +175,17 @@ module.exports = O =>
 												{
 													screen_name : O.Text(WW.MF(/class="t [^>]+>([^<]+)/,N)),
 												},
-												content : WW.MF(/WBA_content[^>]+>([^]+)<\/div><\/div>/,N),
+												content : WW.MF(/WBA_content[^>]+>([^]+)<\/div>\s*(<\/div>|<div class="link")/,N),
 											}
 										}) :
-										WX.Just(Common(B))
+										[120001].includes(B.code) ?
+											Meta.push
+											(
+												'',
+												'{Article}',
+												WW.Quo(B.code) + B.msg
+											) && WX.Empty :
+											WX.Just(Common(B))
 								}).FMap(B =>
 								{
 									var

@@ -337,6 +337,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 							{
 								case 'adFeedVideo' :
 								case 'live' :
+								case 'movie' :
 								case 'video' : // 5 11
 									NonAV = false
 									Len = WR.Path(['playback_list',0,'play_info','duration'],T) ||
@@ -457,7 +458,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			}
 		},{
 			Name : 'User',
-			Judge : [/\.com\/(?:u\/(?=\d))?(\w+)/,O.Word('User')],
+			Judge : [/\.com\/(?:u\/(?=\d)|n\/)?([%\w]+)/,O.Word('User')],
 			View : function(ID,Page)
 			{
 				var PageID;
