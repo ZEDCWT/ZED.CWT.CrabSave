@@ -272,6 +272,7 @@ module.exports = O =>
 									'app', // 0
 									'appItem', // 2
 									'audio', // 0
+									'cardlist', // 0
 									'event', // 5
 									'file', // 2
 									'group', // 0

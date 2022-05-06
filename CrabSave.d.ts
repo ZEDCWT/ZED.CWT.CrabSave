@@ -66,6 +66,11 @@ declare module CrabSaveNS
 
 			Vacuum() : WishNS.Provider<any>
 			Stat() : WishNS.Provider<import('fs').Stats?>
+
+			Site :
+			{
+				[K : string] : <U,N>(Q : U) => WishNS.Provider<N>
+			}
 		}
 	}
 	interface Task

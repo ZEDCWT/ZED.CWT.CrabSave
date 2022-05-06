@@ -373,6 +373,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 										'appItem', // 2
 										'article', // 2 5
 										'audio', // 0
+										'cardlist', // 0
 										'event', // 5
 										'file', // 2
 										'group', // 0

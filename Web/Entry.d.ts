@@ -25,6 +25,7 @@ declare module CrabSaveNS
 		Coke() : string
 		CokeU() : any
 		CokeC<U>(Q : () => WishNS.Provider<U>) : () => WishNS.Provider<U>
+		DB(Key : string,Q : any) : WishNS.Provider<any>
 		Bad(Code? : any,Message : any) : never
 		BadR(Q : any) : never
 		Num(Q : string) : RegExp

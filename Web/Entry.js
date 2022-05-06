@@ -23,6 +23,7 @@
 	ActionWebTaskErr = 'TaskE',
 	ActionWebTaskHist = 'TaskH',
 	ActionWebShortCut = 'SC',
+	ActionWebSiteDB = 'SiteDB',
 	ActionWebTick = 'Tick',
 	ActionWebError = 'Err',
 	ActionAuthHello = 'Hell',
@@ -358,6 +359,13 @@
 					WSOnSC(K)
 					break
 
+				case ActionWebSiteDB :
+					WSOnDBKey &&
+						K === WSOnDBKey[0] &&
+						O === WSOnDBKey[1] &&
+						(Q[3] ? WSOnDB.U(Q[3]) : WSOnDB.E(Q[4]))
+					break
+
 				case ActionWebTaskNew :
 				case ActionWebTaskPlay :
 				case ActionWebTaskPause :
@@ -469,6 +477,8 @@
 	}),
 	WSOnProgress,
 	WSOnAPI = {},
+	WSOnDBKey,
+	WSOnDB,
 	WSOnAuthing = WW.BusS(),
 	WSOnOnline = WW.BusS(),
 	WSOnOffline = WW.BusS(),
@@ -3370,6 +3380,13 @@
 					{
 						return Q(CookieMap[V.Cookie] || '')
 					}
+				},
+				DB : function(K,O)
+				{
+					K = V.ID + K
+					WebSocketSend([ActionWebSiteDB,K,O])
+					WSOnDBKey = [K,O]
+					return WSOnDB = WX.R()
 				},
 				Bad : function(Q,S)
 				{

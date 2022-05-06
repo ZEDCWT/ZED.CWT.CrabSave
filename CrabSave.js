@@ -18,6 +18,7 @@ ActionWebTaskSize = 'TaskS',
 ActionWebTaskErr = 'TaskE',
 ActionWebTaskHist = 'TaskH',
 ActionWebShortCut = 'SC',
+ActionWebSiteDB = 'SiteDB',
 ActionWebTick = 'Tick',
 ActionWebError = 'Err',
 ActionAuthHello = 'Hell',
@@ -366,7 +367,8 @@ module.exports = Option =>
 			try{S.send(Buffer.from(D))}catch(_){}
 		},
 		Suicide = () => S.terminate(),
-		APIPool = new Map;
+		APIPool = new Map,
+		SiteDB = WX.EndL();
 
 		S.on('message',(Q,IsBuf) =>
 		{
@@ -494,9 +496,8 @@ module.exports = Option =>
 								Root : Setting.Dir(),
 								Format : Setting.Fmt()
 							}).Map(B =>
-								Loop.Info() ||
 								WebSocketSend([ActionWebTaskNew,++DBVersion,B],true)) :
-							WX.Throw(['ErrUnkSite',V.S]))
+							WX.Throw(['ErrUnkSite',V.S]),Loop.Info)
 						break
 					case ActionAuthTaskInfo :
 						false === K ?
@@ -586,6 +587,18 @@ module.exports = Option =>
 
 				case ActionWebTick :
 					Feed[1] = 9
+					break
+
+				case ActionWebSiteDB :
+					SiteDB(WX.Just()
+						.FMap(() => WR.Has(K,DB.Site) ?
+							DB.Site[K](O) :
+							WX.Throw('Bad Method ' + WC.OTJ(K,{Apos : true})))
+						.Now
+						(
+							B => Send([Q[0],K,O,B]),
+							E => Send([Q[0],K,O,null,E]),
+						))
 					break
 			}
 		}).on('close',() =>

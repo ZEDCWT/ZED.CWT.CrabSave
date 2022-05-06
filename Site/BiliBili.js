@@ -209,6 +209,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					Card.sketch.desc_text
 				)
 				break
+			case 4098 : // Movie 649924763705147506
 			case 4099 : // Series
 				R = SolveAV(Card)
 				break
@@ -250,6 +251,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				}
 				break
 			case 4308 : // Live
+				Card = Card.live_play_info || Card
 				R =
 				{
 					Non : true,
@@ -257,7 +259,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					URL : BiliBiliLive + Card.room_id,
 					Img : Card.cover,
 					Title : Card.title,
-					Date : new Date(Card.live_start_time),
+					Date : new Date(1E3 * Card.live_start_time),
 					More : Card.area_id + ':' + Card.area_name
 				}
 				break
@@ -314,7 +316,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			]
 		})
 	}),
-	AV = function(ID)
+	AV = function(ID,CID)
 	{
 		return O.API(BiliBiliAPIWebView(ID)).FMap(function(V)
 		{
@@ -339,7 +341,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					UP : R.UP,
 					UPURL : R.UPURL,
 					Len : B.duration,
-					More : 'cid' + B.cid,
+					More :
+					[
+						'CID ' + B.cid,
+						CID && CID[B.cid] ?
+							'{Downloaded ' + CID[B.cid] + '}' :
+							null
+					],
 					CID : B.cid
 				}
 			},V.pages))
@@ -837,7 +845,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Name : 'Video',
 			Judge : [/^\d+$/,O.Num('Video|AID|AV')],
 			Example : '9',
-			View : O.Less(AV)
+			View : O.Less(function(ID)
+			{
+				return O.DB('CID',ID).FMap(function(CID)
+				{
+					return AV(ID,CID)
+				})
+			})
 		},{
 			Name : 'BV',
 			Judge : /\bBV[\d\w]+\b/i,

@@ -423,6 +423,26 @@ module.exports = Option =>
 		Vacuum : () => Exec('vacuum'),
 		Stat : () => WN.Exist(PathDB),
 
+		Site :
+		{
+			BiliBiliCID : ID => All(
+			`
+				select ID,URL from Task,Down D
+				where
+					Row = Task and
+					Site = 'BiliBili' and
+					? <= ID and ID < ? and
+					0 <= Part and
+					0 = D.File
+			`,[ID,ID + '$'])
+				.Map(B => WR.Reduce((D,V) =>
+				{
+					V = WW.MF(/#(\d+$)/,V.ID) ||
+						WW.MF(/\/(\d+)[-_][\d\w-]+\.\w+\?/,V.URL)
+					V && (D[V] = -~D[V])
+				},{},B)),
+		},
+
 		Run
 	}
 }
