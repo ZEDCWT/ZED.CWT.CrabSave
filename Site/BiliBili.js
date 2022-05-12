@@ -125,15 +125,22 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Date : 1E3 * WR.Default(V.created,V.pubdate),
 			Len : WR.Default(V.length,V.duration),
 			Desc : WR.Default(V.description,V.desc),
-			More :
-			[
-				SolveCTime(V.ctime),
-				V.stein_guide_cid &&
-					O.Ah('Stein ' + V.stein_guide_cid + ' (' + V.videos + ')',
-						BiliBiliVideo(V.aid) + '#Stein'),
-				(EP = V.redirect_url) && O.Ah(EP = WW.MU(/ep\d+/,V.redirect_url),BiliBiliBgmEP(EP = EP.slice(2))),
-				V.season_id && O.Ah(PrefixUGCSeason + V.season_id,BiliBiliSpaceChannelSeason(UP,V.season_id))
-			],
+			More : WR.Cat
+			(
+				WR.Map(function(B)
+				{
+					return O.Ah(B.title + ' ' + B.name,BiliBiliSpace + B.mid)
+				},V.staff),
+				[
+					SolveCTime(V.ctime),
+					V.stein_guide_cid &&
+						O.Ah('Stein ' + V.stein_guide_cid + ' (' + V.videos + ')',
+							BiliBiliVideo(V.aid) + '#Stein'),
+					(EP = V.redirect_url) && O.Ah(EP = WW.MU(/ep\d+/,V.redirect_url),BiliBiliBgmEP(EP = EP.slice(2))),
+					V.season_id && O.Ah(PrefixUGCSeason + V.season_id,BiliBiliSpaceChannelSeason(UP,V.season_id)),
+					V.is_union_video ? '{UnionVideo}' : ''
+				]
+			),
 			EP : EP
 		}
 	},
