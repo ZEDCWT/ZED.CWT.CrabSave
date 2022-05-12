@@ -80,6 +80,7 @@ declare module CrabSaveNS
 		ProxyURL : boolean
 		ProxyView : boolean
 		Delay : number
+		HTTP429 : number
 		Size : boolean
 		Meta : boolean
 		Cover : boolean
@@ -94,6 +95,7 @@ declare module CrabSaveNS
 		Proxy() : boolean
 		ProxyURL() : boolean
 		Delay() : number
+		HTTP429() : number
 		Size() : boolean
 		Meta() : boolean
 		Cover() : boolean

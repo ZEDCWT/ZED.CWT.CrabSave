@@ -68,6 +68,7 @@ module.exports = Option =>
 	InfoRunning = new Map,
 	InfoDispatching,InfoDispatchAgain,
 	InfoDispatchOnErr = WX.EndL(),
+	InfoErrorHTTP429 = new Map,
 	InfoDispatch = () =>
 	{
 		if (!InfoDispatching && InfoRunning.size < ConfigInfoLimit)
@@ -121,10 +122,8 @@ module.exports = Option =>
 						ReqU : ExtReq,
 						ReqH : Q => ExtReq(Q).Map(V => V[0]),
 						ReqB : Q => ExtReq(Q).Map(V => V[1]),
-					};
-					V.Error && Option.ErrT(V.Row)
-					Option.OnRenew(V.Row)
-					InfoRunning.set(V.Row,Option.Site.P(V.Site)
+					},
+					Run = Option.Site.P(V.Site)
 						.FMap(S => S.URL(V.ID,Ext))
 						.FMap(U =>
 						{
@@ -238,10 +237,26 @@ module.exports = Option =>
 										WX.Just(R.Size)
 								})
 								.Tap(Z => Option.OnSize(V.Row,Z,Down.length))
-						})
+						}),
+					T;
+					V.Error && Option.ErrT(V.Row)
+					Option.OnRenew(V.Row)
+					if ((T = InfoErrorHTTP429.get(V.Site)) &&
+						T[0] === Setting.Proxy() &&
+						(!T[0] || T[1] === Setting.ProxyURL()) &&
+						WW.Now() < 1E3 * Setting.HTTP429() + T[2])
+					{
+						Run = WX.Throw(['ErrHTTP429',WW.StrDate(1E3 * Setting.HTTP429() + T[2])])
+							.Delay(5E2)
+					}
+					InfoRunning.set(V.Row,Run
 						.Now(null,E =>
 						{
 							var At = WW.Now();
+							if (WW.ErrIs(WW.Err.NetBadStatus,E) && 429 === E.Arg[0])
+							{
+								InfoErrorHTTP429.set(V.Site,[Setting.Proxy(),Setting.ProxyURL(),WW.Now()])
+							}
 							InfoRunning.set(V.Row,DB.Err(V.Row,2,At).Now(null,O =>
 							{
 								InfoRunning.delete(V.Row)

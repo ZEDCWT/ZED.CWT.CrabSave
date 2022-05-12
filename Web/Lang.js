@@ -141,6 +141,7 @@ var Lang = // eslint-disable-line
 		SetImgNo : 'No proxy',
 		SetImgDown : 'Follow downloader proxy',
 		SetDelay : 'Retry delay after download error (in seconds)',
+		SetHTTP429 : 'Request throttle for [HTTP 429] Too Many Requests (in seconds)',
 		SetSize : 'Resolve file sizes before downloading',
 		SetMeta : 'Save metadata',
 		SetCover : 'Save cover',
@@ -171,6 +172,7 @@ var Lang = // eslint-disable-line
 		ErrDBAddFail : '{INTERNAL FATAL} Unknown error occured while adding ~0~',
 		ErrLoopURL : 'Failed to resolve some URLs\n~0~',
 		ErrLoopSize : 'Failed to resolve size\n~0~',
+		ErrHTTP429 : '[HTTP 429] Too Many Requests. Will not request until ~0~',
 
 		'' : ''
 	},
@@ -309,7 +311,8 @@ var Lang = // eslint-disable-line
 		SetImg : '圖片代理',
 		SetImgNo : '不使用代理',
 		SetImgDown : '使用下載代理',
-		SetDelay : '下載失敗重試前的等待時間(秒)',
+		SetDelay : '下載失敗重試前的等待時長 (秒)',
+		SetHTTP429 : '發生 [HTTP 429] Too Many Requests (請求過於頻繁) 後不再嘗試的時長 (秒)',
 		SetSize : '下載前解析文件大小',
 		SetMeta : '保存元數據',
 		SetCover : '保存封面圖',
@@ -339,6 +342,7 @@ var Lang = // eslint-disable-line
 		ErrDBAdding : '同時有其他請求將該任務加入到下載列表中 ~0~',
 		ErrLoopURL : '部分URL解析失敗\n~0~',
 		ErrLoopSize : '解析文件大小失敗\n~0~',
+		ErrHTTP429 : '[HTTP 429] Too Many Requests (請求過於頻繁). 在~0~之前不再嘗試解析',
 
 		'' : ''
 	},
@@ -477,7 +481,8 @@ var Lang = // eslint-disable-line
 		SetImg : '图片代理',
 		SetImgNo : '不使用代理',
 		SetImgDown : '使用下载代理',
-		SetDelay : '下载失败重试前的等待时间(秒)',
+		SetDelay : '下载失败重试前的等待时长 (秒)',
+		SetHTTP429 : '发生 [HTTP 429] Too Many Requests (请求过于频繁) 后不再尝试的时长 (秒)',
 		SetSize : '下载前解析文件大小',
 		SetMeta : '保存元数据',
 		SetCover : '保存封面图',
@@ -507,6 +512,7 @@ var Lang = // eslint-disable-line
 		ErrDBAdding : '同时有其他请求将该任务加入到下载列表中 ~0~',
 		ErrLoopURL : '部分URL解析失败\n~0~',
 		ErrLoopSize : '解析文件大小失败\n~0~',
+		ErrHTTP429 : '[HTTP 429] Too Many Requests (请求过于频繁). 在~0~之前不再尝试解析',
 
 		'' : ''
 	},
@@ -646,6 +652,7 @@ var Lang = // eslint-disable-line
 		SetImgNo : 'プロキシなし',
 		SetImgDown : 'ダウンローダープロキシを使用する',
 		SetDelay : 'エラー後の再試行遅延 (秒)',
+		SetHTTP429 : '[HTTP 429] Too Many Requests (リクエストが多すぎる) が発生した場合の再試行遅延 (秒)',
 		SetSize : 'ダウンロードする前にファイルサイズを解決する',
 		SetMeta : 'メタデータを保存する',
 		SetCover : 'カバーを保存',
@@ -675,6 +682,7 @@ var Lang = // eslint-disable-line
 		ErrDBAdding : '~0~は既に追加中',
 		ErrLoopURL : '一部のURLを解決できませんでした\n~0~',
 		ErrLoopSize : 'サイズを解決できませんでした\n~0~',
+		ErrHTTP429 : '[HTTP 429] Too Many Requests (リクエストが多すぎる)、~0~まで再試行しません',
 
 		'' : ''
 	}

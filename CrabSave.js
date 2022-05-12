@@ -135,6 +135,7 @@ module.exports = Option =>
 		Size : SettingMake('Size',WR.T,true),
 		Meta : SettingMake('Meta',WR.T,true),
 		Cover : SettingMake('Cover',WR.T,true),
+		HTTP429 : SettingMake('HTTP429',WW.IsNum,60),
 	},
 	SiteO =
 	{

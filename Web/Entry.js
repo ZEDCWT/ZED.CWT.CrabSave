@@ -3152,6 +3152,16 @@
 				}),
 				20
 			],[
+				SA('SetHTTP429'),
+				Key('HTTP429'),
+				WV.Inp(
+				{
+					Yep : WV.InpYZ,
+					InpU : PC,
+					Map : Number
+				}),
+				60
+			],[
 				SA('SetSize'),
 				Key('Size'),
 				WV.Cho(
