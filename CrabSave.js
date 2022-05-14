@@ -188,7 +188,7 @@ module.exports = Option =>
 
 		OnFinal : (Task,Done) => WebSocketSend([ActionWebTaskHist,++DBVersion,[Task,Done]],true),
 
-		OnEnd : () => OnTick(true)
+		OnEnd : WR.ThrottleDelay(10,() => OnTick(true)),
 	},
 	Loop = require('./Loop')(LoopO),
 
@@ -522,8 +522,12 @@ module.exports = Option =>
 							{
 								WebSocketSend([ActionWebTaskPause,++DBVersion,V],true)
 								RecErrT(V)
-								Loop.Stop(V)
-							}),Loop.Info)
+								Loop.Stop(V,true)
+							}),() =>
+							{
+								Loop.Info()
+								Loop.Down()
+							})
 						break
 					case ActionAuthTaskRemove :
 						DBMulti(K,V =>

@@ -110,7 +110,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 							ID : V.creatorId,
 							URL : FanBoxUser,
 							Img : V.user.iconUrl,
-							UP : '[' + V.user.userId + '] ' + V.user.name,
+							UP : WW.Quo(V.user.userId) + V.user.name,
 							UPURL : FanBoxUser(V.creatorId),
 							More : WR.Concat(WR.Map(function(N)
 							{
@@ -137,11 +137,11 @@ CrabSave.Site(function(O,WW,WC,WR)
 							ID : V.creatorId,
 							URL : FanBoxUser,
 							Img : V.user.iconUrl,
-							UP : '[' + V.user.userId + '] ' + V.user.name,
+							UP : WW.Quo(V.user.userId) + V.user.name,
 							UPURL : FanBoxUser(V.creatorId),
 							More :
 							[
-								'[' + V.id + '] ' + V.title,
+								WW.Quo(V.id) + V.title,
 								'JPY ' + V.fee,
 								O.Img(V.coverImageUrl),
 								V.description

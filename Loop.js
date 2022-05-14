@@ -646,14 +646,14 @@ module.exports = Option =>
 		}
 	},
 	DownloadDelay = MakeDelay(() => DB.TopErr(1),DownloadDispatch),
-	DownloadEnd = Q =>
+	DownloadEnd = (Q,SuppressDispatch) =>
 	{
 		if (DownloadRunning.has(Q))
 		{
 			DownloadRunning.get(Q)()
 			DownloadRunning.delete(Q)
 			DownloadStatus.delete(Q)
-			DownloadDispatch()
+			SuppressDispatch || DownloadDispatch()
 			Option.OnEnd()
 		}
 	},
@@ -684,9 +684,9 @@ module.exports = Option =>
 		},
 		Renewing : () => [...InfoRunning.keys()],
 		Downloading : DownloadStatus,
-		Stop : Q =>
+		Stop : (Q,SuppressDispatch) =>
 		{
-			DownloadEnd(Q)
+			DownloadEnd(Q,SuppressDispatch)
 		},
 
 		OnSet : () =>

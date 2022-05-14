@@ -218,6 +218,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				break
 			case 4098 : // Movie 649924763705147506
 			case 4099 : // Series
+			case 4101 : // Series 658954502692405301
 				R = SolveAV(Card)
 				break
 			case 4200 : // Live
@@ -323,6 +324,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			]
 		})
 	}),
+	ShowCID = function(CID,Downloaded)
+	{
+		return 'CID ' + CID +
+			(Downloaded && Downloaded[CID] ? '\n{Downloaded ' + Downloaded[CID] + '}' : '')
+	},
 	AV = function(ID,CID)
 	{
 		return O.API(BiliBiliAPIWebView(ID)).FMap(function(V)
@@ -350,10 +356,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					Len : B.duration,
 					More :
 					[
-						'CID ' + B.cid,
-						CID && CID[B.cid] ?
-							'{Downloaded ' + CID[B.cid] + '}' :
-							null
+						ShowCID(B.cid,CID)
 					],
 					CID : B.cid
 				}
@@ -391,6 +394,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				R[0].More.push(O.Ah('ss' + Q[1],BiliBiliBgmSS(Q[1])))
 			}) : WX.Just())
 				.Map(WR.Const(R))
+		})
+	},
+	AVWithCID = function(ID)
+	{
+		return O.DB('CID',ID).FMap(function(CID)
+		{
+			return AV(ID,CID)
 		})
 	},
 	SolveAU = function(V)
@@ -782,69 +792,79 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Name : 'Stein',
 			Judge : [/AV(\d+)\W+Stein/i,O.Num('Stein')],
 			Example : '841474000',
-			View : O.Less(WX.CacheM(function(ID)
+			View : O.Less(WX.CacheL(function(ID)
 			{
-				return AV(ID).FMap(function(R)
+				return O.DB('CID',ID).FMap(function(CIDDB)
 				{
-					var CID = R[1].CID;
-					R.pop()
-					return O.API(O.Head(BiliBiliAPIPlayerSo(ID,CID),'Referer',BiliBili)).FMap(function(B)
+					return AV(ID).FMap(function(R)
 					{
-						var
-						Loaded = 0,Max = 0,
-						Graph = WW.MF(/graph_version":(\d+)/,B),
-						CID2Node = WR.OfObj(CID,[1]),
-						Node2CID = {1 : CID};
-						Graph || O.Bad('Unable to acquire GraphVersion')
-						R[0].More.push('Graph ' + Graph)
-						return WX.Exp(function(I)
+						var CID = R[1].CID;
+						R.pop()
+						return O.API(O.Head(BiliBiliAPIPlayerSo(ID,CID),'Referer',BiliBili)).FMap(function(B)
 						{
-							return O.API(BiliBiliAPISteinNode(ID,Graph,CID === I ? '' : CID2Node[I][0])).Map(function(V)
+							var
+							Loaded = 0,Max = 0,
+							Graph = WW.MF(/graph_version":(\d+)/,B),
+							CID2Node = WR.OfObj(CID,[1]),
+							Node2CID = {1 : CID};
+							Graph || O.Bad('Unable to acquire GraphVersion')
+							R[0].More.push('Graph ' + Graph)
+							return WX.Exp(function(I)
 							{
-								V = Common(V)
-								++Loaded
-								R.push(
+								return O.API(BiliBiliAPISteinNode(ID,Graph,CID === I ? '' : CID2Node[I][0])).Map(function(V)
 								{
-									ID : ID + '#' + I,
-									URL : BiliBiliVideo(ID),
-									Img : V.story_list[0].cover.replace(CID,I),
-									Title : V.title,
-									More : V.edges && V.edges.choices,
-									CID : I,
-									Node : CID2Node[I]
-								})
-								V = V.edges && WR.Map(function(B)
-								{
-									Node2CID[B.node_id] = B.cid
-									CID2Node[B.cid] ?
-										CID2Node[B.cid].push(B.node_id) :
-										CID2Node[++Max,B.cid] = [B.node_id]
-									return B.cid
-								},V.edges.choices)
-								O.Progress('Node ' + Loaded + ' / ' + Max)
-								return V
-							})
-						},CID,true)
-					}).Map(function(C)
-					{
-						WR.EachU(function(V){V.Node.sort(WR.Sub)})
-						R.sort(function(Q,S)
-						{
-							return !Q.Len - !S.Len ||
-								Q.Node[0] - S.Node[0]
-						})
-						C = WR.ReduceU(function(D,V,F){D[V.CID] = F},{},R)
-						WR.EachU(function(V,F)
-						{
-							if (F)
-								V.More = WR.Concat(
-									['Node[' + V.Node.length + '] ' + V.Node.join(' ')],
-									WR.Map(function(B)
+									V = Common(V)
+									++Loaded
+									R.push(
 									{
-										return '[' + C[B.cid] + ':' + B.node_id + '] ' + B.option
-									},V.More))
-						},R)
-						return R
+										ID : ID + '#' + I,
+										URL : BiliBiliVideo(ID),
+										Img : V.story_list[0].cover.replace(CID,I),
+										Title : V.title,
+										More :
+										[
+											ShowCID(I,CIDDB)
+										],
+										Next : V.edges && V.edges.choices,
+										CID : I,
+										Node : CID2Node[I]
+									})
+									V = V.edges && WR.Map(function(B)
+									{
+										Node2CID[B.node_id] = B.cid
+										CID2Node[B.cid] ?
+											CID2Node[B.cid].push(B.node_id) :
+											CID2Node[++Max,B.cid] = [B.node_id]
+										return B.cid
+									},V.edges.choices)
+									O.Progress('Node ' + Loaded + ' / ' + Max)
+									return V
+								})
+							},CID,true)
+						}).Map(function(C)
+						{
+							WR.EachU(function(V){V.Node.sort(WR.Sub)})
+							R.sort(function(Q,S)
+							{
+								return !Q.Len - !S.Len ||
+									Q.Node[0] - S.Node[0]
+							})
+							C = WR.ReduceU(function(D,V,F){D[V.CID] = F},{},R)
+							WR.EachU(function(V,F)
+							{
+								if (F)
+									V.More = WR.Flatten(
+									[
+										'Node' + WW.Quo(V.Node.length) + V.Node.join(' '),
+										WR.Map(function(B)
+										{
+											return WW.Quo(C[B.cid] + ':' + B.node_id) + B.option
+										},V.Next),
+										V.More
+									])
+							},R)
+							return R
+						})
 					})
 				})
 			}))
@@ -852,13 +872,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Name : 'Video',
 			Judge : [/^\d+$/,O.Num('Video|AID|AV')],
 			Example : '9',
-			View : O.Less(function(ID)
-			{
-				return O.DB('CID',ID).FMap(function(CID)
-				{
-					return AV(ID,CID)
-				})
-			})
+			View : O.Less(AVWithCID)
 		},{
 			Name : 'BV',
 			Judge : /\bBV[\d\w]+\b/i,
@@ -867,7 +881,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			{
 				return O.API(BiliBiliAPIWebViewBV(ID)).FMap(function(B)
 				{
-					return AV(Common(B).View.aid)
+					return AVWithCID(Common(B).View.aid)
 				})
 			})
 		},{
@@ -1127,7 +1141,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			{
 				return EP2AV(ID).FMap(function(Q)
 				{
-					return AV(Q[0])
+					return AVWithCID(Q[0])
 				})
 			})
 		},{
@@ -1136,34 +1150,50 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Example : '34543',
 			View : O.Less(function(ID)
 			{
-				return O.API(BiliBiliAPIPGCSeason(ID)).Map(function(B)
+				return O.API(BiliBiliAPIPGCSeason(ID)).FMap(function(B)
 				{
+					var
+					AVAll = {},
+					AVList,
+					SingleExpanded;
 					B = Common(B)
-					return [
+					WR.Each(function(V)
 					{
-						Non : true,
-						ID : 'ss' + B.season_id,
-						URL : BiliBiliBgmSS(B.season_id),
-						Img : B.cover,
-						Title : B.title,
-						UP : 'md' + B.media_id,
-						UPURL : BiliBiliBgmMD(B.media_id),
-						Date : B.publish.pub_time,
-						Desc : B.evaluate,
-						More : B.time_length_show
-					}].concat(WR.MapU(function(V,F)
+						AVAll[V.aid] = -~AVAll[V.aid]
+					},B.episodes)
+					AVList = WR.Key(AVAll)
+					SingleExpanded = 1 === AVList.length && 1 < B.episodes.length
+					return (SingleExpanded ? O.DB('CID',AVList[0]) : WX.Just()).Map(function(CID)
 					{
-						return {
-							Index : F,
-							ID : V.aid + '#' + V.cid,
-							URL : BiliBiliBgmEP(V.id),
-							Img : V.cover,
-							Title : WR.Trim(V.title + ' ' + V.long_title),
-							UP : 'ep' + V.id,
-							UPURL : BiliBiliBgmEP(V.id),
-							More : 'cid' + V.cid
-						}
-					},B.episodes))
+						return [
+						{
+							Non : true,
+							ID : 'ss' + B.season_id,
+							URL : BiliBiliBgmSS(B.season_id),
+							Img : B.cover,
+							Title : B.title,
+							UP : 'md' + B.media_id,
+							UPURL : BiliBiliBgmMD(B.media_id),
+							Date : B.publish.pub_time,
+							Desc : B.evaluate,
+							More : B.time_length_show
+						}].concat(WR.MapU(function(V,F)
+						{
+							return {
+								Index : F,
+								ID : SingleExpanded ? V.aid + '#' + V.cid : V.aid,
+								URL : BiliBiliBgmEP(V.id),
+								Img : V.cover,
+								Title : WR.Trim(V.title + ' ' + V.long_title),
+								UP : 'ep' + V.id,
+								UPURL : BiliBiliBgmEP(V.id),
+								More :
+								[
+									SingleExpanded && ShowCID(V.cid,CID)
+								]
+							}
+						},B.episodes))
+					})
 				}).FMap(function(R)
 				{
 					return O.API(BiliBiliAPIPGCSeasonSection(ID)).Map(function(B)

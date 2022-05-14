@@ -346,11 +346,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 
 								case 'hudongvote' : // 23
 									T = Card.vote_object
-									More.push('[' + T.part_info + '] ' + T.content,
+									More.push(WW.Quo(T.part_info) + T.content,
 										O.DTS(1E3 * T.expire_date))
 									WR.EachU(function(V,F)
 									{
-										More.push('[' + F + '] ' +
+										More.push(WW.Quo(F) +
 											V.part_num + ':' + (0 | 100 * V.part_ratio) + '% ' +
 											V.content)
 									},T.vote_list)

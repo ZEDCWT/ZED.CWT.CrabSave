@@ -1036,9 +1036,9 @@
 		Update = function()
 		{
 			StatusSet(K,Count ?
-				'[' + WR.ToSize(Size) + (Plus ? '+' : '') + '] ' +
-					SA('StsSelect',[Count]) +
-					(Plus ? SA('StsPlus',[Plus]) : '') :
+				WW.Quo(WR.ToSize(Size) + (Plus ? '+' : '')) +
+				SA('StsSelect',[Count]) +
+				(Plus ? SA('StsPlus',[Plus]) : '') :
 				null)
 			return Count
 		};
@@ -1080,7 +1080,7 @@
 			++Active
 			Speed += V[1]
 		},ProgressMap)
-		WV.T(RSpeed,'[' + Active + '] ' + MakeSpeed(Speed))
+		WV.T(RSpeed,WW.Quo(Active) + MakeSpeed(Speed))
 	},
 
 
@@ -3404,7 +3404,7 @@
 						Q :
 						WW.IsArr(S) ?
 							SA(Q,S) :
-							'[' + Q + '] ' + S)
+							WW.Quo(Q) + S)
 				},
 				BadR : function(Q)
 				{

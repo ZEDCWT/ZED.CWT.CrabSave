@@ -655,7 +655,7 @@ var Lang = // eslint-disable-line
 		SetHTTP429 : '[HTTP 429] Too Many Requests (リクエストが多すぎる) が発生した場合の再試行遅延 (秒)',
 		SetSize : 'ダウンロードする前にファイルサイズを解決する',
 		SetMeta : 'メタデータを保存する',
-		SetCover : 'カバーを保存',
+		SetCover : 'カバーを保存する',
 		SetNonAV : 'オーディオまたはビデオ以外のコンテンツをダウンロード可能にする',
 		SetSPUP : '特別にフォローされているうp主 (ユーザー名またはURL、1行に1つ)',
 		// SetMerge : 'マージコマンド',

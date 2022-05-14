@@ -188,7 +188,7 @@ declare module CrabSaveNS
 			Del(Task : number) : void
 			Renewing() : string[]
 			Downloading : Map<number,(H : (Q : number) => string) => string>
-			Stop(Task : number) : void
+			Stop(Task : number,SuppressDispatch? : boolean) : void
 
 			OnSet() : void
 		}
