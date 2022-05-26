@@ -370,11 +370,13 @@ module.exports = Option =>
 				Done is null
 			order by Part,File
 		`,[Q]),
-		ViewPart : (Q,S) => Get(
-		`
-			select * from Part
-			where ? = Task and ? = Part
-		`,[Q,S]),
+		ViewPart : (Q,S) => false === S ?
+			Get(`select * from Part where ? = Task`,[Q]) :
+			Get(
+			`
+				select * from Part
+				where ? = Task and ? = Part
+			`,[Q,S]),
 
 		SavePlay : (Q,W,E,S) => Run(
 		`

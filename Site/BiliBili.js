@@ -222,6 +222,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				R = SolveAV(Card)
 				break
 			case 4200 : // Live
+			case 4201 : // Live 129429363453235147
 				R =
 				{
 					Non : true,
@@ -231,10 +232,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					Title : Card.title,
 					UP : Card.uname,
 					UPURL : BiliBiliSpace + Card.uid,
-					Date : new Date(Card.live_time),
+					Date : new Date(Card.live_time || Card.start_time),
 					More :
 					[
-						Card.area_v2_parent_id + ':' + Card.area_v2_parent_name,
+						Card.area_v2_parent_id && Card.area_v2_parent_id + ':' + Card.area_v2_parent_name,
 						Card.area_v2_id + ':' + Card.area_v2_name
 					]
 				}

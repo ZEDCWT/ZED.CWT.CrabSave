@@ -65,6 +65,7 @@ module.exports = O =>
 			return Ext.ReqB(O.Coke(WeiBoAJAXStatusShow(ID[1]))).FMap(B =>
 			{
 				B = WC.JTO(B)
+				B.error_code && O.Bad(WW.Quo(B.error_code) + B.message)
 				// LlJq26YJu	Unexpected `isLongText` flag
 				return (B.isLongText ? Ext.ReqB(O.Coke(WeiBoAJAXStatusLong(ID[1]))) : WX.Just()).FMap(Long =>
 				{

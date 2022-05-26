@@ -52,7 +52,7 @@ declare module CrabSaveNS
 			{
 				ExtCount : number
 			}>
-			ViewPart(Task : number,Part : number) : WishNS.Provider<Part>
+			ViewPart(Task : number,Part : number | false) : WishNS.Provider<Part>
 
 			SavePlay(Task : number,Part : number,File : number,Play : number) : WishNS.Provider<any>
 			SaveConn(Task : number,Part : number,File : number,First : number) : WishNS.Provider<any>

@@ -269,7 +269,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 							UP : B.userName,
 							UPURL : PixivUser(B.userId),
 							Date : new Date(B.createDate),
-							Desc : B.description
+							Desc : O.Text(B.description)
 						}]
 					}
 				})

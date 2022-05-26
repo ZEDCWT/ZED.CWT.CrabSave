@@ -412,8 +412,14 @@ module.exports = Option =>
 				{
 					var
 					Has = V.Has,
-					SolvePart = (Row,Part) => Part < 0 ?
-						WX.Just({}) :
+					TaskIsSingleMultiPart =
+					{
+						BiliBili : ID => /^\d+#\d+$/.test(ID),
+					},
+					SolvePart = /**@type {WishNS.TypeR<CrabSaveNS.DB>['ViewPart']}*/ (Row,Part) => Part < 0 ?
+						TaskIsSingleMultiPart[V.Site]?.(V.ID) ?
+							DB.ViewPart(Row,false).Map(WR.Pick(['Total','Part'])) :
+							WX.Just({}) :
 						DB.ViewPart(Row,Part),
 					Working;
 					DownloadStatus.set(V.Row,H => ' ' + H(Working ? Has + Working.Calc().Saved : Has) +
@@ -441,7 +447,7 @@ module.exports = Option =>
 									N : WW.Pad02(UPAt.getMinutes()),
 									S : WW.Pad02(UPAt.getSeconds()),
 									MS : WW.Pad03(UPAt.getMilliseconds()),
-									PartIndex : 1 < Part.Total && WR.PadL(Part.Total,Down.Part),
+									PartIndex : 1 < Part.Total && WR.PadL(Part.Total,Part.Part),
 									PartTitle : WR.SafeFile(Part.Title || ''),
 									FileIndex : 1 < Part.File &&
 										Down.ExtCount !== Part.File &&
