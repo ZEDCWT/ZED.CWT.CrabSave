@@ -122,13 +122,16 @@ module.exports = O =>
 							case 'movie' :
 							case 'video' : // 5 11
 								if ('live' === T.object_type)
-									Part.push(ReqWithRef(WeiBoLiveShow(T.page_id)).Map(N =>
+									Part.push(ReqWithRef(WeiBoLiveShow(T.page_id)).FMap(N =>
 									{
 										N = WC.JTO(N)
+										if (27401 === N.error_code)
+											return WX.Empty
 										N.error_code && O.Bad(N)
-										return {
+										return WX.Just(
+										{
 											URL : [N.data.replay_origin_url]
-										}
+										})
 									}))
 								else if (C = T.media_info)
 								{
@@ -280,6 +283,7 @@ module.exports = O =>
 									'shop', // 2
 									'topic', // 0
 									'user', // 2
+									'wbox', // 0
 									'webpage', // 0 23
 									undefined
 								]) || WW.Throw('Unknown Type #' + T.type + ':' + T.object_type)

@@ -40,7 +40,11 @@ Common = V => (V = WC.JTO(V)).code ?
 
 /*
 	av6777232
-	Having two parts cid11114072 & cid11036876, since it is redirected to ep278253, the second part seems vanished.
+		Having two parts cid11114072 & cid11036876, since it is redirected to ep278253, the second part seems vanished.
+	av54076217
+		CID 102724598 vanished
+	av669229042
+		CID 224439730 vanished
 */
 
 /**@type {CrabSaveNS.SiteO}*/
@@ -94,10 +98,11 @@ module.exports = O =>
 					case 1 : // Forward
 						break
 					case 2 : // Picture
-						R.Part = Card.item.pictures.map(V => (
+						R.Part = [
 						{
-							URL : [V.img_src]
-						}))
+							URL : WR.Pluck('img_src',Card.item.pictures),
+							ExtDefault : '.jpg',
+						}]
 						break
 					case 4 : // Text Only
 						break
@@ -170,6 +175,15 @@ module.exports = O =>
 						Ext : '.htm'
 					},...WW.MR((D,V) =>
 					{
+						/*
+							Some resources refuse to load
+							cv17652147
+							s1.hdslb.com/bfs/static/jinkela/article-web/article-web.bc81fcb45c9ad64666de79b78421e5c2518e97f7.js
+							clientW : 660
+							r = n.clientW,c = r - 32
+							st = nt.d > 2 ? 2 : 1.5
+							@942w_progressive.webp
+						*/
 						D.push({URL : [V[2]]})
 						return D
 					},[],/<img[^>]+src=(['"])(.+?)\1/g,B.content)]
@@ -300,7 +314,7 @@ module.exports = O =>
 						}
 						return WX.From(V)
 					})
-					.FMapE(V =>
+					.FMapE((V,F) =>
 						PlayURL(ID,V[0],120).FMap((B,T) =>
 						{
 							T = B.accept_quality && Math.max(...B.accept_quality)
@@ -308,6 +322,10 @@ module.exports = O =>
 								PlayURL(ID,V[0],T) :
 								WX.Just(B)
 						})
+						// For vanished parts, we simply ignore them
+						.ErrAs(E => E && F && -404 === E.code ?
+							WX.Empty :
+							WX.Throw(E))
 						.Tap(B =>
 						{
 							var U,T;

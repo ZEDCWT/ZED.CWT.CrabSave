@@ -3,6 +3,8 @@ var
 WW = require('@zed.cwt/wish'),
 {R : WR,C : WC} = WW,
 
+FanBox = 'https://www.fanbox.cc/',
+FanBoxUserPost = WW.Tmpl(FanBox,'@',undefined,'/posts/',undefined),
 FanBoxAPI = 'https://api.fanbox.cc/',
 FanBoxAPIPostInfo = WW.Tmpl(FanBoxAPI,'post.info?postId=',undefined);
 
@@ -31,6 +33,10 @@ module.exports = O =>
 					{
 						switch (V.type)
 						{
+							case 'embed' :
+								V = Content.embedMap[V.embedId]
+								Meta.push('<Link> ' + V.serviceProvider + ' ' + V.contentId)
+								break
 							case 'file' :
 								V = Content.fileMap[V.fileId]
 								Meta.push('<File> ' + V.name)
@@ -55,7 +61,16 @@ module.exports = O =>
 								break
 							case 'url_embed' :
 								V = Content.urlEmbedMap[V.urlEmbedId]
-								Meta.push('<URL> ' + V.html)
+								switch (V.type)
+								{
+									case 'fanbox.post' :
+										V = WW.Quo(V.postInfo.title) +
+											FanBoxUserPost('owo',V.postInfo.id)
+										break
+									default :
+										V = V.html
+								}
+								Meta.push('<URL> ' + V)
 								break
 							default :
 								WW.Throw('Unknown Article Block Type #' + V.type)

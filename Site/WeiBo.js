@@ -381,6 +381,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 										'story', // 31
 										'topic', // 0
 										'user', // 2
+										'wbox', // 0
 										undefined
 									]) || More.push('Unknown Type #' + T.type + ':' + T.object_type)
 							}

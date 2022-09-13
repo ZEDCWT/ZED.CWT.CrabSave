@@ -21,6 +21,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliBgmMD = WW.Tmpl(BiliBili,'bangumi/media/md',undefined),
 	BiliBiliBgmSS = WW.Tmpl(BiliBili,'bangumi/play/ss',undefined),
 	BiliBiliBgmEP = WW.Tmpl(BiliBili,'bangumi/play/ep',undefined),
+	BiliBiliMediaListFav = WW.Tmpl(BiliBili,'medialist/detail/ml',undefined),
 	// BiliBiliMyList = WW.Tmpl(BiliBili,'mylist/mylist-',undefined,'.js'),
 	BiliBiliAudio = BiliBili + 'audio/',
 	BiliBiliAudioURL = BiliBili + 'audio/au',
@@ -219,6 +220,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			case 4098 : // Movie 649924763705147506
 			case 4099 : // Series
 			case 4101 : // Series 658954502692405301
+			case 4310 : // Channel 670374429942874210
 				R = SolveAV(Card)
 				break
 			case 4200 : // Live
@@ -238,6 +240,17 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						Card.area_v2_parent_id && Card.area_v2_parent_id + ':' + Card.area_v2_parent_name,
 						Card.area_v2_id + ':' + Card.area_v2_name
 					]
+				}
+				break
+			case 4300 : // Fav
+				R =
+				{
+					Non : true,
+					ID : Card.id,
+					URL : BiliBiliMediaListFav(Card.id),
+					Title : Card.title,
+					Img : Card.cover,
+					More : Card.media_count
 				}
 				break
 			case 4302 : // Cheese
@@ -493,9 +506,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			View : function(ID,Page,Pref)
 			{
 				var
+				Head = {Cookie : 'DedeUserID=0'},
 				Find = function(H)
 				{
-					return O.API(BiliBiliAPISearch(H,ID,Page,'')).Map(function(B)
+					return O.API({URL : BiliBiliAPISearch(H,ID,Page,''),Head : Head}).Map(function(B)
 					{
 						B = Common(B)
 						return [B.numPages,B.numResults,WR.Map(function(V)
@@ -518,7 +532,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				ID = WC.UE(ID)
 				return WX.Merge
 				(
-					O.API(BiliBiliAPISearch(BiliBiliAPISearchTypeVideo,ID,++Page,Pref ? '&' + WC.QSS(Pref) : '')).Map(function(B)
+					O.API({URL : BiliBiliAPISearch(BiliBiliAPISearchTypeVideo,ID,++Page,Pref ? '&' + WC.QSS(Pref) : ''),Head : Head}).Map(function(B)
 					{
 						B = Common(B)
 						return [B.numPages,B.numResults,WR.MapU(function(V,F)
@@ -887,7 +901,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			})
 		},{
 			Name : 'Fav',
-			Judge : O.Num('Fav|FID'),
+			Judge : O.Num('Fav|FID|ML'),
 			Example : '61989503',
 			View : function(ID,Page)
 			{
@@ -1205,7 +1219,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							return WR.Map(function(B)
 							{
 								return {
-									ID : B.aid + '#' + B.cid,
+									ID : B.aid,
 									URL : BiliBiliBgmEP(B.id),
 									Img : B.cover,
 									Title : WR.Trim(V.title + ' | ' + B.title + ' ' + B.long_title),
