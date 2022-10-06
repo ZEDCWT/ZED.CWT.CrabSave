@@ -1051,7 +1051,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Example : '2',
 			View : function(ID,Page)
 			{
-				return (Page ? WX.Just([]) : O.API(BiliBiliAPISpaceInfo(ID)).FMap(function(UP)
+				return (Page ? WX.Just([]) : O.Req(BiliBiliAPISpaceInfo(ID)).FMap(function(UP)
 				{
 					UP = Common(UP)
 					return O.API(O.Head(BiliBiliAPISpaceNavNum(ID),'Referer',BiliBili)).Map(function(Nav)
@@ -1079,7 +1079,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					})
 				})).FMap(function(UP)
 				{
-					return O.API(BiliBiliAPISpaceUpload(ID,-~Page)).Map(function(V)
+					return O.Req(BiliBiliAPISpaceUpload(ID,-~Page)).Map(function(V)
 					{
 						V = Common(V)
 						return {
