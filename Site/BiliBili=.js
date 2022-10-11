@@ -16,8 +16,8 @@ BiliBiliAudioWebInfo = WW.Tmpl(BiliBiliAudioWeb,'song/info?sid=',undefined),
 BiliBiliAudioWebURL = WW.Tmpl(BiliBiliAudioWeb,'url?sid=',undefined,'&privilege=2&quality=2'),
 BiliBiliAPI = 'https://api.bilibili.com/',
 BiliBiliAPIWebView = WW.Tmpl(BiliBiliAPI,'x/web-interface/view?aid=',undefined),
-BiliBiliAPIPlayURL = WW.Tmpl(BiliBiliAPI,'x/player/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=16&fourk=1'),
-BiliBiliAPIPlayURLPGC = WW.Tmpl(BiliBiliAPI,'pgc/player/web/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=16&fourk=1'),
+BiliBiliAPIPlayURL = WW.Tmpl(BiliBiliAPI,'x/player/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=4048&fourk=1'),
+BiliBiliAPIPlayURLPGC = WW.Tmpl(BiliBiliAPI,'pgc/player/web/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=4048&fourk=1'),
 BiliBiliAPIPlayURLList =
 [
 	BiliBiliAPIPlayURL,
@@ -27,7 +27,7 @@ BiliBiliAPIPlayerSo = WW.Tmpl(BiliBiliAPI,'x/player.so?aid=',undefined,'&id=cid:
 BiliBiliAPISteinNode = WW.Tmpl(BiliBiliAPI,'x/stein/nodeinfo?aid=',undefined,'&graph_version=',undefined,'&node_id=',undefined),
 BiliBiliAPIPUGV = BiliBiliAPI + 'pugv/',
 BiliBiliAPIPUGVViewSeasonByEP = WW.Tmpl(BiliBiliAPIPUGV,'view/web/season?ep_id=',undefined),
-BiliBiliAPIPUGVPlayURL = WW.Tmpl(BiliBiliAPIPUGV,'player/web/playurl?ep_id=',undefined,'&qn=',undefined,'&fnver=0&fnval=80&fourk=1'),
+BiliBiliAPIPUGVPlayURL = WW.Tmpl(BiliBiliAPIPUGV,'player/web/playurl?ep_id=',undefined,'&qn=',undefined,'&fnver=0&fnval=4048&fourk=1'),
 BiliBiliVCAPI = 'https://api.vc.bilibili.com/',
 // BiliBiliVCAPIDetail = WW.Tmpl(BiliBiliVCAPI,'clip/v1/video/detail?video_id=',undefined,'&need_playurl=1'),
 BiliBiliVCAPIDynamicAPIRoot = BiliBiliVCAPI + 'dynamic_svr/v1/dynamic_svr/',
@@ -229,12 +229,12 @@ module.exports = O =>
 							})
 							if (T.video)
 							{
-								U.URL.push(O.Best('bandwidth',T.video).base_url)
+								U.URL.push(O.Best('id',T.video).base_url)
 								U.Ext.push('.mp4')
 							}
 							if (T.audio)
 							{
-								U.URL.push(O.Best('bandwidth',T.audio).base_url)
+								U.URL.push(O.Best('id',T.audio).base_url)
 								U.Ext.push('.mp3')
 							}
 						}
@@ -346,14 +346,25 @@ module.exports = O =>
 									URL : [],
 									Ext : []
 								}
+								/*
+									Actually, videos may have higher bandwidth with lower resolution
+									So let us just trust that they arrange the quality by id in order
+									av816470741
+									{id : 120,bandwidth : 4732045,codecs : 'avc1.640034',width : 3840,height : 2160}
+									{id : 116,bandwidth : 5237452,codecs : 'avc1.640032',width : 1920,height : 1080}
+									{id : 80,bandwidth : 2625599,codecs : 'avc1.640032',width : 1920,height : 1080}
+									{id : 64,bandwidth : 1755296,codecs : 'avc1.640028',width : 1280,height : 720}
+									{id : 32,bandwidth : 789775,codecs : 'avc1.64001F',width : 852,height : 480}
+									{id : 16,bandwidth : 354406,codecs : 'avc1.64001E',width : 640,height : 360}
+								*/
 								if (T.video)
 								{
-									U.URL.push(O.Best('bandwidth',T.video).baseUrl)
+									U.URL.push(O.Best('id',T.video).baseUrl)
 									U.Ext.push('.mp4')
 								}
 								if (T.audio)
 								{
-									U.URL.push(O.Best('bandwidth',T.audio).baseUrl)
+									U.URL.push(O.Best('id',T.audio).baseUrl)
 									U.Ext.push('.mp3')
 								}
 							}

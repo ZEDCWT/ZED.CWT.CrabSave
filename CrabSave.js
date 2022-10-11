@@ -595,7 +595,7 @@ module.exports = Option =>
 						var P;
 						if (!WR.Has(Data.Med,DB.Site))
 							WW.Throw('Bad Method')
-						P = SolveJSON(Data.Inp)
+						P = SolveJSON(Data.JSON)
 						return P ? DB.Site[Data.Med](...P) : WW.Throw('Bad Param')
 					})
 					.Now
