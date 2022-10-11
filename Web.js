@@ -11,83 +11,77 @@
 	Top = Wish.Top,
 	RegExp = Top.RegExp,
 	TopSet = Top.Set,
+	CrabSave = Top.CrabSave,
 
-	ActionWebTaskNew = 'TaskN',
-	ActionWebTaskOverview = 'TaskO',
-	ActionWebTaskPlay = 'TaskP',
-	ActionWebTaskPause = 'TaskU',
-	ActionWebTaskRemove = 'TaskD',
-	ActionWebTaskSize = 'TaskS',
-	ActionWebTaskRenew = 'TaskW',
-	ActionWebTaskTitle = 'TaskT',
-	ActionWebTaskErr = 'TaskE',
-	ActionWebTaskHist = 'TaskH',
-	ActionWebShortCut = 'SC',
-	ActionWebSiteDB = 'SiteDB',
-	ActionWebTick = 'Tick',
-	ActionWebError = 'Err',
-	ActionAuthHello = 'Hell',
-	ActionAuthToken = 'Toke',
-	ActionAuthCookie = 'Coke',
-	ActionAuthShortCut = 'SC',
-	ActionAuthSetting = 'Set',
-	ActionAuthAPI = 'Api',
-	ActionAuthTaskNew = 'TaskN',
-	ActionAuthTaskInfo = 'TaskI',
-	ActionAuthTaskPlay = 'TaskP',
-	ActionAuthTaskPause = 'TaskU',
-	ActionAuthTaskRemove = 'TaskD',
-	ActionAuthDownFile = 'DownF',
-	ActionAuthDownPlay = 'DownP',
-	ActionAuthDownConn = 'DownC',
-	ActionAuthDownPath = 'DownA',
-	ActionAuthDownHas = 'DownH',
-	ActionAuthDownTake = 'DownT',
-	ActionAuthDownDone = 'DownD',
-	ActionAuthInspect = 'Ins',
-	ActionAuthReload = 'Red',
-	ActionAuthVacuum = 'Vac',
-	ActionAuthErr = 'RErr',
-	ActionAuthErrT = 'RErrT',
-
-	PartSpecialType =
+	Conf = {/*{Conf}*/},
+	ConfRetry = 1E4,
+	ConfPadding = 20,
+	ConfPaddingHalf = ConfPadding / 2,
+	ConfPaddingQuarter = ConfPaddingHalf / 2,
+	ConfSizeHeader = 40,
+	ConfSizeFooter = 40,
+	ConfSizeCardWidth = 200,
+	ConfPageSize = 30,
+	ConfTaskButtonSize = 80,
+	ConfDBPageSize = 4096,
+	ConfCacheLimit = 128,
+	ConfTickInterval = 500,
+	ConfDebugClick = 10,
+	ConfDebugInterval = 2000,
+	ConfDebugLimit = 2048,
+	ConfDebugLimitObj = 128,
+	ConfPartSpecialType =
 	{
 		'-8000' : 'Meta',
 		'-7999' : 'Cover'
 	},
-	PartSpecialTypeLang =
+	ConfPartSpecialTypeLang =
 	{
 		Meta : 'GenMeta',
 		Cover : 'GenCover'
 	},
+	ConfURLSite = 'S/',
+	ConfURLAPI = 'R/',
+	ConfURLReq = 'U?',
 
-	Retry = 1E4,
-	Padding = 20,
-	PaddingHalf = Padding / 2,
-	PaddingQuarter = PaddingHalf / 2,
-	SizeHeader = 40,
-	SizeFooter = 40,
-	SizeCardWidth = 200,
-	PageSize = 30,
-	TaskButtonSize = 80,
-	CacheLimit = 128,
-	TickInterval = 500,
-	DebugClick = 10,
-	DebugInterval = 2000,
-	DebugLimit = 2048,
-	DebugLimitReq = 32,
+	Proto = {/*{Proto}*/},
+	ProtoInv = WR.Inv(Proto),
+	ProtoJar = WC.PBJ().S(WC.B91P({/*{ProtoPB}*/})),
+	ProtoEnc = function(ProtoID,Data){return Data ? ProtoJar.E(ProtoInv[ProtoID],Data) : []},
+	ProtoDec = function(ProtoID,Data){return ProtoJar.D(ProtoInv[ProtoID],Data)},
+	ProtoIsAuth = WR.Where(WR.Test(/^Auth/),ProtoInv),
+	ProtoMsgTypePlain = 0,
+	ProtoMsgTypeAuth = 1,
+	ProtoMsgTypeBrief = 2,
+	ProtoMsgHeadBuf = WC.Buff(1024),
+	ProtoMsgCache,ProtoMsgCacheID,ProtoMsgCacheData,
+	ProtoMsgMake = function(ProtoID,Data)
+	{
+		var T,F;
+		if (ProtoMsgCacheID !== ProtoID || ProtoMsgCacheData !== Data)
+		{
+			ProtoMsgCacheID = ProtoID
+			ProtoMsgCacheData = Data
+			Data = ProtoEnc(ProtoID,Data)
+			F = 0
+			ProtoMsgHeadBuf[F++] = ProtoMsgTypePlain
+			for (T = ProtoID;T = (T - (ProtoMsgHeadBuf[F++] = T % 128)) / 128;)
+				ProtoMsgHeadBuf[F - 1] |= 128
+			for (T = ProtoID + Data.length;T = (T - (ProtoMsgHeadBuf[F++] = T % 128)) / 128;)
+				ProtoMsgHeadBuf[F - 1] |= 128
+			ProtoMsgCache = WC.Con([ProtoMsgHeadBuf.subarray(0,F),Data])
+		}
+		return ProtoMsgCache
+	},
 
-	URLSite = 'Site/',
-	URLAPI = 'Api/',
-
-	Lang = Top.Lang,
+	Lang = {/*{Lang}*/},
 	LangDefault = Lang.EN,
 	LangNow = LangDefault,
 	LangTo = function(Q)
 	{
 		LangNow = WR.Has(Q,Lang) ? Lang[Q] : LangNow
 	},
-	SA = /**@type {<U extends keyof Lang['EN']>(Q : U,S? : any[] | {[K : string] : any}) => string}*/ function(Q,S)
+	LangSolve = /**@type {<U extends keyof _$_Lang['EN']>(Q : U,S? : any[]) => string}*/ function(Q,S)
 	{
 		WW.IsArr(Q) && (S = Q.slice(1),Q = Q[0])
 		return WR.Has(Q,LangNow) ? S ? WW.Fmt(LangNow[Q],S,'~') : LangNow[Q] :
@@ -105,7 +99,6 @@
 		return '{ERR} ' + E
 	},
 	DTS = function(Q){return WW.StrDate(Q,WW.DateColS)},
-	NumberZip = WC.Rad(WR.Map(WR.CHR,WR.Range(33,127))),
 	SolveURL = function(Q,S)
 	{
 		if (WR.StartW('//',Q))
@@ -158,24 +151,25 @@
 	},
 	InpNoRel = function(Q)
 	{
-		return [SA('GenNoRel'),WV.X(Q,'span')]
+		return [LangSolve('GenNoRel'),WV.X(Q,'span')]
+	},
+	MakeAPI = function(V)
+	{
+		var Param = '';
+		if (WW.IsObj(V))
+		{
+			Param = '=' + WC.B64S(WC.OTJ(WR.Omit(['URL'],V))).replace(/=*$/,'=')
+			V = V.URL
+		}
+		return ConfURLAPI + Param + V.replace(/^https:\/\//,'')
 	},
 	MakeImgURL = function(V)
 	{
-		return WW.IsObj(V) ? URLAPI + '~' + WC.UE(WC.OTJ(V)) :
-			Setting.ProxyView ? URLAPI + '~' + SolveURL(V).replace(/\/\/+/g,WC.UE) :
-			SolveURL(V)
+		return WW.IsObj(V) || Setting.ProxyView ? MakeAPI(V) : SolveURL(V)
 	},
 
-	CrabSave = Top.CrabSave,
-
-	OnUpdateBar = function()
-	{
-		WV.Con(RToolbar,RTab.Key()[ToolbarKey])
-		WV.Con(RStatus,RTab.Key()[StatusKey])
-	},
-	Rainbow = WV.Div(2,1,null,[0,SizeFooter]),
-	RMain = WV.Div(2,2,['10%'],[SizeHeader,'100%'],true),
+	Rainbow = WV.Div(2,1,null,[0,ConfSizeFooter]),
+	RMain = WV.Div(2,2,['10%'],[ConfSizeHeader,'100%'],true),
 	RToolbar = WV.VM(RMain[2]),
 	OnUpdateBar = function()
 	{
@@ -265,9 +259,39 @@
 	RStatus = WV.Rock(),
 	RSpeed = WV.Rock(),
 
-	IDCombine = function(Site,ID)
+	DBBriefKeyCache,DBBriefKeyCacheTask,
+	DBBriefKey = function(Task)
 	{
-		return (WW.IsObj(Site) ? Site.ID : Site) + '|' + ID
+		return DBBriefKeyCacheTask === (DBBriefKeyCacheTask = Task) ?
+			DBBriefKeyCache :
+			DBBriefKeyCache = Task.Site + '|' + Task.ID
+	},
+	DBBriefVer = 0,
+	DBBriefHot = [],
+	DBBriefHist = [],
+	DBBriefDiff = WW.Bus(),
+	DBBriefDiffQueue = [],
+	DBBriefDiffState,
+	DBBriefDiffForward = function(Data)
+	{
+		if (DBBriefDiffState)
+			if (DBBriefDiffState < Data.Ver)
+			{
+				DBBriefDiffState = DBBriefVer = Data.Ver
+				DBBriefDiff.Emit(WSProtoCurrentID,Data)
+			}
+		else DBBriefDiffQueue.push(Data,WSProtoCurrentID)
+	},
+	DBBriefDiffRelease = function(F)
+	{
+		DBBriefDiffState = F
+		for (F = 0;F < DBBriefDiffQueue.length;F += 2)
+			if (DBBriefDiffState < DBBriefDiffQueue[F].Ver)
+			{
+				DBBriefDiffState = DBBriefVer = DBBriefDiffQueue[F].Ver
+				DBBriefDiff.Emit(DBBriefDiffQueue[1 + F],DBBriefDiffQueue[F])
+			}
+		DBBriefDiffQueue.length = 0
 	},
 	BrowserUpdate,
 	ColdCount = MakeCount(),
@@ -279,216 +303,170 @@
 	IsHot,
 	IsHistory,
 
-	Online,
-	WebSocketRetry = 0,
-	WebSocketSince = 0,
-	WebSocketNotConnectedNoti = Noti.O(),
-	WebSocketNotConnected = function(){WebSocketNotConnectedNoti(SA('ErrOff'))},
-	WebSocketNotAuthed,WebSocketNotAuthedNoti = Noti.O(),
-	WebSocketSend = WebSocketNotConnected,
-	WebSocketSendAuth = WebSocketNotConnected,
-	WebSocketSendAuthPrecheck = function()
+	WSSolveJSON = function(Q)
 	{
-		return Cipher || WebSocketNotAuthed()
+		var R = WW.Try(WC.JTO,[Q]);
+		return WW.TryE === R ?
+			DebugLog('JSON',Q) :
+			R
 	},
-	WebSocketNoti = Noti.O(),
+	WSActPlain,
+	WSActAuth,
+	WSOnline,WSOnlineAt,
+	WSAuthInited,WSAuthSeed,
+	WSCipher,WSDecipher,
+	WSProtoCurrentID,
+	WSRetry = 0,
+	WSEndSince = 0,
+	WSProxyMap = {},
+	WSNotConnectedNoti = Noti.O(),
+	WSNotConnected = function(){WSNotConnectedNoti(LangSolve('ErrOff'))},
+	WSNotAuthedNoti = Noti.O(),
+	WSNotAuthed,
+	WSSend = WSNotConnected,
+	WSAuthPrecheck = function(){return WSCipher || WSNotAuthed()},
+	WSNoti = Noti.O(),
+	WSTick = WW.To(3E5,function(){WSSend(Proto.Tick)},true).F(),
 	TokenStepA = function(Q){return WC.HSHA512(Q,'j!ui+Ju8?j')},
 	TokenStepB = function(Q){return WC.HSHA512('!(|[.:O9;~',Q)},
-	Cipher,Decipher,
-	WebSocketTick = WW.To(3E5,function()
-	{
-		WebSocketSend([ActionWebTick])
-	},true).F(),
 	WS = WB.WS(
 	{
 		Rect : false,
 		Beg : function()
 		{
-			WebSocketRetry && WebSocketNoti(SA('SocConn') + ' ' + SA('SocRetry') + ' : ' + WebSocketRetry)
+			WSRetry && WSNoti(LangSolve('SocConn') + ' ' + LangSolve('SocRetry') + ' : ' + WSRetry)
 		},
 		Hsk : function()
 		{
-			Online = true
+			WSOnline = true
+			WSOnlineAt = WW.Now()
 			DebugLog('Online')
-			WebSocketRetry && WebSocketNoti(SA('SocOn'))
-			WebSocketNoti(false)
-			WebSocketRetry = 0
-			WebSocketSend = function(Q)
+			WSRetry && WSNoti(LangSolve('SocOn'))
+			WSNoti(false)
+			WSRetry = 0
+			WSSend = function(ID,Data)
 			{
-				WS.D(WC.OTJ(Q))
+				var R;
+				if (WR.Has(ID,ProtoIsAuth))
+				{
+					if (!WSCipher)
+						return WSNotAuthed()
+					R = ProtoMsgMake(ID,Data)
+					R = WC.Con([[ProtoMsgTypeAuth],WSCipher.D(WC.Slice(R,1))])
+				}
+				else R = ProtoMsgMake(ID,Data)
+				WS.D(R)
+				if (Proto.DBBrief !== ID &&
+					Proto.Tick !== ID)
+					DebugProto.unshift([true,ProtoInv[ID],Data]) < ConfDebugLimitObj || DebugProto.pop()
 				return true
 			}
-			WebSocketSendAuth = function(Q)
-			{
-				if (Cipher)
-				{
-					Q = Cipher.D(WC.OTJ([WW.Key(WW.Rnd(20,40)),Q,WW.Key(WW.Rnd(20,40))]))
-					WS.D(Q)
-					return true
-				}
-				WebSocketNotAuthed()
-			}
-			WSOnOnline.D()
-			WebSocketNotConnectedNoti(false)
-			WebSocketTick.D()
+			WSNotConnectedNoti(false)
+			WSTick.D()
+			WSSend(Proto.DBBrief,{Ver : DBBriefVer,Limit : ConfDBPageSize})
 		},
-		Str : function(Q,K,O)
+		Bin : function(Q)
 		{
-			if (10 === Q.charCodeAt(0))
+			var
+			Type = Q[0],
+			Check = 0,
+			UVM = 1,
+			T,F = 1;
+
+			if (ProtoMsgTypeBrief === Type)
 			{
 				ProgressMap = {}
-				WR.Each(function(V)
+				for (;F < Q.length;)
 				{
-					if (V)
-					{
-						V = V.split(' ')
-						ProgressMap[NumberZip.P(V[0])] = [NumberZip.P(V[1]),NumberZip.P(V[2])]
-					}
-				},Q.split('\n'))
+					for (UVM = 1,Type = 0;
+						Type += UVM * (127 & Q[F]),
+						127 < Q[F++]
+					;) UVM *= 128
+					for (UVM = 1,Check = 0;
+						Check += UVM * (127 & Q[F]),
+						127 < Q[F++]
+					;) UVM *= 128
+					for (UVM = 1,T = 0;
+						T += UVM * (127 & Q[F]),
+						127 < Q[F++]
+					;) UVM *= 128
+					ProgressMap[Type] = [Check,T]
+				}
 				WSOnProgress()
-				WebSocketSend([ActionWebTick])
+				WSSend(Proto.Tick)
 				return
 			}
-			DebugLog('Web',Q)
-			Q = WC.JTOO(Q)
-			K = Q[1]
-			O = Q[2]
-			switch (Q[0])
+
+			if (ProtoMsgTypeAuth === Type)
 			{
-				case ActionWebShortCut :
-					WSOnSC(K)
-					break
-
-				case ActionWebSiteDB :
-					WSOnDBKey &&
-						K === WSOnDBKey[0] &&
-						O === WSOnDBKey[1] &&
-						(Q[3] ? WSOnDB.U(Q[3]) : WSOnDB.E(Q[4]))
-					break
-
-				case ActionWebTaskNew :
-				case ActionWebTaskPlay :
-				case ActionWebTaskPause :
-				case ActionWebTaskRemove :
-					WSOnDiffHot.D(Q)
-					WSOnDiffHist.D(Q)
-					break
-				case ActionWebTaskHist :
-					WSOnDiffHot.D(Q)
-					DetailIs(O[0]) && DetailUpdate.F(O[1])
-					break
-				case ActionWebTaskOverview :
-					TaskOverviewUpdate(K,O)
-					break
-				case ActionWebTaskRenew :
-					WSOnRenew(K,O)
-					break
-				case ActionWebTaskTitle :
-					WSOnTitle(K,O)
-					break
-				case ActionWebTaskSize :
-					WSOnSize(K,O)
-					break
-				case ActionWebTaskErr :
-					WSOnTaskErr(K,O)
-					break
-
-				case ActionWebError :
-					Noti.S([SA('Err'),' | ',K,' | ',SA(O)])
+				Q = WSDecipher.D(WC.Slice(Q,1))
+				F = 0
 			}
-		},
-		Bin : function(Q,K,O)
-		{
-			Q = WC.JTOO(WC.U16S(Decipher.D(Q)))
-			if (!WW.IsArr(Q) || !WW.IsArr(Q = Q[1])) return WS.F()
-			DebugLog('Auth',Q)
-			K = Q[1]
-			O = Q[2]
-			switch (Q[0])
+			else if (ProtoMsgTypePlain !== Type)
 			{
-				case ActionAuthHello :
-					NotiAuth(SA('AutAuthed'))
-					NotiAuth(false)
-					WebSocketNotAuthedNoti(false)
-					break
-
-				case ActionAuthToken :
-					Noti.S(SA(K))
-					break
-				case ActionAuthCookie :
-					WSOnCookie(K,O)
-					break
-
-				case ActionAuthSetting :
-					WSOnSetting(K)
-					break
-
-				case ActionAuthAPI :
-					WR.Has(K,WSOnAPI) && WSOnAPI[K](Q)
-					break
-
-				case ActionAuthTaskInfo :
-					TaskFullInfoUpdate(K,O)
-					break
-
-				case ActionAuthDownFile :
-				case ActionAuthDownPlay :
-				case ActionAuthDownConn :
-				case ActionAuthDownPath :
-				case ActionAuthDownHas :
-				case ActionAuthDownTake :
-				case ActionAuthDownDone :
-					DetailIs(K[0]) && DetailUpdate.U(Q[0].slice(-1),K[1],K[2],O)
-					break
-
-				case ActionAuthInspect :
-					console.log('Inspector',K)
-					break
-				case ActionAuthVacuum :
-					WR.Has('Err',O) ?
-						console.log('Vacuum',WW.StrMS(K),WR.ToSize(O.From),O.Err) :
-						console.log('Vacuum',WW.StrMS(K),WR.ToSize(O.From),WR.ToSize(O.To),WR.ToSize(O.To - O.From))
-					break
-
-				case ActionAuthErr :
-					WSOnErr(K,O)
-					break
-				case ActionAuthErrT :
-					WSOnErrT(K,O)
-					break
+				DebugLog('Proto','Bad Message Type ' + Type)
+				return WS.F()
 			}
+			for (WSProtoCurrentID = 0;
+				WSProtoCurrentID += UVM * (127 & Q[F]),
+				127 < Q[F++]
+			;) UVM *= 128
+			for (UVM = 1;
+				Check += UVM * (127 & Q[F]),
+				127 < Q[F++]
+			;) UVM *= 128
+			if (WSProtoCurrentID + Q.length - F - Check)
+			{
+				DebugLog('Proto','Bad Check ' + WC.OTJ([WSProtoCurrentID,Q.length,F,Check]))
+				WS.F()
+			}
+			else if (Type = (ProtoMsgTypeAuth === Type ? WSActAuth : WSActPlain)[WSProtoCurrentID])
+				try
+				{
+					Q = ProtoDec(WSProtoCurrentID,WC.Slice(Q,F))
+					if (Proto.DBBrief !== WSProtoCurrentID &&
+						Proto.AuthCookie !== WSProtoCurrentID)
+					{
+						DebugLog('Proto.' + ProtoInv[WSProtoCurrentID],Q)
+						DebugProto.unshift([false,ProtoInv[WSProtoCurrentID],Q]) < ConfDebugLimitObj || DebugProto.pop()
+					}
+					Type(Q)
+				}
+				catch(E){DebugLog('Proto.' + ProtoInv[WSProtoCurrentID],ErrorS(E))}
 		},
 		End : function()
 		{
-			WebSocketSend = WebSocketNotConnected
-			WebSocketSendAuth = WebSocketNotConnected
-			Cipher = Decipher = false
+			DBBriefDiffQueue.length = 0
+			DBBriefHot = []
+			DBBriefHist = []
+			WSSend = WSNotConnected
+			WSAuthInited =
+			WSCipher = WSDecipher = false
 			CookieMap = {}
-			DebugLog('Offline',WebSocketRetry)
-			if (Online)
-				WebSocketSince = WW.Now()
+			DebugLog('Offline',WSRetry)
+			if (WSOnline)
+				WSEndSince = WW.Now()
 			else
-				WebSocketNoti(SA('SocOff',[WW.StrDate(WebSocketSince),WebSocketRetry++]))
+				WSNoti(LangSolve('SocOff',[WW.StrDate(WSEndSince),WSRetry++]))
 			NotiAuth(false)
 			WSOnOffline.D()
-			WebSocketTick.F()
-			WW.To(Online ? 0 : Retry,WS.C,Online = false)
+			WSTick.F()
+			WW.To(WSOnline ? 0 : ConfRetry,WS.C,WSOnline = false)
 		}
 	}),
 	WSOnProgress,
-	WSOnAPI = {},
 	WSOnDBKey,
 	WSOnDB,
 	WSOnAuthing = WW.BusS(),
-	WSOnOnline = WW.BusS(),
 	WSOnOffline = WW.BusS(),
-	WSOnDiffHot,
-	WSOnDiffHist,
+	WSOnDBBriefHot,
+	WSOnDBBriefHist,
+	WSOnHist,
 	WSOnRenew,
 	WSOnTitle,
 	WSOnSize,
 	WSOnTaskErr,
-	WSOnErrT,
+	WSOnErr,
 	WSOnCookie,
 	WSOnSC,
 	WSOnSetting,
@@ -516,7 +494,6 @@
 			}
 		}
 	},
-
 	SiteAll = [],
 	SiteMap = {},
 	SiteBegin,SiteCount = 0,SiteTotal,
@@ -525,7 +502,7 @@
 	SiteOnNoti = function()
 	{
 		WW.Now() - SiteBegin < 1000 ||
-			SiteNoti([SA('SocSite') + ' ',SiteCount,' / ',SiteTotal,' ',(WW.Now() - SiteBegin),'ms'])
+			SiteNoti([LangSolve('SocSite') + ' ',SiteCount,' / ',SiteTotal,' ',(WW.Now() - SiteBegin),'ms'])
 		SiteCount < SiteTotal ||
 		(
 			WR.Del('Site',CrabSave),
@@ -536,78 +513,9 @@
 	SiteSolveName = function(Q,S)
 	{
 		S = WW.IsObj(Q) ? Q : SiteMap[Q]
-		return S ? S.Name || S.ID : SA('GenUnknown',[Q])
+		return S ? S.Name || S.ID : LangSolve('GenUnknown',[Q])
 	},
 
-	TaskBriefRetry = function(H)
-	{
-		return function(E)
-		{
-			return Online ?
-				E.Map(function(E,F)
-				{
-					Noti.S([SA('LstBriefErr',[H,++F]),' ',ErrorS(E)])
-				}).Delay(Retry).Map(function()
-				{
-					Noti.S(SA('LstBriefRead',[H]))
-				}) :
-				WX.Empty
-		}
-	},
-	TaskBriefSolve = function(S,Q,P,H,N)
-	{
-		var
-		V = [],F = 0,G,
-		SiteMap = {};
-		F = Q.indexOf('\n')
-		if (!Q) return
-		G = +Q.slice(0,F)
-		if (G !== G) return
-		P(G)
-		for (G = 0;++F < Q.length;)
-		{
-			V[G] = Q.slice(F,~(F = Q.indexOf('\n',F)) ? F : F = Q.length)
-			if (++G === S)
-			{
-				if (~V[1].indexOf(' '))
-				{
-					G = V[1].split(' ')
-					SiteMap[G[0]] = G[1]
-					V[1] = G[1]
-				}
-				else V[1] = SiteMap[V[1]]
-				H(V)
-				G = 0
-			}
-		}
-		N()
-	},
-	TaskDiff = function(H)
-	{
-		var
-		State,
-		Queue = [];
-		WSOnOffline.R(function()
-		{
-			State =
-			Queue.length = 0
-		})
-		return {
-			S : function(V)
-			{
-				State = V
-				for (V = 0;V < Queue.length;V += 3)
-					State < Queue[V] && H(State = Queue[V],Queue[-~V],Queue[2 + V])
-				Queue.length = 0
-			},
-			D : function(Q)
-			{
-				State ?
-					State < Q[1] && H(State = Q[1],Q[0],Q[2]) :
-					Queue.push(Q[1],Q[0],Q[2])
-			}
-		}
-	},
 	TaskOverviewCache = {},
 	TaskOverviewList = [],
 	TaskOverviewRequiring = {},
@@ -619,32 +527,32 @@
 			WX.Provider(function(O)
 			{
 				WR.Has(Row,TaskOverviewRequiring) &&
-					TaskOverviewRequiring[Row].E(SA('LstTwice',[Row]))
-				if (WebSocketSend([ActionWebTaskOverview,Row]))
+					TaskOverviewRequiring[Row].E(LangSolve('LstTwice',[Row]))
+				if (WSSend(Proto.TaskOverview,{Row : Row}))
 				{
 					TaskOverviewRequiring[Row] = O
 				}
-				else O.E(SA('ErrOff'))
+				else O.E(LangSolve('ErrOff'))
 				return function()
 				{
 					WR.Del(Row,TaskOverviewRequiring)
 				}
 			})
 	},
-	TaskOverviewUpdate = function(Row,Q)
+	TaskOverviewUpdate = function(Data)
 	{
-		if (WW.IsObj(Q))
+		if (Data.Task)
 		{
-			TaskOverviewList.push(Row)
-			if (CacheLimit < TaskOverviewList.length)
+			TaskOverviewList.push(Data.Row)
+			if (ConfCacheLimit < TaskOverviewList.length)
 				WR.Del(TaskOverviewList.shift(),TaskOverviewCache)
-			TaskOverviewCache[Row] = Q
-			if (WR.Has(Row,TaskOverviewRequiring))
-				TaskOverviewRequiring[Row].D(Q).F()
+			TaskOverviewCache[Data.Row] = Data
+			if (WR.Has(Data.Row,TaskOverviewRequiring))
+				TaskOverviewRequiring[Data.Row].D(Data.Task).F()
 		}
 		else
-			if (WR.Has(Row,TaskOverviewRequiring))
-				TaskOverviewRequiring[Row].E(Q)
+			if (WR.Has(Data.Row,TaskOverviewRequiring))
+				TaskOverviewRequiring[Data.Row].E(Data.Err)
 	},
 	TaskRenewing = {},
 	TaskFullInfoRow,
@@ -653,44 +561,44 @@
 	{
 		return WX.Provider(function(O)
 		{
-			TaskFullInfoO && TaskFullInfoO.E(SA('DetCancel'))
+			TaskFullInfoO && TaskFullInfoO.E(LangSolve('DetCancel'))
 			TaskFullInfoO = false
-			if (WebSocketSendAuth([ActionAuthTaskInfo,Row]))
+			if (WSSend(Proto.AuthTaskInfo,{Row : Row}))
 			{
 				TaskFullInfoRow = Row
 				TaskFullInfoO = O
 			}
-			else O.E(SA(Online ? 'ErrNoAuth' : 'ErrOff'))
+			else O.E(LangSolve(WSOnline ? 'ErrNoAuth' : 'ErrOff'))
 		})
 	},
-	TaskFullInfoUpdate = function(Row,Q)
+	TaskFullInfoUpdate = function(Data)
 	{
-		if (TaskFullInfoRow === Row && TaskFullInfoO)
+		if (TaskFullInfoRow === Data.Row && TaskFullInfoO)
 		{
-			if (WW.IsObj(Q))
-				TaskFullInfoO.D(Q)
+			if (Data.Task)
+				TaskFullInfoO.D(Data.Task)
 			else
 			{
-				TaskFullInfoO.E(Q)
+				TaskFullInfoO.E(Data.Err)
 				TaskFullInfoO = false
 			}
 		}
 	},
 
 	RecordErrList = [],
-	WSOnErr = function(Q,S)
+	WSOnErrFile = function(Data)
 	{
-		WW.IsArr(Q) ?
-			WR.Each(function(V)
-			{
-				RecordErrList.push(V)
-			},Q,RecordErrList.length = 0) :
-			RecordErrList.push([Q,S])
+		if (Data.JSON)
+		{
+			if (Data = WSSolveJSON(Data.JSON))
+				CrabSave.Err = RecordErrList = Data
+		}
+		else RecordErrList.push(Data)
 	},
 
 	OverlayOn,
 	OverlayEnd = WX.EndL(),
-	MakeOverlay = function(H)
+	OverlayMake = function(H)
 	{
 		var T = WV.VM(WV.Clr(ROverlay));
 		OverlayOn = true
@@ -723,15 +631,15 @@
 		Has = Has || 0
 		return WW.Fmt('[`0`%] `1` / `2`',
 		[
-			null == Size ?
+			false === Size ?
 				'-' :
 				Has < Size ?
 					WR.ToFix(2,100 * Has / Size) :
 					100,
-			null == Size ?
+			false === Size ?
 				'-' :
 				WR.ToSize(Has),
-			null == Size ?
+			false === Size ?
 				'-' :
 				WR.ToSize(Size)
 		])
@@ -748,21 +656,25 @@
 	},
 	DetailIs = function(Row){return DetailUpdate && Row === DetailUpdate.O},
 	DetailUpdate,
-	MakeDetail = function(Q,S,E)
+	DetailUpdateForward = function(Data)
 	{
-		MakeOverlay(function(Y)
+		DetailIs(Data.Row) && DetailUpdate.U(Data)
+	},
+	DetailMake = function(/**@type {CrabSaveNS.TaskBriefHist}*/ Q,S,E)
+	{
+		OverlayMake(function(Y)
 		{
 			var
-			Site = SiteMap[Q.S],
+			Site = SiteMap[Q.Site],
 			PartMap = {},
 			Header = WV.Rock(ClassHeader),
 			Title = WV.Rock(),
 			SiteID = WV.X(
 			[
-				SiteSolveName(Q.S),' ',
+				SiteSolveName(Q.Site),' ',
 				Site && Site.IDView ?
-					Site.IDView(Q.I) :
-					Q.I
+					Site.IDView(Q.ID) :
+					Q.ID
 			]),
 			Detail = WV.Rock(),
 			Part = WV.Rock(),
@@ -770,38 +682,38 @@
 			Err = WV.Rock(WV.FmtW + ' ' + WV.None),
 			Line =
 			[
-				[SA('DetRow'),WR.Const(Q.O)],
-				[SA('DetBirth'),function(S)
+				[LangSolve('DetRow'),WR.Const(Q.Row)],
+				[LangSolve('DetBirth'),function(S)
 				{
-					return null != S.Birth &&
+					return WR.Has('Birth',S) &&
 						WW.StrDate(S.Birth)
 				}],
-				[SA('DetUp'),function(S)
+				[LangSolve('DetUp'),function(S)
 				{
 					return S.UP
 				}],
-				[SA('DetDate'),function(S)
+				[LangSolve('DetDate'),function(S)
 				{
-					return null != S.UPAt &&
+					return WR.Has('UPAt',S) &&
 						WW.StrDate(S.UPAt)
 				}],
-				[SA('DetPartC'),function(S)
+				[LangSolve('DetPartC'),function(S)
 				{
 					return S.Part && S.Part.length
 				}],
-				[SA('DetFileC'),function(S)
+				[LangSolve('DetFileC'),function(S)
 				{
 					return S.File
 				}],
-				[SA('DetRoot'),function(S)
+				[LangSolve('DetRoot'),function(S)
 				{
 					return S.Root
 				}],
-				[SA('DetDone'),function(S)
+				[LangSolve('DetDone'),function(S)
 				{
-					return null != S.Done &&
+					return S.Done &&
 						WW.StrDate(S.Done) +
-							(null == Birth ? '' :
+							(!Birth ? '' :
 								' (' +
 								WW.StrMS(S.Done - Birth) +
 								(Down ?
@@ -857,11 +769,11 @@
 						Prog = WV.Fmt(
 						[
 							'','G',
-							'. ' + SA('DetRun') + ' ','P',
-							'. ' + SA('DetFirst') + ' ','C',
-							'\n' + SA('DetTake') + ' ','T',
-							'. ' + SA('DetAvg') + ' ','V',
-							'\n' + SA('DetDone') + ' ','D',
+							'. ' + LangSolve('DetRun') + ' ','P',
+							'. ' + LangSolve('DetFirst') + ' ','C',
+							'\n' + LangSolve('DetTake') + ' ','T',
+							'. ' + LangSolve('DetAvg') + ' ','V',
+							'\n' + LangSolve('DetDone') + ' ','D',
 						]);
 						if (!PartList[V.Part])
 							PartList[V.Part] = []
@@ -869,9 +781,9 @@
 						{
 							WV.Ap(WV.Con(WV.Rock(),
 							[
-								MakeHigh(SA('DetPart') + ' '),
-								WR.Has(V.Part,PartSpecialType) ?
-									SA(PartSpecialTypeLang[PartSpecialType[V.Part]]) :
+								MakeHigh(LangSolve('DetPart') + ' '),
+								WR.Has(V.Part,ConfPartSpecialType) ?
+									LangSolve(ConfPartSpecialTypeLang[ConfPartSpecialType[V.Part]]) :
 									WW.Fmt('`0` / `1` `2`',
 									[
 										V.Part,
@@ -885,92 +797,92 @@
 						WV.T(Name,V.Path || '\xA0')
 						Prog
 							.P(V.Play || '-')
-							.G(MakeProgress(V.Size,V.Has))
-							.C(null == V.First ? '-' : WW.StrDate(V.First))
+							.G(MakeProgress(WR.Has('Size',V) && V.Size,V.Has))
+							.C(V.First ? WW.StrDate(V.First) : '-')
 							.T(V.Take ? WW.StrMS(V.Take) : '-')
 							.V(V.Take ? MakeSpeed(V.Has / V.Take) : '-')
-							.D(null == V.Done ? '-' : WW.StrDate(V.Done))
+							.D(V.Done ? WW.StrDate(V.Done) : '-')
 						WV.ApR([URL,Name,Prog],U)
 						WV.Ap(U,Part)
-						PartList[V.Part][V.File] =
-						{
-							F : function(Size)
+						PartList[V.Part][V.File] = WW.MakeO
+						(
+							Proto.AuthDownFile,function(Data)
 							{
-								if (null == V.Size || V.Has < V.Size)
-									Prog.G(MakeProgress(V.Size = Size,V.Has))
+								Prog.G(MakeProgress(V.Size = Data.Size,V.Has))
 							},
-							P : function(Play)
+							Proto.AuthDownPlay,function(Data)
 							{
-								Prog.P(Play)
+								Prog.P(Data.Play)
 							},
-							C : function(Conn)
+							Proto.AuthDownConn,function(Data)
 							{
-								Prog.C(WW.StrDate(Conn))
+								Prog.C(WW.StrDate(Data.First))
 							},
-							A : function(Path)
+							Proto.AuthDownPath,function(Data)
 							{
-								WV.T(Name,Path)
+								WV.T(Name,Data.Path)
 							},
-							H : function(Has,T)
+							Proto.AuthDownHas,function(Data)
 							{
-								Prog.G(MakeProgress(V.Size,V.Has = Has[0]))
-								T = Has[1]
-								Prog.T(WW.StrMS(T))
-									.V(MakeSpeed(V.Has / (T || 1)))
+								Prog.G(MakeProgress(V.Size,V.Has = Data.Has))
+								Prog.T(WW.StrMS(Data.Take))
+									.V(MakeSpeed(V.Has / (Data.Take || 1)))
 							},
-							T : function(Take)
+							Proto.AuthDownTake,function(Data)
 							{
-								Prog.T(WW.StrMS(V.Take = Take))
-									.V(MakeSpeed(V.Has / (Take || 1)))
+								Prog.T(WW.StrMS(V.Take = Data.Take))
+									.V(MakeSpeed(V.Has / (Data.Take || 1)))
 							},
-							D : function(Done)
+							Proto.AuthDownDone,function(Data)
 							{
-								Prog.D(WW.StrDate(Done))
+								Prog.D(WW.StrDate(Data.Done))
 							}
-						}
+						)
 					},S.Down)
 				}
 			},
 			OnError = function(E)
 			{
-				WW.IsArr(E) && (E = SA(E))
+				WW.IsArr(E) && (E = LangSolve(E))
 				WV.T(Err,null == E ? '' : ErrorS(E))
 				;(null == E ? WV.ClsA : WV.ClsR)(Err,WV.None)
 			};
 			WV.ApA([Title,SiteID],Header)
 			Site && Site.IDURL &&
-				WV.Ap(WV.X(Site.IDURL(Q.I)),Header)
+				WV.Ap(WV.X(Site.IDURL(Q.ID)),Header)
 			Update(S)
 			WV.ApA([Header,Detail,ErrReq,Err,Part],Y)
 			WV.ClsA(Y,ClassDetail)
 			E && OnError(E)
 			DetailUpdate =
 			{
-				O : Q.O,
+				O : Q.Row,
 				S : Update,
 				E : OnError,
-				U : function(H,Part,File,Val)
+				U : function(Data)
 				{
-					PartList[Part] && PartList[Part][File] &&
-						PartList[Part][File][H](Val)
+					var P;
+					P = PartList[Data.Part]
+					P = P && P[Data.File]
+					P && P[WSProtoCurrentID](Data)
 				},
 				F : function(Done,T)
 				{
 					T = WR.Last(Line)
-					WV.T(T[2],T[1]({Done : Done}))
+					WV.T(T[2],T[1](Done))
 					WV.Ap(T[0],Detail)
 				}
 			}
 			return WX.EndI(
 			[
-				TaskFullInfoLoad(Q.O).Now(Update,function(E)
+				TaskFullInfoLoad(Q.Row).Now(Update,function(E)
 				{
-					WV.T(ErrReq,SA('LstFail') + '\n' + ErrorS(E))
+					WV.T(ErrReq,LangSolve('LstFail') + '\n' + ErrorS(E))
 					WV.ClsR(ErrReq,WV.None)
 				}),
 				function()
 				{
-					WebSocketSendAuth([ActionAuthTaskInfo,false])
+					WSSend(Proto.AuthTaskInfo)
 				}
 			])
 		})
@@ -978,7 +890,7 @@
 
 	MakeConfirm = function(Title,Body,No,Yes,H)
 	{
-		MakeOverlay(function(Y)
+		OverlayMake(function(Y)
 		{
 			var
 			Header = WV.T(WV.Rock(ClassHeader),Title),
@@ -1007,9 +919,9 @@
 	},
 	ConfirmRemove = function(Q)
 	{
-		MakeConfirm(SA('LstDelConfirm'),SA('LstDelCount',[Q.length]),
-			SA('GenCancel'),SA('LstRemove'),
-			function(){WebSocketSendAuth([ActionAuthTaskRemove,Q])})
+		MakeConfirm(LangSolve('LstDelConfirm'),LangSolve('LstDelCount',[Q.length]),
+			LangSolve('GenCancel'),LangSolve('LstRemove'),
+			function(){WSSend(Proto.AuthTaskRemove,{Row : Q})})
 	},
 
 
@@ -1037,8 +949,8 @@
 		{
 			StatusSet(K,Count ?
 				WW.Quo(WR.ToSize(Size) + (Plus ? '+' : '')) +
-				SA('StsSelect',[Count]) +
-				(Plus ? SA('StsPlus',[Plus]) : '') :
+				LangSolve('StsSelect',[Count]) +
+				(Plus ? LangSolve('StsPlus',[Plus]) : '') :
 				null)
 			return Count
 		};
@@ -1047,25 +959,25 @@
 			A : function(Q)
 			{
 				++Count
-				null == Q.Z ?
-					++Plus :
-					Size += Q.Z
+				WR.Has('Size',Q) ?
+					Size += Q.Size :
+					++Plus
 			},
 			D : function(Q)
 			{
 				--Count
-				null == Q.Z ?
-					--Plus :
-					Size -= Q.Z
+				WR.Has('Size',Q) ?
+					Size -= Q.Size :
+					--Plus
 			},
 			I : function(Q,S)
 			{
-				null == Q ?
-					--Plus :
-					Size -= Q
-				null == S ?
-					++Plus :
-					Size += S
+				WR.Has('Size',Q) ?
+					Size -= Q :
+					--Plus
+				WR.Has('Size',S) ?
+					Size += S :
+					++Plus
 				Update()
 			}
 		}
@@ -1085,20 +997,27 @@
 
 
 
+	DebugProto = [],
 	DebugCount = 0,
 	DebugView = WV.Rock(),
 	DebugCurrent = [],
-	DebugLog = function(Q,S)
+	DebugLog = function(Q)
 	{
-		Q = '{' + WW.StrDate() + ' | ' + WW.Tick() + ' #' + DebugCount++ + '} ' + WR.Map(function(V)
-		{
-			V = null == V ?
-				'' :
-				WW.IsObj(V) ? WC.OTJ(V) : String(V)
-			return V.length < 512 ? V : V.slice(0,512) + '...'
-		},[Q,S]).join(' ')
+		var T,F = 0;
+		Q = WW.StrDate() +
+			' | ' +
+			WW.Tick() +
+			' #' + DebugCount++ +
+			' [' + Q + ']'
+		for (;++F < arguments.length;)
+			if (null != (T = arguments[F]))
+			{
+				T = WW.IsObj(T) ? WC.OTJ(T) : String(T)
+				T.length < 512 || (T = T.slice(0,512) + '...')
+				Q += ' ' + T
+			}
 		DebugCurrent.push(WV.Pre(WV.X(Q),DebugView))
-		DebugCurrent.length < DebugLimit ||
+		DebugCurrent.length < ConfDebugLimit ||
 			WV.Del(DebugCurrent.shift())
 	},
 	DebugIn,
@@ -1109,15 +1028,15 @@
 		WV.On(Event,function()
 		{
 			Last.push(WW.Now())
-			DebugClick < Last.length && Last.shift()
-			Last.length < DebugClick ||
-				WR.Last(Last) - Last[0] < DebugInterval &&
-				MakeDebug(Last)
+			ConfDebugClick < Last.length && Last.shift()
+			Last.length < ConfDebugClick ||
+				WR.Last(Last) - Last[0] < ConfDebugInterval &&
+				DebugMake(Last)
 		},Target)
 	},
-	MakeDebug = function(Last)
+	DebugMake = function(Last)
 	{
-		DebugIn || MakeOverlay(function(Y)
+		DebugIn || OverlayMake(function(Y)
 		{
 			var
 			Header = WV.Rock(ClassHeader);
@@ -1132,10 +1051,10 @@
 		})
 	};
 
-	LangTo(Top.LangS)
+	LangTo(Conf.Lang)
 
 	WV.ClsA(RMain[1],WV.NoSel)
-	WV.Text(WV.VM(RMain[1]),SA('Title'))
+	WV.Text(WV.VM(RMain[1]),LangSolve('Title'))
 	DebugReg(RMain[1],'mousedown')
 	WV.Ap(WV.Rock(ClassTitleSplit),RMain[2])
 	WV.Ap(WV.Rock(WV.ST),RMain[3])
@@ -1231,15 +1150,15 @@
 			V : WV.ID(RStatusBar[1]),
 			X : WV.ID(RStatusBar[2]),
 
-			p : Padding,
-			h : PaddingHalf,
-			q : PaddingQuarter
+			p : ConfPadding,
+			h : ConfPaddingHalf,
+			q : ConfPaddingQuarter
 		}
 	))
 
 	RTab.Add(
 	[
-		[SA('Bro'),function(V,_,K)
+		[LangSolve('Bro'),function(V,_,K)
 		{
 			var
 			ClassBrief = WW.Key(),
@@ -1271,7 +1190,7 @@
 				Q = Q.replace(/\s+$/,'')
 				if (T = Q.match(/^\s*([A-Z\u2E80-\u9FFF\uAC00-\uD7FF\uF900-\uFAFF]+)(?:\s+([^]*))?$/i))
 				{
-					if (!WR.Has(Site = WR.Up(T[1]),SiteMap)) return SA('BroUnSite',[T[1]])
+					if (!WR.Has(Site = WR.Up(T[1]),SiteMap)) return LangSolve('BroUnSite',[T[1]])
 					Site = SiteMap[Site]
 					T = T[2] || ''
 				}
@@ -1279,7 +1198,7 @@
 				{
 					T = Q
 					Site = WR.Find(function(V){return V.Judge.test(Q)},SiteAll)
-					if (!Site) return SA('BroUnParse',[Q])
+					if (!Site) return LangSolve('BroUnParse',[Q])
 				}
 				Action = WR.Find(function(V)
 				{
@@ -1294,7 +1213,7 @@
 				},Site.Map)
 				return Action ?
 					[Site,Action,WR.Trim(ID),Q.slice(0,-ID.length)] :
-					SA('BroUnSol',[T,SiteSolveName(Site)])
+					LangSolve('BroUnSol',[T,SiteSolveName(Site)])
 			},
 
 			Bar = [],
@@ -1308,7 +1227,7 @@
 			MakeBar = function(Site,Q,V)
 			{
 				var
-				ID = IDCombine(Site,Q.ID),
+				ID = DBBriefKey({Site : Site.ID,ID : Q.ID}),
 				B = WV.Rock(ClassCardBar),
 				State,
 				Reload = function()
@@ -1325,21 +1244,21 @@
 						State = Next
 						if (BarNone === State)
 						{
-							WV.T(B,SA('BroAdd'))
+							WV.T(B,LangSolve('BroAdd'))
 						}
 						else if (BarCold === State)
 						{
-							WV.T(B,SA('BroCold'))
+							WV.T(B,LangSolve('BroCold'))
 							WV.ClsA(V,WV.Foc)
 						}
 						else if (BarHot === State)
 						{
-							WV.T(B,SA('BroHot'))
+							WV.T(B,LangSolve('BroHot'))
 							WV.ClsA(V,WV.Foc)
 						}
 						else if (BarHistory === State)
 						{
-							WV.T(B,SA('BroHist'))
+							WV.T(B,LangSolve('BroHist'))
 							WV.ClsA(V,WV.Alt)
 						}
 					}
@@ -1391,19 +1310,19 @@
 				if (Action)
 				{
 					if (!BriefKeywordOn) BriefKeywordOn = WV.Con(Brief,BriefKeyword.R)
-					StatusSet(K,SA('GenLoading'))
+					StatusSet(K,LangSolve('GenLoading'))
 					BriefKeyword.K(Key)
 						.S(SiteSolveName(Site))
 						.A(Action.Name)
 						.I(ID)
-						.U(SA('GenLoading'))
+						.U(LangSolve('GenLoading'))
 					JumpEnd(Action.View(ID,Q,Action === GoPrefAction ? GoPref : undefined).Now(function(/**@type {CrabSaveNS.SitePage}*/S)
 					{
 						StatusSet(K)
 						WV.Clear(List)
 						Bar.length = 0
 						BarMap.C()
-						S.Size = S.Size || PageSize
+						S.Size = S.Size || ConfPageSize
 						WR.EachU(function(V,F)
 						{
 							var
@@ -1482,11 +1401,11 @@
 								!!V.Date && WV.X(WW.IsStr(V.Date) ? V.Date : DTS(V.Date)),
 								!!V.Desc && WV.But(
 								{
-									X : SA('BroDesc'),
+									X : LangSolve('BroDesc'),
 									The : WV.TheP,
 									C : function()
 									{
-										MakeOverlay(function(Y)
+										OverlayMake(function(Y)
 										{
 											WV.Con(Y,
 											[
@@ -1528,10 +1447,10 @@
 							{
 								F : S.Item.length && S.Item[0].Index,
 								T : S.Item.length && WR.Last(S.Item).Index,
-								I : SA('BroItem'),
+								I : LangSolve('BroItem'),
 								L : S.Item.length,
 								U : S.Len = WR.Default(WR.Max(0,~-S.Max) * S.Size + S.Item.length,S.Len),
-								G : SA('BroPage'),
+								G : LangSolve('BroPage'),
 								A : S.At,
 								P : S.Max,
 								D : WW.StrDate(),
@@ -1573,8 +1492,8 @@
 			},
 
 			KeywordCache = WW.Key(),
-			KeywordHintLoad = WV.Fmt(SA('BroSugLoad',['`K`']) + '\n`E`'),
-			KeywordHint = WV.Fmt(SA('BroSugDone',['`K`']) + '\n[`M`ms `T`] `D`'),
+			KeywordHintLoad = WV.Fmt(LangSolve('BroSugLoad',['`K`']) + '\n`E`'),
+			KeywordHint = WV.Fmt(LangSolve('BroSugDone',['`K`']) + '\n[`M`ms `T`] `D`'),
 			HintErr,HintCurrent,
 			Hint = function(S)
 			{
@@ -1623,7 +1542,7 @@
 			},
 			Keyword = WV.Inp(
 			{
-				Hint : SA('BroKeyword'),
+				Hint : LangSolve('BroKeyword'),
 				Right : WV.But({X : '\u2192',The : WV.TheP,U : WV.StopProp,C : Go}).R,
 				Any : true,
 				Non : true,
@@ -1701,7 +1620,7 @@
 			}
 			BrowserOnProgress = function(Q)
 			{
-				BriefKeyword.U(SA('GenLoading') + ' ' + Q)
+				BriefKeyword.U(LangSolve('GenLoading') + ' ' + Q)
 			}
 
 			return {
@@ -1743,9 +1662,9 @@
 							A : WV.Alt,
 							O : WV.Foc,
 
-							p : Padding,
-							h : PaddingHalf,
-							l : PaddingHalf / 2,
+							p : ConfPadding,
+							h : ConfPaddingHalf,
+							l : ConfPaddingHalf / 2,
 
 							E : ClassBrief,
 							e : WV.Exp('box-shadow','inset 0 0 3px 2px rgba(0,0,0,.2)'),
@@ -1753,8 +1672,8 @@
 							C : ClassCard,
 							K : ClassCardClick,
 							S : ClassCardBar,
-							c : SizeCardWidth,
-							m : 2 * SizeCardWidth,
+							c : ConfSizeCardWidth,
+							m : 2 * ConfSizeCardWidth,
 							M : ClassImgMulti,
 							LR : ClassImgMultiLR
 						}
@@ -1762,10 +1681,19 @@
 				}
 			}
 		}],
-		[[SA('Col'),ColdCount.R],function(V,_,K)
+		[[LangSolve('Col'),ColdCount.R],function(V,_,K)
 		{
 			var
+			/**@type {
+			{
+				Key : string
+				Site : string
+				ID : string
+				Title : string
+				UP : string
+			}[]}*/
 			Cold = [],
+			/**@type {Record<any,Cold[0]>}*/
 			ColdMap = {},
 			Selected = 0,
 			OnDel = function(ID,Index)
@@ -1778,40 +1706,39 @@
 			},
 			JustCommit = WV.But(
 			{
-				X : SA('ColCommit'),
+				X : LangSolve('ColCommit'),
 				The : WV.TheP,
 				C : function()
 				{
-					WebSocketSendAuthPrecheck() && WebSocketSendAuth(
-					[
-						ActionAuthTaskNew,
-						WR.Map(function(V)
+					WSAuthPrecheck() && WSSend(Proto.AuthTaskNew,
+					{
+						Task : WR.Map(function(V)
 						{
 							return Cold[V]
 						},List.SelL())
-					])
+					})
 				}
 			}).Off(),
 			JustRemove = WV.But(
 			{
-				X : SA('LstRemove'),
+				X : LangSolve('LstRemove'),
 				The : WV.TheP,
 				C : function(L,F)
 				{
 					L = List.SelL()
 					for (F = L.length;F;)
-						OnDel(Cold[L[--F]].O,L[F])
+						OnDel(Cold[L[--F]].Key,L[F])
 				}
 			}).Off(),
 			JustCommitAll = WV.But(
 			{
-				X : SA('ColCommitAll'),
+				X : LangSolve('ColCommitAll'),
 				The : WV.TheP,
 				C : function()
 				{
-					if (Cold.length && WebSocketSendAuthPrecheck())
+					if (Cold.length && WSAuthPrecheck())
 					{
-						WebSocketSendAuth([ActionAuthTaskNew,Cold])
+						WSSend(Proto.AuthTaskNew,{Task : Cold})
 						RTab.Next()
 					}
 				}
@@ -1824,7 +1751,7 @@
 				SelC : function()
 				{
 					StatusSet(K,Selected ?
-						SA('StsSelect',[Selected]) :
+						LangSolve('StsSelect',[Selected]) :
 						null)
 					if (Selected)
 					{
@@ -1848,27 +1775,27 @@
 				Make : function(V,S)
 				{
 					var
-					R = WV.Div(2,['',TaskButtonSize]),
+					R = WV.Div(2,['',ConfTaskButtonSize]),
 					ID = MakeSingle(),
 					Title = MakeSingle(),
 					Commit = WV.But(
 					{
-						X : SA('ColCommit'),
+						X : LangSolve('ColCommit'),
 						The : WV.TheP,
 						Blk : true,
 						C : function()
 						{
-							S[0] && WebSocketSendAuth([ActionAuthTaskNew,S])
+							S[0] && WSSend(Proto.AuthTaskNew,{Task : S})
 						}
 					}),
 					Remove = WV.But(
 					{
-						X : SA('LstRemove'),
+						X : LangSolve('LstRemove'),
 						The : WV.TheP,
 						Blk : true,
 						C : function()
 						{
-							S[0] && ColdDel(S[0].O)
+							S[0] && ColdDel(S[0].Key)
 						}
 					});
 					WV.ClsA(ID,WV.Alt)
@@ -1881,8 +1808,8 @@
 					return {
 						U : function(V)
 						{
-							SingleFill(ID,V.S,V.I)
-							SingleFill(Title,V.U,V.T)
+							SingleFill(ID,V.Site,V.ID)
+							SingleFill(Title,V.UP,V.Title)
 						}
 					}
 				}
@@ -1901,17 +1828,17 @@
 			ShortCutOnPage(K,ShortCutColdCommitAll,JustCommitAll.C)
 
 			IsCold = function(ID){return WR.Has(ID,ColdMap)}
-			ColdAdd = function(ID,Site,/**@type {CrabSaveNS.SiteItem}*/Q)
+			ColdAdd = function(ID,Site,Q)
 			{
 				if (!IsCold(ID) && !IsHot(ID))
 				{
 					List.Push(ColdMap[ID] =
 					{
-						O : ID,
-						S : Site.ID,
-						I : Q.ID,
-						T : Q.Title || '',
-						U : Q.UP
+						Key : ID,
+						Site : Site.ID,
+						ID : Q.ID,
+						Title : Q.Title || '',
+						UP : Q.UP
 					})
 					BrowserUpdate([ID])
 					ColdCount.D(Cold)
@@ -1928,17 +1855,17 @@
 				HideP : List.Out
 			}
 		}],
-		[[SA('Hot'),HotCount.R],function(V,_,K)
+		[[LangSolve('Hot'),HotCount.R],function(V,_,K)
 		{
 			var
 			ClassStatus = WW.Key(),
 			ClassBar = WW.Key(),
 
+			/**@type {CrabSaveNS.TaskBriefHot[]}*/
 			Hot = [],
 			HotMap = MultiMap(),
+			/**@type {Record<any,CrabSaveNS.TaskBriefHot>}*/
 			HotRowMap = {},
-			HotVersion = '',
-			HotRead = WX.EndL(),
 			HotShown = {},
 			TaskErr = {},
 			Selected = MakeSelectSize(K),
@@ -1946,23 +1873,23 @@
 			{
 				return WV.But(
 				{
-					X : SA(H),
+					X : LangSolve(H),
 					The : WV.TheP,
 					C : function(L)
 					{
-						if (WebSocketSendAuthPrecheck() && (L = List.SelL()).length)
+						if (WSAuthPrecheck() && (L = List.SelL()).length)
 						{
-							L = WR.Map(function(V){return Hot[V].O},L)
+							L = WR.Map(function(V){return Hot[V].Row},L)
 							Confirm ?
 								Confirm(L) :
-								WebSocketSendAuth([Action,L])
+								WSSend(Action,{Row : L})
 						}
 					}
 				}).Off()
 			},
-			JustPlay = MakeJust('HotPlay',ActionAuthTaskPlay),
-			JustPause = MakeJust('HotPause',ActionAuthTaskPause),
-			JustRemove = MakeJust('LstRemove',ActionAuthTaskRemove,ConfirmRemove),
+			JustPlay = MakeJust('HotPlay',Proto.AuthTaskPlay),
+			JustPause = MakeJust('HotPause',Proto.AuthTaskPause),
+			JustRemove = MakeJust('LstRemove',Proto.AuthTaskRemove,ConfirmRemove),
 			List = WV.List(
 			{
 				Data : Hot,
@@ -1990,7 +1917,7 @@
 					var
 					Row,
 					Task,
-					R = WV.Div(2,['',TaskButtonSize]),
+					R = WV.Div(2,['',ConfTaskButtonSize]),
 					Title = MakeSingle(),
 					Status = MakeSingle(ClassStatus),
 					PlayCurrent = 9,
@@ -1999,11 +1926,7 @@
 						The : WV.TheP,
 						C : function()
 						{
-							S[0] && WebSocketSendAuth(
-							[
-								PlayCurrent ? ActionAuthTaskPause : ActionAuthTaskPlay,
-								[S[0].O]
-							])
+							S[0] && WSSend(PlayCurrent ? Proto.AuthTaskPause : Proto.AuthTaskPlay,{Row : [S[0].Row]})
 						}
 					}),
 					OnState = function(V)
@@ -2011,13 +1934,13 @@
 						WV.WC(Bar) // Force to reset transition state
 						if (PlayCurrent = V)
 						{
-							Play.X(SA('HotPause'))
+							Play.X(LangSolve('HotPause'))
 							WV.ClsA(Bar,WV.Foc)
 						}
 						else
 						{
 							HasError = false
-							Play.X(SA('HotPlay'))
+							Play.X(LangSolve('HotPlay'))
 							WV.ClsR(Bar,WV.Foc)
 						}
 					},
@@ -2025,22 +1948,22 @@
 					Renew = WV.E(),
 					More = WV.But(
 					{
-						X : SA('LstDetail'),
+						X : LangSolve('LstDetail'),
 						The : WV.TheP,
 						Blk : true,
 						C : function()
 						{
-							S[0] && MakeDetail(S[0],Task,TaskErr[S[0].O])
+							S[0] && DetailMake(S[0],Task,TaskErr[S[0].Row])
 						}
 					}),
 					Remove = WV.But(
 					{
-						X : SA('LstRemove'),
+						X : LangSolve('LstRemove'),
 						The : WV.TheP,
 						Blk : true,
 						C : function()
 						{
-							S[0] && ConfirmRemove([S[0].O])
+							S[0] && ConfirmRemove([S[0].Row])
 						}
 					}),
 					Bar = WV.Rock(ClassBar),
@@ -2049,16 +1972,16 @@
 					LoadErr,RenewLast,
 					OnTick = function(T)
 					{
-						if (S[0] && !WR.Has(S[0].O,ProgressMap))
+						if (S[0] && !WR.Has(S[0].Row,ProgressMap))
 						{
-							T = null == Task ? SA('LstLoad') :
+							T = null == Task ? LangSolve('LstLoad') :
 								null != LoadErr ? LoadErr :
-								TaskRenewing[S[0].O] ? SA(null == Task.Size ? 'HotSolve' : 'HotRenew') :
-								HasError && WW.Now() <= 1E3 * Setting.Delay + ErrorAt ? SA('Err') + ' ' + RemainS(1E3 * Setting.Delay + ErrorAt - WW.Now()) :
-								HasError && ErrorToRenew ? SA('HotReady') :
-								null == Task.Size ? SA('HotReady') :
-								Task.State ? SA('HotQueue') :
-								SA('HotPaused')
+								TaskRenewing[S[0].Row] ? LangSolve(WR.Has('Size',Task) ? 'HotRenew' : 'HotSolve') :
+								HasError && WW.Now() <= 1E3 * Setting.Delay + ErrorAt ? LangSolve('Err') + ' ' + RemainS(1E3 * Setting.Delay + ErrorAt - WW.Now()) :
+								HasError && ErrorToRenew ? LangSolve('HotReady') :
+								!WR.Has('Size',Task) ? LangSolve('HotReady') :
+								Task.State ? LangSolve('HotQueue') :
+								LangSolve('HotPaused')
 							T === RenewLast || WV.T(Renew,RenewLast = T)
 						}
 					},
@@ -2100,16 +2023,16 @@
 							LoadErr = null
 							HasError = false
 							Play.X('').Off()
-							SingleFill(Title,'#' + V.O + ' ' + V.S + ' ' + V.I)
+							SingleFill(Title,'#' + V.Row + ' ' + V.Site + ' ' + V.ID)
 							WV.ClsA(Running.R,WV.None)
 							OnTick()
 							OnState(false)
 							WV.CSS(Bar,'width',0)
-							LoadO(TaskOverviewLoad(V.O).Now(function(B)
+							LoadO(TaskOverviewLoad(V.Row).Now(function(B)
 							{
 								Task = B
-								SingleFill(Title,B.Title || SA('GenUntitle'))
-								null == B.Size || WV.ClsR(Running.R,WV.None)
+								SingleFill(Title,B.Title || LangSolve('GenUntitle'))
+								WR.Has('Size',B) && WV.ClsR(Running.R,WV.None)
 								if (B.Error)
 								{
 									HasError = true
@@ -2117,21 +2040,21 @@
 									ErrorAt = B.Error
 								}
 								OnTick()
-								if (null != B.Size)
+								if (WR.Has('Size',B))
 								{
 									Running.F(B.File)
 									OnSizeHas(B.Size,B.Has)
 								}
-								WR.Has(V.O,ProgressMap) && OnProgress(ProgressMap[V.O])
+								WR.Has(V.Row,ProgressMap) && OnProgress(ProgressMap[V.Row])
 								Play.On()
 								OnState(B.State)
 							},function(E)
 							{
-								LoadErr = SA('LstFail') + ' ' + ErrorS(E)
+								LoadErr = LangSolve('LstFail') + ' ' + ErrorS(E)
 								OnTick()
 							}))
 							HotShownRelease()
-							HotShown[Row = V.O] = HotShownCurrent =
+							HotShown[Row = V.Row] = HotShownCurrent =
 							{
 								S : function(Q)
 								{
@@ -2141,7 +2064,7 @@
 										Task.State - Q &&
 									(
 										OnState(Task.State = Q),
-										WR.Del(V.O,ProgressMap),
+										WR.Del(V.Row,ProgressMap),
 										OverallUpdate(),
 										OnTick()
 									)
@@ -2153,13 +2076,13 @@
 									HasError = false
 									OnTick()
 								},
-								E : function(Q)
+								E : function(Data)
 								{
-									if (Q)
+									if (Data.At)
 									{
 										HasError = true
-										ErrorToRenew = 2 === Q[0]
-										ErrorAt = Q[1]
+										ErrorToRenew = 2 === Data.State
+										ErrorAt = Data.At
 									}
 									else HasError = false
 									OnTick()
@@ -2167,14 +2090,14 @@
 								T : function(Q)
 								{
 									if (null == Task) return
-									SingleFill(Title,Q || SA('GenUntitle'))
+									SingleFill(Title,Q || LangSolve('GenUntitle'))
 								},
-								Z : function(Q)
+								Z : function(Data)
 								{
 									if (null == Task) return
 									WV.ClsR(Running.R,WV.None)
-									null == Q[1] || Running.F(Q[1])
-									OnSizeHas(Task.Size = Q[0],Task.Has)
+									WR.Has('File',Data) && Running.F(Data.File)
+									OnSizeHas(Task.Size = Data.Size,Task.Has)
 									OnTick()
 								}
 							}
@@ -2199,99 +2122,72 @@
 			ShortCutOnPage(K,ShortCutListSelClear,List.SelClr)
 
 			IsHot = HotMap.H
-			WSOnDiffHot = TaskDiff(function(H,Q,S)
-			{
-				var T;
-				HotVersion = H
-				switch (Q)
+			DBBriefDiff
+				.On(Proto.TaskNew,function(Data)
 				{
-					case ActionWebTaskNew :
-						if (!WR.Has(S.Row,HotRowMap))
-						{
-							List.Push(HotRowMap[S.Row] = HotMap.D(T = IDCombine(S.Site,S.ID),
-							{
-								O : S.Row,
-								S : S.Site,
-								I : S.ID,
-								Z : S.Size
-							}))
-							ColdDel(T)
-							HotCount.D(Hot)
-							BrowserUpdate([T])
-						}
-						break
-					case ActionWebTaskPlay :
-						WR.Has(S,HotShown) &&
-							HotShown[S].S(true)
-						break
-					case ActionWebTaskPause :
-						WR.Has(S,HotShown) &&
-							HotShown[S].S(false)
-						break
-					case ActionWebTaskHist :
-						if (WR.Has(S[0],HotRowMap))
-						{
-							T = WW.BSL(Hot,S[0],function(Q,S){return Q.O < S})
-							Hot[T] && Hot[T].O === S[0] &&
-								List.Splice(T,1)
-							T = HotRowMap[S[0]]
-							WR.Del(S[0],HotRowMap)
-							HotMap.E(IDCombine(T.S,T.I),T)
-							T.E = S[1]
-							HotCount.D(Hot)
-							WSOnDiffHist.D([Q,H,T])
-						}
-						break
-					case ActionWebTaskRemove :
-						if (WR.Has(S[0],HotRowMap))
-						{
-							T = WW.BSL(Hot,S[0],function(Q,S){return Q.O < S})
-							Hot[T] && Hot[T].O === S[0] &&
-								List.Splice(T,1)
-							T = HotRowMap[S[0]]
-							WR.Del(S[0],HotRowMap)
-							HotMap.E(IDCombine(T.S,T.I),T)
-							HotCount.D(Hot)
-							BrowserUpdate([IDCombine(T.S,T.I)])
-						}
-						break
-				}
-			})
-
-			WSOnOnline.R(function()
-			{
-				DebugLog('HotBegin',HotVersion)
-				HotRead(WB.ReqB({URL : 'Hot' + (HotVersion ? '?' + HotVersion : ''),TO : false})
-					.RetryWhen(TaskBriefRetry(SA('Hot')))
-					.Now(function(B)
+					Data = Data.Task
+					if (!WR.Has(Data.Row,HotRowMap))
 					{
-						List.SelClr()
-						TaskBriefSolve(4,B,function(V)
-						{
-							Hot.length = 0
-							HotMap.C()
-							HotRowMap = {}
-							HotVersion = V
-							DebugLog('HotEnd',HotVersion)
-						},function(V)
-						{
-							V[0] = NumberZip.P(V[0])
-							Hot.push(HotRowMap[V[0]] = HotMap.D(IDCombine(V[1],V[2]),
-							{
-								O : V[0],
-								S : V[1],
-								I : V[2],
-								Z : V[3] ? NumberZip.P(V[3]) : null
-							}))
-						},function()
-						{
-							HotCount.D(Hot)
-							BrowserUpdate()
-						})
-						WSOnDiffHot.S(HotVersion)
-						List.Re()
-					},WW.O,WW.O))
-			})
+						List.Push(HotRowMap[Data.Row] = HotMap.D(DBBriefKey(Data),Data))
+						ColdDel(DBBriefKey(Data))
+						HotCount.D(Hot)
+						BrowserUpdate([DBBriefKey(Data)])
+					}
+				})
+				.On(Proto.TaskPlay,function(Data)
+				{
+					WR.Has(Data.Row,HotShown) &&
+						HotShown[Data.Row].S(true)
+				})
+				.On(Proto.TaskPause,function(Data)
+				{
+					WR.Has(Data.Row,HotShown) &&
+						HotShown[Data.Row].S(false)
+				})
+				.On(Proto.TaskHist,function(Data)
+				{
+					var T;
+					if (WR.Has(Data.Row,HotRowMap))
+					{
+						T = WW.BSL(Hot,Data.Row,function(Q,S){return Q.Row < S})
+						Hot[T] && Hot[T].Row === Data.Row &&
+							List.Splice(T,1)
+						T = HotRowMap[Data.Row]
+						WR.Del(Data.Row,HotRowMap)
+						HotMap.E(DBBriefKey(T),T)
+						T.Done = Data.Done
+						HotCount.D(Hot)
+						WSOnHist(T)
+					}
+				})
+				.On(Proto.TaskRemove,function(Data)
+				{
+					var T;
+					if (WR.Has(Data.Row,HotRowMap))
+					{
+						T = WW.BSL(Hot,Data.Row,function(Q,S){return Q.Row < S})
+						Hot[T] && Hot[T].Row === Data.Row &&
+							List.Splice(T,1)
+						T = HotRowMap[Data.Row]
+						WR.Del(Data.Row,HotRowMap)
+						HotMap.E(DBBriefKey(T),T)
+						HotCount.D(Hot)
+						BrowserUpdate([DBBriefKey(T)])
+					}
+				})
+
+			WSOnDBBriefHot = function(B)
+			{
+				HotMap.C()
+				HotRowMap = {}
+				WR.Each(function(V)
+				{
+					HotRowMap[V.Row] = V
+					HotMap.D(DBBriefKey(V),V)
+				},Hot = B)
+				HotCount.D(Hot)
+				List.D(Hot)
+			}
 
 			WSOnProgress = function()
 			{
@@ -2302,61 +2198,81 @@
 				},ProgressMap)
 				OverallUpdate()
 			}
-			WSOnRenew = function(Row,Q)
+			WSOnRenew = function(Data)
 			{
-				if (Q)
+				var T;
+				if (Data.All)
 				{
-					WR.Each(function(Row)
+					T = TaskRenewing
+					TaskRenewing = {}
+					WR.Each(function(V)
 					{
-						TaskRenewing[Row] = 9
-						WR.Del(Row,TaskErr)
-						WR.Has(Row,HotShown) &&
-							HotShown[Row].R()
-					},WW.IsArr(Row) ? Row : [Row])
+						TaskRenewing[V] = 9
+						WR.Del(V,TaskErr)
+						WR.Has(V,HotShown) && HotShown[V].R()
+					},Data.All)
+					WR.EachU(function(_,F)
+					{
+						TaskRenewing[F] ||
+							WR.Has(F,HotShown) && HotShown[F].R()
+					},T)
 				}
 				else
 				{
-					WR.Del(Row,TaskRenewing)
-					WR.Has(Row,HotShown) &&
-						HotShown[Row].W()
+					T = Data.Row
+					if (Data.On)
+					{
+						TaskRenewing[T] = 9
+						WR.Del(T,TaskErr)
+						WR.Has(T,HotShown) && HotShown[T].R()
+					}
+					else
+					{
+						WR.Del(T,TaskRenewing)
+						WR.Has(T,HotShown) && HotShown[T].W()
+					}
 				}
 			}
-			WSOnTitle = function(Row,Q)
+			WSOnTitle = function(Data)
 			{
-				WR.Has(Row,HotShown) &&
-					HotShown[Row].T(Q)
+				WR.Has(Data.Row,HotShown) &&
+					HotShown[Data.Row].T(Data.Title)
 			}
-			WSOnSize = function(Row,Q,T)
+			WSOnSize = function(Data)
 			{
-				WR.Has(Row,HotShown) &&
-					HotShown[Row].Z(Q)
-				T = WW.BSL(Hot,Row,function(Q,S){return Q.O < S})
-				if (Hot[T] && Hot[T].O === Row)
+				var T;
+				WR.Has(Data.Row,HotShown) &&
+					HotShown[Data.Row].Z(Data)
+				T = WW.BSL(Hot,Data.Row,function(Q,S){return Q.Row < S})
+				if (Hot[T] && Hot[T].Row === Data.Row)
 				{
 					List.SelHas(T) &&
-						Selected.I(Hot[T].Z,Q[0])
-					Hot[T].Z = Q[0]
+						Selected.I(Hot[T],Data)
+					Hot[T].Size = Data.Size
 				}
 			}
-			WSOnErrT = function(Q,S)
+			WSOnErr = function(Data)
 			{
-				if (WW.IsObj(Q))
+				if (Data.JSON)
 				{
-					TaskErr = Q
-					DetailUpdate && WR.Has(DetailUpdate.O,Q) &&
-						DetailUpdate.E(Q[DetailUpdate.O])
+					if (Data = WSSolveJSON(Data.JSON))
+					{
+						TaskErr = Data
+						DetailUpdate && WR.Has(DetailUpdate.O,Data) &&
+							DetailUpdate.E(Data[DetailUpdate.O])
+					}
 				}
 				else
 				{
-					S ? TaskErr[Q] = S : WR.Del(Q,TaskErr)
-					DetailIs(Q) && DetailUpdate.E(S)
+					Data.Err ? TaskErr[Data.Row] = Data.Err : WR.Del(Data.Row,TaskErr)
+					DetailIs(Data.Row) && DetailUpdate.E(Data.Err)
 				}
 			}
-			WSOnTaskErr = function(Row,Q)
+			WSOnTaskErr = function(Data)
 			{
-				WR.Has(Row,HotShown) &&
-					HotShown[Row].E(Q)
-				WR.Del(Row,ProgressMap)
+				WR.Has(Data.Row,HotShown) &&
+					HotShown[Data.Row].E(Data)
+				WR.Del(Data.Row,ProgressMap)
 			}
 
 			Tick(function()
@@ -2386,7 +2302,7 @@
 
 							t : WV.Exp('transition','.2s linear'),
 
-							q : PaddingQuarter
+							q : ConfPaddingQuarter
 						}
 					)
 				},
@@ -2394,37 +2310,37 @@
 				HideP : List.Out
 			}
 		}],
-		[SA('His'),function(V,_,K)
+		[LangSolve('His'),function(V,_,K)
 		{
 			var
-			History = [],
-			HistoryMap = MultiMap(),
-			HistoryRowMap = {},
-			HistoryVersion = '',
-			HistoryRead = WX.EndL(),
+			/**@type {CrabSaveNS.TaskBriefHist[]}*/
+			Hist = [],
+			HistMap = MultiMap(),
+			/**@type {Record<any,CrabSaveNS.TaskBriefHist>}*/
+			HistRowMap = {},
 			Selected = MakeSelectSize(K),
 			MakeJust = function(H,Action,Confirm)
 			{
 				return WV.But(
 				{
-					X : SA(H),
+					X : LangSolve(H),
 					The : WV.TheP,
 					C : function(L)
 					{
-						if (WebSocketSendAuthPrecheck() && (L = List.SelL()).length)
+						if (WSAuthPrecheck() && (L = List.SelL()).length)
 						{
-							L = WR.Map(function(V){return History[V].O},L)
+							L = WR.Map(function(V){return Hist[V].Row},L)
 							Confirm ?
 								Confirm(L) :
-								WebSocketSendAuth([Action,L])
+								WSSend(Action,{Row : L})
 						}
 					}
 				}).Off()
 			},
-			JustRemove = MakeJust('LstRemove',ActionAuthTaskRemove,ConfirmRemove),
+			JustRemove = MakeJust('LstRemove',Proto.AuthTaskRemove,ConfirmRemove),
 			List = WV.List(
 			{
-				Data : History,
+				Data : Hist,
 				Pan : V,
 				Sel : true,
 				SelC : function()
@@ -2444,7 +2360,7 @@
 				{
 					var
 					Task,
-					R = WV.Div(2,['',TaskButtonSize]),
+					R = WV.Div(2,['',ConfTaskButtonSize]),
 					Title = MakeSingle(),
 					Status = MakeSingle(),
 					Done = WV.E(),
@@ -2452,22 +2368,22 @@
 					Size = WV.Fmt('[`F`] `S`',null,WV.A('span')),
 					More = WV.But(
 					{
-						X : SA('LstDetail'),
+						X : LangSolve('LstDetail'),
 						The : WV.TheP,
 						Blk : true,
 						C : function()
 						{
-							S[0] && MakeDetail(S[0],Task)
+							S[0] && DetailMake(S[0],Task)
 						}
 					}),
 					Remove = WV.But(
 					{
-						X : SA('LstRemove'),
+						X : LangSolve('LstRemove'),
 						The : WV.TheP,
 						Blk : true,
 						C : function()
 						{
-							S[0] && ConfirmRemove([S[0].O])
+							S[0] && ConfirmRemove([S[0].Row])
 						}
 					}),
 					LoadO = WX.EndL();
@@ -2483,20 +2399,20 @@
 						U : function(V)
 						{
 							Task = null
-							SingleFill(Title,'#' + V.O + ' ' + V.S + ' ' + V.I)
-							WV.T(Done,WW.StrDate(V.E) + ' ')
-							WV.T(Pending,SA('LstLoad'))
-							LoadO(TaskOverviewLoad(V.O).Now(function(B)
+							SingleFill(Title,'#' + V.Row + ' ' + V.Site + ' ' + V.ID)
+							WV.T(Done,WW.StrDate(V.Done) + ' ')
+							WV.T(Pending,LangSolve('LstLoad'))
+							LoadO(TaskOverviewLoad(V.Row).Now(function(B)
 							{
 								Task = B
-								SingleFill(Title,B.Title || SA('GenUntitle'))
+								SingleFill(Title,B.Title || LangSolve('GenUntitle'))
 								WV.Con(Pending,Size.R)
 								Size
 									.F(B.File)
 									.S(WR.ToSize(B.Size))
 							},function(E)
 							{
-								SingleFill(Pending,SA('LstFail') + ' ' + ErrorS(E))
+								SingleFill(Pending,LangSolve('LstFail') + ' ' + ErrorS(E))
 							}))
 						}
 					}
@@ -2511,72 +2427,44 @@
 			ShortCutOnPage(K,ShortCutListSelAll,List.SelAll)
 			ShortCutOnPage(K,ShortCutListSelClear,List.SelClr)
 
-			IsHistory = HistoryMap.H
-			WSOnDiffHist = TaskDiff(function(H,Q,S)
+			IsHistory = HistMap.H
+			WSOnHist = function(Data)
 			{
-				var T;
-				HistoryVersion = H
-				switch (Q)
+				if (!WR.Has(Data.Row,HistRowMap))
 				{
-					case ActionWebTaskHist :
-						if (!WR.Has(S.O,HistoryRowMap))
-						{
-							S = HistoryRowMap[S.O] = HistoryMap.D(T = IDCombine(S.S,S.I),S)
-							!History.length || History[0].E < S.E || History[0].E === S.E && S.O < History[0].O ?
-								List.Unshift(S) :
-								List.Splice(WW.BSL(History,S,function(Q,S){return Q.E - S.E ? S.E < Q.E : Q.O < S.O}),0,S)
-							BrowserUpdate([T])
-						}
-						break
-					case ActionWebTaskRemove :
-						if (S[1] && WR.Has(S[0],HistoryRowMap))
-						{
-							H = HistoryRowMap[S[0]]
-							T = WW.BSL(History,S,function(Q,S){return Q.E - S[1] ? S[1] < Q.E : Q.O < S[0]})
-							History[T] && History[T].O === S[0] &&
-								List.Splice(T,1)
-							WR.Del(S[0],HistoryRowMap)
-							HistoryMap.E(T = IDCombine(H,S,H.I),H)
-							BrowserUpdate([T])
-						}
-						break
+					Data = HistRowMap[Data.Row] = HistMap.D(DBBriefKey(Data),Data)
+					!Hist.length || Hist[0].Done < Data.Done || Hist[0].Done === Data.Done && Data.Row < Hist[0].Row ?
+						List.Unshift(Data) :
+						List.Splice(WW.BSL(Hist,Data,function(Q,S){return Q.Done - S.Done ? S.Done < Q.Done : Q.Row < S.Row}),0,Data)
+					BrowserUpdate([DBBriefKey(Data)])
+				}
+			}
+			DBBriefDiff.On(Proto.TaskRemove,function(Data)
+			{
+				var H,T;
+				if (Data.Done && WR.Has(Data.Row,HistRowMap))
+				{
+					H = HistRowMap[Data.Row]
+					T = WW.BSL(Hist,Data,function(Q,S){return Q.Done - S.Done ? S.Done < Q.Done : Q.Row < S.Row})
+					Hist[T] && Hist[T].Row === Data.Row &&
+						List.Splice(T,1)
+					WR.Del(Data.Row,HistRowMap)
+					HistMap.E(DBBriefKey(H),H)
+					BrowserUpdate([DBBriefKey(H)])
 				}
 			})
 
-			WSOnOnline.R(function()
+			WSOnDBBriefHist = function(B)
 			{
-				DebugLog('HistBegin',HistoryVersion)
-				HistoryRead(WB.ReqB({URL : 'Hist' + (HistoryVersion ? '?' + HistoryVersion : ''),TO : false})
-					.RetryWhen(TaskBriefRetry(SA('His')))
-					.Now(function(B)
-					{
-						List.SelClr()
-						TaskBriefSolve(5,B,function(V)
-						{
-							History.length = 0
-							HistoryMap.C()
-							HistoryRowMap = {}
-							HistoryVersion = V
-							DebugLog('HistEnd',HistoryVersion)
-						},function(V)
-						{
-							V[0] = NumberZip.P(V[0])
-							History.push(HistoryRowMap[V[0]] = HistoryMap.D(IDCombine(V[1],V[2]),
-							{
-								O : V[0],
-								S : V[1],
-								I : V[2],
-								Z : NumberZip.P(V[3]),
-								E : NumberZip.P(V[4])
-							}))
-						},function()
-						{
-							BrowserUpdate()
-						})
-						WSOnDiffHist.S(HistoryVersion)
-						List.Re()
-					}))
-			})
+				HistMap.C()
+				HistRowMap = {}
+				WR.Each(function(V)
+				{
+					HistRowMap[V.Row] = V
+					HistMap.D(DBBriefKey(V),V)
+				},Hist = B)
+				List.D(Hist)
+			}
 
 			return {
 				Show : List.In,
@@ -2587,27 +2475,30 @@
 		{
 
 		}],*/
-		[SA('Aut'),function(V,_,TabKey)
+		[LangSolve('Aut'),function(V,_,TabKey)
 		{
 			var
 			RToken = WV.Rock(WV.S6),
 			Token = WV.Inp(
 			{
-				Hint : SA('AutToken'),
+				Hint : LangSolve('AutToken'),
 				Pass : true,
 				Ent : function(T)
 				{
-					if (!Online) WebSocketNotConnected()
-					else if (Cipher) Noti.S(SA('AutAlready'))
+					if (!WSOnline) WSNotConnected()
+					else if (WSCipher) Noti.S(LangSolve('AutAlready'))
 					else
 					{
 						T = TokenStepB(TokenStepA(Token.V()))
-						Cipher = WC.AESES(T,T,WC.CFB)
-						Decipher = WC.AESDS(T,T,WC.CFB)
+						WSCipher = WC.AESES(WC.Slice(T,0,32),WC.Slice(T,-16),WC.OFB)
+						WSDecipher = WC.AESDS(WC.Slice(T,-32),WC.Slice(T,16,32),WC.OFB)
 						Token.V('').Fresh().Foc()
-						WebSocketSendAuth([ActionAuthHello])
+						WSSend(Proto.AuthHello,
+						{
+							Syn : WSAuthSeed = WW.Rnd(0x4000000000000)
+						})
 						WSOnAuthing.D()
-						NotiAuth(SA('AutAuthing'))
+						NotiAuth(LangSolve('AutAuthing'))
 						TokenEnt.Off()
 						TokenNew.On()
 						TokenNewEnt.On()
@@ -2616,35 +2507,39 @@
 			}),
 			TokenEnt = WV.But(
 			{
-				X : SA('AutAut'),
+				X : LangSolve('AutAut'),
 				The : WV.TheO,
 				Blk : true,
 				C : Token.Ent
 			}),
 			TokenNew = WV.Inp(
 			{
-				Hint : SA('AutNew'),
+				Hint : LangSolve('AutNew'),
 				Pass : true,
 				Ent : function()
 				{
-					if (WebSocketSendAuth([ActionAuthToken,WC.B91S(TokenStepA(Token.V())),WC.B91S(TokenStepA(TokenNew.V()))]))
+					if (WSSend(Proto.AuthToken,
+					{
+						Old : WC.B91S(TokenStepA(Token.V())),
+						New : WC.B91S(TokenStepA(TokenNew.V()))
+					}))
 					{
 						Token.V('').Fresh()
 						TokenNew.V('').Fresh().Foc()
-						Noti.S(SA('AutSaving'))
+						Noti.S(LangSolve('AutSaving'))
 					}
 				}
 			}).Off(),
 			TokenNewEnt = WV.But(
 			{
-				X : SA('AutSave'),
+				X : LangSolve('AutSave'),
 				The : WV.TheO,
 				Blk : true,
 				C : TokenNew.Ent
 			}).Off(),
 			Site = WV.Inp(
 			{
-				Hint : '<' + SA('AutSite') + '>',
+				Hint : '<' + LangSolve('AutSite') + '>',
 				Stat : true,
 				Inp : function(V)
 				{
@@ -2661,11 +2556,11 @@
 			{
 				Mul : true,
 				Blk : true,
-				Set : [['Y',SA('AutMin')]]
+				Set : [['Y',LangSolve('AutMin')]]
 			}).V(['Y']).Off(),
 			Cookie = WV.Inp(
 			{
-				Hint : SA('AutCoke'),
+				Hint : LangSolve('AutCoke'),
 				Row : 8,
 				The : WV.TheS,
 				Stat : true,
@@ -2677,7 +2572,7 @@
 			CookieCheckNoti = Noti.O(),
 			CookieSave = WV.But(
 			{
-				X : SA('AutCokeSave'),
+				X : LangSolve('AutCokeSave'),
 				Blk : true,
 				C : function(T)
 				{
@@ -2689,14 +2584,14 @@
 							SiteMap[CookieSaving].Min(T) :
 							WC.CokeS(WR.Pick(SiteMap[CookieSaving].Min,WC.CokeP(T,WR.Id)),WR.Id)
 					}
-					WebSocketSendAuth([ActionAuthCookie,CookieSaving,T])
+					WSSend(Proto.AuthCookie,{Site : CookieSaving,Coke : T})
 				}
 			}).Off();
-			WebSocketNotAuthed = function()
+			WSNotAuthed = function()
 			{
-				WebSocketNotAuthedNoti([SA('ErrNoAuth'),WV.But(
+				WSNotAuthedNoti([LangSolve('ErrNoAuth'),WV.But(
 				{
-					X : SA('AutEnt'),
+					X : LangSolve('AutEnt'),
 					The : WV.TheP,
 					C : function()
 					{
@@ -2723,31 +2618,35 @@
 				TokenNew.Off()
 				TokenNewEnt.Off()
 			})
-			WSOnCookie = function(K,O)
+			WSOnCookie = function(Data)
 			{
-				if (CookieSaving && CookieSaving === K && SiteMap[K])
+				var S = Data.Site,C = Data.Coke;
+				if (Data.JSON)
 				{
-					CookieSaving = false
-					CookieCheckNoti(SA('AutCheck') + ' @' + SiteSolveName(K))
-					CookieEnd(SiteMap[K].Sign().Now(function(Q)
-					{
-						if (Q && WW.IsStr(Q))
-							CookieCheckNoti(SA('AutSigned') + ' ' + Q + '@' + SiteSolveName(K))
-						else CookieCheckNoti(SA('AutNoSign') + ' @' + SiteSolveName(K))
-						CookieCheckNoti(false)
-					},function(E)
-					{
-						CookieCheckNoti(SA('AutNoSign') + ' @' + SiteSolveName(K) + '\n' + ErrorS(E))
-						CookieCheckNoti(false)
-					}))
+					if (Data = WSSolveJSON(Data.JSON))
+						C = (CookieMap = Data)[S = Site.V()]
 				}
-				if (WW.IsObj(K))
+				else if (WR.Has(S,SiteMap))
 				{
-					CookieMap = K
-					O = CookieMap[K = Site.V()]
+					if (CookieSaving && CookieSaving === S)
+					{
+						CookieSaving = false
+						CookieCheckNoti(LangSolve('AutCheck') + ' @' + SiteSolveName(S))
+						CookieEnd(SiteMap[S].Sign().Now(function(Q)
+						{
+							if (Q && WW.IsStr(Q))
+								CookieCheckNoti(LangSolve('AutSigned') + ' ' + Q + '@' + SiteSolveName(S))
+							else CookieCheckNoti(LangSolve('AutNoSign') + ' @' + SiteSolveName(S))
+							CookieCheckNoti(false)
+						},function(E)
+						{
+							CookieCheckNoti(LangSolve('AutNoSign') + ' @' + SiteSolveName(S) + '\n' + ErrorS(E))
+							CookieCheckNoti(false)
+						}))
+					}
+					CookieMap[S] = C
 				}
-				else CookieMap[K] = O
-				Site.V() && K === Site.V() && Cookie.V(O || '')
+				Site.V() && S === Site.V() && Cookie.V(C || '')
 			}
 			WV.ApR(
 			[
@@ -2774,14 +2673,14 @@
 							S : WV.S6,
 							I : WV.InpW,
 
-							p : Padding
+							p : ConfPadding
 						}
 					)
 				},
 				Hide : function(){Token.V('').Fresh(),TokenNew.V('').Fresh()}
 			}
 		}],
-		[SA('Sot'),function(V)
+		[LangSolve('Sot'),function(V)
 		{
 			var
 			ClassTitle = WW.Key(),
@@ -2789,7 +2688,7 @@
 			SC = WB.SC(),
 			SCC = {},
 			SCM = {},
-			Mask = [[WB.SCD,SA('SotDown')],[WB.SCU,SA('SotUp')],[WB.SCI,SA('SotInp')]];
+			Mask = [[WB.SCD,LangSolve('SotDown')],[WB.SCU,LangSolve('SotUp')],[WB.SCI,LangSolve('SotInp')]];
 			WR.EachU(function(B)
 			{
 				var
@@ -2830,7 +2729,7 @@
 					},
 					I = WV.Inp(
 					{
-						Hint : SA('SotSet'),
+						Hint : LangSolve('SotSet'),
 						Blk : false,
 						RO : true,
 						InpU : Update,
@@ -2860,7 +2759,7 @@
 					[
 						WV.But(
 						{
-							X : SA('SotRemove'),
+							X : LangSolve('SotRemove'),
 							The : WV.TheP,
 							C : Remove
 						}),
@@ -2882,7 +2781,7 @@
 				{
 					if (WR.Eq(SCM[Key] = WR.Reduce(function(D,V){V.G(D)},[],Current),B))
 						SCM[Key] = undefined
-					WebSocketSendAuth([ActionAuthShortCut,WR.Where(WR.Id,SCM)])
+					WSSend(Proto.AuthShortCut,{JSON : WC.OTJ(WR.Where(WR.Id,SCM))})
 				};
 				B = [B.slice(1)]
 				SCM[Key] = false
@@ -2904,16 +2803,16 @@
 				})()
 				WV.ApR(
 				[
-					WV.T(WV.Rock(ClassTitle),SA('Sot' + Key,LangNow)),
+					WV.T(WV.Rock(ClassTitle),LangSolve('Sot' + Key,LangNow)),
 					WV.But(
 					{
-						X : SA('SotAdd'),
+						X : LangSolve('SotAdd'),
 						The : WV.TheP,
 						C : function(){Make('',WB.SCD)}
 					}),
 					WV.But(
 					{
-						X : SA('SotRestore'),
+						X : LangSolve('SotRestore'),
 						The : WV.TheP,
 						C : function()
 						{
@@ -2982,13 +2881,14 @@
 				ShortCutOverlayClose,
 				'Esc',WB.SCD
 			]])
-			WSOnSC = function(Q)
+			WSOnSC = function(Data)
 			{
-				WR.EachU(function(V,F){V(Q[F])},SCC)
+				if (Data = WSSolveJSON(Data.JSON))
+					WR.EachU(function(V,F){V(Data[F])},SCC)
 			}
 			SC.On('Shift+Ctrl+Alt+Space+p+-+]',function()
 			{
-				MakeDebug()
+				DebugMake()
 			},WB.SCD | WB.SCI)
 			return {
 				CSS : function(ID)
@@ -3005,19 +2905,19 @@
 							H : WV.ChoW,
 							T : ClassTitle,
 							A : ClassAction,
-							p : Padding
+							p : ConfPadding
 						}
 					)
 				}
 			}
 		}],
-		[SA('Set'),function(V)
+		[LangSolve('Set'),function(V)
 		{
 			var
 			SetD = {},SetC = {},
 			PC,
 			Key = function(Q){return PC = Pref.C(Q),Q},
-			ChoOF = [[false,SA('GenDisabled')],[true,SA('GenEnabled')]],
+			ChoOF = [[false,LangSolve('GenDisabled')],[true,LangSolve('GenEnabled')]],
 			UnstableZone,
 			Pref = WV.Pref(
 			{
@@ -3025,7 +2925,7 @@
 				C : function()
 				{
 					UnstableZone ||
-					WebSocketSendAuth([ActionAuthSetting,WR.WhereU(function(V,F){return V !== SetD[F]},Setting)])
+					WSSend(Proto.AuthSetting,{JSON : WC.OTJ(WR.WhereU(function(V,F){return V !== SetD[F]},Setting))})
 				}
 			}),
 			OptionProxy,
@@ -3040,7 +2940,7 @@
 				ShortCut.On(SCKey,function(V)
 				{
 					Opt.V(V = !Opt.V())
-					Noti.S([SA('Set'),SA('Set' + Key),SA(V ? 'GenEnabled' : 'GenDisabled')].join(' | '))
+					Noti.S([LangSolve('Set'),LangSolve('Set' + Key),LangSolve(V ? 'GenEnabled' : 'GenDisabled')].join(' | '))
 				})
 			};
 			WR.Each(function(V)
@@ -3063,7 +2963,7 @@
 				}
 			},[
 			[
-				SA('SetLang'),
+				LangSolve('SetLang'),
 				Key('Lang'),
 				WV.Inp(
 				{
@@ -3071,7 +2971,7 @@
 					Inp : function(Q)
 					{
 						LangNow === (LangTo(Q),LangNow) ||
-							Noti.S(SA('SetLangH'))
+							Noti.S(LangSolve('SetLangH'))
 					},
 					NoRel : InpNoRel
 				}).Drop(WR.Map(function(V)
@@ -3080,19 +2980,19 @@
 				},WR.Ent(Lang))),
 				'EN'
 			],[
-				SA('SetDir'),
+				LangSolve('SetDir'),
 				Key('Dir'),
 				WV.Inp(
 				{
-					Hint : SA('SetDirH'),
+					Hint : LangSolve('SetDirH'),
 					InpU : PC
 				})
 			],[
-				SA('SetFmt'),
+				LangSolve('SetFmt'),
 				Key('Fmt'),
 				WV.Inp(
 				{
-					Hint : SA('SetFmtH'),
+					Hint : LangSolve('SetFmtH'),
 					Any : true,
 					InpU : PC,
 					NoRel : InpNoRel
@@ -3107,7 +3007,7 @@
 				]),
 				'|Up|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?'
 			],[
-				SA('SetMax'),
+				LangSolve('SetMax'),
 				Key('Max'),
 				WV.Inp(
 				{
@@ -3116,7 +3016,7 @@
 				}).Drop(WR.Range(1,25)),
 				4
 			],[
-				SA('SetProxy'),
+				LangSolve('SetProxy'),
 				Key('Proxy'),
 				OptionProxy = WV.Cho(
 				{
@@ -3125,24 +3025,24 @@
 				}),
 				false
 			],[
-				SA('SetURL'),
+				LangSolve('SetURL'),
 				Key('ProxyURL'),
 				WV.Inp(
 				{
-					Hint : SA('SetURLH'),
+					Hint : LangSolve('SetURLH'),
 					InpU : PC
 				})
 			],[
-				SA('SetImg'),
+				LangSolve('SetImg'),
 				Key('ProxyView'),
 				WV.Cho(
 				{
-					Set : [[false,SA('SetImgNo')],[true,SA('SetImgDown')]],
+					Set : [[false,LangSolve('SetImgNo')],[true,LangSolve('SetImgDown')]],
 					Inp : PC
 				}),
 				false
 			],[
-				SA('SetDelay'),
+				LangSolve('SetDelay'),
 				Key('Delay'),
 				WV.Inp(
 				{
@@ -3152,7 +3052,7 @@
 				}),
 				20
 			],[
-				SA('SetHTTP429'),
+				LangSolve('SetHTTP429'),
 				Key('HTTP429'),
 				WV.Inp(
 				{
@@ -3162,7 +3062,7 @@
 				}),
 				60
 			],[
-				SA('SetSize'),
+				LangSolve('SetSize'),
 				Key('Size'),
 				WV.Cho(
 				{
@@ -3171,7 +3071,7 @@
 				}),
 				true
 			],[
-				SA('SetMeta'),
+				LangSolve('SetMeta'),
 				Key('Meta'),
 				WV.Cho(
 				{
@@ -3180,7 +3080,7 @@
 				}),
 				true
 			],[
-				SA('SetCover'),
+				LangSolve('SetCover'),
 				Key('Cover'),
 				WV.Cho(
 				{
@@ -3189,7 +3089,7 @@
 				}),
 				true
 			],[
-				SA('SetNonAV'),
+				LangSolve('SetNonAV'),
 				Key('NonAV'),
 				OptionNonAV = WV.Cho(
 				{
@@ -3198,7 +3098,7 @@
 				}),
 				false
 			],[
-				SA('SetSPUP'),
+				LangSolve('SetSPUP'),
 				Key('SPUP'),
 				OptionSPUP = WV.Inp(
 				{
@@ -3223,15 +3123,16 @@
 			{
 				UnstableZone = true
 			})
-			WSOnSetting = function(Q)
+			WSOnSetting = function(Data)
 			{
-				WR.EachU(function(V,F){V(Q[F])},SetC)
-				LangTo(Q.Lang)
-				UnstableZone = false
+				if (Data = WSSolveJSON(Data.JSON))
+				{
+					WR.EachU(function(V,F){V(Data[F])},SetC)
+					LangTo(Data.Lang)
+					UnstableZone = false
+				}
 			}
-			WR.Has(Top.LangS,Lang) && SetC.Lang(Top.LangS)
-			Top.Lang = null
-			WR.Del('LangS',Top)
+			WR.Has(Conf.Lang,Lang) && SetC.Lang(Conf.Lang)
 			MakeShortCutToggle(ShortCutGeneralProxy,OptionProxy,'Proxy')
 			MakeShortCutToggle(ShortCutGeneralNonAV,OptionNonAV,'NonAV')
 			return {
@@ -3242,7 +3143,7 @@
 						'#`R`{padding:0 `p`px}',
 						{
 							R : ID,
-							p : Padding
+							p : ConfPadding
 						}
 					)
 				}
@@ -3263,14 +3164,197 @@
 	WV.On('click',OverlayRelease,ROverlay)
 	ShortCutOnOverlay(ShortCutOverlayClose,OverlayRelease)
 
+	WSActPlain = WW.MakeO
+	(
+		Proto.TaskNew,DBBriefDiffForward,
+		Proto.TaskPlay,DBBriefDiffForward,
+		Proto.TaskPause,DBBriefDiffForward,
+		Proto.TaskRemove,DBBriefDiffForward,
+		Proto.TaskHist,function(Data)
+		{
+			DBBriefDiffForward(Data)
+			DetailIs(Data.Row) && DetailUpdate.F(Data)
+		},
+		Proto.TaskOverview,TaskOverviewUpdate,
+		Proto.TaskRenew,WSOnRenew,
+		Proto.TaskTitle,WSOnTitle,
+		Proto.TaskSize,WSOnSize,
+		Proto.TaskErr,WSOnTaskErr,
+
+		Proto.ShortCut,WSOnSC,
+
+		Proto.Error,function(Data)
+		{
+			Noti.S(
+			[
+				LangSolve('Err'),
+				' | ',
+				ProtoInv[Data.Src] || '0x' + WR.HEX(Data.Src),
+				' | ',
+				LangSolve(Data.Msg,Data.Arg)
+			])
+		},
+
+		Proto.DBBrief,function(Data)
+		{
+			if (Data.Part && Data.Part.length)
+			{
+				WR.Each(function(V)
+				{
+					V.Done ?
+						DBBriefHist.push(V) :
+						DBBriefHot.push(V)
+				},Data.Part)
+				WSSend(Proto.DBBrief,{Cont : 9,Limit : ConfDBPageSize})
+			}
+			else
+			{
+				if (DBBriefVer === Data.Ver)
+				{
+					DebugLog('DBBrief',DBBriefVer)
+				}
+				else
+				{
+					DBBriefVer = Data.Ver
+					Data = WW.Now()
+					DebugLog('DBBrief',DBBriefVer + ' ' + WW.StrMS(Data - WSOnlineAt))
+					DBBriefHist.sort(function(Q,S)
+					{
+						return S.Done - Q.Done ||
+							S.Row - Q.Row
+					})
+					DebugLog('DBBrief','Sort ' + WW.StrMS(WW.Now() - Data))
+					Data = WW.Now()
+					WSOnDBBriefHot(DBBriefHot)
+					WSOnDBBriefHist(DBBriefHist)
+					DebugLog('DBBrief','Build ' + WW.StrMS(WW.Now() - Data))
+				}
+				DBBriefDiffRelease(DBBriefVer)
+				DBBriefHot = []
+				DBBriefHist = []
+				BrowserUpdate()
+			}
+		},
+		Proto.DBSite,function(Data)
+		{
+			if (WSOnDBKey === Data.ID)
+				Data.Err ? WSOnDB.E(Data.Err) :
+				(Data = WSSolveJSON(Data.JSON)) ? WSOnDB.U(Data) :
+				WSOnDB.E('Bad JSON')
+		}
+	)
+	WSActAuth = WW.MakeO
+	(
+		Proto.AuthHello,function(Data)
+		{
+			if (!WSAuthInited)
+			{
+				WSAuthInited = true
+				NotiAuth(LangSolve('AutAuthed'))
+				NotiAuth(false)
+				WSNotAuthedNoti(false)
+				if (Data.Ack !== WSAuthSeed)
+				{
+					DebugLog('Hello','Bad Ack ' + WC.OTJ([WSAuthSeed,Data.Ack]))
+					WS.F()
+					return
+				}
+				WSSend(Proto.AuthHello,
+				{
+					Ack : Data.Syn
+				})
+			}
+		},
+		Proto.AuthToken,function()
+		{
+			Noti.S(LangSolve('AutSaved'))
+		},
+		Proto.AuthCookie,WSOnCookie,
+		Proto.AuthReq,function(Data)
+		{
+			var R = WSProxyMap[Data.ID];
+			if (R)
+			{
+				WR.Del(Data.ID,WSProxyMap)
+				WB.ReqB(
+				{
+					URL : ConfURLReq + Data.Token,
+					Bin : true
+				}).Map(function(B)
+				{
+					var
+					Head = {},R,
+					UVM = 1,
+					T,F = 0;
+					B = WC.AESD(Data.Key,Data.IV,WC.OFB,B)
+					for (T = 0;
+						T += UVM * (127 & B[F]),
+						127 < B[F++]
+					;) UVM *= 128
+					if (T !== Data.ID)
+						WW.Throw(LangSolve('ErrReqID',[Data.ID,T]))
+					for (UVM = 1,T = 0;
+						T += UVM * (127 & B[F]),
+						127 < B[F++]
+					;) UVM *= 128
+					T = WC.U16S(B.slice(F,F += T)).split('\n')
+					R =
+					{
+						ID : Data.ID,
+						Token : Data.Token,
+						Code : +T[0],
+						Msg : T[1],
+						W : T = T.slice(2),
+						H : Head,
+						B : WC.U16S(B.slice(F))
+					}
+					for (F = 0;F < T.length;F += 2)
+					{
+						UVM = WR.Pascal(T[F])
+						if ('Set-Cookie' === UVM)
+							Head[UVM] ?
+								Head[UVM].push(T[1 + F]) :
+								Head[UVM] = [T[1 + F]]
+						else Head[UVM] = T[1 + F]
+					}
+					return R
+				}).Now(R)
+			}
+		},
+
+		Proto.AuthSetting,WSOnSetting,
+
+		Proto.AuthTaskInfo,TaskFullInfoUpdate,
+
+		Proto.AuthDownFile,DetailUpdateForward,
+		Proto.AuthDownPlay,DetailUpdateForward,
+		Proto.AuthDownConn,DetailUpdateForward,
+		Proto.AuthDownPath,DetailUpdateForward,
+		Proto.AuthDownHas,DetailUpdateForward,
+		Proto.AuthDownTake,DetailUpdateForward,
+		Proto.AuthDownDone,DetailUpdateForward,
+
+		Proto.AuthInspect,function(Data)
+		{
+			console.log('Inspector',Data.URL)
+		},
+		Proto.AuthVacuum,function(Data)
+		{
+			Data.Err ?
+				console.log('Vacuum',WW.StrMS(Data.Take),WR.ToSize(Data.From),Data.Err) :
+				console.log('Vacuum',WW.StrMS(Data.Take),WR.ToSize(Data.From),WR.ToSize(Data.To),WR.ToSize(Data.To - Data.From))
+		},
+		Proto.AuthErr,WSOnErr,
+		Proto.AuthErrFile,WSOnErrFile
+	)
+
 	WV.Ready(function()
 	{
 		var
 		Req = [],
 		ReqFeed = function(Q,S)
 		{
-			Req.unshift([Q,S])
-			Req.length < DebugLimitReq || Req.pop()
+			Req.unshift([Q,S]) < ConfDebugLimitObj || Req.pop()
 		},
 		MakeRegExpCachePrefix = false,MakeRegExpCache,
 		MakeRegExp = function(Prefix)
@@ -3318,7 +3402,7 @@
 				}
 		};
 		WV.Ap(Rainbow[0],WV.Body)
-		WS.H || WebSocketNoti(SA('GenNoSock'))
+		WS.H || WSNoti(LangSolve('GenNoSock'))
 		WS.C()
 
 		Top.CrabSave = CrabSave = {}
@@ -3326,42 +3410,26 @@
 		{
 			var V = Q(
 			{
-				SA : SA,
+				SA : LangSolve,
 				Req : function(Q,H)
 				{
+					var ID,R = WX.R();
+					for (;WR.Has(ID = WW.Rnd(0xFFFFFFFF),WSProxyMap););
+					WSProxyMap[ID] = R
 					Q = WW.IsObj(Q) ? Q : {URL : Q}
 					if (!WR.Has('Cookie',Q))
 						Q.Cookie = V.Cookie
-					return WX.Provider(function(O)
+					WSSend(Proto.AuthReq,{ID : ID,JSON : WC.OTJ(Q)})
+					return R.Map(function(B)
 					{
-						var T = WW.Key();
-						if (WebSocketSendAuth([ActionAuthAPI,T,Q]))
-						{
-							WSOnAPI[T] = function(B)
-							{
-								ReqFeed(Q,B)
-								WR.Del(T,WSOnAPI)
-								T = false
-								if (B[2] && H) O.D(B.slice(2)).F()
-								else if (B[2] && /^2/.test(B[2])) O.D(B[3]).F()
-								else O.E(B[2] ?
-									SA('ErrBadRes',['#' + B[2] + ' ' + B[3]]) :
-									B[3])
-							}
-						}
-						else T = WW.Throw(SA(Online ? 'ErrNoAuth' : 'ErrOff'))
-						return function()
-						{
-							T && WebSocketSendAuth([ActionAuthAPI,T,false])
-							T && WR.Del(T,WSOnAPI)
-						}
+						ReqFeed(Q,B)
+						Q.AC || /^2/.test(B.Code) || WW.Throw(WW.Err.NetBadStatus(B.Code))
+						return H ? B : B.B
 					})
 				},
 				API : function(Q,H)
 				{
-					var
-					URL = URLAPI + '~' + WC.UE(WW.IsObj(Q) ? WC.OTJ(Q) : Q);
-					return (H ? WB.ReqU({URL : URL,AC : true}) : WB.ReqB(URL))
+					return (H ? WB.ReqU({URL : MakeAPI(Q),AC : true}) : WB.ReqB(MakeAPI(Q)))
 						.Tap(function(B)
 						{
 							ReqFeed(Q,B)
@@ -3373,7 +3441,7 @@
 				},
 				Auth : function()
 				{
-					return !!Cipher
+					return !!WSCipher
 				},
 				Coke : function()
 				{
@@ -3381,7 +3449,7 @@
 				},
 				CokeU : function(Q)
 				{
-					WebSocketSendAuth([ActionAuthCookie,V.ID,Q])
+					WSSend(Proto.AuthCookie,{Site : V.ID,Coke : Q})
 				},
 				CokeC : function(Q)
 				{
@@ -3391,11 +3459,11 @@
 						return Q(CookieMap[V.Cookie] || '')
 					}
 				},
-				DB : function(K,O)
+				DB : function(Med,Inp)
 				{
-					K = V.ID + K
-					WebSocketSend([ActionWebSiteDB,K,O])
-					WSOnDBKey = [K,O]
+					WSOnDBKey = WW.Rnd(0x4000000000000)
+					Med = V.ID + Med
+					WSSend(Proto.DBSite,{ID : WSOnDBKey,Med : Med,JSON : WC.OTJ([Inp])})
 					return WSOnDB = WX.R()
 				},
 				Bad : function(Q,S)
@@ -3403,12 +3471,12 @@
 					WW.Throw(null == S ?
 						Q :
 						WW.IsArr(S) ?
-							SA(Q,S) :
+							LangSolve(Q,S) :
 							WW.Quo(Q) + S)
 				},
 				BadR : function(Q)
 				{
-					WW.Throw(SA('ErrBadRes',[WW.IsObj(Q) ? WC.OTJ(Q) : Q]))
+					WW.Throw(LangSolve('ErrBadRes',[WW.IsObj(Q) ? WC.OTJ(Q) : Q]))
 				},
 				Num : function(Q)
 				{
@@ -3426,7 +3494,7 @@
 				UP : MakeRegExp().UP,
 				Find : MakeRegExp().Find,
 				MakeRX : MakeRegExp,
-				Size : PageSize,
+				Size : ConfPageSize,
 				Pascal : function(Q)
 				{
 					return Q.replace(/[A-Z]?[a-z]+/g,function(V)
@@ -3450,16 +3518,16 @@
 					{
 						return (Page && Cache ? WX.Just(Cache) : H(ID)).FMap(function(V)
 						{
-							var C = Math.ceil(V.length / PageSize);
+							var C = Math.ceil(V.length / ConfPageSize);
 							Cache = V
-							V = V.slice(Page * PageSize,-~Page * PageSize)
+							V = V.slice(Page * ConfPageSize,-~Page * ConfPageSize)
 							return (ItemMap ? ItemMap(V,ID) : WX.Just(V)).Map(function(V)
 							{
 								return {
 									At : Page < C ? Page : Page = C && ~-C,
 									Max : C,
 									Len : Cache.length,
-									Size : PageSize,
+									Size : ConfPageSize,
 									Item : V
 								}
 							})
@@ -3546,23 +3614,24 @@
 		}
 		CrabSave.Err = RecordErrList
 		CrabSave.Req = Req
+		CrabSave.Proto = DebugProto
 		CrabSave.Inspect = function()
 		{
-			WebSocketSendAuth([ActionAuthInspect,WW.Arr(arguments)])
+			WSSend(Proto.AuthInspect,{JSON : WC.OTJ(WW.Arr(arguments))})
 		}
 		CrabSave.Reload = function()
 		{
-			WebSocketSendAuth([ActionAuthReload])
+			WSSend(Proto.AuthReload)
 		}
 		CrabSave.Vacuum = function()
 		{
-			WebSocketSendAuth([ActionAuthVacuum])
+			WSSend(Proto.AuthVacuum)
 		}
 		SiteBegin = WW.Now()
 		WW.To(1E3,function(){SiteCount < SiteTotal && SiteOnNoti()})
 		SiteTotal = WR.EachU(function(V,F)
 		{
-			WV.Ap(WV.Attr(WV.A('script'),'src',URLSite + V + '.js'),WV.Head)
+			WV.Ap(WV.Attr(WV.A('script'),'src',ConfURLSite + V),WV.Head)
 			SiteMap[V] = F
 		},[
 			'BiliBili',
@@ -3586,7 +3655,7 @@
 			'Manual'
 		]).length
 		SiteOnNoti()
-		WW.To(TickInterval,function(F)
+		WW.To(ConfTickInterval,function(F)
 		{
 			for (F = 0;F < TickQueue.length;++F)
 				TickQueue[F]()

@@ -1,0 +1,350 @@
+syntax = 'proto3';
+
+
+
+message DBTask
+{
+	sint64 Row = 1;
+	sint64 Birth = 2;
+	string Site = 3;
+	string ID = 4;
+	string Title = 5;
+	string UP = 6;
+	sint64 UPAt = 7;
+	sint64 File = 8;
+	sint64 Size = 9;
+	sint64 Has = 10;
+	string Root = 11;
+	string Format = 12;
+	sint64 State = 13;
+	sint64 Error = 14;
+	sint64 Done = 15;
+	repeated DBPart Part = 16;
+	sint64 PartTotal = 17;
+	repeated DBDown Down = 18;
+}
+
+message DBTaskBrief
+{
+	sint64 Row = 1;
+	string Site = 2;
+	string ID = 3;
+	sint64 Size = 4;
+	sint64 Done = 5; // Hist Only
+}
+
+message DBTaskOverview
+{
+	string Title = 1;
+	sint64 File = 2;
+	sint64 Size = 3;
+	sint64 Has = 4;
+	sint64 State = 5;
+	sint64 Error = 6;
+}
+
+message DBTaskNew
+{
+	string Site = 1;
+	string ID = 2;
+	string Title = 3;
+	string UP = 4;
+}
+
+message DBPart
+{
+	sint64 Task = 1;
+	sint64 Part = 2;
+	sint64 Total = 3;
+	sint64 File = 4;
+	string Title = 5;
+}
+
+message DBDown
+{
+	sint64 Task = 1;
+	sint64 Part = 2;
+	sint64 File = 3;
+	string URL = 4;
+	string Ext = 5;
+	sint64 Size = 6;
+	string Path = 7;
+	sint64 Has = 8;
+	sint64 First = 9;
+	sint64 Play = 10;
+	sint64 Take = 11;
+	sint64 Done = 12;
+}
+
+
+
+message TaskNew
+{
+	sint64 Ver = 1;
+	DBTaskBrief Task = 2;
+}
+
+message TaskPlay
+{
+	sint64 Ver = 1;
+	sint64 Row = 2;
+}
+
+message TaskPause
+{
+	sint64 Ver = 1;
+	sint64 Row = 2;
+}
+
+message TaskRemove
+{
+	sint64 Ver = 1;
+	sint64 Row = 2;
+	sint64 Done = 3;
+}
+
+message TaskHist
+{
+	sint64 Ver = 1;
+	sint64 Row = 2;
+	sint64 Done = 3;
+}
+
+message TaskOverview
+{
+	sint64 Row = 1;
+	DBTaskOverview Task = 2;
+	string Err = 3;
+}
+
+message TaskRenew
+{
+	sint64 Row = 1;
+	sint64 On = 2;
+	repeated sint64 All = 3;
+}
+
+message TaskTitle
+{
+	sint64 Row = 1;
+	string Title = 2;
+}
+
+message TaskSize
+{
+	sint64 Row = 1;
+	sint64 File = 2;
+	sint64 Size = 3;
+}
+
+message TaskErr
+{
+	sint64 Row = 1;
+	sint64 State = 2;
+	sint64 At = 3;
+}
+
+
+
+message ShortCut
+{
+	string JSON = 1;
+}
+
+
+
+message Tick
+{
+}
+
+message Error
+{
+	string Src = 1;
+	string Msg = 2;
+	repeated string Arg = 3;
+}
+
+
+
+message DBBrief
+{
+	sint64 Ver = 1;
+	sint64 Limit = 2;
+	sint64 Cont = 3;
+	repeated DBTaskBrief Part = 4;
+}
+
+message DBSite
+{
+	sint64 ID = 1;
+	string Med = 2;
+	string JSON = 3;
+	string Err = 4;
+}
+
+
+
+message AuthHello
+{
+	sint64 Syn = 1;
+	sint64 Ack = 2;
+}
+
+message AuthToken
+{
+	string Old = 1;
+	string New = 2;
+}
+
+message AuthCookie
+{
+	string Site = 1;
+	string Coke = 2;
+	string JSON = 3;
+}
+
+message AuthReq
+{
+	sint64 ID = 1;
+	string JSON = 2;
+
+	string Token = 3;
+	bytes Key = 4;
+	bytes IV = 5;
+}
+
+
+
+message AuthShortCut
+{
+	string JSON = 1;
+}
+
+message AuthSetting
+{
+	string JSON = 1;
+}
+
+
+
+message AuthTaskNew
+{
+	repeated DBTaskNew Task = 1;
+}
+
+message AuthTaskInfo
+{
+	sint64 Row = 1;
+	DBTask Task = 2;
+	string Err = 3;
+}
+
+message AuthTaskPlay
+{
+	repeated sint64 Row = 1;
+}
+
+message AuthTaskPause
+{
+	repeated sint64 Row = 1;
+}
+
+message AuthTaskRemove
+{
+	repeated sint64 Row = 1;
+}
+
+
+
+message AuthDownFile
+{
+	sint64 Row = 1;
+	sint64 Part = 2;
+	sint64 File = 3;
+	sint64 Size = 4;
+}
+
+message AuthDownPlay
+{
+	sint64 Row = 1;
+	sint64 Part = 2;
+	sint64 File = 3;
+	sint64 Play = 4;
+}
+
+message AuthDownConn
+{
+	sint64 Row = 1;
+	sint64 Part = 2;
+	sint64 File = 3;
+	sint64 First = 4;
+}
+
+message AuthDownPath
+{
+	sint64 Row = 1;
+	sint64 Part = 2;
+	sint64 File = 3;
+	string Path = 4;
+}
+
+message AuthDownHas
+{
+	sint64 Row = 1;
+	sint64 Part = 2;
+	sint64 File = 3;
+	sint64 Has = 4;
+	sint64 Take = 5;
+}
+
+message AuthDownTake
+{
+	sint64 Row = 1;
+	sint64 Part = 2;
+	sint64 File = 3;
+	sint64 Take = 4;
+}
+
+message AuthDownDone
+{
+	sint64 Row = 1;
+	sint64 Part = 2;
+	sint64 File = 3;
+	sint64 Done = 4;
+}
+
+
+
+message AuthInspect
+{
+	string JSON = 1;
+	string URL = 2;
+}
+
+message AuthReload
+{
+}
+
+message AuthVacuum
+{
+	sint64 Take = 1;
+	sint64 From = 2;
+	sint64 To = 3;
+	string Err = 4;
+}
+
+
+
+message AuthErr
+{
+	sint64 Row = 1;
+	string Err = 2;
+	string JSON = 3;
+}
+
+message AuthErrFile
+{
+	string File = 1;
+	string Err = 2;
+	string JSON = 3;
+}

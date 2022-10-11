@@ -16,7 +16,14 @@ declare module CrabSaveNS
 	{
 		SA(Q : string,S? : any[]) : string
 		Req(Q : string | WebReq) : WishNS.Provider<string>
-		Req(Q : string | WebReq,H : true) : WishNS.Provider<[number | false,string,WishNS.ReqH['H']]>
+		Req(Q : string | WebReq,H : true) : WishNS.Provider<
+		{
+			Code : number
+			Msg : string
+			W : string[]
+			H : WishNS.ReqHead
+			B : string
+		}>
 		API(Q : WishNS.ReqAccept) : WishNS.Provider<string>
 		API(Q : WishNS.ReqAccept,H : true) : WishNS.Provider<[object,string,XMLHttpRequest]>
 		Head<U extends keyof WishNS.ReqHead>(Q : WishNS.ReqAccept,K : U,V : string) : WishNS.ReqO

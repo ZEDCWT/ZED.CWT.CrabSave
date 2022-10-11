@@ -123,11 +123,15 @@ ZED/CrabSave
 +-- Setting.json
 +-- ShortCut.json
 +-- Cookie.json # Cookie settings
++-- Web.js # Bundled script for Web clients
 ```
 
 
 
 ## Changelog
+
+### v1.5.0 Beaking Changes
+From this version, the protocol between C/S has been revamped, thus browsers running old version pages will not be able to communicate with newer versions.
 
 ### v1.4.0
 From this version, we do NOT ONLY focusing on video or audio data, we also supported to save infomation related to posts including Metadata and Cover Images. Also, posts without video or audio (eg. text only) are able to be saved now.

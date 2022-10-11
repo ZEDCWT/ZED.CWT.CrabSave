@@ -39,7 +39,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	{
 		return O.Req(SinaLoginSSO,true).FMap(function(AT,T)
 		{
-			AT = AT[2] && AT[2]['set-cookie']
+			AT = AT.H['Set-Cookie']
 			return AT && 1 < AT.length ?
 			(
 				T = WC.CokeP(O.Coke(),WR.Id),
@@ -70,7 +70,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 						WX.Just()
 				}).Map(function(B)
 				{
-					B = B && B[2] && B[2]['set-cookie']
+					B = B.H['Set-Cookie']
 					if (B && 1 < B.length)
 					{
 						B = WC.CokeP(B.join('; '),WR.Id)

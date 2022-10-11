@@ -144,10 +144,10 @@ module.exports = Option =>
 				update Task set Error = 0 where 0 <> Error;
 			`.replace(/^	{4}/mg,'').trim())),
 
-		New : Q => Get('select Row from Task where Done is null and ? = Site and ? = ID',[Q.Site,Q.ID])
+		New : Task => Get('select Row from Task where Done is null and ? = Site and ? = ID',[Task.Site,Task.ID])
 			.FMap(B =>
 			{
-				var I = Q.Site + ' ' + Q.ID
+				var I = Task.Site + ' ' + Task.ID
 				B && WW.Throw(['ErrDBHas',I])
 				NewPending.has(I) && WW.Throw(['ErrDBAdding',I])
 				NewPending.add(I)
@@ -172,57 +172,62 @@ module.exports = Option =>
 						1,0
 					)
 				`,[
-					Q.Birth,
-					Q.Site,
-					Q.ID,
-					Q.Title,
-					Q.UP,
-					Q.Root,
-					Q.Format
+					Task.Birth,
+					Task.Site,
+					Task.ID,
+					Task.Title,
+					Task.UP,
+					Task.Root,
+					Task.Format
 				]).Tap(null,
 					() => NewPending.delete(I),
 					() => NewPending.delete(I))
-					.FMap(() => Get(`select ${HotBrief} from Task where Done is null and ? = Site and ? = ID`,[Q.Site,Q.ID]))
+					.FMap(() => Get(`select ${HotBrief} from Task where Done is null and ? = Site and ? = ID`,[Task.Site,Task.ID]))
 					.Tap(B => B || WW.Throw(['ErrDBAddFail',I]))
 			}),
-		Over : Q => Get(
+		Over : Row => Get(
 		`
 			select
 				Title,File,Size,State,
 				Error,
 				(select sum(Has) from Down where ? = Task) Has
 			from Task where ? = Row
-		`,[Q,Q])
-			.Map(B => TaskAdjust(Q,B)),
-		Full : Q => Get('select * from Task where ? = Row',[Q])
+		`,[Row,Row])
+			.Map(B => TaskAdjust(Row,B)),
+		Full : Row => Get('select * from Task where ? = Row',[Row])
 			.FMap(B =>
 			{
-				TaskAdjust(Q,B)
-				return All('select * from Part where ? = Task order by Part',[Q]).FMap(P =>
+				TaskAdjust(Row,B)
+				return All('select * from Part where ? = Task order by Part',[Row]).FMap(P =>
 				{
 					B.Part = P
-					return All('select * from Down where ? = Task order by Part,File',[Q])
+					return All('select * from Down where ? = Task order by Part,File',[Row])
 				}).Map(N =>
 				{
 					B.Down = N
 					return B
 				})
 			}),
-		Del : Q => Get('select Done from Task where ? = Row',[Q])
+		Del : Row => Get('select Done from Task where ? = Row',[Row])
 			.FMap(B => Transaction(
 			[
-				['delete from Task where ? = Row',[Q]],
-				['delete from Part where ? = Task',[Q]],
-				['delete from Down where ? = Task',[Q]],
+				['delete from Task where ? = Row',[Row]],
+				['delete from Part where ? = Task',[Row]],
+				['delete from Down where ? = Task',[Row]],
 			]).Map(() => B && B.Done)),
 
-		Hot : (Q,S) => DB.each(`select ${HotBrief} from Task where Done is null order by Row`,
-			(E,V) => E || Q(V),
-			S),
-		Play : Q => Run(`update Task set State = 1 where ? = Row and 0 = State and Done is null`,[Q]),
-		Pause : Q => Run(`update Task set State = 0,Error = 0 where ? = Row and Done is null`,[Q]),
+		Brief : (Row,Limit) => All(
+		`
+			select ${HistBrief} from Task
+			where ? < Row
+			order by Row
+			limit ?
+		`,[Row,Limit]),
 
-		TopNoSize : (S,Q) => All(
+		Play : Row => Run(`update Task set State = 1 where ? = Row and 0 = State and Done is null`,[Row]),
+		Pause : Row => Run(`update Task set State = 0,Error = 0 where ? = Row and Done is null`,[Row]),
+
+		TopNoSize : (Count,From) => All(
 		`
 			select Row,Site,ID,Title,State,Error from Task
 			where
@@ -233,12 +238,12 @@ module.exports = Option =>
 				Error < ?
 			order by Row
 			limit ?
-		`,[Q,S]).FMap(R => WX.From(R)
+		`,[From,Count]).FMap(R => WX.From(R)
 			.FMapE(V => All('select Part,File,Size,Done from Down where ? = Task order by Part,File',[V.Row])
 				.Tap(Down => V.Down = Down))
 			.Fin()
 			.Map(() => R)),
-		SaveInfo : (S,Q) => Transaction(
+		SaveInfo : (Row,Info) => Transaction(
 		[
 			[`
 				update Task set
@@ -251,12 +256,12 @@ module.exports = Option =>
 					Error = 0
 				where ? = Row
 			`,[
-				Q.Title,
-				Q.UP,
-				Q.UPAt,
-				Q.Down.length,
+				Info.Title,
+				Info.UP,
+				Info.UPAt,
+				Info.Down.length,
 				// Q.Size,
-				S
+				Row
 			]],
 			...WR.Map(V =>
 			[
@@ -266,12 +271,12 @@ module.exports = Option =>
 						where not exists(select * from Part where ? = Task and ? = Part)
 				`,
 				[
-					S,V.Part,
-					Q.PartTotal,V.File,
+					Row,V.Part,
+					Info.PartTotal,V.File,
 					V.Title,
-					S,V.Part
+					Row,V.Part
 				]
-			],Q.Part),
+			],Info.Part),
 			...WR.Map(V =>
 			[
 				`
@@ -280,10 +285,10 @@ module.exports = Option =>
 						where not exists(select * from Down where ? = Task and ? = Part and ? = File)
 				`,
 				[
-					S,V.Part,V.File,
-					S,V.Part,V.File
+					Row,V.Part,V.File,
+					Row,V.Part,V.File
 				]
-			],Q.Down),
+			],Info.Down),
 			...WR.Map(V =>
 			[
 				`
@@ -295,34 +300,34 @@ module.exports = Option =>
 				`,
 				[
 					V.URL,V.Ext,V.Size,
-					S,V.Part,V.File
+					Row,V.Part,V.File
 				]
-			],Q.Down),
+			],Info.Down),
 			[`
 				update Task set
 					Size = (select sum(Size) from Down where ? = Task)
 				where ? = Row
-			`,[S,S]],
+			`,[Row,Row]],
 		]),
-		SaveSize : (Row,Part,File,Q) => Run(
+		SaveSize : (Row,Part,File,Size) => Run(
 		`
 			update Down set Size = ?
 			where ? = Task and ? = Part and ? = File and Done is null
-		`,[Q,Row,Part,File]),
-		FillSize : Q => Run(
+		`,[Size,Row,Part,File]),
+		FillSize : Row => Run(
 		`
 			update Task set
 				Size = (select sum(Size) from Down where ? = Task)
 			where ? = Row
-		`,[Q,Q])
-			.FMap(() => Get(`select Size from Task where ? = Row`,[Q]))
+		`,[Row,Row])
+			.FMap(() => Get(`select Size from Task where ? = Row`,[Row]))
 			.Map(V => V.Size),
-		NewSize : (Row,Part,File,Q) => Transaction(
+		NewSize : (Row,Part,File,Size) => Transaction(
 		[
 			[`
 				update Down set Size = ?
 				where ? = Task and ? = Part and ? = File
-			`,[Q,Row,Part,File]],
+			`,[Size,Row,Part,File]],
 			[`
 				update Task set
 					Size = (select sum(Size) from Down where ? = Task)
@@ -331,16 +336,16 @@ module.exports = Option =>
 		])
 			.FMap(() => Get(`select Size from Task where ? = Row`,[Row]))
 			.Map(V => V.Size),
-		Err : (Q,S,E) => Run(
+		Err : (Row,State,Date) => Run(
 		`
 			update Task set
 				State = case when 0 = State then 0 else ? end,
 				Error = ?
 			where ? = Row
-		`,[S,E,Q]),
-		TopErr : S => Get('select Error from Task where ? = State and 0 < Error order by Error limit 1',[S])
+		`,[State,Date,Row]),
+		TopErr : State => Get('select Error from Task where ? = State and 0 < Error order by Error limit 1',[State])
 			.Map(V => V && V.Error),
-		TopQueue : (S,Q,O) => All(
+		TopQueue : (Count,From,Online) => All(
 		`
 			select
 				*,
@@ -354,11 +359,11 @@ module.exports = Option =>
 				and
 				Error < ?
 				and
-				Row not in (${O})
+				Row not in (${Online})
 			order by Row
 			limit ?
-		`,[Q,S]),
-		TopToDown : Q => Get(
+		`,[From,Count]),
+		TopToDown : Row => Get(
 		`
 			select
 				*,
@@ -369,58 +374,55 @@ module.exports = Option =>
 				and
 				Done is null
 			order by Part,File
-		`,[Q]),
-		ViewPart : (Q,S) => false === S ?
-			Get(`select * from Part where ? = Task`,[Q]) :
+		`,[Row]),
+		ViewPart : (Row,Part) => false === Part ?
+			Get(`select * from Part where ? = Task`,[Row]) :
 			Get(
 			`
 				select * from Part
 				where ? = Task and ? = Part
-			`,[Q,S]),
+			`,[Row,Part]),
 
-		SavePlay : (Q,W,E,S) => Run(
+		SavePlay : (Row,Part,File,Play) => Run(
 		`
 			update Down set Play = ?
 			where ? = Task and ? = Part and ? = File
-		`,[S,Q,W,E]),
-		SaveConn : (Q,W,E,S) => Run(
+		`,[Play,Row,Part,File]),
+		SaveConn : (Row,Part,File,First) => Run(
 		`
 			update Down set First = ?
 			where ? = Task and ? = Part and ? = File and First is null
-		`,[S,Q,W,E]),
-		SavePath : (Q,W,E,S) => Run(
+		`,[First,Row,Part,File]),
+		SavePath : (Row,Part,File,Path) => Run(
 		`
 			update Down set Path = ?
 			where ? = Task and ? = Part and ? = File
-		`,[S,Q,W,E]),
-		SaveHas : (Q,W,E,S,K) => Run(
+		`,[Path,Row,Part,File]),
+		SaveHas : (Row,Part,File,Has,Take) => Run(
 		`
 			update Down set Has = ?,Take = ?
 			where ? = Task and ? = Part and ? = File
-		`,[S,K,Q,W,E]),
-		SaveTake : (Q,W,E,S) => Run(
+		`,[Has,Take,Row,Part,File]),
+		SaveTake : (Row,Part,File,Take) => Run(
 		`
 			update Down set Take = ?
 			where ? = Task and ? = Part and ? = File
-		`,[S,Q,W,E]),
-		SaveDone : (Q,W,E,S,ResetURL) => Run(
+		`,[Take,Row,Part,File]),
+		SaveDone : (Row,Part,File,Done,ResetURL) => Run(
 		`
 			update Down set
 				${ResetURL ? 'URL = null,' : ''}
 				Done = ?
 			where ? = Task and ? = Part and ? = File
-		`,[S,Q,W,E]),
+		`,[Done,Row,Part,File]),
 
-		Hist : (Q,S) => DB.each(`select ${HistBrief} from Task where Done is not null order by Done desc,Row`,
-			(E,V) => E || Q(V),
-			S),
-		Final : (Q,S) => Run(
+		Final : (Row,Done) => Run(
 		`
 			update Task set
 				Error = 0,
 				Done = ?
 			where ? = Row
-		`,[S,Q]),
+		`,[Done,Row]),
 
 		Vacuum : () => Exec('vacuum'),
 		Stat : () => WN.Exist(PathDB),

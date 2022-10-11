@@ -236,7 +236,7 @@ module.exports = Option =>
 											.FMap(() => DB.FillSize(V.Row)) :
 										WX.Just(R.Size)
 								})
-								.Tap(Z => Option.OnSize(V.Row,Z,Down.length))
+								.Tap(Z => Option.OnSize(V.Row,Down.length,Z))
 						}),
 					T;
 					V.Error && Option.ErrT(V.Row)
@@ -422,8 +422,11 @@ module.exports = Option =>
 							WX.Just({}) :
 						DB.ViewPart(Row,Part),
 					Working;
-					DownloadStatus.set(V.Row,H => ' ' + H(Working ? Has + Working.Calc().Saved : Has) +
-						' ' + H(Working ? Working.Info.Speed : 0))
+					DownloadStatus.set(V.Row,H =>
+					{
+						H(Working ? Has + Working.Calc().Saved : Has)
+						H(Working ? Working.Info.Speed : 0)
+					})
 					V.Error && Option.ErrT(V.Row)
 					DownloadRunning.set(V.Row,WX.TCO(() =>
 						DB.TopToDown(V.Row).FMap(Down => Down ?
@@ -465,7 +468,7 @@ module.exports = Option =>
 												.Tap(S =>
 												{
 													Option.OnFile(Down.Task,Down.Part,Down.File,Q)
-													Option.OnSize(Down.Task,S,null)
+													Option.OnSize(Down.Task,null,S)
 												}))
 									},
 									LowSpeedCount = 0,
@@ -501,7 +504,7 @@ module.exports = Option =>
 									}).On('Data',Q =>
 									{
 										var D = Down.Take + WW.Now() - Work.Info.Start
-										Option.OnHas(Down.Task,Down.Part,Down.File,[Q.Saved,D])
+										Option.OnHas(Down.Task,Down.Part,Down.File,Q.Saved,D)
 										NotBigDeal(DB.SaveHas(Down.Task,Down.Part,Down.File,Q.Saved,D))
 										if (RefSpeed)
 										{

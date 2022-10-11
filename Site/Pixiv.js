@@ -281,7 +281,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 			{
 				return O.Req({URL : PixivFanBox(ID),Red : 0},true).Map(function(B)
 				{
-					B = B[2].location
+					B = B.H.Location
 					return {
 						Item : [
 						{

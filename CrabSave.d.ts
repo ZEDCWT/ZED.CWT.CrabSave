@@ -27,42 +27,42 @@ declare module CrabSaveNS
 		}) : {
 			Init : WishNS.Provider<any>
 
-			New(Q : Pick<Task,'Birth' | 'Site' | 'ID' | 'Title' | 'UP' | 'Root' | 'Format'>) : WishNS.Provider<TaskBriefHot>
-			Over(Task : number) : WishNS.Provider<TaskOverview>
-			Full(Task : number) : WishNS.Provider<Task>
-			Del(Task : number) : WishNS.Provider<any>
+			New(Task : Pick<Task,'Birth' | 'Site' | 'ID' | 'Title' | 'UP' | 'Root' | 'Format'>) : WishNS.Provider<TaskBriefHot>
+			Over(Row : number) : WishNS.Provider<TaskOverview>
+			Full(Row : number) : WishNS.Provider<Task>
+			Del(Row : number) : WishNS.Provider<any>
 
-			Hot(Row : (Q : TaskBriefHot) => any,Down : (E? : any) => any) : any
-			Play(Task : number) : WishNS.Provider<any>
-			Pause(Task : number) : WishNS.Provider<any>
+			Brief(Row : number,Limit : number) : WishNS.Provider<TaskBriefHist[]>
+
+			Play(Row : number) : WishNS.Provider<any>
+			Pause(Row : number) : WishNS.Provider<any>
 
 			TopNoSize(Count : number,From : number) : WishNS.Provider<Pick<Task,'Row' | 'Site' | 'ID' | 'State' | 'Error' | 'Down'>[]>
-			SaveInfo(Task : number,Info : Omit<Task,'Size'> &
+			SaveInfo(Row : number,Info : Omit<Task,'Size'> &
 			{
 				Meta? : string
 				Cover? : string
 			}) : WishNS.Provider<any>
-			SaveSize(Task : number,Part : number,File : number,Size : number) : WishNS.Provider<any>
-			FillSize(Task : number) : WishNS.Provider<number>
-			NewSize(Task : number,Part : number,File : number,Size : number) : WishNS.Provider<number>
-			Err(Task : number,State : number,Date : number) : WishNS.Provider<any>
+			SaveSize(Row : number,Part : number,File : number,Size : number) : WishNS.Provider<any>
+			FillSize(Row : number) : WishNS.Provider<number>
+			NewSize(Row : number,Part : number,File : number,Size : number) : WishNS.Provider<number>
+			Err(Row : number,State : number,Date : number) : WishNS.Provider<any>
 			TopErr(State : number) : WishNS.Provider<number>
 			TopQueue(Count : number,From : number,Online : number[]) : WishNS.Provider<Omit<Task,'Part' | 'Down'>[]>
-			TopToDown(Task : number) : WishNS.Provider<Down &
+			TopToDown(Row : number) : WishNS.Provider<Down &
 			{
 				ExtCount : number
 			}>
-			ViewPart(Task : number,Part : number | false) : WishNS.Provider<Part>
+			ViewPart(Row : number,Part : number | false) : WishNS.Provider<Part>
 
-			SavePlay(Task : number,Part : number,File : number,Play : number) : WishNS.Provider<any>
-			SaveConn(Task : number,Part : number,File : number,First : number) : WishNS.Provider<any>
-			SavePath(Task : number,Part : number,File : number,Path : string) : WishNS.Provider<any>
-			SaveHas(Task : number,Part : number,File : number,Has : number,Take : number) : WishNS.Provider<any>
-			SaveTake(Task : number,Part : number,File : number,Take : number) : WishNS.Provider<any>
-			SaveDone(Task : number,Part : number,File : number,Date : number,ResetURL : boolean) : WishNS.Provider<any>
+			SavePlay(Row : number,Part : number,File : number,Play : number) : WishNS.Provider<any>
+			SaveConn(Row : number,Part : number,File : number,First : number) : WishNS.Provider<any>
+			SavePath(Row : number,Part : number,File : number,Path : string) : WishNS.Provider<any>
+			SaveHas(Row : number,Part : number,File : number,Has : number,Take : number) : WishNS.Provider<any>
+			SaveTake(Row : number,Part : number,File : number,Take : number) : WishNS.Provider<any>
+			SaveDone(Row : number,Part : number,File : number,Done : number,ResetURL : boolean) : WishNS.Provider<any>
 
-			Hist(Row : (Q : TaskBriefHist) => any,Down : (E? : any) => any) : any
-			Final(Task : number,Done : number) : WishNS.Provider<any>
+			Final(Row : number,Done : number) : WishNS.Provider<any>
 
 			Vacuum() : WishNS.Provider<any>
 			Stat() : WishNS.Provider<import('fs').Stats?>
@@ -115,7 +115,7 @@ declare module CrabSaveNS
 	interface Part
 	{
 		/** Row ID of Task */
-		Task : number
+		Row : number
 		/** Part index of the task */
 		Part : number
 		/** Total part count */
@@ -128,7 +128,7 @@ declare module CrabSaveNS
 	interface Down
 	{
 		/** Row ID of Task */
-		Task : number
+		Row : number
 		/** Part index of the task */
 		Part : number
 		/** File index of the part */
@@ -161,34 +161,34 @@ declare module CrabSaveNS
 			Site : ReturnType<SiteAll>
 			DB : ReturnType<DB>
 			Err(File : string,Err : any) : any
-			ErrT(Task : number,Err : any,State : number,At : number) : any
+			ErrT(Row : number,Err : any,State : number,At : number) : any
 
 			Req(Q : string | WishNS.RequestOption) : WishNS.RequestOption
 
-			OnRenew(Task : number) : any
-			OnRenewDone(Task : number) : any
-			OnInfo(Task : number,Info : Task) : any
-			OnTitle(Task : number,Title : string) : any
-			OnFile(Task : number,Part : number,File : number,Size : number) : any
-			OnSize(Task : number,Size : number,Count : number) : any
+			OnRenew(Row : number) : any
+			OnRenewDone(Row : number) : any
+			OnInfo(Row : number,Info : Task) : any
+			OnTitle(Row : number,Title : string) : any
+			OnFile(Row : number,Part : number,File : number,Size : number) : any
+			OnSize(Row : number,File : number,Size : number) : any
 
-			OnPlay(Task : number,Part : number,File : number,Play : number) : any
-			OnConn(Task : number,Part : number,File : number,Start : number) : any
-			OnPath(Task : number,Part : number,File : number,Path : string) : any
-			OnHas(Task : number,Part : number,File : number,Has : [number,number]) : any
-			OnTake(Task : number,Part : number,File : number,Take : number) : any
-			OnDone(Task : number,Part : number,File : number,Date : number) : any
+			OnPlay(Row : number,Part : number,File : number,Play : number) : any
+			OnConn(Row : number,Part : number,File : number,Start : number) : any
+			OnPath(Row : number,Part : number,File : number,Path : string) : any
+			OnHas(Row : number,Part : number,File : number,Has : number,Take : number) : any
+			OnTake(Row : number,Part : number,File : number,Take : number) : any
+			OnDone(Row : number,Part : number,File : number,Date : number) : any
 
-			OnFinal(Task : number,Done : number) : any
+			OnFinal(Row : number,Done : number) : any
 
 			OnEnd() : any
 		}) : {
 			Info() : void
 			Down() : void
-			Del(Task : number) : void
-			Renewing() : string[]
-			Downloading : Map<number,(H : (Q : number) => string) => string>
-			Stop(Task : number,SuppressDispatch? : boolean) : void
+			Del(Row : number) : void
+			Renewing() : number[]
+			Downloading : Map<number,(H : (Q : number) => any) => void>
+			Stop(Row : number,SuppressDispatch? : boolean) : void
 
 			OnSet() : void
 		}

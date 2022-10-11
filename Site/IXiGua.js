@@ -110,9 +110,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 						ReqCokeAC.__ac_signature = S('',ReqCokeAC.__ac_nonce = WC.CokeP(V).__ac_nonce)
 						B = 0
 					}
-				},B[2]['set-cookie'])
+				},B.H['Set-Cookie'])
 				return B ?
-					WX.Just(B[1]) :
+					WX.Just(B.B) :
 					U()
 			})
 		})

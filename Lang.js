@@ -1,5 +1,4 @@
-'use strict'
-var Lang = // eslint-disable-line
+var _$_Lang = // eslint-disable-line
 {
 	// {INTERNAL FATAL} is used to mark internal errors, should not be seen by users on UI. So not necessary to be translated
 	EN :
@@ -164,8 +163,10 @@ var Lang = // eslint-disable-line
 		ErrAuthFail : 'Authentication Failed',
 		ErrAuthInc : 'Original token is incorrect',
 		ErrAuthSave : 'Failed to save the new token ~0~',
+		ErrReqID : '{INTERNAL FATAL} Res ID mismatch ~0~ !== ~1~',
 		ErrUnkSite : 'Unknown site ~0~',
 		ErrSetDir : 'Download destination should be an absolute path',
+		ErrDBLoad : 'Failed to load DB infomation ~0~',
 		ErrDBNo : 'No such task ~0~',
 		ErrDBHas : 'Hot list already contains ~0~',
 		ErrDBAdding : 'Already adding ~0~',
@@ -337,6 +338,7 @@ var Lang = // eslint-disable-line
 		ErrAuthSave : '新密鑰保存失敗 ~0~',
 		ErrUnkSite : '未知站點 ~0~',
 		ErrSetDir : '下載目錄不是一個絕對路徑',
+		ErrDBLoad : '數據庫讀取異常 ~0~',
 		ErrDBNo : '任務ID不存在 ~0~',
 		ErrDBHas : '該任務已加入到下載列表中 ~0~',
 		ErrDBAdding : '同時有其他請求將該任務加入到下載列表中 ~0~',
@@ -507,6 +509,7 @@ var Lang = // eslint-disable-line
 		ErrAuthSave : '新密钥保存失败 ~0~',
 		ErrUnkSite : '未知站点 ~0~',
 		ErrSetDir : '下载目录不是一个绝对路径',
+		ErrDBLoad : '数据库读取异常 ~0~',
 		ErrDBNo : '任务ID不存在 ~0~',
 		ErrDBHas : '该任务已加入到下载列表中 ~0~',
 		ErrDBAdding : '同时有其他请求将该任务加入到下载列表中 ~0~',
@@ -677,6 +680,7 @@ var Lang = // eslint-disable-line
 		ErrAuthSave : '新しいTokenを保存できませんでした ~0~',
 		ErrUnkSite : '未知なサイト ~0~',
 		ErrSetDir : 'ダウンロード先はフルパスではありません',
+		ErrDBLoad : 'データベースのロードに失敗しました ~0~',
 		ErrDBNo : 'タスクはありません ~0~',
 		ErrDBHas : 'ホットリストには既に~0~が含まれています',
 		ErrDBAdding : '~0~は既に追加中',

@@ -101,8 +101,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				/^\w+:\/\//.test(ID) || (ID = 'https://' + ID)
 				return O.Req({URL : ID,Red : 0},true).Map(function(B)
 				{
-					B = B[2]
-					B = B.location
+					B = B.H.Location
 					return {
 						Item : [
 						{

@@ -26,7 +26,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	NicoChannelVideo = WW.Tmpl(NicoChannel,undefined,'/video?sort=f&order=d&page=',undefined),
 	NicoExt = 'https://ext.nicovideo.jp/',
 	NicoExtThumb = WW.Tmpl(NicoExt,'api/getthumbinfo/',undefined),
-	NicoSearchSug = 'http://sug.search.nicovideo.jp/',
+	NicoSearchSug = 'https://sug.search.nicovideo.jp/',
 	NicoSearchSugComplete = WW.Tmpl(NicoSearchSug,'suggestion/complete/',undefined),
 	NicoSeiga = 'https://seiga.nicovideo.jp/',
 	NicoSeigaMy = WW.Tmpl(NicoSeiga + 'my/personalize?page=',undefined),
