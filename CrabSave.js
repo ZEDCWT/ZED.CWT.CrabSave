@@ -181,7 +181,7 @@ module.exports = Option =>
 			}
 			RecErrTaskMap[Row] = Err
 			WebSocketBroadcast(Proto.TaskErr,{Row,State,At})
-			WebSocketBroadcast(Proto.AuthErr,{Row,Err})
+			WebSocketBroadcast(Proto.AuthErr,{Row,Err : WC.OTJ(Err)})
 		}
 	},
 

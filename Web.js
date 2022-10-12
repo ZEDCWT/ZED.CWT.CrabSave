@@ -161,7 +161,7 @@
 			Param = '=' + WC.B64S(WC.OTJ(WR.Omit(['URL'],V))).replace(/=*$/,'=')
 			V = V.URL
 		}
-		return ConfURLAPI + Param + V.replace(/^https:\/\//,'')
+		return ConfURLAPI + Param + V.replace(/^(?:https:)?\/\//,'')
 	},
 	MakeImgURL = function(V)
 	{
@@ -2253,6 +2253,7 @@
 			}
 			WSOnErr = function(Data)
 			{
+				var E;
 				if (Data.JSON)
 				{
 					if (Data = WSSolveJSON(Data.JSON))
@@ -2264,8 +2265,9 @@
 				}
 				else
 				{
-					Data.Err ? TaskErr[Data.Row] = Data.Err : WR.Del(Data.Row,TaskErr)
-					DetailIs(Data.Row) && DetailUpdate.E(Data.Err)
+					E = Data.Err ? WSSolveJSON(Data.Err) : null
+					E ? TaskErr[Data.Row] = E : WR.Del(Data.Row,TaskErr)
+					DetailIs(Data.Row) && DetailUpdate.E(E)
 				}
 			}
 			WSOnTaskErr = function(Data)
