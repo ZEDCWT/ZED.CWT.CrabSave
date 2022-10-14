@@ -973,10 +973,10 @@
 			I : function(Q,S)
 			{
 				WR.Has('Size',Q) ?
-					Size -= Q :
+					Size -= Q.Size :
 					--Plus
 				WR.Has('Size',S) ?
-					Size += S :
+					Size += S.Size :
 					++Plus
 				Update()
 			}

@@ -8,7 +8,7 @@ YouTubeWatch = WW.Tmpl(YouTube,'watch?v=',undefined),
 YouTubeIPlayer = WW.Tmpl(YouTube,'youtubei/v1/player?key=',undefined),
 // Example : B91P('?wmH{<|dG6`BhE')
 YouTubeGetWithBPCTR = WW.Tmpl(YouTube,'watch?v=',undefined,'&bpctr=',undefined,'&pbj=1'),
-GoogleAPIKey = '#GoogleAPIKey#',
+GoogleAPIKey = '~GoogleAPIKey~',
 GoogleAPI = 'https://www.googleapis.com/',
 GoogleAPIYouTube = GoogleAPI + 'youtube/v3/',
 GoogleAPIYouTubeVideo = WW.Tmpl(GoogleAPIYouTube,'videos?key=',GoogleAPIKey,'&part=',undefined,'&id=',undefined);

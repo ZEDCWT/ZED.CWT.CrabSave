@@ -913,7 +913,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						Size : 20,
 						Item : WR.Map(function(V)
 						{
-							return {
+							var R =
+							{
 								ID : V.id,
 								Img : V.cover,
 								Title : V.title,
@@ -921,7 +922,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								UPURL : BiliBiliSpace + V.upper.mid,
 								Date : 1E3 * V.pubtime,
 								Desc : V.intro
+							};
+							switch (V.type)
+							{
+								case 12 :
+									R.ID = PrefixAudio + R.ID
+									break
 							}
+							return R
 						},B.medias)
 					}
 				})

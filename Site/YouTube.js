@@ -14,7 +14,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	// YouTubeIGuide = YouTubeI + 'guide',
 	YouTubeAccount = YouTube + 'account',
 	YouTubeKey = YouTube + 'sw.js',
-	GoogleAPIKey = '#GoogleAPIKey#',
+	GoogleAPIKey = '~GoogleAPIKey~',
 	GoogleAPI = 'https://www.googleapis.com/',
 	GoogleAPIYouTube = GoogleAPI + 'youtube/v3/',
 	GoogleAPIYouTubeVideo = WW.Tmpl(GoogleAPIYouTube,'videos?key=',GoogleAPIKey,'&part=',undefined,'&id=',undefined),

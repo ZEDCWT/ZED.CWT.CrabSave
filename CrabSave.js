@@ -271,8 +271,9 @@ module.exports = Option =>
 	RequestComm = SiteO.Req = LoopO.Req = Q =>
 	{
 		Q = WW.IsObj(Q) ? Q : {URL : Q}
+		;/^\w+:\/\//.test(Q.URL) || (Q.URL = Q.URL.replace(/^\/*/,'https://'))
 		if (WW.IsStr(Q.URL) && WR.StartW('https://www.googleapis.com/',Q.URL))
-			Q.URL = Q.URL.replace(/#GoogleAPIKey#/,Option.GoogleAPIKey || WC.B91S('DaXh66^N/%57mxMn{1D.V0}uQVa!PO~XvMDFm4<68%w7_Pck'))
+			Q.URL = Q.URL.replace(/~GoogleAPIKey~/,Option.GoogleAPIKey || WC.B91S('DaXh66^N/%57mxMn{1D.V0}uQVa!PO~XvMDFm4<68%w7_Pck'))
 		Q.AC = false
 		Setting.Proxy() && Setting.ProxyURL() &&
 			(Q.Pro = Setting.ProxyURL())
