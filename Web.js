@@ -84,6 +84,7 @@
 	LangSolve = /**@type {<U extends keyof _$_Lang['EN']>(Q : U,S? : any[]) => string}*/ function(Q,S)
 	{
 		WW.IsArr(Q) && (S = Q.slice(1),Q = Q[0])
+		S && !S.length && (S = null)
 		return WR.Has(Q,LangNow) ? S ? WW.Fmt(LangNow[Q],S,'~') : LangNow[Q] :
 			WR.Has(Q,LangDefault) ? S ? WW.Fmt(LangDefault[Q],S,'~') : LangDefault[Q] :
 			'{' + Q + (S ? '|' + S.join(':') : '') + '}'
@@ -2201,7 +2202,7 @@
 			WSOnRenew = function(Data)
 			{
 				var T;
-				if (Data.All)
+				if (WR.Has('All',Data))
 				{
 					T = TaskRenewing
 					TaskRenewing = {}
@@ -2435,9 +2436,9 @@
 				if (!WR.Has(Data.Row,HistRowMap))
 				{
 					Data = HistRowMap[Data.Row] = HistMap.D(DBBriefKey(Data),Data)
-					!Hist.length || Hist[0].Done < Data.Done || Hist[0].Done === Data.Done && Data.Row < Hist[0].Row ?
+					!Hist.length || Hist[0].Done < Data.Done || Hist[0].Done === Data.Done && Hist[0].Row < Data.Row ?
 						List.Unshift(Data) :
-						List.Splice(WW.BSL(Hist,Data,function(Q,S){return Q.Done - S.Done ? S.Done < Q.Done : Q.Row < S.Row}),0,Data)
+						List.Splice(WW.BSL(Hist,Data,function(Q,S){return Q.Done - S.Done ? S.Done < Q.Done : S.Row < Q.Row}),0,Data)
 					BrowserUpdate([DBBriefKey(Data)])
 				}
 			}
@@ -2447,7 +2448,7 @@
 				if (Data.Done && WR.Has(Data.Row,HistRowMap))
 				{
 					H = HistRowMap[Data.Row]
-					T = WW.BSL(Hist,Data,function(Q,S){return Q.Done - S.Done ? S.Done < Q.Done : Q.Row < S.Row})
+					T = WW.BSL(Hist,Data,function(Q,S){return Q.Done - S.Done ? S.Done < Q.Done : S.Row < Q.Row})
 					Hist[T] && Hist[T].Row === Data.Row &&
 						List.Splice(T,1)
 					WR.Del(Data.Row,HistRowMap)
@@ -3199,7 +3200,7 @@
 
 		Proto.DBBrief,function(Data)
 		{
-			if (Data.Part && Data.Part.length)
+			if (WR.Has('Part',Data))
 			{
 				WR.Each(function(V)
 				{

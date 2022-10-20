@@ -651,7 +651,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Example : '2',
 			View : O.More(function(ID)
 			{
-				return O.API(BiliBiliVCAPIDynamicUser(ID))
+				return O.API(BiliBiliVCAPIDynamicUser(ID,''))
 			},function(I,Page,ID)
 			{
 				return O.API(BiliBiliVCAPIDynamicUser(ID,I[Page]))
