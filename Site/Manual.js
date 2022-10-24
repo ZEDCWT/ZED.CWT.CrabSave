@@ -99,7 +99,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			View : function(ID)
 			{
 				/^\w+:\/\//.test(ID) || (ID = 'https://' + ID)
-				return O.Req({URL : ID,Red : 0},true).Map(function(B)
+				return O.Req({URL : ID,Red : 0,AC : true},true).Map(function(B)
 				{
 					B = B.H.Location
 					return {

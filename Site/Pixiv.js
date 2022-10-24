@@ -279,7 +279,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 			Judge : O.Num('FanBox'),
 			View : function(ID)
 			{
-				return O.Req({URL : PixivFanBox(ID),Red : 0},true).Map(function(B)
+				return O.Req({URL : PixivFanBox(ID),Red : 0,AC : true},true).Map(function(B)
 				{
 					B = B.H.Location
 					return {
