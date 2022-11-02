@@ -473,14 +473,33 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 							.Map(function(B)
 							{
 								PageID = SolvePageID(B)
-								return WC.JTO(WW.MU(/{"ns":"pl.content.home.*MyProfileFeed.*}/,B)).html
+								return [B,WC.JTO(WW.MU(/{"ns":"pl.content.home.*MyProfileFeed.*}/,B)).html]
 							})
-				}).Reduce(WR.Add,'').Map(function(B)
+				}).Reduce(function(D,V)
 				{
+					D[1] += V
+					return D
+				}).Map(function(B)
+				{
+					var
+					Len,
+					Max = +WW.MF(/"page".*countPage=(\d+)/,B[1]);
+					if (!Max)
+					{
+						/*
+							Seems that the old good pager has been replaced with infinity scroll
+							And the endpoint still works
+							Thus we have to figure out the max page ourself
+						*/
+						Len = WC.JTO(WW.MU(/{"ns":"".*TriColumn.*css.*}/,B[0])).html
+						Len = +WR.Match(/[^<>]+(?=<\/strong)/g,Len).pop()
+						Max = WR.Ceil(Len / 45)
+					}
 					return {
-						Max : +WW.MF(/"page".*countPage=(\d+)/,B),
+						Len : Len,
+						Max : 1 + Max || 0,
 						Size : 45,
-						Item : WR.Where(function(V){return !V.SPA},SolveCardList(B))
+						Item : WR.Where(function(V){return !V.SPA},SolveCardList(B[1]))
 					}
 				})
 			}
