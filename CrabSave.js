@@ -402,7 +402,11 @@ module.exports = Option =>
 				Q.OnE = () => Res.end()
 				Q = WN.Req(Q)
 					.On('Req',O => WithHead && HeadWrite(Req,O))
-					.On('Res',O => WithHead && HeadWrite(O,Res))
+					.On('Res',O =>
+					{
+						WithHead && HeadWrite(O,Res)
+						Res.writeHead(O.statusCode,O.statusMessage)
+					})
 					.On('Err',() => Res.destroy())
 				Res
 					.once('error',Q.End)
@@ -536,7 +540,9 @@ module.exports = Option =>
 					.Reduce(WR.Or)
 					.Now(B =>
 					{
-						B && Err(H,ErrorS(B[0]))
+						if (B) WW.IsArr(B = B[0]) ?
+							Err(H,...B) :
+							Err(H,ErrorS(B))
 						E && E()
 					}) :
 				Err(H,'ErrBadReq')

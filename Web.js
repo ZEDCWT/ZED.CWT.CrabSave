@@ -84,7 +84,7 @@
 	LangSolve = /**@type {<U extends keyof _$_Lang['EN']>(Q : U,S? : any[]) => string}*/ function(Q,S)
 	{
 		WW.IsArr(Q) && (S = Q.slice(1),Q = Q[0])
-		S && !S.length && (S = null)
+		WW.IsArr(S) && !S.length && (S = null)
 		return WR.Has(Q,LangNow) ? S ? WW.Fmt(LangNow[Q],S,'~') : LangNow[Q] :
 			WR.Has(Q,LangDefault) ? S ? WW.Fmt(LangDefault[Q],S,'~') : LangDefault[Q] :
 			'{' + Q + (S ? '|' + S.join(':') : '') + '}'

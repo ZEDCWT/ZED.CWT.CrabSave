@@ -32,7 +32,8 @@ CrabSave.Site(function(O,WW,WC,WR)
 			NonAV : B.isRestricted,
 			ID : B.id,
 			URL : FanBoxUserPost(B.creatorId,B.id),
-			Img : B.coverImageUrl,
+			Img : B.coverImageUrl ||
+				WR.Path(['cover','url'],B),
 			Title : B.title,
 			UP : B.user.name,
 			UPURL : FanBoxUser(B.creatorId),
