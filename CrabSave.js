@@ -516,7 +516,7 @@ module.exports = Option =>
 				S.send(Data())
 			}
 		},
-		/**@type {<U extends keyof _$_Lang['EN']>(Src : number,Msg : U,...S? : string[]) => void}*/
+		/**@type {<U extends keyof Proto,N extends keyof _$_Lang['EN']>(Src : U,Msg : N,...S? : string[]) => void}*/
 		Err = (Src,Msg,...Arg) => Send(Proto.Error,{Src,Msg,Arg}),
 		// Fatal is not meant to occur involving properly functional C/S, thus it is not necessary to localization fatal messages.
 		Fatal = S =>
@@ -591,7 +591,7 @@ module.exports = Option =>
 							DBLoadingRow = WR.Last(B).Row
 						Send(Proto.DBBrief,B.length ? {Part : B} : {Ver : DBLoadingVer})
 					},
-					E => Err(Proto.DBBrief,'ErrDBLoad',ErrorS(E))
+					E => Err('DBBrief','ErrDBLoad',ErrorS(E))
 				)
 			},
 			[Proto.DBSite] : Data =>
@@ -660,8 +660,8 @@ module.exports = Option =>
 							DataCookie.O(WR.Map(CookieE,CookieMap))
 							Send(Proto.AuthToken)
 							WebSocketPoolAuthSuicide.forEach(V => V())
-						},E => Err(Proto.AuthToken,'ErrAuthSave',ErrorS(E)))
-				else Err(Proto.AuthToken,'ErrAuthInc')
+						},E => Err('AuthToken','ErrAuthSave',ErrorS(E)))
+				else Err('AuthToken','ErrAuthInc')
 			}),
 			[Proto.AuthCookie] : WithAuth(Data =>
 			{
@@ -670,7 +670,7 @@ module.exports = Option =>
 					DataCookie.D(Data.Site,CookieE(CookieMap[Data.Site] = Data.Coke))
 					WebSocketBroadcast(Proto.AuthCookie,{Site : Data.Site,Coke : Data.Coke})
 				}
-				else Err(Proto.AuthCookie,'ErrUnkSite',Data.Site)
+				else Err('AuthCookie','ErrUnkSite',Data.Site)
 			}),
 			[Proto.AuthReq] : WithAuth(Data =>
 			{
@@ -723,7 +723,7 @@ module.exports = Option =>
 				{
 					Data = WR.Where(V => null != V,Data)
 					if (WR.Has('Dir',Data) && !Path.isAbsolute(Data.Dir))
-						Err(Proto.AuthSetting,'ErrSetDir')
+						Err('AuthSetting','ErrSetDir')
 					else
 					{
 						L = Setting.Lang()
@@ -877,7 +877,7 @@ module.exports = Option =>
 			;) UVM *= 128
 			if (ID + Q.length - F - Check)
 			{
-				Err(Proto.AuthToken,'ErrAuthFail')
+				Err('AuthToken','ErrAuthFail')
 				Suicide()
 			}
 			else if (Type = (ProtoMsgTypeAuth === Type ? ActAuth : ActPlain)[ID])

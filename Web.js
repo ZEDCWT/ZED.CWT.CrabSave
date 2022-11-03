@@ -3192,7 +3192,7 @@
 			[
 				LangSolve('Err'),
 				' | ',
-				ProtoInv[Data.Src] || '0x' + WR.HEX(Data.Src),
+				Data.Src,
 				' | ',
 				LangSolve(Data.Msg,Data.Arg)
 			])
