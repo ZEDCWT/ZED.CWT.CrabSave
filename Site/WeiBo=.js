@@ -382,6 +382,11 @@ module.exports = O =>
 						}))
 				})
 			})
-		}
+		},
+		Pack : Q => (
+		{
+			URL : Q,
+			Head : {Referer : WeiBo}
+		}),
 	}
 }

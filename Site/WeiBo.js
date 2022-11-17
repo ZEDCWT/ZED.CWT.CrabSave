@@ -107,6 +107,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			O.Bad(B.code,B.msg)
 		return B.data
 	},
+	PackImg = function(V){return WW.IsArr(V) ? WR.Map(PackImg,V) : V && {URL : V,Head : {Referer : WeiBo}}},
 	SolveID = function(B){return WW.MF(/href="\/(\d+\/\w+).*?date="/,B)},
 	SolvePageID = function(B){return WW.MF(/page_id']='(\d+)/,B)},
 	SolvePost,
@@ -153,7 +154,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			AD : /blocktype=ad&/.test(B),
 			SPA : SpecialAction,
 			ID : SolveID(B),
-			Img : Img,
+			Img : PackImg(Img),
 			Title : Title.slice(0,128),
 			UP : ShowName(WC.HED(WW.MF(/face".*title="([^"]+)/,B)),
 				WC.HED(WW.MF(/S_txt2[^<>]+usercard[^<>]+>\(([^<]+)\)/,B))),
@@ -246,7 +247,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 							{
 								NonAV : Non,
 								ID : T = WW.MF(/from".*\s+.*href="[^"]+\/(\d+\/\w+)/,V),
-								Img : Img,
+								Img : PackImg(Img),
 								Title : Title.slice(0,128),
 								UP : WC.HED(WW.MF(/nick-name="([^"]+)/,V)),
 								UPURL : WeiBo + T.replace(/\/.*/,''),
@@ -391,7 +392,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 							{
 								NonAV : B.retweeted_status || NonAV,
 								ID : B.user.idstr + '/' + B.mblogid,
-								Img : Img,
+								Img : PackImg(Img),
 								Title : B.text_raw,
 								UP : B.user.screen_name,
 								UPURL : WeiBo + B.user.profile_url.replace(/^\//,''),
@@ -420,7 +421,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 						Item : [
 						{
 							ID : B.uid + '/' + Zip('' + B.mid),
-							Img : B.cover_img.image.url,
+							Img : PackImg(B.cover_img.image.url),
 							Title : B.title,
 							UP : B.userinfo.screen_name,
 							UPURL : B.userinfo.url,
@@ -551,7 +552,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 									Non : true,
 									ID : /\D/.test(I) ? I + WW.QuoP(C.uid) : I,
 									URL : WeiBo + I,
-									Img : WW.MF(/src="([^"]+)/,V),
+									Img : PackImg(WW.MF(/src="([^"]+)/,V)),
 									UP : ShowName(C.screen_name,C.remark),
 									UPURL : WeiBo + I,
 									More :
