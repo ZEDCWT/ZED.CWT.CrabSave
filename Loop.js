@@ -418,7 +418,7 @@ module.exports = Option =>
 					},
 					SolvePart = /**@type {WishNS.TypeR<CrabSaveNS.DB>['ViewPart']}*/ (Row,Part) => Part < 0 ?
 						TaskIsSingleMultiPart[V.Site]?.(V.ID) ?
-							DB.ViewPart(Row,false).Map(WR.Pick(['Total','Part'])) :
+							DB.ViewPart(Row,false).Map(WR.Pick(['Total','Part','Title'])) :
 							WX.Just({}) :
 						DB.ViewPart(Row,Part),
 					Working;

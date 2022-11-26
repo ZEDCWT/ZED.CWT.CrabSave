@@ -6,6 +6,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	[
 		'b23.tv',
 		't.cn',
+		't.co',
 		'url.cn'
 	],
 	WrappedURL =
@@ -101,15 +102,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				/^\w+:\/\//.test(ID) || (ID = 'https://' + ID)
 				return O.Req({URL : ID,Red : 0,AC : true},true).Map(function(B)
 				{
-					B = B.H.Location
+					var R = B.H.Location ||
+						WC.HED(WW.MF(/<[^<>]+HTTP-Equiv=["']?Refresh[^<>]+Content=["']?[^<>]*URL=([^"'<>]+)/i,B.B));
 					return {
 						Item : [
 						{
 							Non : true,
 							ID : ID,
 							URL : ID,
-							UP : B,
-							UPURL : B
+							UP : R,
+							UPURL : R
 						}]
 					}
 				})
