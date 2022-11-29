@@ -10,6 +10,7 @@ PrefixVideoLike = new Set(
 	'sm',
 	'ch', // Channel
 	'nm', // Movie Maker
+	'so', // Channel
 ]),
 
 Nico = 'https://www.nicovideo.jp/',
