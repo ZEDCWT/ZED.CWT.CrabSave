@@ -36,7 +36,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliCheeseSeason = WW.Tmpl(BiliBiliCheese,'play/ss',undefined),
 	BiliBiliCheeseEpisode = WW.Tmpl(BiliBiliCheese,'play/ep',undefined),
 	BiliBiliAPI = 'https://api.bilibili.com/',
-	BiliBiliArticleList = WW.Tmpl(BiliBiliAPI,'x/article/list/articles?id=',undefined),
+	BiliBiliAPIArticleList = WW.Tmpl(BiliBiliAPI,'x/article/list/articles?id=',undefined),
+	// BiliBiliAPIArticleInfo = WW.Tmpl(BiliBiliAPI,'x/article/viewinfo?id=',undefined,'&mobi_app=unknown'),
 	BiliBiliAPIFavList = WW.Tmpl(BiliBiliAPI,'x/v3/fav/folder/created/list-all?up_mid=',undefined),
 	BiliBiliAPIFav = WW.Tmpl(BiliBiliAPI,'medialist/gateway/base/spaceDetail?media_id=',undefined,'&pn=',undefined,'&ps=20'),
 	BiliBiliAPIWeb = BiliBiliAPI + 'x/web-interface/',
@@ -722,7 +723,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			}
 		},{
 			Name : 'Article',
-			Judge : O.Num('Article|Read|CV'),
+			Judge : O.Num('Article|Read|CV(?:ID)?'),
 			Example : '2',
 			View : function(ID)
 			{
@@ -756,7 +757,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Example : '500',
 			View : O.Less(function(ID)
 			{
-				return O.API(BiliBiliArticleList(ID))
+				return O.API(BiliBiliAPIArticleList(ID))
 					.Map(function(B)
 					{
 						B = Common(B)

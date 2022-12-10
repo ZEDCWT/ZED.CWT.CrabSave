@@ -14,6 +14,7 @@ BiliBiliAudio = BiliBili + 'audio/',
 BiliBiliAudioWeb = BiliBiliAudio + 'music-service-c/web/',
 BiliBiliAudioWebInfo = WW.Tmpl(BiliBiliAudioWeb,'song/info?sid=',undefined),
 BiliBiliAudioWebURL = WW.Tmpl(BiliBiliAudioWeb,'url?sid=',undefined,'&privilege=2&quality=2'),
+BiliBiliArticleReadContent = WW.Tmpl(BiliBili,'read/native?id=',undefined),
 BiliBiliAPI = 'https://api.bilibili.com/',
 BiliBiliAPIWebView = WW.Tmpl(BiliBiliAPI,'x/web-interface/view?aid=',undefined),
 BiliBiliAPIPlayURL = WW.Tmpl(BiliBiliAPI,'x/player/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=4048&fourk=1'),
@@ -28,11 +29,11 @@ BiliBiliAPISteinNode = WW.Tmpl(BiliBiliAPI,'x/stein/nodeinfo?aid=',undefined,'&g
 BiliBiliAPIPUGV = BiliBiliAPI + 'pugv/',
 BiliBiliAPIPUGVViewSeasonByEP = WW.Tmpl(BiliBiliAPIPUGV,'view/web/season?ep_id=',undefined),
 BiliBiliAPIPUGVPlayURL = WW.Tmpl(BiliBiliAPIPUGV,'player/web/playurl?ep_id=',undefined,'&qn=',undefined,'&fnver=0&fnval=4048&fourk=1'),
+// BiliBiliAPINotoInfo = WW.Tmpl(BiliBiliAPI,'x/note/publish/info?cvid=',undefined),
 BiliBiliVCAPI = 'https://api.vc.bilibili.com/',
 // BiliBiliVCAPIDetail = WW.Tmpl(BiliBiliVCAPI,'clip/v1/video/detail?video_id=',undefined,'&need_playurl=1'),
 BiliBiliVCAPIDynamicAPIRoot = BiliBiliVCAPI + 'dynamic_svr/v1/dynamic_svr/',
 BiliBiliVCAPIDynamicDetail = WW.Tmpl(BiliBiliVCAPIDynamicAPIRoot,'get_dynamic_detail?dynamic_id=',undefined),
-BiliBiliArticleReadContent = WW.Tmpl(BiliBili,'read/native?id=',undefined),
 
 Common = V => (V = WC.JTO(V)).code ?
 	WW.Throw(V) :
