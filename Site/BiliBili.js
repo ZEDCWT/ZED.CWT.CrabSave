@@ -4,7 +4,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	var
 	/*
 		MyList seemed to have been terminated
-		VC project had been terminated, posts are not normal videos but hidden from user uploaded lists. https://vc.bilibili.com/p/eden/rank
+		VC project had been terminated, posts are now normal videos but hidden from user uploaded lists. https://vc.bilibili.com/p/eden/rank
 		Audio homepage. https://www.bilibili.com/audio/home?musicType=music
 	*/
 	PrefixTimeline = 'TL',

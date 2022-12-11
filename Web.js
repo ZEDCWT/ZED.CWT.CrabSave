@@ -444,6 +444,11 @@
 			WSAuthInited =
 			WSCipher = WSDecipher = false
 			CookieMap = {}
+			WR.Each(function(V)
+			{
+				V.E(LangSolve('ErrOff'))
+			},WSProxyMap)
+			WSProxyMap = {}
 			DebugLog('Offline',WSRetry)
 			if (WSOnline)
 				WSEndSince = WW.Now()
@@ -3411,32 +3416,39 @@
 		Top.CrabSave = CrabSave = {}
 		CrabSave.Site = function(Q)
 		{
-			var V = Q(
+			var
+			WebToolReq = function(Q,H)
 			{
-				SA : LangSolve,
-				Req : function(Q,H)
-				{
-					var ID,R = WX.R();
-					for (;WR.Has(ID = WW.Rnd(0xFFFFFFFF),WSProxyMap););
-					WSProxyMap[ID] = R
-					Q = WW.IsObj(Q) ? Q : {URL : Q}
-					if (!WR.Has('Cookie',Q))
-						Q.Cookie = V.Cookie
-					WSSend(Proto.AuthReq,{ID : ID,JSON : WC.OTJ(Q)})
-					return R.Map(function(B)
+				var ID,R = WX.R();
+				for (;WR.Has(ID = WW.Rnd(0xFFFFFFFF),WSProxyMap););
+				Q = WW.IsObj(Q) ? Q : {URL : Q}
+				if (!WR.Has('Cookie',Q))
+					Q.Cookie = V.Cookie
+				return WSSend(Proto.AuthReq,{ID : ID,JSON : WC.OTJ(Q)}) ?
+					(WSProxyMap[ID] = R).Map(function(B)
 					{
 						ReqFeed(Q,B)
 						Q.AC || /^2/.test(B.Code) || WW.Throw(WW.Err.NetBadStatus(B.Code))
 						return H ? B : B.B
+					}) :
+					WX.Throw(LangSolve('ErrOff'))
+			},
+			WebToolAPI = function(Q,H)
+			{
+				return (H ? WB.ReqU({URL : MakeAPI(Q),AC : true}) : WB.ReqB(MakeAPI(Q)))
+					.Tap(function(B)
+					{
+						ReqFeed(Q,B)
 					})
-				},
-				API : function(Q,H)
+			},
+			V = Q(
+			{
+				SA : LangSolve,
+				Req : WebToolReq,
+				API : WebToolAPI,
+				ReqAPI : function(Q,ForceReq,ForceAPI)
 				{
-					return (H ? WB.ReqU({URL : MakeAPI(Q),AC : true}) : WB.ReqB(MakeAPI(Q)))
-						.Tap(function(B)
-						{
-							ReqFeed(Q,B)
-						})
+					return (!ForceAPI && (ForceReq || WSAuthInited && CookieMap[V.Cookie]) ? WebToolReq : WebToolAPI)(Q)
 				},
 				Head : function(Q,K,V)
 				{
@@ -3644,6 +3656,7 @@
 			'AcFun',
 			'Facebook',
 			'FanBox',
+			'Fantia',
 			'Instagram',
 			'IXiGua',
 			'KakuYomu',

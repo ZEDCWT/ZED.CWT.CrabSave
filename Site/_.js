@@ -77,6 +77,7 @@ module.exports = Option =>
 		'AcFun',
 		'Facebook',
 		'FanBox',
+		'Fantia',
 		'Instagram',
 		'IXiGua',
 		'KakuYomu',

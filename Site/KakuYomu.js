@@ -17,10 +17,6 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	KakuYomuAPIAPPUserInfo = WW.Tmpl(KakuYomuAPIAPP,'users/names/',undefined),
 	KakuYomuAPIAPPUserWork = WW.Tmpl(KakuYomuAPIAPP,'users/',undefined,'/works?page=',undefined),
 
-	API = function(Q)
-	{
-		return (O.Coke() ? O.Req : O.API)(Q)
-	},
 	MakeID = function(Work,Episode)
 	{
 		return Work + JoinID + WW.Nat(Episode).Sub(Work).DEC()
@@ -65,7 +61,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	SolveSelfNameCache = O.CokeC(SolveSelfName),
 	SolveUserInfo = WX.CacheM(function(Q)
 	{
-		return API(KakuYomuAPIAPPUserInfo(Q)).Map(WC.JTO)
+		return O.ReqAPI(KakuYomuAPIAPPUserInfo(Q)).Map(WC.JTO)
 	}),
 	SolveUserTabCount = function(B)
 	{
@@ -95,7 +91,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			View : function(ID)
 			{
 				ID = SolveID(ID)
-				return API(KakuYomuAPIAPPEpisode(ID[0],ID[1])).Map(function(B)
+				return O.ReqAPI(KakuYomuAPIAPPEpisode(ID[0],ID[1])).Map(function(B)
 				{
 					return {
 						Item : [
@@ -119,7 +115,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			Judge : O.Num('Works?'),
 			View : O.Less(function(ID)
 			{
-				return API(KakuYomuAPIAPPWork(ID)).Map(function(B)
+				return O.ReqAPI(KakuYomuAPIAPPWork(ID)).Map(function(B)
 				{
 					B = WC.JTO(B)
 					return WR.Concat([SolveWork(B)],WR.Rev(WR.Map(function(V)
@@ -149,11 +145,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				return SolveUserInfo(ID).FMap(function(B)
 				{
 					I[0] = B
-					return API(KakuYomuAPIAPPUserWork(B.id,''))
+					return O.ReqAPI(KakuYomuAPIAPPUserWork(B.id,''))
 				})
 			},function(I,Page)
 			{
-				return API(KakuYomuAPIAPPUserWork(I[0].id,I[Page]))
+				return O.ReqAPI(KakuYomuAPIAPPUserWork(I[0].id,I[Page]))
 			},function(B,I)
 			{
 				B = WC.JTO(B)
@@ -175,7 +171,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			{
 				return SolveSelfNameCache().FMap(function(B)
 				{
-					return API(KakuYomuUserFollowingWork(B,-~Page))
+					return O.ReqAPI(KakuYomuUserFollowingWork(B,-~Page))
 				}).Map(function(B)
 				{
 					return {
@@ -207,7 +203,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			{
 				return SolveSelfNameCache().FMap(function(B)
 				{
-					return API(KakuYomuUserFollowingUser(B,-~Page))
+					return O.ReqAPI(KakuYomuUserFollowingUser(B,-~Page))
 				}).Map(function(B)
 				{
 					return {

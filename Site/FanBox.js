@@ -17,11 +17,11 @@ CrabSave.Site(function(O,WW,WC,WR)
 
 	API = function(Q,ForceReq)
 	{
-		return (ForceReq || O.Coke() ? O.Req : O.API)(
+		return O.ReqAPI(
 		{
 			URL : Q,
 			Head : {Origin : FanBoxAPI.slice(0,-1)}
-		}).Map(function(B)
+		},ForceReq).Map(function(B)
 		{
 			return WC.JTO(B).body
 		})

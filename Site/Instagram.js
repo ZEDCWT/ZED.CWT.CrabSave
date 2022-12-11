@@ -10,7 +10,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	InstagramQueryTmpl = WW.Tmpl(Instagram,'graphql/query/?query_hash=',undefined,'&variables=',undefined),
 	InstagramQuery = function(Q,S)
 	{
-		return (O.Coke() ? O.Req : O.API)(InstagramQueryTmpl(Q,WC.UE(WC.OTJ(S)))).Map(function(B)
+		return O.ReqAPI(InstagramQueryTmpl(Q,WC.UE(WC.OTJ(S)))).Map(function(B)
 		{
 			B = WC.JTO(B)
 			'ok' === B.status || O.Bad(B.message)

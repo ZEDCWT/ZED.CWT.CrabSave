@@ -96,7 +96,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	{
 		return (Sign && WW.Now() < 36E5 + SignAt ? WX.Just(Sign) : SolveSign()).FMap(function(S)
 		{
-			return (ForceReq || O.Coke() ? O.Req : O.API)(
+			return O.ReqAPI(
 			{
 				UA : Happy.navigator.userAgent = WW.RUA(),
 				URL : Q,
@@ -108,7 +108,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				{
 					Referer : TikTok
 				}
-			})
+			},ForceReq)
 		}).Map(function(B)
 		{
 			B = WC.JTO(B)

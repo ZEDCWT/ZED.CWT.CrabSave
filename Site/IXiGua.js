@@ -70,7 +70,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	{
 		return ReqSign().FMap(function(S)
 		{
-			return (!ForceAPI && O.Coke() ? O.Req : O.API)(
+			return O.ReqAPI(
 			{
 				URL : Q,
 				QS :
@@ -81,7 +81,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				{
 					Referer : IXiGua
 				}
-			})
+			},false,ForceAPI)
 		})
 	},
 	ReqCokeAC = {},
