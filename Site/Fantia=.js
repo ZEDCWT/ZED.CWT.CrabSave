@@ -38,20 +38,72 @@ module.exports = O =>
 				Content,
 				Meta = [],MetaContent = [],
 				Part = [],
+				SolveBlog = Q =>
+				{
+					var
+					U = [],X = [],
+					R = WC.JTO(Q).ops.map(V =>
+					{
+						var
+						Attr = V.attributes,
+						R = V.insert;
+						WW.IsObj(R) && WR.EachU((V,F) =>
+						{
+							switch (F)
+							{
+								case 'fantiaImage' :
+									U.push(V.url)
+									X.push(WN.ExtN(V.url.replace(/\?.*/,'')))
+									R = `![${U.length - 1}:${V.id}](${V.url})`
+									break
+								case 'image' :
+									U.push(V)
+									X.push(WN.ExtN(V))
+									R = `![${U.length - 1}](${V})`
+									break
+								default :
+									O.Bad(R)
+							}
+						},R)
+						WR.EachU((V,F) =>
+						{
+							switch (F)
+							{
+								case 'align' :
+								case 'background' :
+								case 'bold' :
+								case 'color' :
+								case 'list' :
+								case 'size' :
+									break
+								case 'link' :
+									R = `[${R === V ? '' : R}](${V})`
+									break
+								default :
+									O.Bad(Attr)
+							}
+						},Attr)
+						return R
+					}).join``;
+					U.length && Part.push({URL : U,Ext : X})
+					return R
+				},
 				T;
 				B = Common(B)
-				B.comment && Meta.push(B.comment)
+				B.blog_comment ?
+					Meta.push(SolveBlog(B.blog_comment)) :
+					B.comment && Meta.push(B.comment)
 				if (null != ContentID)
 				{
 					Content = B.post_contents.find(V => V.id === +ContentID)
 					Content || WW.Throw('No Such Content')
 					'visible' === Content.visible_status || WW.Throw('Content Invisible')
 					Content.plan && MetaContent.push('Plan ' + WW.Quo(Content.plan.id) + 'JPY ' + Content.plan.price + ' ' + Content.plan.name)
-					Content.comment && MetaContent.push(Content.comment)
 					switch (Content.category)
 					{
 						// case 'text' :
 						case 'photo_gallery' :
+							Content.comment && MetaContent.push(Content.comment)
 							Part.push(
 							{
 								Title : Content.title,
@@ -65,6 +117,7 @@ module.exports = O =>
 							})
 							break
 						case 'file' :
+							Content.comment && MetaContent.push(Content.comment)
 							MetaContent.push('\t{File} ' + Content.filename)
 							T = WN.ExtN(Content.filename)
 							Part.push(
@@ -76,7 +129,9 @@ module.exports = O =>
 							break
 						// case 'product' :
 						// case 'embed' :
-						// case 'blog' :
+						case 'blog' :
+							MetaContent.push(SolveBlog(Content.comment))
+							break
 						default :
 							WW.Throw('Unknown Category ' + Content.category)
 					}

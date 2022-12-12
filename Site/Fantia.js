@@ -180,7 +180,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 								Title : WC.HED(WW.MF(/post-title">([^<]+)/,V)),
 								UP : FanClub,
 								UPURL : FanClubURL,
-								Date : new Date(WW.MF(/post-date">(?:<[^>]+>)?([^<]+)/,V) + '+0900'),
+								Date : new Date(WW.MF(/"post-date[^>]+>(?:<[^>]+>)?([^<]+)/,V) + '+0900'),
 								Desc : WC.HED(WW.MF(/post-text">([^<]+)/,V)),
 							})
 							return D
