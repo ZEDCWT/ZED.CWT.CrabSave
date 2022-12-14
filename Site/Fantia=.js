@@ -90,7 +90,7 @@ module.exports = O =>
 				},
 				T;
 				B = Common(B)
-				B.blog_comment ?
+				B.is_blog && B.blog_comment ?
 					Meta.push(SolveBlog(B.blog_comment)) :
 					B.comment && Meta.push(B.comment)
 				if (null != ContentID)
@@ -109,9 +109,9 @@ module.exports = O =>
 								Title : Content.title,
 								URL : WR.MapU((V,F) =>
 									MetaContent.push('\t{Photo} ' +
-										WW.ShowLI(Content.post_content_photos.length,F) +
-										WW.Quo(WN.JoinU(Fantia,V.show_original_uri),!V.comment) +
-										(V.comment || '')) &&
+										WW.Quo(WW.ShowLI(Content.post_content_photos.length,F)) +
+										WN.JoinU(Fantia,V.show_original_uri) +
+										(V.comment ? ' ' + V.comment : '')) &&
 										V.url.original,
 									Content.post_content_photos)
 							})
@@ -144,7 +144,7 @@ module.exports = O =>
 					Meta : Meta.length && MetaContent.length ?
 					[
 						...Meta,
-						'','',WR.RepS('\u2015',64),
+						'','',WR.RepS('\u2014',63),
 						...MetaContent
 					] : MetaContent.length ? MetaContent : Meta,
 					Cover : B.thumb?.original || B.thumb_micro,
