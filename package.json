@@ -1,6 +1,6 @@
 {
 	"name" : "crabsave",
-	"version" : "1.5.1",
+	"version" : "1.5.2",
 	"description" : "Yet Another UGC Downloader With GUI",
 	"main" : "CrabSave",
 	"bin" :
@@ -16,8 +16,8 @@
 	"license" : "MIT",
 	"dependencies" :
 	{
-		"@zed.cwt/wish" : ">=0.7.4",
-		"sqlite3" : ">=5.1.2",
-		"ws" : ">=8.10.0"
+		"@zed.cwt/wish" : ">=0.7.5",
+		"sqlite3" : ">=5.1.4",
+		"ws" : ">=8.11.0"
 	}
 }
