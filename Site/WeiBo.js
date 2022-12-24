@@ -1,5 +1,5 @@
 'use strict'
-CrabSave.Site(function(O,WW,WC,WR,WX)
+CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 {
 	var
 	WeiBo = 'https://weibo.com/',
@@ -193,6 +193,19 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		Card,
 		T;
 		Long = Long && WC.JTO(Long).data
+		if (T = B.region_name)
+			More.push(T)
+		if (T = B.source)
+			More.push(T)
+		if (T = B.screen_name_suffix_new)
+		{
+			More.push(WR.Map(function(V)
+			{
+				var R = ShowName(V.content,V.remark);
+				// Note that we want the <a> to be inline
+				return (V = V.scheme) ? WV.Ah(R,V) : R
+			},T.slice(1)))
+		}
 		if (T = B.retweeted_status)
 		{
 			More.push
