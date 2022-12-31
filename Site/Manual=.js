@@ -30,6 +30,7 @@ module.exports = O =>
 			}
 
 			O.Bad(URL)
-		}
+		},
+		IDView : () => '',
 	}
 }
