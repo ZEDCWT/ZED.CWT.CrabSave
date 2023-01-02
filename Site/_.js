@@ -78,6 +78,7 @@ module.exports = Option =>
 		'Facebook',
 		'FanBox',
 		'Fantia',
+		'HicceArs',
 		'Instagram',
 		'IXiGua',
 		'KakuYomu',

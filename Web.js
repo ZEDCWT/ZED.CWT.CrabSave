@@ -3657,6 +3657,7 @@
 			'Facebook',
 			'FanBox',
 			'Fantia',
+			'HicceArs',
 			'Instagram',
 			'IXiGua',
 			'KakuYomu',
