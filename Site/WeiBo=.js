@@ -149,7 +149,7 @@ module.exports = O =>
 											C.mp4_sd_url
 									if (T)
 										Part.push({URL : [T]})
-									else if (!/\/\/[^/]*(acg\.tv|letv\.com|qq\.com)\//.test(C.h5_url))
+									else if (!/\/\/[^/]*(acg\.tv|letv\.com|qq\.com|weibo.com)\//.test(C.h5_url))
 										WW.Throw('Unable to solve video URL')
 								}
 								break

@@ -1,5 +1,5 @@
 
-“
+¶
 Proto.proto"Œ
 DBTask
 Row (RRow
@@ -102,12 +102,14 @@ TaskRemove
 Error
 Src (	RSrc
 Msg (	RMsg
-Arg (	RArg"g
+Arg (	RArg"‰
 DBBrief
 Ver (RVer
 Limit (RLimit
 Cont (RCont 
-Part (2.DBTaskBriefRPart"P
+Part (2.DBTaskBriefRPart
+GZ (RGZ
+Bin (RBin"P
 DBSite
 ID (RID
 Med (	RMed

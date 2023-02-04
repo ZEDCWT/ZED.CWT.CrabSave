@@ -9,8 +9,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	KakuYomuWork = WW.Tmpl(KakuYomu,'works/',undefined),
 	KakuYomuEpisode = WW.Tmpl(KakuYomu,'works/',undefined,'/episodes/',undefined),
 	KakuYomuUser = WW.Tmpl(KakuYomu,'users/',undefined),
-	KakuYomuUserFollowingWork = WW.Tmpl(KakuYomu,'users/',undefined,'/following_works?page=',undefined),
+	// KakuYomuUserFollowingWork = WW.Tmpl(KakuYomu,'users/',undefined,'/following_works?page=',undefined),
 	KakuYomuUserFollowingUser = WW.Tmpl(KakuYomu,'users/',undefined,'/following_users?page=',undefined),
+	KakuYomuMyAntennaAll = KakuYomu + 'my/antenna/works/all',
 	KakuYomuAPIAPP = KakuYomu + 'api/app/',
 	KakuYomuAPIAPPWork = WW.Tmpl(KakuYomuAPIAPP,'works/',undefined),
 	KakuYomuAPIAPPEpisode = WW.Tmpl(KakuYomuAPIAPP,'works/',undefined,'/episodes/',undefined,'.html'),
@@ -167,16 +168,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			[
 				/\bFollowingWork\b/i
 			]),
-			View : function(_,Page)
+			View : function()
 			{
-				return SolveSelfNameCache().FMap(function(B)
-				{
-					return O.ReqAPI(KakuYomuUserFollowingWork(B,-~Page))
-				}).Map(function(B)
+				return O.Req(KakuYomuMyAntennaAll).Map(function(B)
 				{
 					return {
-						Size : 50,
-						Len : SolveUserTabCount(B).following_works,
+						// Len : SolveUserTabCount(B).following_works,
 						Item : WW.MR(function(D,V)
 						{
 							D.push(
@@ -184,12 +181,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 								Non : true,
 								ID : WW.MF(/works\/(\d+)/,V),
 								URL : KakuYomuWork,
-								Title : WC.HED(WW.MF(/<a[^>]+works\/[^>]+>([^<]+)/,V)),
-								UP : WC.HED(WW.MF(/class="ActivityName_[^>]+>([^<]+)/,V)),
-								UPURL : KakuYomuUser(WW.MF(/users\/([^"]+)"/,V))
+								Title : WC.HED(WW.MF(/title">([^<]+)/,V)),
+								UP : WC.HED(WW.MF(/author">([^<]+)/,V)),
 							})
 							return D
-						},[],/<[^>]+WorkItem_container[^]+?<[^>]+EyeCatch_container/g,B)
+						},[],/<li[^>]+AntennaList[^]+?<\/li/ig,B)
 					}
 				})
 			}

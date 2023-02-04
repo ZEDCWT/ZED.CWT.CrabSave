@@ -7,6 +7,7 @@ FS = require('fs'),
 HTTP = require('http'),
 Inspector = require('inspector'),
 Path = require('path'),
+ZLib = require('zlib'),
 
 Proto =
 {
@@ -354,6 +355,7 @@ module.exports = Option =>
 				Conf : WC.OTJ(
 				{
 					Lang : Setting.Lang(),
+					Unsafe : +!!Option.UnsafeExport,
 				},{Apos : true}),
 				Lang : B[1][1],
 				Proto : ProtoJSON,
@@ -589,7 +591,11 @@ module.exports = Option =>
 					{
 						if (B.length)
 							DBLoadingRow = WR.Last(B).Row
-						Send(Proto.DBBrief,B.length ? {Part : B} : {Ver : DBLoadingVer})
+						Send(Proto.DBBrief,B.length ?
+							Data.GZ ?
+								{Bin : ZLib.deflateRawSync(ProtoEnc(Proto.DBBrief,{Part : B}))} :
+								{Part : B} :
+							{Ver : DBLoadingVer})
 					},
 					E => Err('DBBrief','ErrDBLoad',ErrorS(E))
 				)

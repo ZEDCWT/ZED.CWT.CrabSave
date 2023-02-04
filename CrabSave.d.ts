@@ -8,6 +8,8 @@ declare module CrabSaveNS
 			Data? : string
 
 			GoogleAPIKey? : string
+
+			UnsafeExport? : boolean
 		}) : {
 			/**Express.Router*/
 			Exp(Express? : object) : object

@@ -59,6 +59,7 @@ And then a local web server `localhost:8000` will be deployed and can be visited
 	+ `PortWeb` : `number` Optional. Port to deploy the Web Server.
 	+ `Data` : `string` Optional. Path to store settings and databases. See [Data Folder Structure](#data-folder-structure)
 	+ `GoogleAPIKey` : `string` Optional. Your own Google API Key in case the bundled key exceeds the call limits.
+	+ `UnsafeExport` : `boolean` Optional. To export unsafe functions that could be used for scripting through browser console, use with care.
 + Returns : `Object`
 	+ `Exp` : `(Express? : require('express')) => require('express').Router`. Given an optional `Express` object, returns a Router. See [Example : Custom Web Server][ExWeb]
 	+ `Soc` : `Function`. Used to handle event `require('ws')::on('connection')`. See [Example : Custom Web Server][ExWeb]

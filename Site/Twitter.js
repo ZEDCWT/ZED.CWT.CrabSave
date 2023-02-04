@@ -72,6 +72,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	SolveTweetIDB = function(ID,B)
 	{
 		var Tweet = B.globalObjects.tweets[ID];
+		Tweet || O.Bad(B)
 		return SolveTweet(Tweet,B.globalObjects.users[Tweet.user_id_str],ID)
 	},
 	MakeTimeline = function(H)

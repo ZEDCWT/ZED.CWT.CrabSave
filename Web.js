@@ -12,6 +12,7 @@
 	RegExp = Top.RegExp,
 	TopSet = Top.Set,
 	CrabSave = Top.CrabSave,
+	Unsafe = {},
 
 	Conf = {/*{Conf}*/},
 	ConfRetry = 1E4,
@@ -364,7 +365,7 @@
 			}
 			WSNotConnectedNoti(false)
 			WSTick.D()
-			WSSend(Proto.DBBrief,{Ver : DBBriefVer,Limit : ConfDBPageSize})
+			WSSend(Proto.DBBrief,{Ver : DBBriefVer,Limit : ConfDBPageSize,GZ : true})
 		},
 		Bin : function(Q)
 		{
@@ -1190,7 +1191,7 @@
 				}
 				else Noti.S(S)
 			},
-			GoSolve = function(Q)
+			GoSolve = Unsafe.GoSolve = function(Q)
 			{
 				var Site,Action,ID,T;
 				Q = Q.replace(/\s+$/,'')
@@ -3205,6 +3206,9 @@
 
 		Proto.DBBrief,function(Data)
 		{
+			if (WR.Has('Bin',Data))
+				Data = ProtoDec(Proto.DBBrief,WC.InfR(Data.Bin))
+
 			if (WR.Has('Part',Data))
 			{
 				WR.Each(function(V)
@@ -3213,7 +3217,7 @@
 						DBBriefHist.push(V) :
 						DBBriefHot.push(V)
 				},Data.Part)
-				WSSend(Proto.DBBrief,{Cont : 9,Limit : ConfDBPageSize})
+				WSSend(Proto.DBBrief,{Cont : 9,Limit : ConfDBPageSize,GZ : true})
 			}
 			else
 			{
@@ -3642,6 +3646,20 @@
 		{
 			WSSend(Proto.AuthVacuum)
 		}
+		Conf.Unsafe && WW.Merge(CrabSave.Unsafe = Unsafe,
+		{
+			Proto : Proto,
+			SiteMap : SiteMap,
+			Key : DBBriefKey,
+			IsCold : IsCold,
+			IsHot : IsHot,
+			IsHistory : IsHistory,
+			ColdAdd : ColdAdd,
+			ColdDel : ColdDel,
+			Setting : Setting,
+			IsSPUP : SettingIsSPUP,
+			WSSend : WSSend,
+		})
 		SiteBegin = WW.Now()
 		WW.To(1E3,function(){SiteCount < SiteTotal && SiteOnNoti()})
 		SiteTotal = WR.EachU(function(V,F)

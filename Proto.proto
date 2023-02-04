@@ -172,6 +172,8 @@ message DBBrief
 	sint64 Limit = 2;
 	sint64 Cont = 3;
 	repeated DBTaskBrief Part = 4;
+	sint64 GZ = 5;
+	bytes Bin = 6;
 }
 
 message DBSite

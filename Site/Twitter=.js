@@ -26,9 +26,9 @@ module.exports = O =>
 			T;
 			B = WC.JTO(B)
 			B.errors && O.Bad(B.errors[0])
-			B = B.globalObjects
-			Tweet = B.tweets[ID]
-			User = B.users[Tweet.user_id_str]
+			Tweet = B.globalObjects.tweets[ID]
+			Tweet || O.Bad(B)
+			User = B.globalObjects.users[Tweet.user_id_str]
 			Title = WC.HED(Tweet.full_text)
 			Meta = [Title]
 			WR.EachU((V,F) =>

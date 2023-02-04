@@ -97,6 +97,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliVCAPIDynamicDetailType2 = WW.Tmpl(BiliBiliVCAPIDynamicAPIRoot,'get_dynamic_detail?type=2&rid=',undefined),
 	BiliBiliVCAPIDynamicUser = WW.Tmpl(BiliBiliVCAPIDynamicAPIRoot,'space_history?host_uid=',undefined,'&offset_dynamic_id=',undefined),
 	BiliBiliTimeline = 'https://t.bilibili.com/',
+	BiliBiliTimelineVote = WW.Tmpl(BiliBiliTimeline,'vote/h5/index/#/result?vote_id=',undefined),
 	BiliBiliLive = 'https://live.bilibili.com/',
 	// Appkey = '20bee1f7a18a425c',
 	Common = function(V)
@@ -299,7 +300,43 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	},
 	SolveDynamic = function(V)
 	{
-		return SolveDynamicSingle(V.desc,V.card)
+		var R = SolveDynamicSingle(V.desc,V.card);
+		WR.Each(function(B)
+		{
+			var
+			Card = B.ugc_attach_card,
+			U;
+			WW.IsArr(R) || (R = [R])
+			WW.IsArr(R[0].More) || (R[0].More = R[0].More ? [R[0].More] : [])
+			switch (B.add_on_card_show_type)
+			{
+				case 2 : // Game Card
+					break
+				case 3 : // Vote Card
+					B = WC.JTO(B.vote_card)
+					R[0].More.push(O.Ah('Vote ' + B.desc,BiliBiliTimelineVote(B.vote_id)))
+					break
+				case 5 :
+					U =
+					{
+						ID : Card.oid_str,
+						Img : Card.image_url,
+						Title : Card.title,
+						Len : Card.duration
+					}
+					break
+				default :
+					U =
+					{
+						Non : true,
+						ID : R[0].ID,
+						Unk : true,
+						Title : 'Unknown AddOn Type #' + B.add_on_card_show_type
+					}
+			}
+			U && R.push(U)
+		},WR.Path(['display','add_on_card_info'],V))
+		return R
 	},
 	SolveDynamicResponse = function(B)
 	{

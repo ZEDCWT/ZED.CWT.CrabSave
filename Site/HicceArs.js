@@ -279,7 +279,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 		ID : 'HicceArs',
 		Alias : 'HA',
 		Judge : /\bHicceArs\b/i,
-		Min : 'hiccears',
+		Min : 'REMEMBERME',
 		Sign : function()
 		{
 			return O.Req(HicceArsAccountUser).Map(function(B)
