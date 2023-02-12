@@ -3646,6 +3646,10 @@
 		{
 			WSSend(Proto.AuthVacuum)
 		}
+		CrabSave.Cut = function()
+		{
+			WS.F()
+		}
 		Conf.Unsafe && WW.Merge(CrabSave.Unsafe = Unsafe,
 		{
 			Proto : Proto,

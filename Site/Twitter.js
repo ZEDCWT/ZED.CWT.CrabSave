@@ -6,9 +6,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	// /"[^"]+/main[^"]+/ https://abs.twimg.com/responsive-web/web/main.713ccc64.js
 	Twitter = 'https://twitter.com/',
 	TwitterTweet = WW.Tmpl(Twitter,'_/status/',undefined),
-	TwitterIAPIUserTweet = Twitter + 'i/api/graphql/UsDw2UjYF5JE6-KyC7MDGw/UserTweets',
 	TwitterAPI = 'https://api.twitter.com/',
-	TwitterAPITypeHome = 'timeline/home',
+	// TwitterAPITypeHome = 'timeline/home',
 	TwitterAPITypeConversation = 'timeline/conversation/',
 	TwitterAPITypeMedia = 'timeline/media/',
 	TwitterAPITypeSearch = 'search/adaptive',
@@ -16,7 +15,31 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	TwitterAPISearchSug = WW.Tmpl(TwitterAPI,'1.1/search/typeahead.json?q=',undefined,'&tweet_mode=extended&count=',O.Size),
 	TwitterAPIFollowing = WW.Tmpl(TwitterAPI,'1.1/friends/list.json?user_id=',undefined,'&cursor=',undefined,'&count=',O.Size),
 	TwitterAPIJSON = WW.Tmpl(TwitterAPI,'2/',undefined,'.json?tweet_mode=extended&count=',O.Size),
-	TwitterAPIUserByScreen = WW.Tmpl(TwitterAPI,'graphql/G6Lk7nZ6eEKd7LBBZw9MYw/UserByScreenName?variables=%7B%22screen_name%22%3A',undefined,'%2C%22withHighlightedLabel%22%3Atrue%7D'),
+	TwitterAPIGraphQL = TwitterAPI + 'graphql/',
+	// TwitterAPIGraphQLUserTweet = TwitterAPIGraphQL + 'UsDw2UjYF5JE6-KyC7MDGw/UserTweets',
+	TwitterAPIGraphQLUserTweet = TwitterAPIGraphQL + 'rCpYpqplOq3UJ2p6Oxy3tw/UserTweets',
+	TwitterAPIGraphQLUserByScreen = WW.Tmpl(TwitterAPIGraphQL,'G6Lk7nZ6eEKd7LBBZw9MYw/UserByScreenName?variables=%7B%22screen_name%22%3A',undefined,'%2C%22withHighlightedLabel%22%3Atrue%7D'),
+	TwitterAPIGraphQLHomeTimeline = TwitterAPIGraphQL + '6VUR2qFhg6jw55JEvJEmmA/HomeTimeline',
+	TwitterAPIGraphQLFeature = WC.OTJ(
+	{
+		freedom_of_speech_not_reach_appeal_label_enabled : false,
+		graphql_is_translatable_rweb_tweet_is_translatable_enabled : false,
+		interactive_text_enabled : false,
+		longform_notetweets_consumption_enabled : true,
+		responsive_web_edit_tweet_api_enabled : false,
+		responsive_web_enhance_cards_enabled : false,
+		responsive_web_graphql_exclude_directive_enabled : false,
+		responsive_web_graphql_skip_user_profile_image_extensions_enabled : false,
+		responsive_web_graphql_timeline_navigation_enabled : false,
+		responsive_web_text_conversations_enabled : false,
+		responsive_web_twitter_blue_verified_badge_is_enabled : false,
+		standardized_nudges_misinfo : true,
+		tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled : false,
+		tweetypie_unmention_optimization_enabled : true,
+		verified_phone_label_enabled : false,
+		vibe_api_enabled : true,
+		view_counts_everywhere_api_enabled : true
+	}),
 	TwitterAuth = 'AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA',
 	Common = function(Q)
 	{
@@ -153,30 +176,69 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			'Authorization','Bearer ' + TwitterAuth
 		])
 	},
-	MakeUserTweet = function(User,Cursor)
+	MakeGraphQL = function(URL,Data)
 	{
 		return O.Req(MakeHead(
 		{
-			URL : TwitterIAPIUserTweet,
+			URL : URL,
 			QS :
 			{
-				variables : WC.OTJ(
-				{
-					userId : User,
-					count : O.Size,
-					cursor : Cursor,
-					includePromotedContent : false,
-					withQuickPromoteEligibilityTweetFields : true,
-					withSuperFollowsUserFields : true,
-					withDownvotePerspective : true,
-					withReactionsMetadata : true,
-					withReactionsPerspective : true,
-					withSuperFollowsTweetFields : true,
-					withVoice : true,
-					withV2Timeline : false
-				})
+				variables : WC.OTJ(Data),
+				features : TwitterAPIGraphQLFeature
 			}
 		}))
+	},
+	SolveGraphQLTweet = function(B,I,Page)
+	{
+		var R = [];
+		B = Common(B)
+		O.Walk(B,function(V,F)
+		{
+			return 'instructions' === F && !O.Walk(WR.Where(function(V)
+			{
+				return !Page || 'TimelinePinEntry' !== V.type
+			},WR.Rev(V)),function(V)
+			{
+				return V.promotedMetadata ||
+					'Tweet' === V.__typename &&
+					R.push(SolveTweet(V.legacy,V.core.user_results.result.legacy))
+			})
+		})
+		return [R.length && SolveCursor(B),{Item : R}]
+	},
+	MakeUserTweet = function(User,Cursor)
+	{
+		return MakeGraphQL(TwitterAPIGraphQLUserTweet,
+		{
+			userId : User,
+			count : O.Size,
+			cursor : Cursor,
+			includePromotedContent : false,
+			withQuickPromoteEligibilityTweetFields : true,
+			withSuperFollowsUserFields : true,
+			withDownvotePerspective : true,
+			withReactionsMetadata : true,
+			withReactionsPerspective : true,
+			withSuperFollowsTweetFields : true,
+			withVoice : true,
+			withV2Timeline : false
+		})
+	},
+	MakeHomeTimeline = function(Cursor)
+	{
+		return MakeGraphQL(TwitterAPIGraphQLHomeTimeline,
+		{
+			count : O.Size,
+			cursor : Cursor,
+			includePromotedContent : false,
+			latestControlAvailable : true,
+			withCommunity : true,
+			withSuperFollowsUserFields : true,
+			withDownvotePerspective : true,
+			withReactionsMetadata : true,
+			withReactionsPerspective : true,
+			withSuperFollowsTweetFields : true,
+		})
 	};
 	return {
 		ID : 'Twitter',
@@ -235,31 +297,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			],
 			View : O.More(function(ID,I)
 			{
-				return O.Req(MakeHead(TwitterAPIUserByScreen(WC.UE(WC.OTJ(ID))))).FMap(function(U)
+				return O.Req(MakeHead(TwitterAPIGraphQLUserByScreen(WC.UE(WC.OTJ(ID))))).FMap(function(U)
 				{
 					return MakeUserTweet(I[0] = Common(U).data.user.rest_id)
 				})
 			},function(I,Page)
 			{
 				return MakeUserTweet(I[0],I[Page])
-			},function(B,I,Page)
-			{
-				var R = [];
-				B = Common(B)
-				O.Walk(B,function(V,F)
-				{
-					return 'instructions' === F && !O.Walk(WR.Where(function(V)
-					{
-						return !Page || 'TimelinePinEntry' !== V.type
-					},WR.Rev(V)),function(V)
-					{
-						return V.promotedMetadata ||
-							'Tweet' === V.__typename &&
-							R.push(SolveTweet(V.legacy,V.core.user_results.result.legacy))
-					})
-				})
-				return [R.length && SolveCursor(B),{Item : R}]
-			})
+			},SolveGraphQLTweet)
 			/*View : MakeTimeline(function(ID)
 			{
 				return O.Req(MakeHead(TwitterAPIUserByScreen(WC.UE(WC.OTJ(ID))))).Map(function(U)
@@ -277,7 +322,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		},{
 			Name : 'Timeline',
 			Judge : O.TL,
-			View : MakeTimeline(WR.Const(WX.Just(TwitterAPIJSON(TwitterAPITypeHome))))
+			// View : MakeTimeline(WR.Const(WX.Just(TwitterAPIJSON(TwitterAPITypeHome))))
+			View : O.More(function()
+			{
+				return MakeHomeTimeline()
+			},function(I,Page)
+			{
+				return MakeHomeTimeline(I[Page])
+			},SolveGraphQLTweet)
 		},{
 			Name : 'Following',
 			Judge : O.UP,
