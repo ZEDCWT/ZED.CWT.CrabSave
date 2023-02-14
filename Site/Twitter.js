@@ -44,7 +44,17 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	Common = function(Q)
 	{
 		Q = WC.JTO(Q)
-		Q.errors && O.Bad(Q.errors[0].code,Q.errors[0].message)
+		WR.Each(function(V)
+		{
+			switch (V.code)
+			{
+				case 214 :
+					// {message:'BadRequest: Failed to get part of the tweet',locations:[{line:2317,column:3}],path:['user','result','timeline','timeline','instructions',0,'entries',5,'content','itemContent','tweet_results','result','legacy','retweeted_status_result','result','vibe'],extensions:{name:'BadRequestError',source:'Client',code:214,kind:'Validation',tracing:{trace_id:'...'}},code:214,kind:'Validation',name:'BadRequestError',source:'Client',tracing:{trace_id:'...'}}
+					break
+				default :
+					O.Bad(V.code,V.message)
+			}
+		},Q.errors)
 		return Q
 	},
 	SolveTweet = function(Tweet,User,ID)

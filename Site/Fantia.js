@@ -1,5 +1,5 @@
 'use strict'
-CrabSave.Site(function(O,WW,WC,WR)
+CrabSave.Site(function(O,WW,WC,WR,WX)
 {
 	var
 	Fantia = 'https://fantia.jp/',
@@ -22,6 +22,27 @@ CrabSave.Site(function(O,WW,WC,WR)
 		return 1 === T.length ?
 			T[0] :
 			T.length ? B : WW.Throw('Empty Response')
+	},
+	CSRFToken,CSRFTokenLast,
+	MakeAPI = function(Q)
+	{
+		return (CSRFToken && CSRFTokenLast && WW.Now() < 6E5 + CSRFTokenLast ?
+			WX.Just(CSRFToken) :
+			O.ReqAPI(Fantia).Map(function(B)
+			{
+				CSRFToken = WW.MF(/<[^>]+csrf-token[^>]+content="([^"]+)/,B)
+				CSRFTokenLast = WW.Now()
+			}))
+			.FMap(function()
+			{
+				return O.ReqAPI(WW.N.ReqOH(Q,'X-CSRF-Token',CSRFToken))
+			})
+			.Tap(null,function(E)
+			{
+				WW.ErrIs(WW.Err.NetBadStatus,E) &&
+					403 === E.Arg[0] &&
+					(CSRFToken = null)
+			})
 	},
 	SolvePost = function(B)
 	{
@@ -159,7 +180,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 			Judge : O.Num('FanClubs?'),
 			View : function(ID,Page)
 			{
-				return O.ReqAPI(FantiaFanclubPost(ID,-~Page)).Map(function(B)
+				return MakeAPI(FantiaFanclubPost(ID,-~Page)).Map(function(B)
 				{
 					var
 					FanClubEle = WW.MU(/fanclub-name">.*?<\/a/,B),
@@ -193,7 +214,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 			Judge : [/^\d+(?=(?:_\d+)?$)/,O.Num('Posts?')],
 			View : function(ID)
 			{
-				return O.ReqAPI(FantiaAPIPost(ID)).Map(function(B)
+				return MakeAPI(FantiaAPIPost(ID)).Map(function(B)
 				{
 					return {
 						Item : SolvePost(Common(B))
@@ -205,7 +226,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 			Judge : O.Word('User|Profiles?'),
 			View : function(ID)
 			{
-				return O.ReqAPI(FantiaProfile(ID)).Map(function(B)
+				return MakeAPI(FantiaProfile(ID)).Map(function(B)
 				{
 					var
 					ROI = WW.MU(/="user-avatar[^]+list-group-item">/,B),

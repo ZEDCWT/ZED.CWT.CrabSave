@@ -1,7 +1,7 @@
 'use strict'
 var
 WW = require('@zed.cwt/wish'),
-{R : WR,C : WC,N : WN} = WW,
+{R : WR,X : WX,C : WC,N : WN} = WW,
 
 Fantia = 'https://fantia.jp/',
 FantiaAPI = Fantia + 'api/v1/',
@@ -11,6 +11,7 @@ FantiaAPIPost = WW.Tmpl(FantiaAPI,'posts/',undefined);
 module.exports = O =>
 {
 	var
+	CSRFToken,CSRFTokenLast,
 	Common = B =>
 	{
 		var T;
@@ -26,13 +27,27 @@ module.exports = O =>
 		{
 			var
 			PostID,
-			ContentID;
+			ContentID,
+			MakeAPI = Q => (CSRFToken && CSRFTokenLast && WW.Now() < 6E5 + CSRFTokenLast ?
+				WX.Just(CSRFToken) :
+				Ext.ReqB(O.Coke(Fantia)).Map(B =>
+				{
+					CSRFToken = WW.MF(/<[^>]+csrf-token[^>]+content="([^"]+)/,B)
+					CSRFTokenLast = WW.Now()
+				}))
+				.FMap(() => Ext.ReqB(O.Coke(WW.N.ReqOH(Q,'X-CSRF-Token',CSRFToken))))
+				.Tap(null,E =>
+				{
+					WW.ErrIs(WW.Err.NetBadStatus,E) &&
+						403 === E.Arg[0] &&
+						(CSRFToken = null)
+				});
 
 			Q = Q.split('_')
 			PostID = Q[0]
 			ContentID = Q[1]
 
-			return Ext.ReqB(O.Coke(FantiaAPIPost(PostID))).Map(B =>
+			return MakeAPI(FantiaAPIPost(PostID)).Map(B =>
 			{
 				var
 				Content,
@@ -46,7 +61,8 @@ module.exports = O =>
 					{
 						var
 						Attr = V.attributes,
-						R = V.insert;
+						R = V.insert,
+						NeedNewLine = false;
 						WW.IsObj(R) && WR.EachU((V,F) =>
 						{
 							switch (F)
@@ -55,11 +71,13 @@ module.exports = O =>
 									U.push(V.url)
 									X.push(WN.ExtN(V.url.replace(/\?.*/,'')))
 									R = `![${U.length - 1}:${V.id}](${V.url})`
+									NeedNewLine = true
 									break
 								case 'image' :
 									U.push(V)
 									X.push(WN.ExtN(V))
 									R = `![${U.length - 1}](${V})`
+									NeedNewLine = true
 									break
 								default :
 									O.Bad(R)
@@ -83,7 +101,7 @@ module.exports = O =>
 									O.Bad(Attr)
 							}
 						},Attr)
-						return R
+						return NeedNewLine ? R + '\n' : R
 					}).join``;
 					U.length && Part.push({URL : U,Ext : X})
 					return R
