@@ -19,7 +19,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	// TwitterAPIGraphQLUserTweet = TwitterAPIGraphQL + 'UsDw2UjYF5JE6-KyC7MDGw/UserTweets',
 	TwitterAPIGraphQLUserTweet = TwitterAPIGraphQL + 'rCpYpqplOq3UJ2p6Oxy3tw/UserTweets',
 	TwitterAPIGraphQLUserByScreen = WW.Tmpl(TwitterAPIGraphQL,'G6Lk7nZ6eEKd7LBBZw9MYw/UserByScreenName?variables=%7B%22screen_name%22%3A',undefined,'%2C%22withHighlightedLabel%22%3Atrue%7D'),
-	TwitterAPIGraphQLHomeTimeline = TwitterAPIGraphQL + '6VUR2qFhg6jw55JEvJEmmA/HomeTimeline',
+	// TwitterAPIGraphQLHomeTimeline = TwitterAPIGraphQL + '6VUR2qFhg6jw55JEvJEmmA/HomeTimeline',
+	TwitterAPIGraphQLHomeLatestTimeline = TwitterAPIGraphQL + 'MsfQTkink2J9_M0YzCl36w/HomeLatestTimeline',
 	TwitterAPIGraphQLFeature = WC.OTJ(
 	{
 		freedom_of_speech_not_reach_appeal_label_enabled : false,
@@ -236,13 +237,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	},
 	MakeHomeTimeline = function(Cursor)
 	{
-		return MakeGraphQL(TwitterAPIGraphQLHomeTimeline,
+		return MakeGraphQL(TwitterAPIGraphQLHomeLatestTimeline,
 		{
 			count : O.Size,
 			cursor : Cursor,
 			includePromotedContent : false,
 			latestControlAvailable : true,
-			withCommunity : true,
+			requestContext : 'launch',
 			withSuperFollowsUserFields : true,
 			withDownvotePerspective : true,
 			withReactionsMetadata : true,
