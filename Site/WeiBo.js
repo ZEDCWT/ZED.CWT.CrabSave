@@ -235,7 +235,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				case 'video' : // 5 11
 					NonAV = false
 					Len = WR.Path(['playback_list',0,'play_info','duration'],T) ||
-						T.media_info.duration
+						WR.Path(['media_info','duration'],T)
 					break
 
 				case 'hudongvote' : // 23

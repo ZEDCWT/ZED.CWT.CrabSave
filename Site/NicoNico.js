@@ -126,7 +126,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							D.push(
 							{
 								ID : SolveSM(V[1]),
-								Img : WW.MF(/original="([^"]+)/,V = V[0]),
+								Img : WW.MF(/(?:original|src)="([^"]+)/,V = V[0]),
 								Title : WC.HED(WW.MF(/title="([^"]+)/,V)),
 								Date : WW.MF(/time">([^<]+)/,V),
 								Len : WW.MF(/gth">([^<]+)/,V)

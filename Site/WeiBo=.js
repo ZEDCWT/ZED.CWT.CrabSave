@@ -21,7 +21,19 @@ NumberZip = WC.Rad(WW.D + WW.az + WW.AZ),
 // 		WR.SplitAll(7,WR.PadS0(7 * WR.Ceil(Q.length / 7),Q))).join``,
 UnZip = Q => WR.MapU((V,F) => (V = NumberZip.P(V),F ? WR.PadS0(7,V) : V),
 		WR.SplitAll(4,WR.PadS0(4 * WR.Ceil(Q.length / 4),Q))).join``,
-ImgEnlarge = V => V.replace(/(?<=\.sinaimg\.cn\/)(?:\w+|crop[\d.]+)(?=\/\w+\.\w+$)/,'large');
+ImgEnlarge = V => V.replace(/(?<=\.sinaimg\.cn\/)(?:\w+|crop[\d.]+)(?=\/\w+\.\w+$)/,'large'),
+
+VideoIgnoreDomain =
+[
+	'acg.tv',
+	'iqiyi.com',
+	'ku6.com',
+	'letv.com',
+	'qq.com',
+	'tudou.com',
+	'weibo.com',
+],
+VideoIgnoreDomainRX = RegExp(`//[^/]*(${VideoIgnoreDomain.map(WR.SafeRX).join`|`})/`);
 
 /*
 	1168377245/H9DtcoC7I	TextOnly
@@ -41,6 +53,7 @@ ImgEnlarge = V => V.replace(/(?<=\.sinaimg\.cn\/)(?:\w+|crop[\d.]+)(?=\/\w+\.\w+
 	7031421269/Lbwq466Xs	Vote
 	1678843974/5KD0tWN9TiG	Ancient
 	5833359023/Gu8F2rS5y	Movie
+	1781163345/FhlEctNcL	Panorama
 */
 
 /**@type {CrabSaveNS.SiteO}*/
@@ -149,7 +162,7 @@ module.exports = O =>
 											C.mp4_sd_url
 									if (T)
 										Part.push({URL : [T]})
-									else if (!/\/\/[^/]*(acg\.tv|letv\.com|qq\.com|weibo.com)\//.test(C.h5_url))
+									else if (!VideoIgnoreDomainRX.test(C.h5_url))
 										WW.Throw('Unable to solve video URL')
 								}
 								break
@@ -255,6 +268,8 @@ module.exports = O =>
 									V.part_num + ' ' +
 									(0 | 100 * V.part_ratio) + '% ' +
 									V.content),C.vote_list)
+								break
+							case 'panorama' : // 29
 								break
 							case 'story' : // 31
 								C = WR.Pluck('play_info',T.slide_cover.playback_list)
@@ -388,5 +403,6 @@ module.exports = O =>
 			URL : Q,
 			Head : {Referer : WeiBo}
 		}),
+		Range : false,
 	}
 }
