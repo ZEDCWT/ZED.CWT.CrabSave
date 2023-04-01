@@ -17,17 +17,18 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	TwitterAPIJSON = WW.Tmpl(TwitterAPI,'2/',undefined,'.json?tweet_mode=extended&count=',O.Size),
 	TwitterAPIGraphQL = TwitterAPI + 'graphql/',
 	// TwitterAPIGraphQLUserTweet = TwitterAPIGraphQL + 'UsDw2UjYF5JE6-KyC7MDGw/UserTweets',
-	TwitterAPIGraphQLUserTweet = TwitterAPIGraphQL + 'rCpYpqplOq3UJ2p6Oxy3tw/UserTweets',
+	TwitterAPIGraphQLUserTweet = TwitterAPIGraphQL + 'PoZUz38XdT-pXNk0FRfKSw/UserTweets',
 	TwitterAPIGraphQLUserByScreen = WW.Tmpl(TwitterAPIGraphQL,'G6Lk7nZ6eEKd7LBBZw9MYw/UserByScreenName?variables=%7B%22screen_name%22%3A',undefined,'%2C%22withHighlightedLabel%22%3Atrue%7D'),
 	// TwitterAPIGraphQLHomeTimeline = TwitterAPIGraphQL + '6VUR2qFhg6jw55JEvJEmmA/HomeTimeline',
-	TwitterAPIGraphQLHomeLatestTimeline = TwitterAPIGraphQL + 'MsfQTkink2J9_M0YzCl36w/HomeLatestTimeline',
+	TwitterAPIGraphQLHomeLatestTimeline = TwitterAPIGraphQL + 'AKmCZTyU1gWxo41b4PrQGA/HomeLatestTimeline',
 	TwitterAPIGraphQLFeature = WC.OTJ(
 	{
-		freedom_of_speech_not_reach_appeal_label_enabled : false,
+		freedom_of_speech_not_reach_fetch_enabled : false,
 		graphql_is_translatable_rweb_tweet_is_translatable_enabled : false,
 		interactive_text_enabled : false,
 		longform_notetweets_consumption_enabled : true,
-		responsive_web_edit_tweet_api_enabled : false,
+		longform_notetweets_richtext_consumption_enabled : false,
+		responsive_web_edit_tweet_api_enabled : true,
 		responsive_web_enhance_cards_enabled : false,
 		responsive_web_graphql_exclude_directive_enabled : false,
 		responsive_web_graphql_skip_user_profile_image_extensions_enabled : false,
@@ -35,6 +36,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		responsive_web_text_conversations_enabled : false,
 		responsive_web_twitter_blue_verified_badge_is_enabled : false,
 		standardized_nudges_misinfo : true,
+		tweet_awards_web_tipping_enabled : false,
 		tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled : false,
 		tweetypie_unmention_optimization_enabled : true,
 		verified_phone_label_enabled : false,
@@ -243,12 +245,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			cursor : Cursor,
 			includePromotedContent : false,
 			latestControlAvailable : true,
-			requestContext : 'launch',
-			withSuperFollowsUserFields : true,
 			withDownvotePerspective : true,
 			withReactionsMetadata : true,
 			withReactionsPerspective : true,
-			withSuperFollowsTweetFields : true,
 		})
 	};
 	return {

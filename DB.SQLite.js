@@ -236,7 +236,9 @@ module.exports = Option =>
 				(Size is null or 2 = State)
 				and
 				Error < ?
-			order by Row
+			order by
+				State desc,
+				Row
 			limit ?
 		`,[From,Count]).FMap(R => WX.From(R)
 			.FMapE(V => All('select Part,File,Size,Done from Down where ? = Task order by Part,File',[V.Row])

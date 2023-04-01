@@ -668,7 +668,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								Non : true,
 								ID : V.idstr,
 								URL : WeiBo + V.idstr,
-								Img : V.profile_image_url,
+								Img : PackImg(V.profile_image_url),
 								UP : ShowName(V.screen_name,V.remark),
 								UPURL : WeiBo + V.idstr,
 								Date : new Date(V.created_at),
