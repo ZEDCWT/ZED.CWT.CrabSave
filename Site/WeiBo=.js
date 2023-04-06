@@ -106,7 +106,7 @@ module.exports = O =>
 					Card,
 					C,T;
 					Long = Long && WR.Path(['data','longTextContent'],WC.JTO(Long))
-					Title = B.text_raw
+					Title = B.text_raw.replace(/\u200B+$/,'')
 					Meta.push(Long ? WC.HED(Long) : Title)
 					if (Forwarded)
 						Title = Title.replace(/\/\/@.*/,'')

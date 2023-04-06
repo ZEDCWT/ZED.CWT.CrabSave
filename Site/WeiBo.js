@@ -20,6 +20,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	WeiBoAJAXProfile = WeiBoAJAX + 'profile/',
 	// uid screen_name
 	WeiBoAJAXProfileInfoCustom = WW.Tmpl(WeiBoAJAXProfile,'info?custom=',undefined),
+	WeiBoAJAXProfileInfoScreen = WW.Tmpl(WeiBoAJAXProfile,'info?screen_name=',undefined),
 	WeiBoAJAXProfileFollow = WW.Tmpl(WeiBoAJAXProfile,'followContent?page=',undefined),
 	WeiBoSearch = 'https://s.weibo.com/',
 	WeiBoSearchSugg = WW.Tmpl(WeiBoSearch,'Ajax_Search/suggest?where=weibo&type=weibo&key=',undefined),
@@ -284,7 +285,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			NonAV : B.retweeted_status || NonAV,
 			ID : B.user.idstr + '/' + B.mblogid,
 			Img : PackImg(Img),
-			Title : B.text_raw,
+			Title : B.text_raw.replace(/\u200B+$/,''),
 			UP : ShowName(B.user.screen_name,B.user.remark),
 			UPURL : WeiBo + B.user.profile_url.replace(/^\//,''),
 			Date : new Date(B.created_at),
@@ -302,9 +303,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		})
 	}),
 	*/
-	SolveCustomUID = WX.CacheM(function(Q)
+	SolveUIDByCustom = WX.CacheM(function(Q)
 	{
 		return Req(WeiBoAJAXProfileInfoCustom(Q)).Map(function(B)
+		{
+			return Common(B).user.idstr
+		})
+	}),
+	SolveUIDByScreen = WX.CacheM(function(Q)
+	{
+		return Req(WeiBoAJAXProfileInfoScreen(Q)).Map(function(B)
 		{
 			return Common(B).user.idstr
 		})
@@ -508,7 +516,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			}
 		},{
 			Name : 'User',
-			Judge : [/\.com\/(?:u\/(?=\d)|n\/)?([%\w]+)/,O.Word('User')],
+			Judge : [/\.com\/(?!n\/)(?:u\/(?=\d))?([%\w]+)/,O.Word('User')],
 			/*
 			// Terminated endpoint, 'old' UI only
 			View : function(ID,Page)
@@ -554,7 +562,25 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			*/
 			View : function(ID,Page)
 			{
-				return (/\D/.test(ID) ? SolveCustomUID(ID) : WX.Just(ID)).FMap(function(ID)
+				return (/\D/.test(ID) ? SolveUIDByCustom(ID) : WX.Just(ID)).FMap(function(ID)
+				{
+					return Req(WeiBoAJAXStatusMBlog(ID,-~Page))
+				}).Map(function(B)
+				{
+					B = Common(B)
+					return {
+						Size : 20,
+						Len : B.total,
+						Item : WR.Map(SolveStatus,B.list)
+					}
+				})
+			}
+		},{
+			Name : 'Nick',
+			Judge : [/\.com\/n\/([%\w]+)/,O.Word('Nick')],
+			View : function(ID,Page)
+			{
+				return (/\D/.test(ID) ? SolveUIDByScreen(ID) : WX.Just(ID)).FMap(function(ID)
 				{
 					return Req(WeiBoAJAXStatusMBlog(ID,-~Page))
 				}).Map(function(B)
