@@ -372,13 +372,14 @@ module.exports = Option =>
 		Prefix = '~CrabSaveCheck~',
 		Unicode = WN.JoinP(Root,Prefix + WR.CHR(...WR.Times(() => WW.Rnd(0x4E00,0x9FFF),Len - Prefix.length))),
 		ASCII = WN.JoinP(Root,Prefix + WW.Key(Len - Prefix.length));
-		return WN.UW(Unicode,'')
+		return WN.MD(Root)
+			.FP(WN.UW(Unicode,''))
 			.FP(WN.Un(Unicode))
 			.Map(() => [true,Len])
 			.ErrAs(() => WN.UW(ASCII,'')
 				.FP(WN.Un(ASCII))
 				.Map(() => [false,Len]))
-			.ErrAs(() => [false,200])
+			.ErrAs(() => WX.Just([false,200]))
 	}),
 	SolveName = (Format,O,Root,Ext) =>
 	{

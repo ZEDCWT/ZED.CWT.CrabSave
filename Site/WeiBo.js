@@ -197,7 +197,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		if (T = B.region_name)
 			More.push(T)
 		if (T = B.source)
-			More.push(T)
+			More.push(O.Text(T))
 		if (T = B.screen_name_suffix_new)
 		{
 			More.push(WR.Map(function(V)

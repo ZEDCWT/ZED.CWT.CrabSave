@@ -586,18 +586,40 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						O.API(BiliBiliSearch)
 							.FMap(function(B)
 							{
-								return WW.B.ReqB(O.SolU(WW.MF(/"([^"]+\/search\.[^"]+\.js)/,B)))
+								return WW.B.ReqB(O.SolU(WW.MF(/"([^"]+\/index\.[^"]+\.js)/,B)))
 							})
 							.Tap(function(B)
 							{
-								B = B.match(/menus:{o.+?}}}}}/g)
-									.pop().slice(6,-3)
-									.replace(/[\da-z]+(?=:["{])/g,'"$&"')
-								Menu = WC.JTO(B)
+								var
+								JTO = function(Q)
+								{
+									return WC.JTO(WR.RepL(
+									[
+										/\b\w+(?=:)/g,'"$&"',
+										/\\x([\dA-F]{2})/ig,'\\u00$1'
+									],Q))
+								},
+								Walk = function(Out,O,Prefix)
+								{
+									WR.Each(function(V)
+									{
+										V.name = Prefix + V.name
+										Out.push(V)
+										Walk(Out,V.children,Prefix + '\u3000\u3000')
+									},O)
+								},
+								T;
+								Menu = {}
+								if (T = WW.MU(/\[{name[^,]+,order[^\]]+]/,B))
+									Menu.order = JTO(T)
+								if (T = WW.MU(/\[{name[^,]+,duration[^\]]+]/,B))
+									Menu.duration = JTO(T)
+								if (T = WW.MU(/\[{tids[^]+?](?=,\w)/,B))
+									Walk(Menu.tids = [],JTO(T),'')
 								return WX.Empty
 							})
 							.FinErr()
-							.FMap(WR.Const(WX.Empty))
+							.FP(WX.Empty)
 				).Reduce(function(D,V)
 				{
 					return [WR.Max(D[0],V[0]),D[1] + V[1],WR.Concat(D[2],V[2])]
@@ -619,24 +641,17 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						Pref : Menu && function(I)
 						{
 							var
-							H = function(Q)
-							{
-								return 5E5 * (Q = Q.split('-'))[0] - ~Q[1]
-							},
 							R = WV.Pref({C : I});
 							WR.EachU(function(V,F)
 							{
-								V = V[0] ?
-									WR.Ent(V).sort(function(Q,S){return H(Q[0]) - H(S[0])}) :
-									WR.Ent(V)
 								R.S([[O.Pascal(F),WV.Inp(
 								{
 									Inp : R.C(F),
 									NoRel : O.NoRel
 								}).Drop(WR.Map(function(V)
 								{
-									return [V[0].split('-').pop(),V[1] + ' (' + V[0] + ')']
-								},V))]])
+									return [V[F],V.name]
+								},V)).V(WR.Default('',V[0] && V[0][F]),true)]])
 							},Menu)
 							return R
 						}

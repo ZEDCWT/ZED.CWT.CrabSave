@@ -305,7 +305,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								}).Drop(WR.Map(function(V)
 								{
 									return [V,O.Pascal(V)]
-								},V[1]))]
+								},V[1])).V(V[1][0],true)]
 							},Menu))
 							return R
 						}
