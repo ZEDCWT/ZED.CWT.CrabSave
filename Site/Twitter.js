@@ -87,6 +87,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		},Tweet.entities)
 		return {
 			NonAV : !Media || Retweet,
+			Group : WR.Path(['self_thread','id_str'],Tweet),
 			ID : Tweet.id_str || ID,
 			Img : Media && WR.Pluck('media_url_https',Media),
 			Title : Title,

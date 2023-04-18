@@ -1171,6 +1171,8 @@
 			ClassBrief = WW.Key(),
 			ClassList = WW.Key(),
 			ClassCard = WW.Key(),
+			ClassCardGroup = WW.Key(),
+			ClassCardContent = WW.Key(),
 			ClassCardClick = WW.Key(),
 			ClassCardBar = WW.Key(),
 			ClassImgMulti = WW.Key(),
@@ -1325,6 +1327,42 @@
 						.U(LangSolve('GenLoading'))
 					JumpEnd(Action.View(ID,Q,Action === GoPrefAction ? GoPref : undefined).Now(function(/**@type {CrabSaveNS.SitePage}*/S)
 					{
+						var
+						// stackoverflow.com/a/5008241
+						// martin.ankerl.com/2009/12/09/how-to-create-random-colors-programmatically
+						HSVToRGB = function(H,S,V)
+						{
+							var
+							I = 0 | 6 * H,
+							T = 6 * H - I,
+							A = (1 - S) * (V *= 256),
+							B = (1 - T * S) * V,
+							C = (1 - (1 - T) * S) * V;
+							return '#' + WC.HEXS(
+							[
+								[V,C,A],
+								[B,V,A],
+								[A,V,C],
+								[A,B,V],
+								[C,A,V],
+								[V,A,B]
+							][I])
+						},
+						RndColorParam,
+						RndColorKey,
+						RndColorCurrent,
+						RndColorGet = function(Key)
+						{
+							if (Key !== RndColorKey)
+							{
+								RndColorKey = Key
+								RndColorParam = null == RndColorParam ?
+									Math.random() :
+									(RndColorParam + (Math.sqrt(5) - 1) / 2) % 1
+								RndColorCurrent = HSVToRGB(RndColorParam,.99,.99)
+							}
+							return RndColorCurrent
+						};
 						StatusSet(K)
 						WV.Clear(List)
 						Bar.length = 0
@@ -1381,59 +1419,63 @@
 								[
 									V.Index = WR.Default(S.Size * Q + F,V.Index),
 									' | ',
-									URL ? WV.Ah(IDView,URL,V.Title) : IDView
+									URL ? WV.Ah(IDView,URL,V.Title) : IDView,
 								]),
-								WV.Con(Click,
+								!!V.Group && WV.CSS(WV.Rock(ClassCardGroup),'background',RndColorGet(V.Group)),
+								WV.Con(WV.Rock(ClassCardContent),
 								[
-									V.Img && Img
-								]),
-								WW.IsArr(V.Img) && WV.ApR(
-								[
-									ImgMultiShow,
-									ImgMultiL,
-									ImgMultiR
-								],ImgMulti),
-								!!V.Len && WW.IsNum(V.Len) ?
-									WV.X(WW.StrS(V.Len)) :
-									WW.IsStr(V.Len) &&
-										WV.X(/^\d+(:\d+){1,2}$/.test(V.Len) ?
-											WW.StrS(WR.Reduce(function(D,V){return 60 * D - -V},0,V.Len.split(':'))) :
-											V.Len),
-								V.TitleView ?
-									WV.Con(WV.Rock(WV.FmtW),V.TitleView) :
-									!!V.Title && WV.T(WV.Rock(WV.FmtW),V.Title),
-								WV.X(V.UPURL ?
-									WV.Ah(V.UP,V.UPURL) :
-									V.UP),
-								!!V.Date && WV.X(WW.IsStr(V.Date) ? V.Date : DTS(V.Date)),
-								!!V.Desc && WV.But(
-								{
-									X : LangSolve('BroDesc'),
-									The : WV.TheP,
-									C : function()
+									WV.Con(Click,
+									[
+										V.Img && Img
+									]),
+									WW.IsArr(V.Img) && WV.ApR(
+									[
+										ImgMultiShow,
+										ImgMultiL,
+										ImgMultiR
+									],ImgMulti),
+									!!V.Len && WW.IsNum(V.Len) ?
+										WV.X(WW.StrS(V.Len)) :
+										WW.IsStr(V.Len) &&
+											WV.X(/^\d+(:\d+){1,2}$/.test(V.Len) ?
+												WW.StrS(WR.Reduce(function(D,V){return 60 * D - -V},0,V.Len.split(':'))) :
+												V.Len),
+									V.TitleView ?
+										WV.Con(WV.Rock(WV.FmtW),V.TitleView) :
+										!!V.Title && WV.T(WV.Rock(WV.FmtW),V.Title),
+									WV.X(V.UPURL ?
+										WV.Ah(V.UP,V.UPURL) :
+										V.UP),
+									!!V.Date && WV.X(WW.IsStr(V.Date) ? V.Date : DTS(V.Date)),
+									!!V.Desc && WV.But(
 									{
-										OverlayMake(function(Y)
+										X : LangSolve('BroDesc'),
+										The : WV.TheP,
+										C : function()
 										{
-											WV.Con(Y,
-											[
-												WV.T(WV.Rock(ClassHeader),SiteSolveName(Site) + ' ' + IDView),
-												WV.T(WV.Rock(WV.FmtW),V.Desc)
-											])
-										})
-									}
-								}).R,
-								!!V.More && WV.Con
-								(
-									WV.Rock(WV.FmtW),
-									WW.IsArr(V.More) ?
-										WR.MapU(function(B,F)
-										{
-											return B && -~F < V.More.length && WW.IsStr(B) ?
-												B + '\n' :
-												B
-										},V.More) :
-										V.More
-								)
+											OverlayMake(function(Y)
+											{
+												WV.Con(Y,
+												[
+													WV.T(WV.Rock(ClassHeader),SiteSolveName(Site) + ' ' + IDView),
+													WV.T(WV.Rock(WV.FmtW),V.Desc)
+												])
+											})
+										}
+									}).R,
+									!!V.More && WV.Con
+									(
+										WV.Rock(WV.FmtW),
+										WW.IsArr(V.More) ?
+											WR.MapU(function(B,F)
+											{
+												return B && -~F < V.More.length && WW.IsStr(B) ?
+													B + '\n' :
+													B
+											},V.More) :
+											V.More
+									)
+								])
 							]),List)
 							NonDownload || MakeBar(Site,V,Click)
 							NonDownload && Img && URL && WV.On('click',function()
@@ -1645,19 +1687,20 @@
 						'{' +
 							'display:inline-block;' +
 							'margin:`l`px;' +
-							'padding:`h`px;' +
 							'width:`c`px;' +
 							'text-align:left;' +
 							'text-align:start;' +
 							'word-break:break-all' +
 						'}' +
-						'.`C` legend{font-weight:bold}' +
+						'.`C` legend{padding:0 `l`px;font-weight:bold}' +
+						'.`N`{padding:0 `h`px `h`px `h`px}' +
 						'.`K`{cursor:pointer}' +
 						'.`S`{color:#F7F7F7;font-weight:bold;text-align:center}' +
 						'.`K`:hover .`S`,.`K`.`A` .`S`{background:rgba(102,175,224,.7)}' +
 						'.`K`.`O` .`S`{background:#66AFE0}' +
 						'.`C` img{width:100%;max-height:`m`px}' +
 						'.`C` .`B`{padding:0;min-width:0}' +
+						'.`G`{width:100%;height:`h`px}' +
 
 						'.`M`{position:relative;text-align:center}' +
 						'.`LR`{position:absolute;top:0;width:50%;height:100%}',
@@ -1677,6 +1720,8 @@
 							e : WV.Exp('box-shadow','inset 0 0 3px 2px rgba(0,0,0,.2)'),
 							L : ClassList,
 							C : ClassCard,
+							G : ClassCardGroup,
+							N : ClassCardContent,
 							K : ClassCardClick,
 							S : ClassCardBar,
 							c : ConfSizeCardWidth,

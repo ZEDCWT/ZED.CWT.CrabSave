@@ -36,6 +36,7 @@ declare module CrabSaveNS
 		Non? : boolean
 		NonAV? : boolean
 		Index? : number
+		Group? : any
 		ID : string
 		View? : WishNS.EleContent
 		URL? : string | ((Q : string) => string)

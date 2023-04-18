@@ -315,9 +315,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		var R = SolveDynamicSingle(V.desc,V.card);
 		WR.Each(function(B)
 		{
-			var
-			Card = B.ugc_attach_card,
-			U;
+			var Card,U;
 			WW.IsArr(R) || (R = [R])
 			WW.IsArr(R[0].More) || (R[0].More = R[0].More ? [R[0].More] : [])
 			switch (B.add_on_card_show_type)
@@ -329,6 +327,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					R[0].More.push(O.Ah('Vote ' + B.desc,BiliBiliTimelineVote(B.vote_id)))
 					break
 				case 5 :
+					Card = B.ugc_attach_card
 					U =
 					{
 						ID : Card.oid_str,
@@ -337,17 +336,27 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						Len : Card.duration
 					}
 					break
-				default :
+				case 6 :
+					Card = B.reserve_attach_card
 					U =
 					{
 						Non : true,
-						ID : R[0].ID,
-						Unk : true,
-						Title : 'Unknown AddOn Type #' + B.add_on_card_show_type
+						ID : Card.oid_str,
+						URL : false,
+						Img : 1 === Card.reserve_button.status ?
+							WR.Path(['reserve_button','uncheck','icon'],Card) :
+							WR.Path(['reserve_button','check','share','icon'],Card),
+						Title : Card.title,
+						More : 'Total ' + Card.reserve_total
 					}
+					break
+				default :
+					R[0].More.push('Unknown AddOn Type #' + B.add_on_card_show_type)
 			}
 			U && R.push(U)
 		},WR.Path(['display','add_on_card_info'],V))
+		if (WW.IsArr(R) && 1 < (R = WR.Flatten(R)).length)
+			WR.Each(function(V){V.Group = R},R)
 		return R
 	},
 	SolveDynamicResponse = function(B)
