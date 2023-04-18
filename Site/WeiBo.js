@@ -3,6 +3,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 {
 	var
 	WeiBo = 'https://weibo.com/',
+	WeiBoUser = WW.Tmpl(WeiBo,'u/',undefined),
 	// WeiBoUserAll = WW.Tmpl(WeiBo,undefined,'?is_all=1&page=',undefined),
 	// WeiBoUserAllSub = WW.Tmpl(WeiBo,'p/aj/v6/mblog/mbloglist?script_uri=/',undefined,'&id=',undefined,'&pl_name=Pl_Official_MyProfileFeed__20&domain=100505&is_all=1&page=',undefined,'&pre_page=',undefined,'&pagebar=',undefined),
 	// WeiBoHome = WW.Tmpl(WeiBo,'aj/mblog/fsearch?',undefined),
@@ -24,7 +25,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	WeiBoAJAXProfileFollow = WW.Tmpl(WeiBoAJAXProfile,'followContent?page=',undefined),
 	WeiBoSearch = 'https://s.weibo.com/',
 	WeiBoSearchSugg = WW.Tmpl(WeiBoSearch,'Ajax_Search/suggest?where=weibo&type=weibo&key=',undefined),
-	WeiBoSearchQuery = WW.Tmpl(WeiBoSearch,'weibo?xsort=hot&q=',undefined,'&page=',undefined),
+	WeiBoSearchQuery = WW.Tmpl(WeiBoSearch,'weibo?q=',undefined,'&page=',undefined),
 	SinaLogin = 'https://login.sina.com.cn/',
 	SinaLoginSSO = SinaLogin + 'sso/login.php',
 	SinaLoginCross = SinaLogin + 'crossdomain2.php?action=login',
@@ -364,51 +365,69 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						{
 							return WR.Max(D,+V[1])
 						},1,/href="[^"]+&page=(\d+)/g,B),
-						Size : 20,
-						Item : WW.MR(function(D,V)
-						{
-							var
-							Non = true,
-							Title = O.Text(WW.MU(/<[^>]+feed_list_content_full".*\s+.*/,V) ||
-								WW.MU(/<[^>]+feed_list_content".*\s+.*/,V)),
-							More,
-							Img,T;
-							T = V.split(/(feed_list_forwardContent">[^]+)(?="from">)/)
-							if (T[1])
+						Size : 10,
+						Item : WR.Cat
+						(
+							WW.MR(function(D,V)
 							{
-								V = T[0] + T[2]
-								T = T[1]
-								More = WC.HED(WW.MF(/nick-name="([^"]+)/,T))
-								T = WW.MF(/from".*\s+.*href="[^"]+\/(\d+\/\w+)/,More)
-								More =
-								[
-									O.Ah(T,WeiBo + T),
-									O.Ah('@' + More,WeiBo + T.replace(/\/.*/,''))
-								]
-							}
-							if (T = WW.MF(/WB_video.*action-data="([^"]+)/,V)) // Video
+								var ID;
+								D.push(
+								{
+									NonAV : true,
+									ID : ID = WW.MF(/u\/(\d+)/,V),
+									URL : WeiBoUser(ID),
+									Img : PackImg(WW.MF(/src="([^"]+)/,V)),
+									UP : WC.HED(WW.MF(/class="name[^>]+>([^<]+)/,V)),
+									UPURL : WeiBoUser(ID),
+									More : O.Text(WW.MU(/<span[^]+?<\/span>/))
+								})
+								return D
+							},[],/class="card card-user[^]+?class="btn/g,B),
+							WW.MR(function(D,V)
 							{
-								Non = false
-								Img = WC.QSP(T).cover_img
-							}
-							else if (T = WW.MF(/media-piclist"[^]+?src="([^"]+)/,V))
-							{
-								Img = T
-							}
-							D.push(
-							{
-								NonAV : Non,
-								ID : T = WW.MF(/from".*\s+.*href="[^"]+\/(\d+\/\w+)/,V),
-								Img : PackImg(Img),
-								Title : Title.slice(0,128),
-								UP : WC.HED(WW.MF(/nick-name="([^"]+)/,V)),
-								UPURL : WeiBo + T.replace(/\/.*/,''),
-								Date : WW.MF(/from".*\s+.*\s+(\S+)/,V),
-								Desc : Title,
-								More : More
-							})
-							return D
-						},[],/feed_list_item"[^]+?"feed_list_repeat"/g,B)
+								var
+								Non = true,
+								Title = O.Text(WW.MU(/<[^>]+feed_list_content_full".*\s+.*/,V) ||
+									WW.MU(/<[^>]+feed_list_content".*\s+.*/,V)),
+								More,
+								Img,T;
+								T = V.split(/(feed_list_forwardContent">[^]+)(?="from">)/)
+								if (T[1])
+								{
+									V = T[0] + T[2]
+									T = T[1]
+									More = WC.HED(WW.MF(/nick-name="([^"]+)/,T))
+									T = WW.MF(/from".*\s+.*href="[^"]+\/(\d+\/\w+)/,More)
+									More =
+									[
+										O.Ah(T,WeiBo + T),
+										O.Ah('@' + More,WeiBo + T.replace(/\/.*/,''))
+									]
+								}
+								if (T = WW.MF(/WB_video.*action-data="([^"]+)/,V)) // Video
+								{
+									Non = false
+									Img = WC.QSP(T).cover_img
+								}
+								else if (T = WW.MF(/media-piclist"[^]+?src="([^"]+)/,V))
+								{
+									Img = T
+								}
+								D.push(
+								{
+									NonAV : Non,
+									ID : T = WW.MF(/from".*\s+.*href="[^"]+\/(\d+\/\w+)/,V),
+									Img : PackImg(Img),
+									Title : Title.slice(0,128),
+									UP : WC.HED(WW.MF(/nick-name="([^"]+)/,V)),
+									UPURL : WeiBo + T.replace(/\/.*/,''),
+									Date : WW.MF(/from".*\s+.*\s+(\S+)/,V),
+									Desc : Title,
+									More : More
+								})
+								return D
+							},[],/feed_list_item"[^]+?"feed_list_repeat"/g,B)
+						)
 					}
 				})
 			},

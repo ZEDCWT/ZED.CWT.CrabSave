@@ -62,6 +62,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliAPISearchTypeVideo = 'video',
 	BiliBiliAPISearchTypeBgm = 'media_bangumi',
 	BiliBiliAPISearchTypeFilm = 'media_ft',
+	BiliBiliAPISearchTypeUser = 'bili_user',
 	BiliBiliAPISearch = WW.Tmpl(BiliBiliAPIWeb,'search/type?search_type=',undefined,'&keyword=',undefined,'&page=',undefined,'&highlight=1',undefined),
 	BiliBiliAPIPGC = BiliBiliAPI + 'pgc/',
 	BiliBiliAPIPGCMedia = WW.Tmpl(BiliBiliAPIPGC,'view/web/media?media_id=',undefined),
@@ -107,7 +108,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		false === V.status && O.Bad(V.data)
 		return V.data || V.result
 	},
-	SolveInitState = function(B){return O.JOM(/__INITIAL_STATE__=/,B)},
+	SolveInitState = function(B)
+	{
+		return O.JOM(/__INITIAL_STATE__=|<script[^>]+__NEXT_DATA__[^>]+>/,B)
+	},
 	SolveCTime = function(V)
 	{
 		return null != V && 'CTime ' + O.DTS(1E3 * V)
@@ -378,9 +382,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		return O.API(O.Head(BiliBiliBgmEP(ID),'Cookie','stardustpgcv=0')).Map(function(B)
 		{
 			B = SolveInitState(B)
+			B = WR.Find(function(V)
+			{
+				return /pgc\/view/.test(V.queryHash)
+			},B.props.pageProps.dehydratedState.queries)
+				.state.data
 			return [
-				B.epInfo.aid,
-				B.mediaInfo.ssId
+				B.epMap[ID].aid,
+				B.mediaInfo.season_id
 			]
 		})
 	}),
@@ -553,14 +562,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			{
 				var
 				Head = {Cookie : 'DedeUserID=0'},
-				Find = function(H)
+				Find = function(Type,Index,Solve)
 				{
-					return O.API({URL : BiliBiliAPISearch(H,ID,Page,''),Head : Head}).Map(function(B)
+					return O.API({URL : BiliBiliAPISearch(Type,ID,Page,''),Head : Head}).Map(function(B)
 					{
 						B = Common(B)
-						return [B.numPages,B.numResults,WR.Map(function(V)
+						return [B.numPages,B.numResults,WR.MapU(function(V,F)
 						{
-							return {
+							V = Solve ? Solve(V) :
+							{
 								Non : true,
 								ID : V.pgc_season_id,
 								View : 'ss' + V.pgc_season_id,
@@ -572,6 +582,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								UPURL : BiliBiliBgmMD(V.media_id),
 								Date : 1E3 * V.pubtime
 							}
+							V.Index = Index + WR.PadL(B.result.length + ~-B.page * B.pagesize,F + ~-B.page * B.pagesize)
+							return V
 						},B.result)]
 					}).ErrAs(function(){return WX.Just([0,[]])})
 				};
@@ -588,8 +600,20 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							return V
 						},B.result)]
 					}),
-					Find(BiliBiliAPISearchTypeBgm),
-					Find(BiliBiliAPISearchTypeFilm),
+					Find(BiliBiliAPISearchTypeBgm,'Bgm#'),
+					Find(BiliBiliAPISearchTypeFilm,'Film#'),
+					Find(BiliBiliAPISearchTypeUser,'UP#',function(V)
+					{
+						return {
+							Non : true,
+							ID : V.mid,
+							URL : BiliBiliSpace + V.mid,
+							Img : V.upic,
+							UP : V.uname,
+							UPURL : BiliBiliSpace + V.mid,
+							More : V.usign
+						}
+					}),
 					Menu ? WX.Empty :
 						O.API(BiliBiliSearch)
 							.FMap(function(B)
@@ -638,13 +662,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						Len : V[1],
 						Item : WR.EachU(function(B,F)
 						{
-							B.Non && (B.Index = 'Bgm#' + F)
-							B.TitleView = SolveHighLight(B.Title)
-							B.Title = SolveHighLightRaw
+							if (B.Title)
+							{
+								B.TitleView = SolveHighLight(B.Title)
+								B.Title = SolveHighLightRaw
+							}
 						},V[2].sort(function(Q,S)
 						{
-							return (0 | S.Non) - (0 | Q.Non) ||
-								(Q.Non ? Q.ID - S.ID : Q.Index - S.Index)
+							return (0 | Q.Non) - (0 | S.Non) ||
+								(Q.Non ? WR.CmpL(Q.Index,S.Index) : Q.Index - S.Index)
 						})),
 						Pref : Menu && function(I)
 						{
