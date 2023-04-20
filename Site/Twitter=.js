@@ -23,6 +23,8 @@ module.exports = O =>
 			Tweet,User,
 			Title,Meta,
 			Part = [],
+			MediaURL = [],
+			MediaExt = [],
 			T;
 			B = WC.JTO(B)
 			B.errors && O.Bad(B.errors[0])
@@ -53,21 +55,17 @@ module.exports = O =>
 				{
 					T = T.variants
 					T = O.Best('bitrate',T.filter(V => WW.IsNum(V.bitrate)))
-					Part.push(
-					{
-						URL : [T.url],
-						Ext : ['.' + WW.MF(/\/(\w+)/,T.content_type)]
-					})
+					MediaURL.push(T.url)
+					MediaExt.push('.' + WW.MF(/\/(\w+)/,T.content_type))
 				}
 				else if (T = V.media_url_https)
 				{
-					Part.push(
-					{
-						URL : [T]
-					})
+					MediaURL.push(T)
+					MediaExt.push(null)
 				}
 				else WW.Throw('Unknown Media Type #' + V.type)
 			},WR.Path(['extended_entities','media'],Tweet) || [])
+			MediaURL.length && Part.push({URL : MediaURL,Ext : MediaExt})
 			Part.forEach(V =>
 			{
 				V.URL = V.URL.map(V =>
