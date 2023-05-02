@@ -33,7 +33,7 @@ module.exports = O =>
 				Ext.ReqB(O.Coke(Fantia)).Map(B =>
 				{
 					CSRFToken = WW.MF(/<[^>]+csrf-token[^>]+content="([^"]+)/,B)
-					CSRFTokenLast = WW.Now()
+					// CSRFTokenLast = WW.Now()
 				}))
 				.FMap(() => Ext.ReqB(O.Coke(WW.N.ReqOH(Q,'X-CSRF-Token',CSRFToken))))
 				.Tap(null,E =>

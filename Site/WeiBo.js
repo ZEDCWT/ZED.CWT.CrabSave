@@ -3,7 +3,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 {
 	var
 	WeiBo = 'https://weibo.com/',
-	WeiBoUser = WW.Tmpl(WeiBo,'u/',undefined),
+	// WeiBoUser = WW.Tmpl(WeiBo,'u/',undefined),
 	// WeiBoUserAll = WW.Tmpl(WeiBo,undefined,'?is_all=1&page=',undefined),
 	// WeiBoUserAllSub = WW.Tmpl(WeiBo,'p/aj/v6/mblog/mbloglist?script_uri=/',undefined,'&id=',undefined,'&pl_name=Pl_Official_MyProfileFeed__20&domain=100505&is_all=1&page=',undefined,'&pre_page=',undefined,'&pagebar=',undefined),
 	// WeiBoHome = WW.Tmpl(WeiBo,'aj/mblog/fsearch?',undefined),
@@ -195,6 +195,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		Card,
 		T;
 		Long = Long && WC.JTO(Long).data
+		if (T = B.title)
+			More.push(T.text)
 		if (T = B.region_name)
 			More.push(T)
 		if (T = B.source)
@@ -373,12 +375,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								var ID;
 								D.push(
 								{
-									NonAV : true,
-									ID : ID = WW.MF(/u\/(\d+)/,V),
-									URL : WeiBoUser(ID),
+									Non : true,
+									ID : ID = WW.MF(/<a[^>]+href="[^"]+\.com\/([^"]+)[^>]+class="name/,V),
+									URL : WeiBo + ID,
 									Img : PackImg(WW.MF(/src="([^"]+)/,V)),
 									UP : WC.HED(WW.MF(/class="name[^>]+>([^<]+)/,V)),
-									UPURL : WeiBoUser(ID),
+									UPURL : WeiBo + ID,
 									More : O.Text(WW.MU(/<span[^]+?<\/span>/))
 								})
 								return D

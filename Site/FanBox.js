@@ -29,7 +29,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 	SolvePost = function(B)
 	{
 		return {
-			NonAV : B.isRestricted,
+			Non : B.isRestricted,
 			ID : B.id,
 			URL : FanBoxUserPost(B.creatorId,B.id),
 			Img : B.coverImageUrl ||
@@ -62,13 +62,23 @@ CrabSave.Site(function(O,WW,WC,WR)
 		Map : [
 		{
 			Name : 'Post',
-			Judge : O.Num('Posts?'),
+			Judge :
+			[
+				/^\d+$/,
+				O.Num('Posts?')
+			],
 			View : function(ID)
 			{
 				return API(FanBoxAPIPostInfo(ID)).Map(function(B)
 				{
+					B = SolvePost(B)
+					if (B.Non)
+					{
+						B.Non = false
+						B.NonAV = true
+					}
 					return {
-						Item : [SolvePost(B)]
+						Item : [B]
 					}
 				})
 			}

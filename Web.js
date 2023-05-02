@@ -1692,7 +1692,7 @@
 							'text-align:start;' +
 							'word-break:break-all' +
 						'}' +
-						'.`C` legend{padding:0 `l`px;font-weight:bold}' +
+						'.`C` legend{padding:0 `l`px `l`px;font-weight:bold}' +
 						'.`N`{padding:0 `h`px `h`px `h`px}' +
 						'.`K`{cursor:pointer}' +
 						'.`S`{color:#F7F7F7;font-weight:bold;text-align:center}' +

@@ -18,9 +18,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	{
 		var T;
 		B = WC.JTO(B)
-		T = WR.Val(B)
+		T = WR.Key(B)
 		return 1 === T.length ?
-			T[0] :
+			'redirect' === T[0] ? // {redirect:'/recaptcha'}
+				O.Bad(B) :
+				B[T[0]] :
 			T.length ? B : WW.Throw('Empty Response')
 	},
 	CSRFToken,CSRFTokenLast,
@@ -31,7 +33,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			O.ReqAPI(Fantia).Map(function(B)
 			{
 				CSRFToken = WW.MF(/<[^>]+csrf-token[^>]+content="([^"]+)/,B)
-				CSRFTokenLast = WW.Now()
+				// CSRFTokenLast = WW.Now()
 			}))
 			.FMap(function()
 			{

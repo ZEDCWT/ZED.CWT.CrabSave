@@ -78,7 +78,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 		WW.IsStr(Q) && (Q = RegExp(WR.SafeRX(Q),'i'))
 		return SolveContentList(WR.Find(function(V)
 		{
-			return Q.test(WW.MU(/^[^]+?<\/div/,V))
+			return Q.test(WW.MF(/section-title">([^<]+)/,V))
 		},S.split(SolveSectionWithHeadKey)))
 	},
 	SolveSelfURL = O.CokeC(function()
@@ -349,10 +349,11 @@ CrabSave.Site(function(O,WW,WC,WR)
 						return {
 							Item : WR.Reduce(WR.Cat,[],
 							[
-								SolveSectionWithHead('Recent Illust',B),
-								SolveSectionWithHead('Recent Novel',B),
-								SolveSectionWithHead('Recent Digital',B),
-								SolveSectionWithHead('Recent Blog',B)
+								SolveSectionWithHead('Recent Content',B)
+								// SolveSectionWithHead('Recent Illust',B),
+								// SolveSectionWithHead('Recent Novel',B),
+								// SolveSectionWithHead('Recent Digital',B),
+								// SolveSectionWithHead('Recent Blog',B)
 							])
 						}
 					})
