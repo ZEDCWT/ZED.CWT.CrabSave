@@ -272,7 +272,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		ID : 'Twitter',
 		Alias : 'T',
 		Judge : /\bTwitter\b/i,
-		Min : 'auth_token ct0 rweb_optin',
+		Min : 'auth_token ct0 guest_id rweb_optin',
 		Sign : function()
 		{
 			return O.Req(Twitter).Map(function(B)

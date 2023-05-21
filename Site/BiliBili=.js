@@ -371,6 +371,11 @@ module.exports = O =>
 							}
 							else O.Bad(B)
 							V[1] && AV.title !== V[1] && (U.Title = V[1])
+							/*
+								By specifying the CID, it is normally due to the video being updated
+								Preserving such info helps to resolve naming conflict
+							*/
+							CID && (U.Title = U.Title ? CID + '.' + U.Title : CID)
 							U.Index = V[2]
 							Part.push(U)
 						}))

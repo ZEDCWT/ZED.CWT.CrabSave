@@ -48,10 +48,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliAPISteinNode = WW.Tmpl(BiliBiliAPI,'x/stein/nodeinfo?aid=',undefined,'&graph_version=',undefined,'&node_id=',undefined),
 	BiliBiliAPIFo = WW.Tmpl(BiliBiliAPI,'x/relation/followings?vmid=',undefined,'&ps=',O.Size,'&pn=',undefined),
 	BiliBiliAPISpace = BiliBiliAPI + 'x/space/',
-	BiliBiliAPISpaceInfo = WW.Tmpl(BiliBiliAPISpace,'wbi/acc/info?mid=',undefined),
-	BiliBiliAPISpaceNavNum = WW.Tmpl(BiliBiliAPISpace,'navnum?mid=',undefined,'&callback='),
+	BiliBiliAPISpaceNavNum = WW.Tmpl(BiliBiliAPISpace,'navnum?platform=web&mid=',undefined,'&callback='),
 	// BiliBiliAPISpaceChannel = WW.Tmpl(BiliBiliAPISpace,'channel/video?mid=',undefined,'&cid=',undefined,'&pn=',undefined,'&ps=',O.Size),
-	BiliBiliAPISpaceUpload = WW.Tmpl(BiliBiliAPISpace,'wbi/arc/search?mid=',undefined,'&ps=',O.Size,'&pn=',undefined),
+	BiliBiliAPISpaceWBI = BiliBiliAPISpace + 'wbi/',
+	BiliBiliAPISpaceWBIInfo = WW.Tmpl(BiliBiliAPISpaceWBI,'acc/info?platform=web&mid=',undefined),
+	BiliBiliAPISpaceWBIUpload = WW.Tmpl(BiliBiliAPISpaceWBI,'arc/search?mid=',undefined,'&ps=',O.Size,'&pn=',undefined),
 	BiliBiliAPISpaceArticle = WW.Tmpl(BiliBiliAPISpace,'article?mid=',undefined,'&pn=',undefined,'&ps=',O.Size),
 	BiliBiliAPIPolymer = BiliBiliAPI + 'x/polymer/',
 	BiliBiliAPIPolymerSeries = WW.Tmpl(BiliBiliAPIPolymer,'space/seasons_series_list?mid=',undefined,'&page_num=',undefined,'&page_size=20'),
@@ -101,6 +102,19 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliTimelineVote = WW.Tmpl(BiliBiliTimeline,'vote/h5/index/#/result?vote_id=',undefined),
 	BiliBiliLive = 'https://live.bilibili.com/',
 	// Appkey = '20bee1f7a18a425c',
+	SignWBI = function(Q)
+	{
+		if (WR.StartW(BiliBiliAPISpaceWBI,Q))
+		{
+			Q += '&wts=' + ~~(WW.Now() / 1E3)
+			Q += '&w_rid=' + WR.Low(WC.HEXS(WC.MD5
+			(
+				Q.split('?')[1].split('&').sort().join('&') +
+				'72136226c6a73669787ee4fd02a74c27'
+			)))
+		}
+		return Q
+	},
 	Common = function(V)
 	{
 		V = WW.IsObj(V) ? V : WC.JTO(V)
@@ -735,7 +749,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			View : function(ID)
 			{
 				ID = ID.split('#')
-				return O.API(1 < ID.length ?
+				return O.ReqAPI(1 < ID.length ?
 					BiliBiliVCAPIDynamicDetailType2(ID[0]) :
 					BiliBiliVCAPIDynamicDetail(ID[0]))
 					.Map(function(B)
@@ -1160,7 +1174,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Example : '2',
 			View : function(ID,Page)
 			{
-				return (Page ? WX.Just([]) : O.Req(BiliBiliAPISpaceInfo(ID)).FMap(function(UP)
+				return (Page ? WX.Just([]) : O.Req(SignWBI(BiliBiliAPISpaceWBIInfo(ID))).FMap(function(UP)
 				{
 					UP = Common(UP)
 					return O.API(O.Head(BiliBiliAPISpaceNavNum(ID),'Referer',BiliBili)).Map(function(Nav)
@@ -1188,7 +1202,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					})
 				})).FMap(function(UP)
 				{
-					return O.Req(BiliBiliAPISpaceUpload(ID,-~Page)).Map(function(V)
+					return O.Req(SignWBI(BiliBiliAPISpaceWBIUpload(ID,-~Page))).Map(function(V)
 					{
 						V = Common(V)
 						return {
