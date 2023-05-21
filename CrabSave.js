@@ -434,6 +434,7 @@ module.exports = Option =>
 				Q = RequestComm(Opt.Req)
 				Q.Enc = false
 				Q.AC = true
+				Q.TO = 3E4
 				Q.OnD = D => Cipher.write(D)
 				Q.OnE = () => Cipher.end()
 				Q = WN.Req(Q)

@@ -3336,7 +3336,8 @@
 				WB.ReqB(
 				{
 					URL : ConfURLReq + Data.Token,
-					Bin : true
+					Bin : true,
+					TO : 3E4
 				}).Map(function(B)
 				{
 					var
