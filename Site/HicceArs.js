@@ -30,13 +30,15 @@ CrabSave.Site(function(O,WW,WC,WR)
 			var T = WW.MF(/class="([^"]+)/,V);
 			return WR.StartW('</',V) ? null :
 				(T ? SolveContentStickerShow[T] : WR.Trim(V)) || null
-		},WW.MF(/"text-sticker[^>]+>([^]+?)<\/p/,B).split(/(<[^>]+>)/))
+		},B.split(/(<[^>]+>)/))
 			.join(' ')
 	},
 	SolveContentImgDate = function(Img){return WW.MF(/\/(\d{4,}(?:-\d\d){2})\//,Img).replace(/-/g,'.')},
 	SolveContentCard = function(B)
 	{
-		var Img = O.SolU(WW.MF(/src="([^"]+)/,B),HicceArs);
+		var
+		Img = O.SolU(WW.MF(/src="([^"]+)/,B),HicceArs),
+		Ext = WW.MR(function(D,V){return D.push(V[1]),D},[],/"text-sticker[^>]+>([^]+?)<\/p/g,B);
 		return {
 			ID : SolveContentID(B),
 			Img : Img,
@@ -45,7 +47,8 @@ CrabSave.Site(function(O,WW,WC,WR)
 			Date : SolveContentImgDate(Img),
 			More :
 			[
-				SolveContentSticker(B)
+				O.Text(Ext[0]),
+				SolveContentSticker(Ext[1] || '')
 			]
 		}
 	},

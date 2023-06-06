@@ -103,39 +103,21 @@ module.exports = O =>
 					PicMeta = [],
 					PicShow = URL => PicMeta.push(URL = [PicIndex[PicID(URL)],URL]) && URL,
 					Part = [],
-					Card,
-					C,T;
-					Long = Long && WR.Path(['data','longTextContent'],WC.JTO(Long))
-					Title = B.text_raw.replace(/\u200B+$/,'')
-					Meta.push(Long ? WC.HED(Long) : Title)
-					if (Forwarded)
-						Title = Title.replace(/\/\/@.*/,'')
-					WR.EachU((V,F) =>
+					ProcessObject = Q =>
 					{
-						Title = Title.replace(RegExp(`\\s*${WR.SafeRX(V.short_url)}\\s*`,'g'),' ')
-						Meta.push(`URL [${WW.ShowLI(B.url_struct.length,F)}] ${V.url_title} ${V.short_url}`)
-						V.long_url && Meta.push('\t' + V.long_url)
-					},B.url_struct)
-					if (B.pic_num)
-						WR.Each(V => PicPush(B.pic_infos[V].largest.url),B.pic_ids)
-					if (Forwarded)
-						WR.Each(V => V.pic_infos && Part.push(
-						{
-							URL : V.pic_ids.map(B => V.pic_infos[B].large.url)
-						}),B.url_struct)
-					else if (T = B.page_info)
-					{
-						Card = T.card_info
-						Cover = T.page_pic ||
+						var
+						Card = Q.card_info,
+						T;
+						Cover = Q.page_pic ||
 							Card && Card.pic_url
-						switch (T.object_type)
+						switch (Q.object_type)
 						{
 							case 'adFeedVideo' :
 							case 'live' :
 							case 'movie' :
 							case 'video' : // 5 11
-								if ('live' === T.object_type)
-									Part.push(ReqWithRef(WeiBoLiveShow(T.page_id)).FMap(N =>
+								if ('live' === Q.object_type)
+									Part.push(ReqWithRef(WeiBoLiveShow(Q.page_id)).FMap(N =>
 									{
 										N = WC.JTO(N)
 										if (27401 === N.error_code)
@@ -146,33 +128,33 @@ module.exports = O =>
 											URL : [N.data.replay_origin_url]
 										})
 									}))
-								else if (C = T.media_info)
+								else if (T = Q.media_info)
 								{
-									if ((T = C.playback_list) && T.length)
-										T = 1 - T.length ?
+									if ((Q = T.playback_list) && Q.length)
+										Q = 1 - Q.length ?
 												O.Best('bitrate',WR.Where(function(V)
 												{
 													// KuTqsBzth | meta.label = scrubber_hd & play_info.type = 3
 													return !/^image\//.test(V.mime)
-												},WR.Pluck('play_info',T))).url :
-												T[0].play_info.url
+												},WR.Pluck('play_info',Q))).url :
+												Q[0].play_info.url
 									else
-										T = C.h265_mp4_hd ||
-											C.mp4_hd_url ||
-											C.mp4_sd_url
-									if (T)
-										Part.push({URL : [T]})
-									else if (!VideoIgnoreDomainRX.test(C.h5_url))
+										Q = T.h265_mp4_hd ||
+											T.mp4_hd_url ||
+											T.mp4_sd_url
+									if (Q)
+										Part.push({URL : [Q]})
+									else if (!VideoIgnoreDomainRX.test(T.h5_url))
 										WW.Throw('Unable to solve video URL')
 								}
 								break
 
 							case 'article' : // 2 5
-								Part.push(ReqWithRef(WeiBoCardArticleDetail(T.page_id)).FMap(B =>
+								Part.push(ReqWithRef(WeiBoCardArticleDetail(Q.page_id)).FMap(B =>
 								{
 									B = WC.JTO(B)
 									return 100002 === B.code ?
-										ReqWithRef(WeiBoCardArticleShow(T.page_id)).Map(N =>
+										ReqWithRef(WeiBoCardArticleShow(Q.page_id)).Map(N =>
 										{
 											N = WC.JTO(N)
 											if ('100010' === N.code) return {
@@ -228,7 +210,7 @@ module.exports = O =>
 									};
 									Meta.push('')
 									return B.history ?
-										ReqWithRef(WeiBoCardArticleHistoryList(T.page_id))
+										ReqWithRef(WeiBoCardArticleHistoryList(Q.page_id))
 											.FMap(B =>
 											(
 												B = Common(B),
@@ -259,33 +241,33 @@ module.exports = O =>
 								}))
 								break
 							case 'hudongvote' : // 23
-								C = Card.vote_object
+								T = Card.vote_object
 								Meta.push(
-									C.content + ' ' +
-									WW.StrDate(1E3 * C.expire_date) + ' ' +
-									C.part_info + C.part_num_unitname)
+									T.content + ' ' +
+									WW.StrDate(1E3 * T.expire_date) + ' ' +
+									T.part_info + T.part_num_unitname)
 								WR.EachU((V,F) => Meta.push(`[${F}] ` +
 									V.part_num + ' ' +
 									(0 | 100 * V.part_ratio) + '% ' +
-									V.content),C.vote_list)
+									V.content),T.vote_list)
 								break
 							case 'panorama' : // 29
 								break
 							case 'story' : // 31
-								C = WR.Pluck('play_info',T.slide_cover.playback_list)
+								T = WR.Pluck('play_info',Q.slide_cover.playback_list)
 								Part.push(
 								{
-									URL : [O.Best('bitrate',C.filter(V => V.bitrate)).url]
+									URL : [O.Best('bitrate',T.filter(V => V.bitrate)).url]
 								})
 								break
 							case 'wenda' : // 24
 								Meta.push('')
-								WR.Key(T).sort()
-									.forEach(V => /^content\d+$/.test(V) && Meta.push(T[V]))
+								WR.Key(Q).sort()
+									.forEach(V => /^content\d+$/.test(V) && Meta.push(Q[V]))
 								break
 
 							default :
-								WR.Include(T.object_type,
+								WR.Include(Q.object_type,
 								[
 									'adFeedEvent', // 5
 									'app', // 0
@@ -301,9 +283,46 @@ module.exports = O =>
 									'wbox', // 0
 									'webpage', // 0 23
 									undefined
-								]) || WW.Throw('Unknown Type #' + T.type + ':' + T.object_type)
+								]) || WW.Throw('Unknown Type #' + Q.type + ':' + Q.object_type)
 						}
+					},
+					T;
+					Long = Long && WR.Path(['data','longTextContent'],WC.JTO(Long))
+					Title = B.text_raw.replace(/\u200B+$/,'')
+					Meta.push(Long ? WC.HED(Long) : Title)
+					if (Forwarded)
+						Title = Title.replace(/\/\/@.*/,'')
+					WR.EachU((V,F) =>
+					{
+						Title = Title.replace(RegExp(`\\s*${WR.SafeRX(V.short_url)}\\s*`,'g'),' ')
+						Meta.push(`URL [${WW.ShowLI(B.url_struct.length,F)}] ${V.url_title} ${V.short_url}`)
+						V.long_url && Meta.push('\t' + V.long_url)
+					},B.url_struct)
+					if (T = B.mix_media_info)
+					{
+						WR.Each(V =>
+						{
+							switch (V.type)
+							{
+								case 'pic' :
+									PicPush(V.data.largest.url)
+									break
+								default :
+									WW.IsStr(V.data?.object_type) ?
+										ProcessObject(V.data) :
+										WW.Throw('Unknown MixMedia Type #' + V.type)
+							}
+						},T.items)
 					}
+					else if (B.pic_num)
+						WR.Each(V => PicPush(B.pic_infos[V].largest.url),B.pic_ids)
+					if (Forwarded)
+						WR.Each(V => V.pic_infos && Part.push(
+						{
+							URL : V.pic_ids.map(B => V.pic_infos[B].large.url)
+						}),B.url_struct)
+					else if (T = B.page_info)
+						ProcessObject(T)
 					return (B.edit_count ? Ext.ReqB(O.Coke(WeiBoPostHistory(UnZip(ID[1]),-~B.edit_count))).Map(His =>
 					{
 						var

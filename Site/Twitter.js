@@ -287,7 +287,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			Judge : O.Find,
 			View : MakeTimeline(function(ID)
 			{
-				return WX.Just(TwitterAPIJSON(TwitterAPITypeSearch) + '&q=' + WC.UE(ID))
+				return WX.Just(MakeHead(TwitterAPIJSON(TwitterAPITypeSearch) + '&q=' + WC.UE(ID)))
 			}),
 			Hint : function(Q)
 			{
@@ -362,7 +362,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			Judge : O.Num('UserID'),
 			View : MakeTimeline(function(ID)
 			{
-				return WX.Just(TwitterAPIJSON(TwitterAPITypeMedia + ID))
+				return WX.Just(MakeHead(TwitterAPIJSON(TwitterAPITypeMedia + ID)))
 			})
 		},{
 			Name : 'Timeline',

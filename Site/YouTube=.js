@@ -64,11 +64,16 @@ module.exports = O =>
 			return Ext.ReqB(O.Coke(YouTubeWatch(ID))).FMap(Watch =>
 			{
 				var
-				IDToken = WC.JTO(WW.MF(/ID_TOKEN":("[^"]+")/,Watch)),
-				APIKey = WC.JTO(WW.MF(/API_KEY":("[^"]+")/,Watch)),
-				ClientName = WC.JTO(WW.MF(/CLIENT_NAME":("[^"]+")/,Watch)),
-				ClientVersion = WC.JTO(WW.MF(/CLIENT_VERSION":("[^"]+")/,Watch)),
-				SigTS = WC.JTO(WW.MF(/"STS":(\d+)/,Watch)),
+				SolveJSONIfPresent = function(Q)
+				{
+					Q = WW.MF(Q,Watch)
+					return Q && WC.JTO(Q)
+				},
+				IDToken = SolveJSONIfPresent(/ID_TOKEN":("[^"]+")/),
+				APIKey = SolveJSONIfPresent(/API_KEY":("[^"]+")/),
+				ClientName = SolveJSONIfPresent(/CLIENT_NAME":("[^"]+")/),
+				ClientVersion = SolveJSONIfPresent(/CLIENT_VERSION":("[^"]+")/),
+				SigTS = SolveJSONIfPresent(/"STS":(\d+)/),
 				MakeI = (URL,Req,Now = WR.Floor(WW.Now() / 1E3)) => Ext.ReqB(O.Coke(
 				{
 					URL : URL,
