@@ -295,7 +295,7 @@ module.exports = O =>
 					WR.EachU((V,F) =>
 					{
 						Title = Title.replace(RegExp(`\\s*${WR.SafeRX(V.short_url)}\\s*`,'g'),' ')
-						Meta.push(`URL [${WW.ShowLI(B.url_struct.length,F)}] ${V.url_title} ${V.short_url}`)
+						Meta.push(`URL [${WW.ShowLI(B.url_struct.length,F)}] ${WC.HED(V.url_title)} ${V.short_url}`)
 						V.long_url && Meta.push('\t' + V.long_url)
 					},B.url_struct)
 					if (T = B.mix_media_info)

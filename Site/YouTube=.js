@@ -64,7 +64,7 @@ module.exports = O =>
 			return Ext.ReqB(O.Coke(YouTubeWatch(ID))).FMap(Watch =>
 			{
 				var
-				SolveJSONIfPresent = function(Q)
+				SolveJSONIfPresent = Q =>
 				{
 					Q = WW.MF(Q,Watch)
 					return Q && WC.JTO(Q)

@@ -13,7 +13,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	YouTubeIBrowse = YouTubeI + 'browse',
 	// YouTubeIGuide = YouTubeI + 'guide',
 	YouTubeAccount = YouTube + 'account',
-	YouTubeKey = YouTube + 'sw.js',
+	// YouTubeKey = YouTube + 'sw.js',
 	GoogleAPIKey = '~GoogleAPIKey~',
 	GoogleAPI = 'https://www.googleapis.com/',
 	GoogleAPIYouTube = GoogleAPI + 'youtube/v3/',
@@ -163,58 +163,49 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	},
 	ClientName,ClientVersion,
 	APIKey,
-	APIKeyAt,
 	PageID,
 	MakeI = function(URL,Req,Now)
 	{
 		Now = WR.Floor(WW.Now() / 1E3)
-		return (APIKey && Now < APIKeyAt + 864E2 ?
-			WX.Just() :
-			O.API(YouTubeKey).Map(function(B)
+		return O.Req(
+		{
+			URL : URL,
+			QS : {key : APIKey},
+			Head :
 			{
-				ClientName = WC.JTO(WW.MF(/CLIENT_NAME":("[^"]+")/,B))
-				ClientVersion = WC.JTO(WW.MF(/CLIENT_VERSION":("[^"]+")/,B))
-				APIKey = WC.JTO(WW.MF(/API_KEY":("[^"]+")/,B))
-				APIKeyAt = Now
-			}))
-			.FMap(function()
+				Authorization : 'SAPISIDHASH ' +
+					Now + '_' +
+					WR.Low(WC.HEXS(WC.SHA1(
+					[
+						Now,
+						WC.CokeP(O.Coke()).SAPISID,
+						YouTube.slice(0,-1)
+					].join(' ')))),
+				'X-Goog-AuthUser' : '0',
+				'X-Goog-PageId' : PageID,
+				Origin : YouTube.slice(0,-1)
+			},
+			JSON : WW.Merge(
 			{
-				return O.Req(
+				context :
 				{
-					URL : URL,
-					QS : {key : APIKey},
-					Head :
+					client : WW.Merge(
 					{
-						Authorization : 'SAPISIDHASH ' +
-							Now + '_' +
-							WR.Low(WC.HEXS(WC.SHA1(
-							[
-								Now,
-								WC.CokeP(O.Coke()).SAPISID,
-								YouTube.slice(0,-1)
-							].join(' ')))),
-						'X-Goog-AuthUser' : '0',
-						'X-Goog-PageId' : PageID,
-						Origin : YouTube.slice(0,-1)
-					},
-					JSON : WW.Merge(
+						clientName : ClientName,
+						clientVersion : ClientVersion
+					},WR.Pick(
+					[
+						'tz',
+						'hl',
+						'gl'
+					],WC.QSP(WC.CokeP(O.Coke()).PREF || ''))),
+					request :
 					{
-						context :
-						{
-							client :
-							{
-								clientName : ClientName,
-								clientVersion : ClientVersion
-							},
-							request :
-							{
-								useSsl : true
-							}
-						}
-					},Req)
-				})
-			})
-			.Map(WC.JTO)
+						useSsl : true
+					}
+				}
+			},Req)
+		}).Map(WC.JTO)
 	},
 	MakeFeed = function(Feed,Map)
 	{
@@ -226,7 +217,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				UA : ''
 			}).Map(function(B)
 			{
-				PageID = WC.JTO(WW.MF(/DELEGATED_SESSION_ID":("[^"]+")/,B))
+				var
+				SolveJSONIfPresent = function(Q)
+				{
+					Q = WW.MF(Q,B)
+					return Q && WC.JTO(Q)
+				};
+				ClientName = SolveJSONIfPresent(/CLIENT_NAME":("[^"]+")/)
+				ClientVersion = SolveJSONIfPresent(/CLIENT_VERSION":("[^"]+")/)
+				APIKey = SolveJSONIfPresent(/API_KEY":("[^"]+")/)
+				PageID = SolveJSONIfPresent(/DELEGATED_SESSION_ID":("[^"]+")/)
 				return O.JOM(/ytInitialData[ =]+/,B)
 			})
 		},function(I,Page)
@@ -372,7 +372,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Judge : O.TL,
 			View : MakeFeed(YouTubeFeedSubscription,function(I,V,K)
 			{
-				return 'gridVideoRenderer' === K && I.push(
+				var
+				IsRenderer = 'gridVideoRenderer' === K;
+				if ('richItemRenderer' === K)
+				{
+					IsRenderer = true
+					V = V.content
+					V = V.videoRenderer || V
+				}
+				return IsRenderer && I.push(
 				{
 					Non : V.upcomingEventData,
 					ID : V.videoId,
@@ -381,7 +389,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					UP : SolveFeedText(V.shortBylineText),
 					UPURL : O.SolU(V.shortBylineText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata.url,YouTube),
 					Date : SolveFeedText(V.publishedTimeText),
-					More : V.upcomingEventData && O.DTS(1E3 * V.upcomingEventData.startTime),
+					More :
+					[
+						V.upcomingEventData && O.DTS(1E3 * V.upcomingEventData.startTime),
+						V.badges && WR.Map(WR.Path(['metadataBadgeRenderer','label']),V.badges).join(' ')
+					],
 					Len : '' + WR.MapW(WR.Prop(['thumbnailOverlayTimeStatusRenderer','text','simpleText']),V.thumbnailOverlays)
 				})
 			})

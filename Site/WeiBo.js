@@ -190,7 +190,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		Len,
 		More = WR.Map(function(V)
 		{
-			return O.Ah(V.url_title || '<No Title>',V.long_url)
+			return O.Ah(V.url_title && WC.HED(V.url_title) || '<No Title>',V.long_url)
 		},B.url_struct),
 		ProcessObject = function(Q)
 		{
