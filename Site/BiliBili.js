@@ -102,24 +102,57 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliTimelineVote = WW.Tmpl(BiliBiliTimeline,'vote/h5/index/#/result?vote_id=',undefined),
 	BiliBiliLive = 'https://live.bilibili.com/',
 	// Appkey = '20bee1f7a18a425c',
-	SignWBI = function(Q)
+	ReqWBISalt = 'bdab7be0a313f1d847ccd8999e1b4370',ReqWBILast,
+	ReqWBI = function(Q)
 	{
-		if (WR.StartW(BiliBiliAPISpaceWBI,Q))
+		return (ReqWBILast && WW.Now() < 144E5 + ReqWBILast ? WX.Just() : O.API(BiliBiliSpace + 2).FMap(function(Space)
 		{
-			Q += '&wts=' + ~~(WW.Now() / 1E3)
-			Q += '&w_rid=' + WR.Low(WC.HEXS(WC.MD5
-			(
-				Q.split('?')[1].split('&').sort().join('&') +
-				'72136226c6a73669787ee4fd02a74c27'
-			)))
-		}
-		return Q
+			Space = WW.MR(function(D,V){return D.push(V[1]),D},[],/<script[^>]+src="([^"]+space[^"]+)/g,Space)
+			return WX.From(Space)
+				.FMap(O.API)
+				.Reduce(WR.Add)
+				.FMap(function(Script)
+				{
+					return O.API(BiliBiliAPIWebNav).Map(function(Nav)
+					{
+						var
+						// IS = WC.JTO(WW.MU(/{img:[^}]+}/,Script).replace(/(\w+):/g,'"$1":')),
+						IS = Common(Nav,true).wbi_img,
+						Index = O.JOM(/\.subKey[^]+?(?=\[[\d,]+\])/,Script),
+						SolveFakeURL = function(Q){return WW.MF(/\/([^/.]+)\.\w+$/,Q)};
+						// IS = IS.img + IS.sub
+						IS = SolveFakeURL(IS.img_url) + SolveFakeURL(IS.sub_url)
+						ReqWBISalt = WR.Map(function(V){return IS.charAt(V) || ''},Index).join('').slice(0,32)
+						ReqWBILast = WW.Now()
+					})
+				})
+		})).FMap(function()
+		{
+			if (WR.StartW(BiliBiliAPISpaceWBI,Q))
+			{
+				Q += '&wts=' + ~~(WW.Now() / 1E3)
+				Q += '&w_rid=' + WR.Low(WC.HEXS(WC.MD5
+				(
+					Q.split('?')[1].split('&').sort().join('&') +
+					ReqWBISalt
+				)))
+			}
+			return O.Req(Q).Map(function(B)
+			{
+				if (-403 === WC.JTO(B).code)
+					ReqWBILast = null
+				return Common(B)
+			})
+		})
 	},
-	Common = function(V)
+	Common = function(V,IgnoreErr)
 	{
 		V = WW.IsObj(V) ? V : WC.JTO(V)
-		V.code && O.Bad(V.code,V.msg || V.message)
-		false === V.status && O.Bad(V.data)
+		if (!IgnoreErr)
+		{
+			V.code && O.Bad(V.code,V.msg || V.message)
+			false === V.status && O.Bad(V.data)
+		}
 		return V.data || V.result
 	},
 	SolveInitState = function(B)
@@ -1174,9 +1207,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Example : '2',
 			View : function(ID,Page)
 			{
-				return (Page ? WX.Just([]) : O.Req(SignWBI(BiliBiliAPISpaceWBIInfo(ID))).FMap(function(UP)
+				return (Page ? WX.Just([]) : ReqWBI(BiliBiliAPISpaceWBIInfo(ID)).FMap(function(UP)
 				{
-					UP = Common(UP)
 					return O.API(O.Head(BiliBiliAPISpaceNavNum(ID),'Referer',BiliBili)).Map(function(Nav)
 					{
 						Nav = Common(Nav)
@@ -1202,9 +1234,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					})
 				})).FMap(function(UP)
 				{
-					return O.Req(SignWBI(BiliBiliAPISpaceWBIUpload(ID,-~Page))).Map(function(V)
+					return ReqWBI(BiliBiliAPISpaceWBIUpload(ID,-~Page)).Map(function(V)
 					{
-						V = Common(V)
 						return {
 							Len : V.page.count,
 							Item : WR.Concat(UP,WR.MapU(function(V,F)
