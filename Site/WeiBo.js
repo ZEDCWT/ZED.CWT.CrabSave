@@ -272,7 +272,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		{
 			More.push
 			(
-				O.Ah(O.DTS(new Date(T.created_at)) + (T.user ? ' @' + T.user.screen_name : ''),
+				O.Ah(O.DTS(T.created_at) + (T.user ? ' @' + T.user.screen_name : ''),
 					WeiBo + (T.user ? T.user.idstr : '_') + '/' + T.mblogid),
 				T.text_raw
 			)
@@ -312,7 +312,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Title : B.text_raw.replace(/\u200B+$/,''),
 			UP : ShowName(B.user.screen_name,B.user.remark),
 			UPURL : WeiBo + B.user.profile_url.replace(/^\//,''),
-			Date : new Date(B.created_at),
+			Date : B.created_at,
 			Len : Len,
 			Desc : Long && WC.HED(Long.longTextContent),
 			More : More
@@ -739,7 +739,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								Img : PackImg(V.profile_image_url),
 								UP : ShowName(V.screen_name,V.remark),
 								UPURL : WeiBo + V.idstr,
-								Date : new Date(V.created_at),
+								Date : V.created_at,
 								More :
 								[
 									V.content1,

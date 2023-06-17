@@ -20,7 +20,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 					ID : WW.MF(/episode\/(\d+)/,V),
 					Title : WC.HED(WW.MF(/title>([^<]+)/,V)),
 					Img : WC.HED(WW.MF(/ url="([^"]+)/,V)),
-					Date : new Date(WW.MF(/pubDate>([^<]+)/,V)),
+					Date : WW.MF(/pubDate>([^<]+)/,V),
 					UP : WC.HED(WW.MF(/author>([^<]+)/,V)),
 					More : O.Ah(WC.HED(WW.MF(/description>([^<]+)/,V)),ShonenMagazinePocketSeriesRSS(ID))
 				})
@@ -58,7 +58,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 								Title : Episode.title,
 								Img : Series && Series.Img,
 								UP : Series && Series.UP,
-								Date : new Date(Episode.publishedAt),
+								Date : Episode.publishedAt,
 								More :
 								[
 									O.Ah(Episode.series.title,ShonenMagazinePocketSeriesRSS(Episode.series.id)),

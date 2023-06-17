@@ -1446,7 +1446,17 @@
 									WV.X(V.UPURL ?
 										WV.Ah(V.UP,V.UPURL) :
 										V.UP),
-									!!V.Date && WV.X(WW.IsStr(V.Date) ? V.Date : DTS(V.Date)),
+									!!V.Date && WV.X(function(Q)
+									{
+										var R;
+										if (WW.IsStr(Q))
+										{
+											R = new Date(Q)
+											R = WW.IsNaN(+R) ? Q : DTS(R)
+										}
+										else R = DTS(Q)
+										return R
+									}(V.Date)),
 									!!V.Desc && WV.But(
 									{
 										X : LangSolve('BroDesc'),

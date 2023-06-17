@@ -295,7 +295,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					Title : Card.title,
 					UP : Card.uname,
 					UPURL : BiliBiliSpace + Card.uid,
-					Date : new Date(Card.live_time || Card.start_time),
+					Date : Card.live_time || Card.start_time,
 					More :
 					[
 						Card.area_v2_parent_id && Card.area_v2_parent_id + ':' + Card.area_v2_parent_name,
@@ -342,7 +342,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					URL : BiliBiliLive + Card.room_id,
 					Img : Card.cover,
 					Title : Card.title,
-					Date : new Date(1E3 * Card.live_start_time),
+					Date : 1E3 * Card.live_start_time,
 					More : Card.area_id + ':' + Card.area_name
 				}
 				break
@@ -394,7 +394,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							WR.Path(['reserve_button','uncheck','icon'],Card) :
 							WR.Path(['reserve_button','check','share','icon'],Card),
 						Title : Card.title,
-						Date : Card.livePlanStartTime ? new Date(1E3 * Card.livePlanStartTime) : null,
+						Date : 1E3 * Card.livePlanStartTime,
 						More :
 						[
 							Card.desc_first.text,

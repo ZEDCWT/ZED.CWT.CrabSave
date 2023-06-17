@@ -97,7 +97,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			TitleView : O.RepCon(WC.HED(Tweet.full_text),TitleMap),
 			UP : User.name,
 			UPURL : Twitter + User.screen_name,
-			Date : new Date(Tweet.created_at),
+			Date : Tweet.created_at,
 			Len : WR.Reduce(function(D,V)
 			{
 				return D += WR.Path(['video_info','duration_millis'],V) || 0

@@ -243,7 +243,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							Title : SolveXMLField('episode_title',B),
 							UP : 'User' + SolveXMLField('user_id',B),
 							UPURL : NicoSeigaUserManga(SolveXMLField('user_id',B)),
-							Date : new Date(SolveXMLField('created',B)),
+							Date : SolveXMLField('created',B),
 							Desc : SolveXMLDesc(B),
 							More :
 							[
@@ -291,7 +291,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							Title : SolveXMLField('title',B),
 							UP : 'User' + SolveXMLField('user_id',B),
 							UPURL : NicoSeigaUser(SolveXMLField('user_id',B)),
-							Date : new Date(SolveXMLField('created',B) + '+0900'),
+							Date : SolveXMLField('created',B) + '+0900',
 							Desc : SolveXMLDesc(B)
 						}]
 					}
@@ -467,7 +467,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							UPURL : (T = WW.MF(/user_id>(\d+)/,B)) ? NicoUser(T) :
 								(T = WW.MF(/ch_id>(\d+)/,B)) ? NicoChannelCH + T :
 								'',
-							Date : new Date(WW.MF(/ieve>([^<]+)/,B)),
+							Date : WW.MF(/ieve>([^<]+)/,B),
 							Len : WW.MF(/gth>([^<]+)/,B),
 							Desc : WC.HED(WW.MF(/tion>([^<]+)/,B))
 						}]
@@ -497,7 +497,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							Title : V.object.name,
 							UP : V.actor.name,
 							UPURL : V.actor.url,
-							Date : new Date(V.updated),
+							Date : V.updated,
 							More : WV.Parse(V.title)
 						} : null
 					},B.data)

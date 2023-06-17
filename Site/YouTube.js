@@ -49,7 +49,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					Title : 'youtube#searchResult' === V.kind ? WC.HED(V.snippet.title) : V.snippet.title,
 					UP : V.snippet.channelTitle,
 					UPURL : YouTubeChannel(V.snippet.channelId),
-					Date : new Date(V.snippet.publishedAt),
+					Date : V.snippet.publishedAt,
 					Len : WW.PTP(V.contentDetails.duration),
 					Desc : V.snippet.description,
 					More :

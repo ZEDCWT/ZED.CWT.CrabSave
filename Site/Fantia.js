@@ -97,7 +97,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			Title : B.title,
 			UP : FanClub.fanclub_name_with_creator_name,
 			UPURL : FantiaFanclub(FanClub.id),
-			Date : new Date(B.posted_at),
+			Date : B.posted_at,
 			Desc : B.comment,
 			More :
 			[
@@ -203,7 +203,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 								Title : WC.HED(WW.MF(/post-title">([^<]+)/,V)),
 								UP : FanClub,
 								UPURL : FanClubURL,
-								Date : new Date(WW.MF(/"post-date[^>]+>(?:<[^>]+>)?([^<]+)/,V) + '+0900'),
+								Date : WW.MF(/"post-date[^>]+>(?:<[^>]+>)?([^<]+)/,V) + '+0900',
 								Desc : WC.HED(WW.MF(/post-text">([^<]+)/,V)),
 							})
 							return D

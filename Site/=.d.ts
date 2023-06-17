@@ -45,7 +45,7 @@ declare module CrabSaveNS
 		TitleView? : WishNS.EleContent
 		UP? : string
 		UPURL? : string
-		Date? : string
+		Date? : number | Date | string
 		Len? : number | string
 		Desc? : string
 		More? : string | WishNS.EleContent[]

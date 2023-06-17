@@ -56,7 +56,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 			Title : V.title,
 			UP : V.userName,
 			UPURL : PixivUser(V.userId),
-			Date : new Date(V.createDate)
+			Date : V.createDate
 		}
 	},
 	SolveUserAll = function(ID)
@@ -87,7 +87,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 			Title : V.text,
 			UP : V.user.name,
 			UPURL : PixivSketchUser(V.user.unique_name),
-			Date : new Date(V.published_at)
+			Date : V.published_at
 		}
 	};
 	return {
@@ -268,7 +268,11 @@ CrabSave.Site(function(O,WW,WC,WR)
 							Title : B.title,
 							UP : B.userName,
 							UPURL : PixivUser(B.userId),
-							Date : new Date(B.createDate),
+							Date : B.createDate.replace(/(\d\d:\d\d:)00/,function(_,P)
+							{
+								// Weird that Illust.createDate has no seconds infomation...
+								return P + WW.MF(/\d{4}(?:\/\d\d){4}\/(\d\d)\/\d+_/,B.urls.original)
+							}),
 							Desc : O.Text(B.description)
 						}]
 					}

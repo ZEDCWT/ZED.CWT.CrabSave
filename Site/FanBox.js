@@ -37,7 +37,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 			Title : B.title,
 			UP : B.user.name,
 			UPURL : FanBoxUser(B.creatorId),
-			Date : new Date(B.publishedDatetime),
+			Date : B.publishedDatetime,
 			Desc : B.excerpt,
 			More :
 			[
