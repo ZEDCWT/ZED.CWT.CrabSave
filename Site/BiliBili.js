@@ -394,7 +394,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							WR.Path(['reserve_button','uncheck','icon'],Card) :
 							WR.Path(['reserve_button','check','share','icon'],Card),
 						Title : Card.title,
-						Date : new Date(1E3 * Card.livePlanStartTime),
+						Date : Card.livePlanStartTime ? new Date(1E3 * Card.livePlanStartTime) : null,
 						More :
 						[
 							Card.desc_first.text,

@@ -22,7 +22,7 @@ module.exports = O =>
 	{
 		var
 		SProcess = WW.MU(/.split\(""[^{}]+.join\(""/,B),
-		SMethod = WW.MU(RegExp(WR.SafeRX(WW.MU(/[$\w]+(?=\.)/,SProcess)) + '={([^{}]+{[^{}]+})+?}'),B),
+		SMethod = WW.MU(RegExp('[^.]\\b' + WR.SafeRX(WW.MU(/[$\w]+(?=\.)/,SProcess)) + '={([^{}]+{[^{}]+})+?}'),B),
 		SMap = WW.MR((D,V) =>
 		{
 			D[V[1]] = /rev/.test(V) ? Q => Q.reverse() :
