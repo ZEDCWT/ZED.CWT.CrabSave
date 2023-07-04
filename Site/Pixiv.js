@@ -268,11 +268,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 							Title : B.title,
 							UP : B.userName,
 							UPURL : PixivUser(B.userId),
-							Date : B.createDate.replace(/(\d\d:\d\d:)00/,function(_,P)
-							{
-								// Weird that Illust.createDate has no seconds infomation...
-								return P + WW.MF(/\d{4}(?:\/\d\d){4}\/(\d\d)\/\d+_/,B.urls.original)
-							}),
+							Date : B.userIllusts[B.id].createDate,
 							Desc : O.Text(B.description)
 						}]
 					}

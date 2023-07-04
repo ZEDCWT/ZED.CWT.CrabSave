@@ -9,7 +9,6 @@ Pixiv = 'https://www.pixiv.net/',
 PixivAJAX = Pixiv + 'ajax/',
 PixivAJAXIllust = WW.Tmpl(PixivAJAX,'illust/',undefined),
 PixivAJAXUgoiraMeta = WW.Tmpl(PixivAJAX,'illust/',undefined,'/ugoira_meta'),
-PixivAJAXUserIllust = WW.Tmpl(PixivAJAX,'user/',undefined,'/profile/illusts?work_category=illustManga&is_first_page=0'),
 PixivSketch = 'https://sketch.pixiv.net/',
 PixivSketchAPI = PixivSketch + 'api/',
 PixivSketchAPIReply = WW.Tmpl(PixivSketchAPI,'replies/',undefined,'.json');
@@ -117,21 +116,14 @@ module.exports = O =>
 					default :
 						WW.Throw('Unknown Illust Type #' + Illust.illustType)
 				}
-				// Weird that Illust.createDate has no seconds infomation...
-				return Ext.ReqB(O.Coke(
-				{
-					URL : PixivAJAXUserIllust(Illust.userId),
-					QS : {ids : [ID]}
-				})).FMap(Brief => R.Map(R => (
+				return R.Map(R => (
 				{
 					Title : Illust.title,
 					UP : Illust.userName,
-					Date : +new Date(+WW.MF(/\d\d:\d\d:(\d\d)/,Illust.createDate) ?
-						Illust.createDate :
-						Common(Brief).works[ID].createDate),
+					Date : +new Date(Illust.userIllusts[ID].createDate),
 					Meta : O.Text(Illust.description),
 					...R
-				})))
+				}))
 			})
 		},
 		Pack : Q => WN.ReqOH(Q,'Referer',Pixiv),

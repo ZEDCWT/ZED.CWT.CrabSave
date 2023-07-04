@@ -16,6 +16,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	TwitterAPIFollowing = WW.Tmpl(TwitterAPI,'1.1/friends/list.json?user_id=',undefined,'&cursor=',undefined,'&count=',O.Size),
 	TwitterAPIJSON = WW.Tmpl(TwitterAPI,'2/',undefined,'.json?tweet_mode=extended&count=',O.Size),
 	TwitterAPIGraphQL = TwitterAPI + 'graphql/',
+	TwitterAPIGraphQLTweetDetail = TwitterAPIGraphQL + '3XDB26fBve-MmjHaWTUZxA/TweetDetail',
 	// TwitterAPIGraphQLUserTweet = TwitterAPIGraphQL + 'UsDw2UjYF5JE6-KyC7MDGw/UserTweets',
 	TwitterAPIGraphQLUserTweet = TwitterAPIGraphQL + 'PoZUz38XdT-pXNk0FRfKSw/UserTweets',
 	TwitterAPIGraphQLUserMedia = TwitterAPIGraphQL + 'YqiE3JL1KNgf9nSljYdxaA/UserMedia',
@@ -25,10 +26,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	TwitterAPIGraphQLFeature = WC.OTJ(
 	{
 		blue_business_profile_image_shape_enabled : false,
+		creator_subscriptions_tweet_preview_api_enabled : true,
 		freedom_of_speech_not_reach_fetch_enabled : false,
 		graphql_is_translatable_rweb_tweet_is_translatable_enabled : false,
 		interactive_text_enabled : false,
 		longform_notetweets_consumption_enabled : true,
+		longform_notetweets_inline_media_enabled : true,
 		longform_notetweets_rich_text_read_enabled : true,
 		longform_notetweets_richtext_consumption_enabled : false,
 		responsive_web_edit_tweet_api_enabled : true,
@@ -36,8 +39,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		responsive_web_graphql_exclude_directive_enabled : false,
 		responsive_web_graphql_skip_user_profile_image_extensions_enabled : false,
 		responsive_web_graphql_timeline_navigation_enabled : false,
+		responsive_web_media_download_video_enabled : true,
 		responsive_web_text_conversations_enabled : false,
+		responsive_web_twitter_article_tweet_consumption_enabled : false,
 		responsive_web_twitter_blue_verified_badge_is_enabled : false,
+		rweb_lists_timeline_redesign_enabled : true,
 		standardized_nudges_misinfo : true,
 		tweet_awards_web_tipping_enabled : false,
 		tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled : false,
@@ -207,7 +213,18 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	},
 	SolveGraphQLTweet = function(B,I,Page)
 	{
-		var R = [];
+		var
+		R = [],
+		CheckTypeTweet = function(V)
+		{
+			return V && 'Tweet' === V.__typename &&
+				R.push(SolveTweet(V.legacy,V.core.user_results.result.legacy)) &&
+				WR.Each(CheckTypeTweet,
+				[
+					WR.Path(['quoted_status_result','result'],V),
+					WR.Path(['legacy','retweeted_status_result','result'],V)
+				])
+		};
 		B = Common(B)
 		O.Walk(B,function(V,F)
 		{
@@ -217,8 +234,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			},WR.Rev(V)),function(V)
 			{
 				return V.promotedMetadata ||
-					'Tweet' === V.__typename &&
-					R.push(SolveTweet(V.legacy,V.core.user_results.result.legacy))
+					/^(TweetDetailRelatedTweets)-/i.test(V.entryId) ||
+					CheckTypeTweet(V)
 			})
 		})
 		return [R.length && SolveCursor(B),{Item : R}]
@@ -306,7 +323,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		},{
 			Name : 'Tweet',
 			Judge : [/^\d+$/,O.Num('Tweet|Status(?:es)?')],
-			View : function(ID)
+			View : [function(ID)
 			{
 				return O.Req(MakeHead(TwitterAPIJSON(TwitterAPITypeConversation + ID))).Map(function(B)
 				{
@@ -315,7 +332,23 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 						Item : [SolveTweetIDB(ID,B)]
 					}
 				})
-			}
+			},function(ID)
+			{
+				return MakeGraphQL(TwitterAPIGraphQLTweetDetail,
+				{
+					focalTweetId : ID,
+					includePromotedContent : false,
+					with_rux_injections : false,
+					withBirdwatchNotes : true,
+					withCommunity : true,
+					withQuickPromoteEligibilityTweetFields : true,
+					withVoice : true,
+					withV2Timeline : true
+				}).Map(function(B)
+				{
+					return SolveGraphQLTweet(B)[1]
+				})
+			}][1]
 		},{
 			Name : 'UserMedia',
 			Judge :

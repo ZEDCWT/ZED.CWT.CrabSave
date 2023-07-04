@@ -721,7 +721,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					return {
 						Max : V[0],
 						Len : V[1],
-						Item : WR.EachU(function(B,F)
+						Item : WR.Each(function(B)
 						{
 							if (B.Title)
 							{

@@ -48,6 +48,16 @@ module.exports = Option =>
 				S = S.exec(Q),
 				WC.JTO(Q.slice(S.index + S[0].length),{More : true})[0]
 			),
+			Walk : (Q,S) =>
+			{
+				var
+				H = (V,F) =>
+				{
+					if (WW.IsObj(V))
+						S(V,F) || WR.EachU(H,V)
+				};
+				H(Q)
+			},
 			Text : Q => WC.HED(Q
 				.split(/<br\b[^>]*>|<\/(?:figure|h\d+|p)\b>/)
 				.map(V => V.replace(/\s*(\r?\n|\r)\s*/g,' '))

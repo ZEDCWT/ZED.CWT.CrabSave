@@ -70,6 +70,7 @@ declare module CrabSaveNS
 			Best<U>(S : string | string[],Q : U[]) : U
 			Bad(Q : any) : never
 			JOM(S : RegExp,Q : string) : object
+			Walk(Q : object,H : (V : object,F : string) => boolean) : void
 			Text(Q : string) : string
 			M3U(Q : string,Ext? : SiteExt) : WishNS.Provider<SitePart>
 			Part(Q : (SitePart | WishNS.Provider<SitePart>)[],Ext? : SiteExt) : WishNS.Provider<SitePart[]>
