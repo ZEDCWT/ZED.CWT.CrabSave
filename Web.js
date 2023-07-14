@@ -2191,7 +2191,6 @@
 					if (!WR.Has(Data.Row,HotRowMap))
 					{
 						List.Push(HotRowMap[Data.Row] = HotMap.D(DBBriefKey(Data),Data))
-						ColdDel(DBBriefKey(Data))
 						HotCount.D(Hot)
 						BrowserUpdate([DBBriefKey(Data)])
 					}
@@ -3230,7 +3229,11 @@
 
 	WSActPlain = WW.MakeO
 	(
-		Proto.TaskNew,DBBriefDiffForward,
+		Proto.TaskNew,function(Data)
+		{
+			ColdDel(DBBriefKey(Data.Task))
+			DBBriefDiffForward(Data)
+		},
 		Proto.TaskPlay,DBBriefDiffForward,
 		Proto.TaskPause,DBBriefDiffForward,
 		Proto.TaskRemove,DBBriefDiffForward,

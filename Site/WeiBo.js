@@ -314,7 +314,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			UPURL : WeiBo + B.user.profile_url.replace(/^\//,''),
 			Date : B.created_at,
 			Len : Len,
-			Desc : Long && WC.HED(Long.longTextContent),
+			// N8tYvti03. With isLongText but not having long text data
+			Desc : Long && WC.HED(Long.longTextContent || ''),
 			More : More
 		}
 	},

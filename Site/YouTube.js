@@ -380,14 +380,18 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					V = V.content
 					V = V.videoRenderer || V
 				}
+
+				// Short Collection. Too bad that it contains no channel/date info
+				V = V.reelItemRenderer || V
+
 				return IsRenderer && I.push(
 				{
 					Non : V.upcomingEventData,
 					ID : V.videoId,
 					Img : V.thumbnail.thumbnails[0].url,
-					Title : SolveFeedText(V.title),
+					Title : SolveFeedText(V.headline || V.title),
 					UP : SolveFeedText(V.shortBylineText),
-					UPURL : O.SolU(V.shortBylineText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata.url,YouTube),
+					UPURL : V.shortBylineText && O.SolU(V.shortBylineText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata.url,YouTube),
 					Date : SolveFeedText(V.publishedTimeText),
 					More :
 					[

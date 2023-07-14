@@ -233,9 +233,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				return !Page || 'TimelinePinEntry' !== V.type
 			},WR.Rev(V)),function(V)
 			{
+				var Begin = R.length;
 				return V.promotedMetadata ||
 					/^(TweetDetailRelatedTweets)-/i.test(V.entryId) ||
-					CheckTypeTweet(V)
+					CheckTypeTweet(V) &&
+					(-~Begin === R.length ||
+						WR.Each(function(V){V.Group = R.length},R.slice(Begin)))
 			})
 		})
 		return [R.length && SolveCursor(B),{Item : R}]
