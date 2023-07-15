@@ -34,6 +34,7 @@ declare module CrabSaveNS
 			Full(Row : number) : WishNS.Provider<Task>
 			Del(Row : number) : WishNS.Provider<any>
 
+			Count() : WishNS.Provider<number>
 			Brief(Row : number,Limit : number) : WishNS.Provider<TaskBriefHist[]>
 
 			Play(Row : number) : WishNS.Provider<any>

@@ -8,6 +8,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	YouTubeCustomURL = WW.Tmpl(YouTube,'c/',undefined),
 	YouTubeFeed = YouTube + 'feed/',
 	YouTubeFeedSubscription = YouTubeFeed + 'subscriptions',
+	YouTubeFeedSubscriptionShort = YouTubeFeedSubscription + '/shorts',
 	YouTubeFeedChannel = YouTubeFeed + 'channels',
 	YouTubeI = YouTube + 'youtubei/v1/',
 	YouTubeIBrowse = YouTubeI + 'browse',
@@ -207,15 +208,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			},Req)
 		}).Map(WC.JTO)
 	},
-	MakeFeed = function(Feed,Map)
+	MakeFeed = function(Feed,Map,DataFMap)
 	{
+		DataFMap = DataFMap || WX.Just
 		return O.More(function()
 		{
 			return O.Req(
 			{
 				URL : Feed,
 				UA : ''
-			}).Map(function(B)
+			}).FMap(function(B)
 			{
 				var
 				SolveJSONIfPresent = function(Q)
@@ -227,14 +229,20 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				ClientVersion = SolveJSONIfPresent(/CLIENT_VERSION":("[^"]+")/)
 				APIKey = SolveJSONIfPresent(/API_KEY":("[^"]+")/)
 				PageID = SolveJSONIfPresent(/DELEGATED_SESSION_ID":("[^"]+")/)
-				return O.JOM(/ytInitialData[ =]+/,B)
-			})
+				B = O.JOM(/ytInitialData[ =]+/,B)
+				return WR.Has('contents',B) ?
+					WX.Just(B) :
+					MakeI(YouTubeIBrowse,
+					{
+						browseId : 'FE' + Feed.slice(YouTubeFeed.length).replace(/\W/g,'_')
+					})
+			}).FMap(DataFMap)
 		},function(I,Page)
 		{
 			return MakeI(YouTubeIBrowse,
 			{
 				continuation : I[Page]
-			})
+			}).FMap(DataFMap)
 		},function(B)
 		{
 			var
@@ -368,12 +376,37 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				})
 			})
 		},{
+			Name : 'SubscriptionShort',
+			Judge :
+			[
+				/^S$/i,
+				/\b(?:Subscription)?Shorts?$/i,
+			],
+			View : MakeFeed(YouTubeFeedSubscriptionShort,function(I,V,K)
+			{
+				return 'richItemRenderer' === K ||
+					'Item' === K && WR.Each(function(B){I.push(B)},V)
+			},function(B)
+			{
+				var All = [];
+				O.Walk(B,function(V,K)
+				{
+					'reelItemRenderer' === K && All.push(V.videoId)
+				})
+				return GoogleAPIReq(GoogleAPIYouTubeVideo('id,snippet,contentDetails',All))
+					.Map(function(N)
+					{
+						return [B,SolveSnippet(N)]
+					})
+			})
+		},{
 			Name : 'Subscription',
 			Judge : O.TL,
 			View : MakeFeed(YouTubeFeedSubscription,function(I,V,K)
 			{
 				var
-				IsRenderer = 'gridVideoRenderer' === K;
+				IsRenderer = 'gridVideoRenderer' === K,
+				T;
 				if ('richItemRenderer' === K)
 				{
 					IsRenderer = true
@@ -382,6 +415,21 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				}
 
 				// Short Collection. Too bad that it contains no channel/date info
+				if ('richShelfRenderer' === K)
+				{
+					O.Walk(V.menu,function(V)
+					{
+						T = T || V.url
+					})
+					I.push(
+					{
+						Non : true,
+						ID : T,
+						URL : O.SolU(T,YouTube),
+						UP : SolveFeedText(V.title),
+						UPURL : O.SolU(T,YouTube)
+					})
+				}
 				V = V.reelItemRenderer || V
 
 				return IsRenderer && I.push(

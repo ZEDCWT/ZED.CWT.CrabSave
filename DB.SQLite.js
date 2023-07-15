@@ -216,6 +216,8 @@ module.exports = Option =>
 				['delete from Down where ? = Task',[Row]],
 			]).Map(() => B && B.Done)),
 
+		Count : () => Get('select count(*) Count from Task')
+			.Map(V => V.Count),
 		Brief : (Row,Limit) => All(
 		`
 			select ${HistBrief} from Task

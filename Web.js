@@ -268,6 +268,9 @@
 			DBBriefKeyCache :
 			DBBriefKeyCache = Task.Site + '|' + Task.ID
 	},
+	DBBriefInitNoti = Noti.O(),
+	DBBriefInitSpeed,
+	DBBriefInitTimer,
 	DBBriefVer = 0,
 	DBBriefHot = [],
 	DBBriefHist = [],
@@ -438,6 +441,13 @@
 		},
 		End : function()
 		{
+			if (DBBriefInitTimer)
+			{
+				DBBriefInitNoti(false)
+				DBBriefInitTimer.F()
+			}
+			DBBriefInitSpeed =
+			DBBriefInitTimer = null
 			DBBriefDiffQueue.length = 0
 			DBBriefHot = []
 			DBBriefHist = []
@@ -3267,8 +3277,26 @@
 			if (WR.Has('Bin',Data))
 				Data = ProtoDec(Proto.DBBrief,WC.InfR(Data.Bin))
 
+			if (WR.Has('Count',Data))
+			{
+				DBBriefInitSpeed = WW.Speed(
+				{
+					Total : Data.Count,
+					Start : WSOnlineAt,
+					Show : function(V)
+					{
+						return +WR.ToFix(2,V)
+					}
+				})
+				DBBriefInitTimer = WW.To(5E2,function()
+				{
+					DBBriefInitNoti(LangSolve('LstBriefLoad') + ' ' + DBBriefInitSpeed.I().S(false,false))
+				},true).C()
+			}
+
 			if (WR.Has('Part',Data))
 			{
+				DBBriefInitSpeed && DBBriefInitSpeed.D(Data.Part.length)
 				WR.Each(function(V)
 				{
 					V.Done ?
@@ -3279,6 +3307,12 @@
 			}
 			else
 			{
+				if (DBBriefInitTimer)
+				{
+					DBBriefInitTimer.F()
+					DBBriefInitNoti(LangSolve('LstBriefLoaded') + ' ' + DBBriefInitSpeed.I().S(false,false))
+					DBBriefInitNoti(false)
+				}
 				if (DBBriefVer === Data.Ver)
 				{
 					DebugLog('DBBrief',DBBriefVer)

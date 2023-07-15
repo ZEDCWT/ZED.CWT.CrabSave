@@ -586,20 +586,22 @@ module.exports = Option =>
 					DBLoadingVer = DBVersion
 					DBLoadingRow = 0
 				}
-				DB.Brief(DBLoadingRow,WR.Fit(1024,Data.Limit,8192)).Now
-				(
-					B =>
+				(Data.Cont ? WX.Just(null) : DB.Count())
+					.FMap(Count => DB.Brief(DBLoadingRow,WR.Fit(1024,Data.Limit,8192)).Tap(B =>
 					{
+						var R;
 						if (B.length)
 							DBLoadingRow = WR.Last(B).Row
+						R =
+						{
+							Part : B,
+							Count : Count,
+						}
 						Send(Proto.DBBrief,B.length ?
-							Data.GZ ?
-								{Bin : ZLib.deflateRawSync(ProtoEnc(Proto.DBBrief,{Part : B}))} :
-								{Part : B} :
+							Data.GZ ? {Bin : ZLib.deflateRawSync(ProtoEnc(Proto.DBBrief,R))} : R :
 							{Ver : DBLoadingVer})
-					},
-					E => Err('DBBrief','ErrDBLoad',ErrorS(E))
-				)
+					}))
+					.Now(null,E => Err('DBBrief','ErrDBLoad',ErrorS(E)))
 			},
 			[Proto.DBSite] : Data =>
 			{
