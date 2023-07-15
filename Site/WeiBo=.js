@@ -100,6 +100,7 @@ module.exports = O =>
 							PicAll.push(URL)
 						}
 					},
+					PicVariant = [],
 					PicMeta = [],
 					PicShow = URL => PicMeta.push(URL = [PicIndex[PicID(URL)],URL]) && URL,
 					Part = [],
@@ -315,7 +316,23 @@ module.exports = O =>
 						},T.items)
 					}
 					else if (B.pic_num)
-						WR.Each(V => PicPush(B.pic_infos[V].largest.url),B.pic_ids)
+						WR.Each(V =>
+						{
+							V = B.pic_infos[V]
+							PicPush(V.largest.url)
+							switch (V.type)
+							{
+								case 'pic' :
+									break
+								case 'dynamic' : // Lr2AY7AyW
+								case 'gif' : // JjRAXxJT5
+								case 'livephoto' : // N9YWhzARq
+									PicVariant.push(V.video)
+									break
+								default :
+									WW.Throw('Unknown Pic Type #' + V.type)
+							}
+						},B.pic_ids)
 					if (Forwarded)
 						WR.Each(V => V.pic_infos && Part.push(
 						{
@@ -352,6 +369,7 @@ module.exports = O =>
 						.Map(Part =>
 						{
 							PicMeta.forEach(V => V[0] = `	[${WR.PadL(PicAll.length,V[0])}] ${V.pop()}`)
+							PicVariant.length && Part.unshift({URL : PicVariant})
 							PicAll.length && Part.unshift({URL : PicAll,ExtDefault : '.jpg'})
 							return {
 								Title : Title.trim(),
