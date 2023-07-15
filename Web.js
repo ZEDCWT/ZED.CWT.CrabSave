@@ -2001,7 +2001,7 @@
 							S[0] && WSSend(PlayCurrent ? Proto.AuthTaskPause : Proto.AuthTaskPlay,{Row : [S[0].Row]})
 						}
 					}),
-					OnState = function(V)
+					OnState = function(V,Init)
 					{
 						WV.WC(Bar) // Force to reset transition state
 						if (PlayCurrent = V)
@@ -2011,7 +2011,8 @@
 						}
 						else
 						{
-							HasError = false
+							if (!Init)
+								HasError = false
 							Play.X(LangSolve('HotPlay'))
 							WV.ClsR(Bar,WV.Foc)
 						}
@@ -2049,7 +2050,8 @@
 							T = null == Task ? LangSolve('LstLoad') :
 								null != LoadErr ? LoadErr :
 								TaskRenewing[S[0].Row] ? LangSolve(WR.Has('Size',Task) ? 'HotRenew' : 'HotSolve') :
-								HasError && WW.Now() <= 1E3 * Setting.Delay + ErrorAt ? LangSolve('Err') + ' ' + RemainS(1E3 * Setting.Delay + ErrorAt - WW.Now()) :
+								HasError && WW.Now() <= 1E3 * Setting.Delay + ErrorAt && (Task.State || !WR.Has('Size',Task)) ?
+									LangSolve('Err') + ' ' + RemainS(1E3 * Setting.Delay + ErrorAt - WW.Now()) :
 								HasError && ErrorToRenew ? LangSolve('HotReady') :
 								!WR.Has('Size',Task) ? LangSolve('HotReady') :
 								Task.State ? LangSolve('HotQueue') :
@@ -2119,7 +2121,7 @@
 								}
 								WR.Has(V.Row,ProgressMap) && OnProgress(ProgressMap[V.Row])
 								Play.On()
-								OnState(B.State)
+								OnState(B.State,true)
 							},function(E)
 							{
 								LoadErr = LangSolve('LstFail') + ' ' + ErrorS(E)
