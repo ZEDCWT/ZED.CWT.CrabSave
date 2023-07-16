@@ -7,6 +7,7 @@ WeiBo = 'https://weibo.com/',
 WeiBoAJAX = WeiBo + 'ajax/',
 WeiBoAJAXStatusShow = WW.Tmpl(WeiBoAJAX,'statuses/show?id=',undefined),
 WeiBoAJAXStatusLong = WW.Tmpl(WeiBoAJAX,'statuses/longtext?id=',undefined),
+WeiBoAJAXStatusComment = WW.Tmpl(WeiBoAJAX,'statuses/buildComments?is_show_bulletin=2&id=',undefined),
 WeiBoPostHistory = WW.Tmpl(WeiBo,'p/aj/v6/history?mid=',undefined,'&page_size=',undefined,'&page=1'),
 WeiBoLiveShow = WW.Tmpl(WeiBo,'l/!/2/wblive/room/show_pc_live.json?live_id=',undefined),
 WeiBoCard = 'https://card.weibo.com/',
@@ -75,16 +76,16 @@ module.exports = O =>
 		{
 			ID = /^\d+\/(\w+)$/.exec(ID) || [ID]
 			if (!ID[1]) return WX.Throw('Bad ID ' + ID[0])
-			return Ext.ReqB(O.Coke(WeiBoAJAXStatusShow(ID[1]))).FMap(B =>
+			return Ext.ReqB(O.Coke(WeiBoAJAXStatusShow(ID[1]))).FMap(Status =>
 			{
-				B = WC.JTO(B)
-				B.error_code && O.Bad(WW.Quo(B.error_code) + B.message)
+				Status = WC.JTO(Status)
+				Status.error_code && O.Bad(WW.Quo(Status.error_code) + Status.message)
 				// LlJq26YJu	Unexpected `isLongText` flag
-				return (B.isLongText ? Ext.ReqB(O.Coke(WeiBoAJAXStatusLong(ID[1]))) : WX.Just()).FMap(Long =>
+				return (Status.isLongText ? Ext.ReqB(O.Coke(WeiBoAJAXStatusLong(ID[1]))) : WX.Just()).FMap(Long =>
 				{
 					var
 					ReqWithRef = V => Ext.ReqB(O.Coke(WN.ReqOH(V,'Referer',WeiBo))),
-					Forwarded = B.retweeted_status,
+					Forwarded = Status.retweeted_status,
 					Title,
 					Meta = [],
 					Cover,
@@ -289,17 +290,17 @@ module.exports = O =>
 					},
 					T;
 					Long = Long && WR.Path(['data','longTextContent'],WC.JTO(Long))
-					Title = B.text_raw.replace(/\u200B+$/,'')
+					Title = Status.text_raw.replace(/\u200B+$/,'')
 					Meta.push(Long ? WC.HED(Long) : Title)
 					if (Forwarded)
 						Title = Title.replace(/\/\/@.*/,'')
 					WR.EachU((V,F) =>
 					{
 						Title = Title.replace(RegExp(`\\s*${WR.SafeRX(V.short_url)}\\s*`,'g'),' ')
-						Meta.push(`URL [${WW.ShowLI(B.url_struct.length,F)}] ${WC.HED(V.url_title)} ${V.short_url}`)
+						Meta.push(`URL [${WW.ShowLI(Status.url_struct.length,F)}] ${WC.HED(V.url_title)} ${V.short_url}`)
 						V.long_url && Meta.push('\t' + V.long_url)
-					},B.url_struct)
-					if (T = B.mix_media_info)
+					},Status.url_struct)
+					if (T = Status.mix_media_info)
 					{
 						WR.Each(V =>
 						{
@@ -315,32 +316,35 @@ module.exports = O =>
 							}
 						},T.items)
 					}
-					else if (B.pic_num)
+					else if (Status.pic_num)
 						WR.Each(V =>
 						{
-							V = B.pic_infos[V]
+							V = Status.pic_infos[V]
 							PicPush(V.largest.url)
 							switch (V.type)
 							{
 								case 'pic' :
 									break
 								case 'dynamic' : // Lr2AY7AyW
+									// Image is the cover for the video, saving the image may not be necessary
 								case 'gif' : // JjRAXxJT5
+									// Video is much smaller
 								case 'livephoto' : // N9YWhzARq
+									// Image contains EXIF
 									PicVariant.push(V.video)
 									break
 								default :
 									WW.Throw('Unknown Pic Type #' + V.type)
 							}
-						},B.pic_ids)
+						},Status.pic_ids)
 					if (Forwarded)
 						WR.Each(V => V.pic_infos && Part.push(
 						{
 							URL : V.pic_ids.map(B => V.pic_infos[B].large.url)
-						}),B.url_struct)
-					else if (T = B.page_info)
+						}),Status.url_struct)
+					else if (T = Status.page_info)
 						ProcessObject(T)
-					return (B.edit_count ? Ext.ReqB(O.Coke(WeiBoPostHistory(UnZip(ID[1]),-~B.edit_count))).Map(His =>
+					return (Status.edit_count ? Ext.ReqB(O.Coke(WeiBoPostHistory(UnZip(ID[1]),-~Status.edit_count))).Map(His =>
 					{
 						var
 						HTS = Q => Q.split(/<[^>]+>/)
@@ -353,7 +357,7 @@ module.exports = O =>
 							.forEach((V,F) => Meta.push
 							(
 								'',
-								'{History} ' + WW.ShowLI(-~B.edit_count,B.edit_count - F),
+								'{History} ' + WW.ShowLI(-~Status.edit_count,Status.edit_count - F),
 								HTS(WW.MU(/<[^>]+WB_from[^]+?<\/span>/,V)),
 								HTS(WW.MU(/<[^>]+WB_text[^>]+>([^<>]+)/,V)),
 								...WW.MR((D,V) =>
@@ -365,6 +369,59 @@ module.exports = O =>
 								},[],/<[^>]+WB_pic[^]+?src="([^"]+)"/g,V)
 							))
 					}) : WX.Just())
+						.FMap(() => Ext.ReqB(O.Coke(WeiBoAJAXStatusComment(ID[1]))).Map(Comment =>
+						{
+							Comment = WC.JTO(Comment).data
+							if (Comment.length)
+							{
+								Meta.push('',WR.RepS('\u2014',63))
+								WR.Each(function(V)
+								{
+									Meta.push
+									(
+										'',
+										WW.StrDate(V.created_at,WW.DateColS) + ' ' + V.user.idstr + ':' + V.user.screen_name,
+										V.source + ' Like ' + V.like_counts,
+										V.text_raw,
+									)
+									WR.Each(B =>
+									{
+										if (B.pic_infos)
+										{
+											B.pic_ids.forEach((N,F) =>
+											{
+												Meta.push('\t' + WW.Quo(F) + B.pic_infos[N].large.url)
+											})
+											Status.user.idstr === V.user.idstr && Part.push(
+											{
+												Title : V.text_raw.replace(/(\s*\w+:\/\/t\.cn\/\S+)+$/,''),
+												URL : B.pic_ids.map(N => B.pic_infos[N].large.url)
+											})
+										}
+									},V.url_struct)
+									WR.Each(B =>
+									{
+										// Weird that they put `reply_comment` & `url_struct` in every sub comment...
+										Meta.push
+										(
+											'',
+											'\t' + WW.StrDate(B.created_at,WW.DateColS) + ' ' + B.user.idstr + ':' + B.user.screen_name,
+											'\t' + B.source + ' Like ' + B.like_count, // Why this field has no ending `s` as the main comment...
+											'\t' + B.text_raw,
+										)
+									},V.comments)
+									V.more_info && Meta.push
+									(
+										'',
+										'\t' +
+										[
+											...WR.Pluck('screen_name',V.more_info.user_list || []),
+											V.more_info.text
+										].join` `,
+									)
+								},Comment)
+							}
+						}))
 						.FP(O.Part(Part,Ext))
 						.Map(Part =>
 						{
@@ -373,15 +430,15 @@ module.exports = O =>
 							PicAll.length && Part.unshift({URL : PicAll,ExtDefault : '.jpg'})
 							return {
 								Title : Title.trim(),
-								UP : B.user.screen_name,
-								Date : +new Date(B.created_at),
+								UP : Status.user.screen_name,
+								Date : +new Date(Status.created_at),
 								Meta,
 								Cover : Cover && ImgEnlarge(Cover),
 								Part,
 							}
 						})
 				})
-			}).ErrAs(E =>
+			})/*.ErrAs(E =>
 			{
 				WW.ErrIs(WW.Err.NetBadStatus,E) &&
 					400 == E.Arg[0] ||
@@ -433,7 +490,7 @@ module.exports = O =>
 							Part
 						}))
 				})
-			})
+			})*/
 		},
 		Pack : Q => (
 		{

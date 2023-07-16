@@ -495,6 +495,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				return Req(WeiBoAJAXStatusShow(ID)).FMap(function(B)
 				{
 					B = WC.JTO(B)
+					B.error_code && O.Bad(B.error_code,B.message)
 					return (B.isLongText ? Req(WeiBoAJAXStatusLong(ID)) : WX.Just()).Map(function(Long)
 					{
 						return {

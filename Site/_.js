@@ -62,7 +62,11 @@ module.exports = Option =>
 				.split(/<br\b[^>]*>|<\/(?:figure|h\d+|p)\b>/)
 				.map(V => V.replace(/\s*(\r?\n|\r)\s*/g,' '))
 				.join`\n`
-				.replace(/<.*?>/g,''))
+				.replace(/<.*?>/g,V =>
+				{
+					V = /\b(?:alt|title)=("|')([^]+?)\1/i.exec(V)
+					return V ? V[2] : ''
+				}))
 				.replace(/.+/g,WR.Trim),
 			M3U,
 			Part : (Q,Ext = WN) => WX.From(Q)
