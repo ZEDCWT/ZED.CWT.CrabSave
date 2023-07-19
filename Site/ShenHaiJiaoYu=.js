@@ -54,15 +54,12 @@ module.exports = O =>
 					X = WW.MF(/xmlUrl[ ='"]+([^'"]+)/,X)
 					X || O.Bad('No record data')
 					return WN.ReqB(O.Req(X)).FMap(Record =>
-					{
-						var
-						Start = +new Date(WW.MF(/\bstarttime="([^"]+)/,Record) + '+0800');
-						return O.M3U(WN.JoinU(X,WW.MF(/hls="([^"]+)/,Record))).Map(M => (
+						O.M3U(WN.JoinU(X,WW.MF(/hls="([^"]+)/,Record))).Map(M => (
 						{
 							Title : Lesson.modelName + '.' + Lesson.lessonName +
 								'.' + Lesson.teachersName,
 							UP : B.classType.name,
-							Date : Start,
+							Date : WW.MF(/\bstarttime="([^"]+)/,Record) + '+0800',
 							Part : WW.MR((D,V) =>
 							{
 								var
@@ -79,8 +76,7 @@ module.exports = O =>
 								},null,/<page.*?>/g,V)
 								return D
 							},[M],/<document[^]+?<\/document/g,Record)
-						}))
-					})
+						})))
 				})
 			})
 
@@ -128,7 +124,7 @@ module.exports = O =>
 							'.' + WW.Pad02(Lecture.lectureOrder) +
 							'.' + Lecture.lectureName,
 						UP : B.ct.name,
-						Date : +new Date(H.H['last-modified']),
+						Date : H.H['last-modified'],
 						Part : [
 						{
 							URL : [O.Best('quality',WC.JTO(N.replace(/^[^{]*\(|\)\s*$/g,'')).copies)

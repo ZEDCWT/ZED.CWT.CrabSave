@@ -158,7 +158,7 @@ module.exports = O =>
 					Title : B.title,
 					// Things getting pretty complicated due to the three name design
 					UP : B.fanclub.creator_name + '.' + B.fanclub.fanclub_name,
-					Date : +new Date(B.posted_at),
+					Date : B.posted_at,
 					Meta : Meta.length && MetaContent.length ?
 					[
 						...Meta,

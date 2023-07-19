@@ -28,7 +28,7 @@ module.exports = O =>
 				R || WW.Throw('Unable to obtain series infomation')
 				return {
 					Title : Episode.series.title + `.${Episode.number}.` + Episode.title,
-					Date : +new Date(Episode.publishedAt),
+					Date : Episode.publishedAt,
 					...R,
 					Part : [
 					{

@@ -53,7 +53,7 @@ module.exports = Option =>
 		return R
 	},
 
-	Pack = (Q,S) => Option.Req((Option.Site.D(S).Pack || WR.Id)(Q)),
+	Pack = (Q,S) => WX.IsP(Q = (Option.Site.D(S).Pack || WR.Id)(Q)) ? Q : Option.Req(Q),
 	SolveSize = (Q,S) => WN.ReqH(Pack(Q,S)).Map((H,T) =>
 		/^2/.test(H.Code) && (T = +H.H['content-length']) === T ?
 			T :
@@ -85,10 +85,11 @@ module.exports = Option =>
 					ExtReqRecordIndex = [],
 					ExtReqRecordHeadOmit = new Set(
 					[
+						'authorization',
 						'cookie',
 						'set-cookie'
 					]),
-					ExtReq = Q =>
+					ExtReq = Q => WX.Just().FMap(() =>
 					{
 						var
 						ID = ExtReqRecordCount++,
@@ -99,7 +100,7 @@ module.exports = Option =>
 						ExtReqRecord.push
 						(
 							WW.StrDate() + ' {Req} ',
-							WC.OTJ(Save)
+							WC.OTJ(Save).replace(/,"Head":{}|,"AC":false/g,'')
 						)
 						return WN.ReqU({...Q,AC : true}).Tap(([H,B]) =>
 						{
@@ -116,7 +117,7 @@ module.exports = Option =>
 							if (!Q.AC && !/^[23]/.test(H.Code))
 								WW.Throw(WW.Err.NetBadStatus(H.Code))
 						})
-					},
+					}),
 					Ext =
 					{
 						ReqU : ExtReq,
@@ -210,7 +211,9 @@ module.exports = Option =>
 							{
 								Title : U.Title || '',
 								UP : U.UP,
-								UPAt : WR.Default(WW.Now(),U.Date),
+								UPAt : WW.IsStr(U.Date) ?
+									+new Date(U.Date) :
+									WR.Default(WW.Now(),U.Date),
 								// Size,
 								Part,
 								PartTotal : WR.Default(Part.length,U.PartTotal),
@@ -487,10 +490,13 @@ module.exports = Option =>
 									},
 									LowSpeedCount = 0,
 									RefSpeed = Site.RefSpeed ? 1024 * Site.RefSpeed / 1E3 : 0,
+									ReqObs = PartSpecialType.Meta === Down.Part ?
+										WX.Just(Down.URL) :
+										Pack(Down.URL,V.Site),
 									Work = WN.Down(
 									{
-										Req : PartSpecialType.Meta !== Down.Part && Pack(Down.URL,V.Site),
-										Obs : PartSpecialType.Meta === Down.Part && WX.Just(Down.URL),
+										Req : !WX.IsP(ReqObs) && ReqObs,
+										Obs : WX.IsP(ReqObs) && ReqObs,
 										Path : Dest,
 										Last : Down.Path && WN.JoinP(V.Root,Down.Path),
 										Fresh : SizeChanged || !Down.Path,

@@ -431,7 +431,7 @@ module.exports = O =>
 							return {
 								Title : Title.trim(),
 								UP : Status.user.screen_name,
-								Date : +new Date(Status.created_at),
+								Date : Status.created_at,
 								Meta,
 								Cover : Cover && ImgEnlarge(Cover),
 								Part,

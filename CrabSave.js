@@ -287,11 +287,11 @@ module.exports = Option =>
 	WebServerEntryPath = WN.JoinP(PathData,'Web.js'),
 	WebServerProxyOmit = new Set(
 	[
-		'host',
 		'cookie',
-		'set-cookie',
+		'host',
 		'referer',
-		'user-agent'
+		'set-cookie',
+		'user-agent',
 	]),
 	/**@type {Map<string,
 	{

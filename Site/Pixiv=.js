@@ -65,7 +65,7 @@ module.exports = O =>
 				return {
 					Title : B.text,
 					UP : B.user.name,
-					Date : +new Date(B.published_at),
+					Date : B.published_at,
 					Meta : B.text_fragments.map(V =>
 					{
 						var R;
@@ -120,7 +120,7 @@ module.exports = O =>
 				{
 					Title : Illust.title,
 					UP : Illust.userName,
-					Date : +new Date(Illust.userIllusts[ID].createDate),
+					Date : Illust.userIllusts[ID].createDate,
 					Meta : O.Text(Illust.description),
 					...R
 				}))

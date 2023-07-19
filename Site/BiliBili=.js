@@ -131,7 +131,7 @@ module.exports = O =>
 				return {
 					Title : B.item.description,
 					UP : B.user.name,
-					Date : +new Date(B.item.upload_time + '+0800'),
+					Date : B.item.upload_time + '+0800',
 					Part : [
 					{
 						URL : [B.item.video_playurl]

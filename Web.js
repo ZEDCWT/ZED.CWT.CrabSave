@@ -2618,7 +2618,7 @@
 				Stat : true,
 				Inp : function(V)
 				{
-					Site.Stat(SiteMap[V] && WW.IsArr(SiteMap[V].Min) ? SiteMap[V].Min.join(', ') : '')
+					Site.Stat(SiteMap[V] && WW.IsArr(SiteMap[V].Min) ? SiteMap[V].Min.join(', ') : SiteMap[V].SignHint || '')
 					CookieMin.On()
 					Cookie.On()
 						.V(CookieMap[V] || '')
@@ -2703,6 +2703,7 @@
 				}
 				else if (WR.Has(S,SiteMap))
 				{
+					CookieMap[S] = C
 					if (CookieSaving && CookieSaving === S)
 					{
 						CookieSaving = false
@@ -2719,7 +2720,6 @@
 							CookieCheckNoti(false)
 						}))
 					}
-					CookieMap[S] = C
 				}
 				Site.V() && S === Site.V() && Cookie.V(C || '')
 			}
@@ -3706,7 +3706,7 @@
 				},
 				Text : function(Q)
 				{
-					return WC.HED(Q
+					return Q && WC.HED(Q
 						.split(/<br\b[^>]*>|<\/(?:figure|h\d+|p)\b>/)
 						.map(WR.Rep(/\s*(\r?\n|\r)\s*/g,' '))
 						.join('\n')
@@ -3778,6 +3778,7 @@
 			'Instagram',
 			'IXiGua',
 			'KakuYomu',
+			'NicoChannel',
 			'Pixiv',
 			'ShenHaiJiaoYu',
 			'ShonenMagazine',

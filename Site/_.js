@@ -24,11 +24,12 @@ module.exports = Option =>
 			return [true,WN.JoinU(Q,B[1])]
 		}
 		if (WW.IsArr(B.INF))
-		{
-			B = B.INF.map(V => WN.JoinU(Q,V[1]))
-			B = B.length < 16 ? {URL : B} : {URL : B,Size : WR.RepA(1,B.length)}
-			return [false,B]
-		}
+			return [false,
+			{
+				URL : B.INF.map(V => WN.JoinU(Q,V[1])),
+				Size : B.INF.length < 4 ? null : WR.RepA(1,B.INF.length),
+				Raw : B,
+			}]
 		Bad(V)
 	}) : Bad('Too many M3U | ' + Q),Q);
 
@@ -58,14 +59,27 @@ module.exports = Option =>
 				};
 				H(Q)
 			},
-			Text : Q => WC.HED(Q
+			Text : (Q,Collect = {}) => WC.HED(Q
 				.split(/<br\b[^>]*>|<\/(?:figure|h\d+|p)\b>/)
 				.map(V => V.replace(/\s*(\r?\n|\r)\s*/g,' '))
 				.join`\n`
 				.replace(/<.*?>/g,V =>
 				{
-					V = /\b(?:alt|title)=("|')([^]+?)\1/i.exec(V)
-					return V ? V[2] : ''
+					var
+					SolveAttr = M =>
+					{
+						M = V.slice(M.index + M[0].length)
+						return /^("|')([^]*?)\1/.exec(M)?.[2] ?? WW.MU(/^\S*/,M)
+					},
+					T;
+					if (T = /^<img\b.*\bsrc=/.exec(V))
+					{
+						(Collect.Img || (Collect.Img = [])).push(WC.HED(T = SolveAttr(T)))
+						return '{Img} ' + T + ' '
+					}
+					if (T = /\b(?:alt|title)=/i.exec(V))
+						return SolveAttr(T)
+					return ''
 				}))
 				.replace(/.+/g,WR.Trim),
 			M3U,
@@ -96,6 +110,7 @@ module.exports = Option =>
 		'Instagram',
 		'IXiGua',
 		'KakuYomu',
+		'NicoChannel',
 		'Pixiv',
 		'ShenHaiJiaoYu',
 		'ShonenMagazine',

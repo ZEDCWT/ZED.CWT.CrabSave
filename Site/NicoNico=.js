@@ -79,7 +79,7 @@ module.exports = O =>
 					{
 						Title : SolveXMLField('title',Illust),
 						UP : WC.HED(WW.MF(/"user_name"[^]+?<strong>([^<]+)</,Page)),
-						Date : +new Date(SolveXMLField('created',Illust) + '+0900'),
+						Date : SolveXMLField('created',Illust) + '+0900',
 						Meta : SolveXMLDesc(Illust),
 						Part : [
 						{
@@ -230,7 +230,7 @@ module.exports = O =>
 						{
 							Title : B.video.title,
 							UP : UP.replace(/ さん$/,''), // 敬稱略
-							Date : +new Date(B.video.registeredAt),
+							Date : B.video.registeredAt,
 							Meta : O.Text(B.video.description),
 							Cover : B.video.thumbnail.largeUrl,
 							CoverExt : '.jpg',

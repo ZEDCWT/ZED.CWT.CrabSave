@@ -8,6 +8,7 @@ declare module CrabSaveNS
 		Judge? : RegExp
 		Cookie? : string
 		Min? : string | string[] | ((Q : string) => string)
+		SignHint? : string
 		Sign?() : WishNS.Provider<string>
 		Map : SiteMap[]
 		IDView?(Q : string) : WishNS.EleContent
@@ -71,13 +72,16 @@ declare module CrabSaveNS
 			Bad(Q : any) : never
 			JOM(S : RegExp,Q : string) : object
 			Walk(Q : object,H : (V : object,F : string) => boolean) : void
-			Text(Q : string) : string
-			M3U(Q : string,Ext? : SiteExt) : WishNS.Provider<SitePart>
+			Text(Q : string,Collect? : {Img? : string[]}) : string
+			M3U(Q : string,Ext? : SiteExt) : WishNS.Provider<SitePart &
+			{
+				Raw : WishNS.M3U
+			}>
 			Part(Q : (SitePart | WishNS.Provider<SitePart>)[],Ext? : SiteExt) : WishNS.Provider<SitePart[]>
 		}) : {
 			URL(ID : string,Ext : SiteExt) : WishNS.Provider<SiteURL>
 			IDView?(Q : string) : string
-			Pack?(Q : string) : WishNS.ReqAccept
+			Pack?(Q : string) : WishNS.DownloadO['Req'] | WishNS.DownloadO['Obs']
 			Range? : boolean
 			RefSpeed? : number
 		}
@@ -92,7 +96,7 @@ declare module CrabSaveNS
 	{
 		Title? : string
 		UP? : string
-		Date? : number
+		Date? : number | string
 		Meta? : string
 		Cover? : string
 		CoverExt? : string

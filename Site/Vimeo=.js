@@ -41,7 +41,7 @@ module.exports = O =>
 			return {
 				Title : B.name,
 				UP : B.user.name,
-				Date : +new Date(B.created_time),
+				Date : B.created_time,
 				Part : [
 				{
 					URL : [Best.link],

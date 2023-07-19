@@ -128,7 +128,7 @@ module.exports = O =>
 				{
 					Title,
 					UP,
-					Date : +new Date(At),
+					Date : At,
 					Meta,
 					Cover,
 					Part,

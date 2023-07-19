@@ -125,7 +125,7 @@ module.exports = O =>
 			})
 			Info.Title = WR.Trim(Title)
 			Info.UP = User.name
-			Info.Date = +new Date(Tweet.created_at)
+			Info.Date = Tweet.created_at
 			Info.Part = Part
 		}
 	};
