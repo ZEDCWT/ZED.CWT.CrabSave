@@ -35,11 +35,15 @@ module.exports = O =>
 					CSRFToken = WW.MF(/<[^>]+csrf-token[^>]+content="([^"]+)/,B)
 					// CSRFTokenLast = WW.Now()
 				}))
-				.FMap(() => Ext.ReqB(O.Coke(WW.N.ReqOH(Q,'X-CSRF-Token',CSRFToken))))
+				.FMap(() => Ext.ReqB(O.Coke(WW.N.ReqOH(Q,
+				[
+					'X-CSRF-Token',CSRFToken,
+					'X-Requested-With','XMLHttpRequest',
+				]))))
 				.Tap(null,E =>
 				{
 					WW.ErrIs(WW.Err.NetBadStatus,E) &&
-						403 === E.Arg[0] &&
+						WR.Include(E.Arg[0],[403,422]) &&
 						(CSRFToken = null)
 				});
 

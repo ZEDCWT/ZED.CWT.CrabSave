@@ -46,7 +46,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 	return {
 		ID : 'AcFun',
 		Alias : 'AC',
-		Judge : /\bAcFun\b|\bAC\d+/i,
+		Judge : /\bAcFun\b|\bAC\d+\b/i,
 		Min : 'auth_key acPasstoken',
 		Sign : function()
 		{

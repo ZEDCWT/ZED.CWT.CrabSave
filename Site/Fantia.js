@@ -37,12 +37,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			}))
 			.FMap(function()
 			{
-				return O.ReqAPI(WW.N.ReqOH(Q,'X-CSRF-Token',CSRFToken))
+				return O.ReqAPI(WW.N.ReqOH(Q,
+				[
+					'X-CSRF-Token',CSRFToken,
+					'X-Requested-With','XMLHttpRequest'
+				]))
 			})
 			.Tap(null,function(E)
 			{
 				WW.ErrIs(WW.Err.NetBadStatus,E) &&
-					403 === E.Arg[0] &&
+					WR.Include(E.Arg[0],[403,422]) &&
 					(CSRFToken = null)
 			})
 	},
