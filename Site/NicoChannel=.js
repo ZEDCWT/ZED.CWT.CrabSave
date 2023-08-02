@@ -5,6 +5,7 @@ PrefixArticle = 'ar',
 
 WW = require('@zed.cwt/wish'),
 {R : WR,X : WX,C : WC,N : WN} = WW,
+Crypto = require('crypto'),
 
 NicoChannel = 'https://nicochannel.jp/',
 NicoChannelAPI = 'https://nfc-api.nicochannel.jp/',
@@ -155,6 +156,7 @@ module.exports = O =>
 					Collect = {},
 					Part = [];
 					Article = Article.article.article
+					Article.contents || O.Bad(Article)
 					Meta.push(O.Text(Article.contents,Collect))
 					Collect.Img && Part.push(
 					{
@@ -184,12 +186,12 @@ module.exports = O =>
 					.U4(0).U4(0)
 					.U4(0).U4(100 * TS[2] + +TS[3])
 					.B(),
-				D = WC.AESDS(Key,IV);
+				D = Crypto.createDecipheriv('AES-128-CBC',WC.Buff(Key),WC.Buff(IV));
 				return WN.Req(O.Req(
 				{
 					URL : TS[1],
-					OnD : B => S.D(WC.Buff(D.D(B))),
-					OnE : () => S.U(WC.Buff(D.F())),
+					OnD : B => S.D(D.update(B)),
+					OnE : () => S.U(D.final()),
 				})).On('Err',S.E)
 					.End
 			})
@@ -199,5 +201,6 @@ module.exports = O =>
 				Head : {Referer : NicoChannel}
 			}
 		},
+		Range : false,
 	}
 }

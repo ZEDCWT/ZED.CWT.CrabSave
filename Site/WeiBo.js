@@ -488,7 +488,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				/(?:^|\/|Post\s+)\d+[/_](\w+)/i,
 				/Post\s+(\w+)\b/i,
 				/\bDetail\/(\d+)\b/i,
-				O.Num('Status')
+				O.Word('Status')
 			],
 			View : SolvePost = function(ID)
 			{
