@@ -80,8 +80,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		},
 		Map : [
 		{
-			Name : 'Search',
-			Judge : O.Find,
+			Name : O.NameFind,
 			View : function(ID)
 			{
 				return O.API(InstagramSearchTop(WC.UE(ID))).Map(function(B)
@@ -137,7 +136,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			}
 		},{
 			Name : 'Timeline',
-			Judge : O.TL,
+			Judge : /^$/,
+			JudgeVal : false,
 			View : O.More(function()
 			{
 				return InstagramQuery(InstagramHashTimeline,{fetch_media_item_count : O.Size})
@@ -149,8 +149,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				return SolveMore(SolvePost,B.user.edge_web_feed_timeline)
 			})
 		},{
-			Name : 'Following',
-			Judge : O.UP,
+			Name : O.NameUP,
+			JudgeVal : false,
 			View : O.More(function(_,I)
 			{
 				return SolveSelfID().FMap(function(ID)

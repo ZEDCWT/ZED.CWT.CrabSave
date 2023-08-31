@@ -39,15 +39,9 @@ declare module CrabSaveNS
 		Num(Q : string) : RegExp
 		NumR(Q : string) : RegExp
 		Word(Q : string) : RegExp
-		TL : RegExp | RegExp[]
-		UP : RegExp | RegExp[]
-		Find : RegExp | RegExp[]
-		MakeRX(Prefix? : string) :
-		{
-			TL : RegExp | RegExp[]
-			UP : RegExp | RegExp[]
-			Find : RegExp | RegExp[]
-		}
+		NameUP : string[]
+		NameFind : string[]
+		ValNum : RegExp
 		Size : number
 		Pascal(Q : string) : string
 		JOM(S : RegExp,Q : string) : object

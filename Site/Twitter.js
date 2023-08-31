@@ -303,8 +303,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		},
 		Map : [
 		{
-			Name : 'Search',
-			Judge : O.Find,
+			Name : O.NameFind,
 			View : MakeTimeline(function(ID)
 			{
 				return WX.Just(MakeHead(TwitterAPIJSON(TwitterAPITypeSearch) + '&q=' + WC.UE(ID)))
@@ -326,6 +325,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		},{
 			Name : 'Tweet',
 			Judge : [/^\d+$/,O.Num('Tweet|Status(?:es)?')],
+			JudgeVal : O.ValNum,
 			View : [function(ID)
 			{
 				return O.Req(MakeHead(TwitterAPIJSON(TwitterAPITypeConversation + ID))).Map(function(B)
@@ -396,13 +396,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		},{
 			Name : 'UserID',
 			Judge : O.Num('UserID'),
+			JudgeVal : O.ValNum,
 			View : MakeTimeline(function(ID)
 			{
 				return WX.Just(MakeHead(TwitterAPIJSON(TwitterAPITypeMedia + ID)))
 			})
 		},{
 			Name : 'Timeline',
-			Judge : O.TL,
+			JudgeVal : false,
 			// View : MakeTimeline(WR.Const(WX.Just(TwitterAPIJSON(TwitterAPITypeHome))))
 			View : O.More(function()
 			{
@@ -412,8 +413,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				return MakeHomeTimeline(I[Page])
 			},SolveGraphQLTweet)
 		},{
-			Name : 'Following',
-			Judge : O.UP,
+			Name : O.NameUP,
+			JudgeVal : false,
 			View : O.More(function(_,I)
 			{
 				return O.Req(MakeHead(TwitterAPIJSON(TwitterAPITypeGuide))).FMap(function(U)

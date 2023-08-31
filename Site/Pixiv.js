@@ -74,7 +74,6 @@ CrabSave.Site(function(O,WW,WC,WR)
 			return WW.MF(/var dataLayer[^}]+user_id\D+(\d+)/,B)
 		})
 	}),
-	SketchRX = O.MakeRX('(?:Sketch|SK?)'),
 	SolveSketchItem = function(V)
 	{
 		return {
@@ -105,7 +104,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 		Map : [
 		{
 			Name : 'SketchHome',
-			Judge : SketchRX.TL,
+			JudgeVal : false,
 			View : O.More(function()
 			{
 				return ReqSketch(PixivSketchAPIHome)
@@ -135,7 +134,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 		},
 		{
 			Name : 'SketchFollowing',
-			Judge : SketchRX.UP,
+			JudgeVal : false,
 			View : O.More(function()
 			{
 				return ReqSketch(PixivSketchAPIUserCurrent).FMap(function(B)
@@ -165,6 +164,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 		{
 			Name : 'SketchItem',
 			Judge : O.Num('SketchItem|Sketch\\b.*Items?'),
+			JudgeVal : O.ValNum,
 			View : function(ID)
 			{
 				return ReqSketch(PixivSketchAPIReply(ID)).Map(function(B)
@@ -178,7 +178,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 		},
 		{
 			Name : 'Bookmark',
-			Judge : O.TL,
+			JudgeVal : false,
 			View : function(_,Page)
 			{
 				return O.Req(PixivBookmark(-~Page)).Map(function(B)
@@ -194,6 +194,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 		},{
 			Name : 'User',
 			Judge : O.Num('Users?|Member(?!\\D*Illust)'),
+			JudgeVal : O.ValNum,
 			View : O.Less(SolveUserAll,function(Q,ID)
 			{
 				return O.Req(
@@ -209,6 +210,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 		},{
 			Name : 'UserAll',
 			Judge : O.Num('UserAll|UA'),
+			JudgeVal : O.ValNum,
 			View : function(ID)
 			{
 				return SolveUserAll(ID).Map(function(V)
@@ -220,7 +222,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 			}
 		},{
 			Name : 'Following',
-			Judge : O.UP,
+			JudgeVal : false,
 			View : function(_,Page)
 			{
 				return SolveSelfID().FMap(function(ID)
@@ -252,6 +254,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 				/^\d+$/,
 				O.Num('Illust|Artworks?')
 			],
+			JudgeVal : O.ValNum,
 			View : function(ID)
 			{
 				return O.Req(PixivAJAXIllust(ID)).Map(function(B)
@@ -277,6 +280,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 		},{
 			Name : 'FanBox',
 			Judge : O.Num('FanBox'),
+			JudgeVal : O.ValNum,
 			View : function(ID)
 			{
 				return O.Req({URL : PixivFanBox(ID),Red : 0,AC : true},true).Map(function(B)

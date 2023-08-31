@@ -378,8 +378,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},
 		Map : [
 		{
-			Name : 'Search',
-			Judge : O.Find,
+			Name : O.NameFind,
 			View : function(ID,Page)
 			{
 				return Req(WeiBoSearchQuery(WC.UE(ID),-~Page)).Map(function(B)
@@ -507,6 +506,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},{
 			Name : 'Article',
 			Judge : O.Num('(?:TT)?Article'),
+			JudgeVal : O.ValNum,
 			View : function(ID)
 			{
 				return O.Req(
@@ -537,6 +537,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},{
 			Name : 'TVShow',
 			Judge : O.Num('(?:TV|Video(?:\\.WeiBo\\.com)?)\\W*Show(?:.*?\\b\\d{3,5}:(?=\\d{6}))?'),
+			JudgeVal : O.ValNum,
 			View : function(ID)
 			{
 				return O.Req(
@@ -639,7 +640,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			}
 		},{
 			Name : 'Home',
-			Judge : O.TL,
+			Judge : /^$/,
+			JudgeVal : false,
 			/*
 			// Terminated endpoint, 'old' UI only
 			View : O.More(function()
@@ -679,8 +681,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				}]
 			})
 		},{
-			Name : 'Following',
-			Judge : O.UP,
+			Name : O.NameUP,
+			JudgeVal : false,
 			/*
 			// Terminated endpoint, 'old' UI only
 			View : function(_,Page)

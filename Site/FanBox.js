@@ -67,6 +67,16 @@ CrabSave.Site(function(O,WW,WC,WR)
 				/^\d+$/,
 				O.Num('Posts?')
 			],
+			JudgeVal : O.ValNum,
+			Example :
+			[
+				'2450',
+				{
+					As : 'Inp',
+					Val : FanBoxUserPost('official',2450),
+					ID : '2450'
+				}
+			],
 			View : function(ID)
 			{
 				return API(FanBoxAPIPostInfo(ID)).Map(function(B)
@@ -90,6 +100,16 @@ CrabSave.Site(function(O,WW,WC,WR)
 				/\b((?!www|api)[-\dA-Z]+)\.FanBox/i,
 				/@([-\dA-Z]+)/i
 			],
+			JudgeVal : /[-\dA-Z]+/i,
+			Example :
+			[
+				'official',
+				{
+					As : 'Inp',
+					Val : FanBoxUser('official'),
+					ID : 'official'
+				}
+			],
 			View : O.More(function(ID,I)
 			{
 				return API(FanBoxAPIUserPager(ID)).FMap(function(B)
@@ -108,8 +128,12 @@ CrabSave.Site(function(O,WW,WC,WR)
 				}]
 			})
 		},{
-			Name : 'Following',
-			Judge : O.UP,
+			Name : O.NameUP,
+			JudgeVal : false,
+			Example :
+			[
+				''
+			],
 			View : O.Less(function()
 			{
 				return API(FanBoxAPIFollowing,true).Map(function(B)
@@ -136,7 +160,11 @@ CrabSave.Site(function(O,WW,WC,WR)
 			})
 		},{
 			Name : 'Supporting',
-			Judge : /\bSu(?:pp(?:ort(?:ing)?)?)?\b/i,
+			JudgeVal : false,
+			Example :
+			[
+				''
+			],
 			View : O.Less(function()
 			{
 				return API(FanBoxAPISupporting,true).Map(function(B)
@@ -163,7 +191,16 @@ CrabSave.Site(function(O,WW,WC,WR)
 			})
 		},{
 			Name : 'Home',
-			Judge : O.TL,
+			Judge : /^$/,
+			JudgeVal : false,
+			Example :
+			[
+				'',
+				{
+					As : 'Sub',
+					Val : ''
+				}
+			],
 			View : O.More(function()
 			{
 				return API(FanBoxAPIHome,true)

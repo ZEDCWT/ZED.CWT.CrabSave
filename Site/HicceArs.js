@@ -310,8 +310,8 @@ CrabSave.Site(function(O,WW,WC,WR)
 				}
 			},
 			{
-				Name : 'Following',
-				Judge : O.UP,
+				Name : O.NameUP,
+				JudgeVal : false,
 				View : function(_,Page)
 				{
 					return SolveSelfURL()
@@ -344,7 +344,8 @@ CrabSave.Site(function(O,WW,WC,WR)
 			},
 			{
 				Name : 'Home',
-				Judge : O.TL,
+				Judge : /^$/,
+				JudgeVal : false,
 				View : function()
 				{
 					return O.Req(HicceArs).Map(function(B)

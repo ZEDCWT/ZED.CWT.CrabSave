@@ -85,9 +85,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			Name : 'Episode',
 			Judge :
 			[
-				/^\d+\+\d+$/,
+				/^(\d+)\D+(\d+)$/,
 				/Work\D+(\d+)\D+Episode\D+(\d+)/i
 			],
+			JudgeVal : /(\d+)\D+(\d+)/,
 			Join : ' ',
 			View : function(ID)
 			{
@@ -114,6 +115,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		},{
 			Name : 'Work',
 			Judge : O.Num('Works?'),
+			JudgeVal : O.ValNum,
 			View : O.Less(function(ID)
 			{
 				return O.ReqAPI(KakuYomuAPIAPPWork(ID)).Map(function(B)
@@ -164,10 +166,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			})
 		},{
 			Name : 'FollowingWork',
-			Judge : WR.Concat(O.TL,
-			[
-				/\bFollowingWork\b/i
-			]),
+			JudgeVal : false,
 			View : function()
 			{
 				return O.Req(KakuYomuMyAntennaAll).Map(function(B)
@@ -191,10 +190,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			}
 		},{
 			Name : 'FollowingUser',
-			Judge : WR.Concat(O.UP,
-			[
-				/\bFollowingUser\b/i
-			]),
+			JudgeVal : false,
 			View : function(_,Page)
 			{
 				return SolveSelfNameCache().FMap(function(B)

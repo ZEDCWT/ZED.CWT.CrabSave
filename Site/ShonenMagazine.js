@@ -38,10 +38,12 @@ CrabSave.Site(function(O,WW,WC,WR)
 		{
 			Name : 'Series',
 			Judge : O.Num('Series'),
+			JudgeVal : O.ValNum,
 			View : O.Less(SolveSeriesList)
 		},{
 			Name : 'Episode',
 			Judge : O.Num('Episode'),
+			JudgeVal : O.ValNum,
 			View : function(ID)
 			{
 				return O.API(ShonenMagazinePocketEpisodeJSON(ID)).FMap(function(Episode)

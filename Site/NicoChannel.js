@@ -180,6 +180,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		{
 			Name : 'Video',
 			Judge : MakePatternSiteContent(PrefixVideo,'Video|Live'),
+			JudgeVal : /([^&?#\\s/]+)[_/](sm\w+)/,
 			Join : '/',
 			View : function(ID)
 			{
@@ -193,6 +194,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		},{
 			Name : 'Article',
 			Judge : MakePatternSiteContent(PrefixArticle + '(?!ticle)','Articles?|News'),
+			JudgeVal : /([^&?#\\s/]+)[_/](ar\w+)/,
 			Join : '/',
 			View : function(ID)
 			{

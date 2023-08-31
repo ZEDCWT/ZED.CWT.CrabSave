@@ -112,8 +112,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},
 		Map : [
 		{
-			Name : 'Search',
-			Judge : O.Find,
+			Name : O.NameFind,
 			View : function(ID,Page)
 			{
 				return MakeAPI(VimeoAPISearch(WC.UE(ID),-~Page)).Map(function(B)
@@ -148,8 +147,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				})
 			}
 		},{
-			Name : 'Following',
-			Judge : O.UP,
+			Name : O.NameUP,
+			JudgeVal : false,
 			View : function(_,Page)
 			{
 				return MakeAPI(VimeoAPIFollow(-~Page)).Map(function(B)
@@ -183,6 +182,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},{
 			Name : 'Video',
 			Judge : [O.Num('Video'),/Vimeo\.[^/]+\/(\d+)\b/i],
+			JudgeVal : O.ValNum,
 			View : function(ID)
 			{
 				return MakeAPI(VimeoAPIVideo(ID)).Map(function(B)

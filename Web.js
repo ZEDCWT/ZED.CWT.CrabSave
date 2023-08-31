@@ -12,6 +12,7 @@
 	RegExp = Top.RegExp,
 	TopSet = Top.Set,
 	CrabSave = Top.CrabSave,
+	ConsoleLog = WR.Bind(Top.console.log,Top.console),
 	Unsafe = {},
 
 	Conf = {/*{Conf}*/},
@@ -516,6 +517,7 @@
 	SiteBegin,SiteCount = 0,SiteTotal,
 	SiteNoti = Noti.O(),
 	SiteOnLoad = WW.BusS(),
+	SiteKeyMapTree = WW.Key(),
 	SiteOnNoti = function()
 	{
 		WW.Now() - SiteBegin < 1000 ||
@@ -531,6 +533,59 @@
 	{
 		S = WW.IsObj(Q) ? Q : SiteMap[Q]
 		return S ? S.Name || S.ID : LangSolve('GenUnknown',[Q])
+	},
+	SiteInitMTSortJumpInner = 1,
+	SiteInitMTSortJumpSeg = 2,
+	SiteInitMT = function(AC,Word,V,Sort,IsTop)
+	{
+		var
+		IsLow,
+		SegStart = 0,
+		S,
+		T,F = 0;
+		for (;F < Word.length;++F)
+		{
+			T = Word.charCodeAt(F)
+			IsLow = 96 < T && T < 123
+			IsLow ?
+				T -= 32 :
+				SegStart = F
+			S = Sort | (SegStart < F && SiteInitMTSortJumpInner) | (SegStart && SiteInitMTSortJumpSeg)
+			if (!IsTop || !IsLow)
+			{
+				T = AC[T] || (AC[T] = WW.MakeO(SiteKeyMapTree,[]))
+				WR.Has(V.Name[0],T[SiteKeyMapTree]) ||
+					(T[SiteKeyMapTree][V.Name[0]] = T[SiteKeyMapTree].push([S,V]))
+				SiteInitMT(T,Word.slice(-~F),V,S,false)
+			}
+		}
+	},
+	SiteInit = function(/**@type {CrabSaveNS.SiteView}*/ Site)
+	{
+		Site.Judge || (Site.Judge = /(?!)/)
+		Site.Cookie || Site.Sign && (Site.Cookie = Site.ID)
+		Site.Min && WW.IsStr(Site.Min) && (Site.Min = Site.Min.split(' '))
+		Site[SiteKeyMapTree] = {}
+		WR.Each(function(B)
+		{
+			WW.IsArr(B.Name) || (B.Name = [B.Name])
+			WR.Each(function(N)
+			{
+				SiteInitMT(Site[SiteKeyMapTree],N,B,0,true)
+			},B.Name)
+			WR.EachU(function(V,F)
+			{
+				WW.IsStr(V) && (B.Example[F] =
+				{
+					As : 'Val',
+					Val : V
+				})
+			},B.Example)
+			WW.IsRExp(B.Judge) && (B.Judge = [B.Judge])
+		},Site.Map)
+		Site.IDView || (Site.IDView = WR.Id)
+		WR.Each(function(B){SiteMap[WR.Up(B)] = SiteMap[B] = Site},
+			[Site.ID].concat(Site.Name || [],Site.Alias = Site.Alias ? Site.Alias.split(' ') : []))
 	},
 
 	TaskOverviewCache = {},
@@ -1195,19 +1250,36 @@
 			{
 				var
 				Q = Keyword.V(),
-				S = GoSolve(Q);
-				if (WW.IsArr(S))
+				T;
+				if (WW.IsStr(Q))
 				{
-					Jump(0,S[0],S[1],S[2],Q)
+					T = SolveInput(Q)
+					if (WW.IsStr(T))
+						return Noti.S(T)
+					Q = T[0]
+				}
+				if (Q.Fuzzy && false !== Q.Act.JudgeVal)
+				{
+					return false
+				}
+				else
+				{
+					Jump(0,Q.Site,Q.Act,Q.ID,Q.Inp)
 					Keyword.Foc()
 				}
-				else Noti.S(S)
 			},
+			SolveID = function(S,Q)
+			{
+				return 2 < Q.length ?
+					Q.slice(1).join(WR.Default('#',S.Join)) :
+					Q[~-Q.length]
+			},
+			/*
 			GoSolve = Unsafe.GoSolve = function(Q)
 			{
 				var Site,Action,ID,T;
 				Q = Q.replace(/\s+$/,'')
-				if (T = Q.match(/^\s*([A-Z\u2E80-\u9FFF\uAC00-\uD7FF\uF900-\uFAFF]+)(?:\s+([^]*))?$/i))
+				if (T = Q.match(/^\s*([A-Z\u2E80-\u9FFF\uAC00-\uD7FF\uF900-\uFAFF]+|\?)(?:\s+([^]*))?$/i))
 				{
 					if (!WR.Has(Site = WR.Up(T[1]),SiteMap)) return LangSolve('BroUnSite',[T[1]])
 					Site = SiteMap[Site]
@@ -1224,15 +1296,166 @@
 					return WR.Any(function(B)
 					{
 						B = B.exec(T)
-						ID = B && (2 in B ?
-							B.slice(1).join(WR.Default('#',V.Join)) :
-							B[1 in B ? 1 : 0])
+						ID = B && SolveID(V,B)
 						return B
 					},V.Judge)
 				},Site.Map)
 				return Action ?
 					[Site,Action,WR.Trim(ID),Q.slice(0,-ID.length)] :
 					LangSolve('BroUnSol',[T,SiteSolveName(Site)])
+			},
+			*/
+			/*
+				Overall there are three types of input
+				URL | Special Formatted Phrase
+					Site.Judge Map.Judge
+				<Site> <SiteSub>
+					Map.Judge
+				<Site> <Action> <Value>
+					Map.JudgeVal
+			*/
+			SolveInput = Unsafe.SolveInput = function(Q,Fuzzy)
+			{
+				var
+				/**@type {
+				{
+					Site : CrabSaveNS.SiteView
+					Act : CrabSaveNS.SiteMap
+					Fuzzy : boolean
+					Inp : string
+					InpSite : string
+					InpAct : string
+					ID? : string
+				}[]}*/
+				Cand = [],
+				SolveKey = function(Q)
+				{
+					var T = /^\s*([A-Z\u2E80-\u9FFF\uAC00-\uD7FF\uF900-\uFAFF]+|\?)(\s+|$)/i.exec(Q);
+					return T &&
+					[
+						T[0],
+						T[1],
+						T[2],
+						Q.slice(T[0].length)
+					]
+				},
+				SolveInTree = function(Site,K)
+				{
+					var R,F;
+					R = Site[SiteKeyMapTree]
+					K = WR.Up(K)
+					for (F = 0;R && F < K.length;++F)
+						R = R[K.charCodeAt(F)]
+					return R && R[SiteKeyMapTree]
+				},
+				SolveInSite = function(/**@type {CrabSaveNS.SiteView}*/ Site,Prefix,Inp)
+				{
+					var
+					ActCand,
+					ActMatch = [],
+					ActHit = {},
+					K,T;
+					if (Prefix && (K = SolveKey(Inp)))
+					{
+						WR.Each(function(V)
+						{
+							var
+							ID = K[3],
+							Valid = ID,
+							T = V[1].JudgeVal;
+							if (false === T)
+							{
+								Valid = !ID
+								ID = ''
+							}
+							else if (T && (Valid = T.exec(ID)))
+								ID = SolveID(V[1],Valid)
+							if (Valid)
+							{
+								ActMatch.push([V[0],
+								{
+									Site : Site,
+									Act : V[1],
+									Fuzzy : false,
+									Inp : Q,
+									InpSite : Prefix,
+									InpAct : Prefix + K[0],
+									ID : ID
+								}])
+								ActHit[V[1].Name[0]] = true
+							}
+						},ActCand = SolveInTree(Site,K[1]))
+					}
+					if (ActMatch.length)
+					{
+						ActMatch.sort(function(Q,S)
+						{
+							return Q[0] - S[0] ||
+								Q[1].Act.Name[0].localeCompare(S[1].Act.Name[0])
+						})
+						WR.Each(function(V){Cand.push(V[1])},ActMatch)
+					}
+					else if (Site)
+					{
+						WR.Each(function(V)
+						{
+							if (WR.Any(function(B)
+							{
+								return (B = B.exec(Inp)) && (T = SolveID(V,B),9)
+							},V.Judge))
+							{
+								Cand.push(
+								{
+									Site : Site,
+									Act : V,
+									Fuzzy : false,
+									Inp : Q,
+									InpSite : Prefix,
+									InpAct : Prefix,
+									ID : T
+								})
+								ActHit[V.Name[0]] = true
+							}
+						},Site.Map)
+					}
+					if (Fuzzy && Prefix)
+					{
+						if (!Inp && /\s$/.test(Prefix))
+							ActCand = Site.Map
+						else if (!K)
+							ActCand = null
+						ActCand && WR.Each(function(V)
+						{
+							WW.IsArr(V) && (V = V[1])
+							WR.Has(V.Name[0],ActHit) || Cand.push(
+							{
+								Site : Site,
+								Act : V,
+								Fuzzy : true,
+								Inp : Q,
+								InpSite : Prefix,
+								InpAct : Prefix + V.Name[0] + ' '
+							})
+						},ActCand)
+					}
+				},
+				TopKey,
+				TopSite;
+
+				TopKey = SolveKey(Q)
+				TopKey && (TopSite = SiteMap[WR.Up(TopKey[1])]) ?
+					SolveInSite(TopSite,TopKey[0],TopKey[3]) :
+					WR.Each(function(V)
+					{
+						V.Judge && V.Judge.test(Q) && SolveInSite(V,'',Q)
+					},SiteAll)
+
+				return Cand.length ? Cand :
+					TopKey ?
+						WR.Has(WR.Up(TopKey[1]),SiteMap) ?
+							LangSolve('BroUnSol',[TopKey[3],SiteSolveName(TopSite)]) :
+							LangSolve('BroUnSite',[TopKey[1]]) :
+						LangSolve('BroUnParse',[Q])
 			},
 
 			Bar = [],
@@ -1332,7 +1555,7 @@
 					StatusSet(K,LangSolve('GenLoading'))
 					BriefKeyword.K(Key)
 						.S(SiteSolveName(Site))
-						.A(Action.Name)
+						.A(Action.Name[0])
 						.I(ID)
 						.U(LangSolve('GenLoading'))
 					JumpEnd(Action.View(ID,Q,Action === GoPrefAction ? GoPref : undefined).Now(function(/**@type {CrabSaveNS.SitePage}*/S)
@@ -1564,20 +1787,23 @@
 			KeywordHintLoad = WV.Fmt(LangSolve('BroSugLoad',['`K`']) + '\n`E`'),
 			KeywordHint = WV.Fmt(LangSolve('BroSugDone',['`K`']) + '\n[`M`ms `T`] `D`'),
 			HintErr,HintCurrent,
-			Hint = function(S)
+			Hint = function(Q)
 			{
-				var K,B,C;
+				var
+				S = WW.IsStr(Q) ? SolveInput(Q,true) : [Q],
+				S0,
+				K,B,C;
 				HintErr = false
-				if (WW.IsArr(S = GoSolve(S)) && S[1].Hint)
+				if (WW.IsArr(S) && !(S0 = S[0]).Fuzzy && S0.Act.Hint)
 				{
 					C = HintCurrent = WW.Key()
-					K = SiteSolveName(S[0]) + ' ' + S[1].Name + ' ' + S[2]
+					K = SiteSolveName(S0.Site) + ' ' + S0.Act.Name[0] + ' ' + S0.ID
 					B = WW.Now()
 					KeywordHintLoad.K(K).E('')
 					Keyword.Hint(undefined,KeywordHintLoad.R)
 						.Drop()
-					;(S[1][KeywordCache] || (S[1][KeywordCache] = WX.CacheM(S[1].Hint)))
-						(S[2])
+					;(S0.Act[KeywordCache] || (S0.Act[KeywordCache] = WX.CacheM(S0.Act.Hint)))
+						(S0.ID)
 						.Now(function(V)
 						{
 							if (HintCurrent === C)
@@ -1589,8 +1815,8 @@
 									.Drop(WR.Map(function(B)
 									{
 										return WW.IsArr(B) ?
-											[(V.Jump ? '' : S[3]) + B[0],B[1],0] :
-											[S[3] + B,B,0]
+											[(V.Jump ? '' : S0.InpAct) + B[0],B[1],0] :
+											[S0.InpAct + B,B,0]
 									},V.Item),false)
 							}
 						},function(E)
@@ -1602,10 +1828,28 @@
 							}
 						})
 				}
-				else
+				else if (WW.IsArr(S))
 				{
 					HintCurrent = false
 					Keyword.Hint(undefined,null)
+						.Drop(WR.Map(function(B)
+						{
+							return [
+								B,
+								SiteSolveName(B.Site) + ' ' + B.Act.Name[0] +
+								(
+									B.Fuzzy ?
+										false === B.Act.JudgeVal ? '' : ' <ID>' :
+										B.ID && ' ' + B.ID
+								),
+								(B.InpAct + (B.ID || '')).replace(/\s+$/,'')
+							]
+						},S),false)
+				}
+				else
+				{
+					HintCurrent = false
+					Keyword.Hint(undefined,WW.IsStr(Q) && !Q.trim() ? null : S)
 						.Drop()
 				}
 			},
@@ -1690,6 +1934,51 @@
 			BrowserOnProgress = function(Q)
 			{
 				BriefKeyword.U(LangSolve('GenLoading') + ' ' + Q)
+			}
+
+			Unsafe.Test = function(/**@type {CrabSaveNS.SiteView}*/ Site)
+			{
+				var
+				All = [];
+				WW.IsStr(Site) && (Site = SiteMap[WR.Up(Site)])
+				Site || WW.Throw('Bad Site')
+				WR.Each(function(Act)
+				{
+					WR.EachU(function(B,F)
+					{
+						var I,T;
+						switch (B.As)
+						{
+							case 'Inp' :
+								I = B.Val
+								break
+							case 'Sub' :
+								I = Site.ID + (B.Val && ' ' + B.Val)
+								break
+							case 'Val' :
+								I = Site.ID + ' ' + Act.Name[0] + (B.Val && ' ' + B.Val)
+								break
+							default :
+								WW.Throw(['Bad Example',F,B,Act])
+						}
+						T = SolveInput(I)
+						WW.IsArr(T) || WW.Throw(['Bad Input',I,T,F,B,Act])
+						T = T[0]
+						T.Act === Act || WW.Throw(['Bad Act',I,T,F,B,Act])
+						B.ID && B.ID !== T.ID && WW.Throw(['Bad ID',I,T,F,B,Act])
+						All.push(T)
+					},Act.Example)
+				},Site.Map)
+				return WX.From(All)
+					.FMapE(function(V,F)
+					{
+						ConsoleLog(WW.ShowLI(All.length,F),V)
+						return V.Act.View(V.ID,0)
+					})
+					.Map(function(B)
+					{
+						ConsoleLog(B)
+					})
 			}
 
 			return {
@@ -3443,13 +3732,13 @@
 
 		Proto.AuthInspect,function(Data)
 		{
-			console.log('Inspector',Data.URL)
+			ConsoleLog('Inspector',Data.URL)
 		},
 		Proto.AuthVacuum,function(Data)
 		{
 			Data.Err ?
-				console.log('Vacuum',WW.StrMS(Data.Take),WR.ToSize(Data.From),Data.Err) :
-				console.log('Vacuum',WW.StrMS(Data.Take),WR.ToSize(Data.From),WR.ToSize(Data.To),WR.ToSize(Data.To - Data.From))
+				ConsoleLog('Vacuum',WW.StrMS(Data.Take),WR.ToSize(Data.From),Data.Err) :
+				ConsoleLog('Vacuum',WW.StrMS(Data.Take),WR.ToSize(Data.From),WR.ToSize(Data.To),WR.ToSize(Data.To - Data.From))
 		},
 		Proto.AuthErr,WSOnErr,
 		Proto.AuthErrFile,WSOnErrFile
@@ -3462,51 +3751,6 @@
 		ReqFeed = function(Q,S)
 		{
 			Req.unshift([Q,S]) < ConfDebugLimitObj || Req.pop()
-		},
-		MakeRegExpCachePrefix = false,MakeRegExpCache,
-		MakeRegExp = function(Prefix)
-		{
-			var
-			Make = function(Q,W,E)
-			{
-				return RegExp(Q + (Prefix || '') + '(?:' + W.join('|') + ')' + E,'i')
-			};
-			return MakeRegExpCachePrefix === (MakeRegExpCachePrefix = Prefix) ?
-				MakeRegExpCache :
-				MakeRegExpCache =
-				{
-					TL :
-					[
-						Make('^',[''],'$'),
-						Make('\\b',
-						[
-							'Bookmark',
-							'Dynamic',
-							'Feed',
-							'Home',
-							'Repo',
-							'Sub',
-							'Subscri(?:be|ption)',
-							'TL',
-							'Timeline',
-							'Top'
-						],'\\b')
-					],
-					UP : Make('\\b',
-					[
-						'Fo',
-						'Follow',
-						'Following',
-						'UP',
-						'Uploader',
-					],'\\b'),
-					Find : Make('^',
-					[
-						'\\?',
-						'Find',
-						'Search',
-					],'\\s+(?!\\s)(.+)$')
-				}
 		};
 		WV.Ap(Rainbow[0],WV.Body)
 		WS.H || WSNoti(LangSolve('GenNoSock'))
@@ -3604,10 +3848,32 @@
 				{
 					return RegExp('\\b(?:' + Q + ')(?:[\\s/=]+|\\b)([^&?#\\s/]+)','i')
 				},
-				TL : MakeRegExp().TL,
-				UP : MakeRegExp().UP,
-				Find : MakeRegExp().Find,
-				MakeRX : MakeRegExp,
+				/*
+				NameTL :
+				[
+					'Dynamic',
+					'Bookmark',
+					'Feed',
+					'Home',
+					'Repo',
+					'Subscribe',
+					'Subscription',
+					'Timeline',
+					'Top'
+				],
+				*/
+				NameUP :
+				[
+					'Following',
+					'Uploader'
+				],
+				NameFind :
+				[
+					'Search',
+					'Find',
+					'?'
+				],
+				ValNum : /\d+/,
 				Size : ConfPageSize,
 				Pascal : function(Q)
 				{
@@ -3716,14 +3982,8 @@
 				Progress : BrowserOnProgress
 			},WW,WC,WR,WX,WV);
 			if (!WW.IsNum(SiteMap[V.ID])) return
-			V.Judge || (V.Judge = /(?!)/)
-			V.Cookie || V.Sign && (V.Cookie = V.ID)
-			V.Min && WW.IsStr(V.Min) && (V.Min = V.Min.split(' '))
-			WR.Each(function(B){B.Judge = WW.IsArr(B.Judge) ? B.Judge : B.Judge ? [B.Judge] : []},V.Map)
-			V.IDView || (V.IDView = WR.Id)
 			SiteAll[SiteMap[V.ID]] = V
-			WR.Each(function(B){SiteMap[WR.Up(B)] = SiteMap[B] = V},
-				[V.ID].concat(V.Name || [],V.Alias ? V.Alias.split(' ') : []))
+			SiteInit(V)
 			SiteOnNoti(++SiteCount)
 		}
 		CrabSave.Err = RecordErrList
@@ -3749,6 +4009,7 @@
 		{
 			Proto : Proto,
 			SiteMap : SiteMap,
+			SiteAll : SiteAll,
 			Key : DBBriefKey,
 			IsCold : IsCold,
 			IsHot : IsHot,
@@ -3757,7 +4018,7 @@
 			ColdDel : ColdDel,
 			Setting : Setting,
 			IsSPUP : SettingIsSPUP,
-			WSSend : WSSend,
+			WSSend : WSSend
 		})
 		SiteBegin = WW.Now()
 		WW.To(1E3,function(){SiteCount < SiteTotal && SiteOnNoti()})
@@ -3796,5 +4057,32 @@
 				TickQueue[F]()
 		},true)
 		OverallUpdate()
+
+		SiteInit(
+		{
+			ID : '?',
+			Map : [
+			{
+				Name : 'Site',
+				View : function()
+				{
+					return WX.Just(
+					{
+						Item : WR.Map(function(V)
+						{
+							return {
+								Non : true,
+								ID : V.ID,
+								Title : V.Name || V.ID,
+								More : WR.Map(function(B)
+								{
+									return B
+								},V.Alias)
+							}
+						},SiteAll)
+					})
+				}
+			}]
+		})
 	})
 }()

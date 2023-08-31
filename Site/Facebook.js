@@ -71,7 +71,8 @@ CrabSave.Site(function(O,WW,WC,WR)
 		Map : [
 		{
 			Name : 'Timeline',
-			Judge : O.TL,
+			Judge : /^$/,
+			JudgeVal : false,
 			View : O.More(function(_,I)
 			{
 				return O.Req(FacebookTimelineRecent).Map(function(B)
@@ -95,6 +96,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 		},{
 			Name : 'Post',
 			Judge : [/com\/(?:pg\/)?(\w+)(?:\/[\w.]+)+(\/\d+)/,/(?:^|Post\s+)(\w+\/\d+)/i],
+			JudgeVal : /\w+\/\d+/,
 			Join : '',
 			View : function(ID)
 			{

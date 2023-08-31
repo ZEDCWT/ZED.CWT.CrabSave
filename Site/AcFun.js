@@ -57,8 +57,11 @@ CrabSave.Site(function(O,WW,WC,WR)
 		},
 		Map : [
 		{
-			Name : 'Search',
-			Judge : O.Find,
+			Name : O.NameFind,
+			Example :
+			[
+				'メイドインアビス'
+			],
 			View : function(ID,Page)
 			{
 				return O.API(AcFunSearch(WC.UE(ID),-~Page)).Map(function(B)
@@ -96,6 +99,26 @@ CrabSave.Site(function(O,WW,WC,WR)
 		},{
 			Name : 'Video',
 			Judge : [/^\d+$/,O.Num('Video|AC')],
+			JudgeVal : O.ValNum,
+			Example :
+			[
+				'1825716',
+				{
+					As : 'Sub',
+					Val : 'ac1825716',
+					ID : '1825716'
+				},
+				{
+					As : 'Inp',
+					Val : 'ac1825716',
+					ID : '1825716'
+				},
+				{
+					As : 'Inp',
+					Val : AcFunVideo(1825716),
+					ID : '1825716'
+				}
+			],
 			View : function(ID)
 			{
 				return O.API(AcFunVideoView(ID)).Map(function(B)
@@ -109,6 +132,16 @@ CrabSave.Site(function(O,WW,WC,WR)
 		},{
 			Name : 'User',
 			Judge : O.Num('User|U'),
+			JudgeVal : O.ValNum,
+			Example :
+			[
+				'284937',
+				{
+					As : 'Sub',
+					Val : AcFunUser(284937),
+					ID : '284937'
+				}
+			],
 			View : function(ID,Page)
 			{
 				return O.API(AcFunUser(ID)).FMap(function(User)
@@ -133,8 +166,12 @@ CrabSave.Site(function(O,WW,WC,WR)
 				})
 			}
 		},{
-			Name : 'Following',
-			Judge : O.UP,
+			Name : O.NameUP,
+			JudgeVal : false,
+			Example :
+			[
+				''
+			],
 			View : function(_,Page)
 			{
 				return O.Req(AcFunRestPCFollow(-~Page)).Map(function(B)
@@ -158,8 +195,17 @@ CrabSave.Site(function(O,WW,WC,WR)
 				})
 			}
 		},{
-			Name : 'Feed',
-			Judge : O.TL,
+			Name : ['Feed'],
+			Judge : /^$/,
+			JudgeVal : false,
+			Example :
+			[
+				'',
+				{
+					As : 'Sub',
+					Val : ''
+				}
+			],
 			View : function(_,Page)
 			{
 				return O.Req(AcFunRestPCFeed(-~Page)).Map(function(B)

@@ -1,5 +1,5 @@
 'use strict'
-CrabSave.Site(function(O,WW,WC,WR,WX,WV)
+CrabSave.Site(function(O,WW,WC,WR,WX)
 {
 	var
 	TikTok = 'https://www.tiktok.com/',
@@ -169,6 +169,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				O.Num('Music'),
 				/Music\/[^/]+-(\d+)\b/i
 			],
+			JudgeVal : O.ValNum,
 			View : O.More(function(ID,I)
 			{
 				return ReqAPI(TikTokAPIMusicDetail(ID)).FMap(function(B)
@@ -207,6 +208,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},{
 			Name : 'Video',
 			Judge : [/^\d+$/,O.Num('Video')],
+			JudgeVal : O.ValNum,
 			View : function(ID)
 			{
 				return ReqAPI(TikTokAPIItemDetail(ID)).Map(function(B)
@@ -217,8 +219,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				})
 			}
 		},{
-			Name : 'Following',
-			Judge : O.UP,
+			Name : O.NameUP,
+			JudgeVal : false,
 			View : O.More(function()
 			{
 				return ReqAPI(TikTokAPIUserList(0,0),true)
@@ -269,7 +271,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			})
 		},{
 			Name : 'Home',
-			Judge : O.TL,
+			JudgeVal : false,
 			View : O.More(function()
 			{
 				return ReqAPI(TikTokAPIItemListTL(0,1,1),true)

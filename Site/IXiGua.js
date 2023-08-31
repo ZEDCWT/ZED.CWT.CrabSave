@@ -146,8 +146,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		},
 		Map : [
 		{
-			Name : 'Search',
-			Judge : O.Find,
+			Name : O.NameFind,
 			View : O.More(function(ID)
 			{
 				return ReqAPI(IXiGuaAPISearch(WC.UE(ID),0),true)
@@ -187,6 +186,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		},{
 			Name : 'User',
 			Judge : O.Num('Home|User'),
+			JudgeVal : O.ValNum,
 			View : O.More(function(ID)
 			{
 				return ReqAPI(IXiGuaAPIAuthorVideo(ID,0))
@@ -221,6 +221,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				O.Num('Video'),
 				/\bIXiGua\b[^/]+\/I?(\d+)/i
 			],
+			JudgeVal : O.ValNum,
 			View : function(ID)
 			{
 				return Req(IXiGua + ID).Map(function(B)
@@ -241,8 +242,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				})
 			}
 		},{
-			Name : 'Following',
-			Judge : O.UP,
+			Name : O.NameUP,
+			JudgeVal : false,
 			View : O.More(function(_,I)
 			{
 				return SolveSelfID().FMap(function(ID)
@@ -278,7 +279,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			})
 		},{
 			Name : 'Feed',
-			Judge : O.TL,
+			Judge : /^$/,
 			View : O.More(function()
 			{
 				return ReqAPI(IXiGuaAPIFeedHot(0))

@@ -16,12 +16,31 @@ declare module CrabSaveNS
 	}
 	interface SiteMap
 	{
-		Name : string
+		Name : string | string[]
 		Judge? : RegExp | RegExp[]
+		JudgeVal? : false | RegExp
 		Join? : string
-		Example? : string | string[]
+		Example? : (string | SiteMapExampleVal | SiteMapExampleSub | SiteMapExampleInp)[]
 		View(ID : string,Page : number,Pref? : object) : WishNS.Provider<SitePage>
 		Hint?(Q : string) : SiteHint
+	}
+	interface SiteMapExampleVal
+	{
+		As : 'Val'
+		Val : string
+		ID? : string
+	}
+	interface SiteMapExampleSub
+	{
+		As : 'Sub'
+		Val : string
+		ID? : string
+	}
+	interface SiteMapExampleInp
+	{
+		As : 'Inp'
+		Val : string
+		ID? : string
 	}
 	interface SitePage
 	{

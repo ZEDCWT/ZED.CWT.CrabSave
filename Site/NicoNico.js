@@ -112,8 +112,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},
 		Map : [
 		{
-			Name : 'Search',
-			Judge : O.Find,
+			Name : O.NameFind,
 			View : function(ID,Page,Pref)
 			{
 				return O.API(NicoSearch(WC.UE(ID),-~Page,Pref ? '&' + WC.UD(WC.QSS(Pref)) : '')).Map(function(B)
@@ -172,6 +171,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},{
 			Name : 'UserManga',
 			Judge : O.Num('User\\W*Manga|Manga.*User(?:_ID)?'),
+			JudgeVal : O.ValNum,
 			View : function(ID,Page)
 			{
 				// Examples where paging effects are not identified yet
@@ -202,6 +202,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},{
 			Name : 'Manga',
 			Judge : O.Num('Manga|Comic'),
+			JudgeVal : O.ValNum,
 			View : O.Less(function(ID)
 			{
 				return O.Req(NicoSeigaComic(ID)).Map(function(B)
@@ -231,6 +232,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},{
 			Name : 'MangaEpisode',
 			Judge : O.Num('MangaEpisode|MG'),
+			JudgeVal : O.ValNum,
 			View : function(ID)
 			{
 				return O.Req(NicoSeigaAPIMangaEpisodeInfo(ID)).Map(function(B)
@@ -256,6 +258,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},{
 			Name : 'UserIllust',
 			Judge : O.Num('User\\W*Illust'),
+			JudgeVal : O.ValNum,
 			View : function(ID,Page)
 			{
 				return O.Req(NicoSeigaUserAll(ID,-~Page)).Map(function(B)
@@ -279,6 +282,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},{
 			Name : 'Seiga',
 			Judge : O.Num('Seiga|IM'),
+			JudgeVal : O.ValNum,
 			View : function(ID)
 			{
 				return O.Req(NicoSeigaAPIIllust(ID)).Map(function(B)
@@ -300,11 +304,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},{
 			// /my/personalize
 			Name : 'SeigaMyPersonalize',
-			Judge :
-			[
-				/\bS\b/i,
-				/\bSeigaMyPersonalize\b/i,
-			],
+			JudgeVal : false,
 			View : function(_,Page)
 			{
 				return O.Req(NicoSeigaMy(-~Page)).Map(function(B)
@@ -333,6 +333,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},{
 			Name : 'MyList',
 			Judge : O.Num('MyList'),
+			JudgeVal : O.ValNum,
 			View : function(ID,Page)
 			{
 				return O.Req(MakeNV(NicoNVAPIMyList(ID,-~Page))).Map(function(B)
@@ -348,6 +349,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			// It does not seem to be paged (3**3*2593)
 			Name : 'Series',
 			Judge : O.Num('Series'),
+			JudgeVal : O.ValNum,
 			View : O.Less(function(ID)
 			{
 				return O.API(NicoSeries(ID)).Map(function(B)
@@ -369,6 +371,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},{
 			Name : 'User',
 			Judge : O.Num('User'),
+			JudgeVal : O.ValNum,
 			View : function(ID,Page)
 			{
 				return O.API(MakeNV(NicoNVAPIUser(ID,-~Page))).Map(function(B)
@@ -387,6 +390,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				O.Num('Channel|CH'),
 				/Ch\.Nico[^/]+\/([^ ?/]+)/i
 			],
+			JudgeVal : O.ValNum,
 			View : function(ID,Page)
 			{
 				return O.Req(NicoChannelVideo(PadCH(ID),-~Page)).Map(function(B)
@@ -415,8 +419,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				})
 			}
 		},{
-			Name : 'Following',
-			Judge : O.UP,
+			Name : O.NameUP,
+			JudgeVal : false,
 			View : O.More(function()
 			{
 				return O.Req(MakeNV(NicoNVAPIFollowing('')))
@@ -450,6 +454,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				/^\d+$/,O.Num('Video|SM'),
 				/\b(?:SO|NM)\d+\b/i
 			],
+			JudgeVal : O.ValNum,
 			View : function(ID)
 			{
 				ID = WR.Low(ID)
@@ -476,7 +481,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			}
 		},{
 			Name : 'Top',
-			Judge : O.TL,
+			Judge : /^$/,
+			JudgeVal : false,
 			View : O.More(function()
 			{
 				return O.Req(NicoPublicAPITop(''))

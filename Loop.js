@@ -563,7 +563,8 @@ module.exports = Option =>
 										var
 										ShouldRenew = WW.ErrIs(WW.Err.NetBadStatus,E) ||
 											WW.ErrIs(WW.Err.ReqCloseBeforeEnd,E) ||
-											WW.ErrIs(WW.Err.NetTimeout,E) && (!Working || Work.Info.Begin === Work.Info.Saved);
+											WW.ErrIs(WW.Err.NetTimeout,E) && (!Working || Work.Info.Begin === Work.Info.Saved) ||
+											'ECONNREFUSED' === E?.code;
 										SizeChanged = WW.ErrIs(WW.Err.DownSizeChange,E) ||
 											WW.ErrIs(WW.Err.NetBadStatus,E) && 416 == E.Arg[0];
 										OnEnd()

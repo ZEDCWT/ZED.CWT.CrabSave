@@ -184,6 +184,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		{
 			Name : 'FanClub',
 			Judge : O.Num('FanClubs?'),
+			JudgeVal : O.ValNum,
 			View : function(ID,Page)
 			{
 				return MakeAPI(FantiaFanclubPost(ID,-~Page)).Map(function(B)
@@ -218,6 +219,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		},{
 			Name : 'Post',
 			Judge : [/^\d+(?=(?:_\d+)?$)/,O.Num('Posts?')],
+			JudgeVal : O.ValNum,
 			View : function(ID)
 			{
 				return MakeAPI(FantiaAPIPost(ID)).Map(function(B)
@@ -230,6 +232,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		},{
 			Name : 'User',
 			Judge : O.Word('User|Profiles?'),
+			JudgeVal : /\w+/,
 			View : function(ID)
 			{
 				return MakeAPI(FantiaProfile(ID)).Map(function(B)
@@ -255,16 +258,17 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				})
 			}
 		},{
-			Name : 'Following',
-			Judge : O.UP,
+			Name : O.NameUP,
+			JudgeVal : false,
 			View : MakePlan('free')
 		},{
 			Name : 'Plan',
-			Judge : /\bPl(?:an)?\b/i,
+			JudgeVal : false,
 			View : MakePlan('not_free')
 		},{
 			Name : 'Timeline',
-			Judge : O.TL,
+			Judge : /^$/,
+			JudgeVal : false,
 			View : O.More(function()
 			{
 				return O.Req(FantiaAPIMeTimeline(1))

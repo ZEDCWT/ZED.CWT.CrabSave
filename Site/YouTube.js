@@ -279,6 +279,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			'SAPISID',
 			'HSID',
 			'LOGIN_INFO',
+			'__Secure-1PSIDTS',
 			'__Secure-3PSID',
 			'__Secure-3PAPISID',
 			'PREF'
@@ -292,8 +293,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},
 		Map : [
 		{
-			Name : 'Search',
-			Judge : O.Find,
+			Name : O.NameFind,
 			View : function(ID,Page,Pref)
 			{
 				return GoogleAPIReq(GoogleAPIYouTubeSearch(WC.UE(ID),Page ? WC.PageToken(O.Size * Page) : '',Pref ? '&' + WC.QSS(Pref) : ''))
@@ -360,8 +360,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Judge : O.Word('PlayList(?:\\b.*\\bList\\b)?'),
 			View : SolvePlayList
 		},{
-			Name : 'Following',
-			Judge : O.UP,
+			Name : O.NameUP,
+			JudgeVal : false,
 			View : MakeFeed(YouTubeFeedChannel,function(I,V,K)
 			{
 				return 'channelRenderer' === K && I.push(
@@ -377,11 +377,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			})
 		},{
 			Name : 'SubscriptionShort',
-			Judge :
-			[
-				/^S$/i,
-				/\b(?:Subscription)?Shorts?$/i,
-			],
+			Judge : /(?:\bShorts\b)/i,
+			JudgeVal : false,
 			View : MakeFeed(YouTubeFeedSubscriptionShort,function(I,V,K)
 			{
 				return 'richItemRenderer' === K ||
@@ -401,7 +398,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			})
 		},{
 			Name : 'Subscription',
-			Judge : O.TL,
+			Judge : /^$/,
+			JudgeVal : false,
 			View : MakeFeed(YouTubeFeedSubscription,function(I,V,K)
 			{
 				var

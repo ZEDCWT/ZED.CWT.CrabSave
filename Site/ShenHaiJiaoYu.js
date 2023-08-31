@@ -37,6 +37,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 		{
 			Name : 'LiveReplay',
 			Judge : O.Num('LiveReplay|(?:Query)?Detail(?=.*#LiveReplay)'),
+			JudgeVal : O.ValNum,
 			View : function(ID)
 			{
 				return O.API(ShenHaiJiaoYuDetail(ID)).FMap(function(Detail)
@@ -65,6 +66,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 		},{
 			Name : 'Lecture',
 			Judge : O.Num('Lecture|(?:Query)?Detail(?=.*#Lecture)'),
+			JudgeVal : O.ValNum,
 			View : function(ID)
 			{
 				return O.API(ShenHaiJiaoYuDetail(ID)).FMap(function(Detail)
@@ -99,6 +101,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 		},{
 			Name : 'Resource',
 			Judge : O.Num('Resource|(?:Query)?Detail(?=.*#Resource)'),
+			JudgeVal : O.ValNum,
 			View : function(ID,Page)
 			{
 				return O.API(ShenHaiJiaoYuDetail(ID)).FMap(function(Detail)
@@ -132,6 +135,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 				/^\d+$/,
 				O.Num('Course|(?:Query)?Detail')
 			],
+			JudgeVal : O.ValNum,
 			View : function(ID)
 			{
 				return O.API(ShenHaiJiaoYuDetail(ID)).Map(function(B)
