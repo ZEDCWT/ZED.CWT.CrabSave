@@ -4,8 +4,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	var
 	YouTube = 'https://www.youtube.com/',
 	YouTubeWatch = WW.Tmpl(YouTube,'watch?v=',undefined),
+	YouTubeUser = WW.Tmpl(YouTube,'user/',undefined),
 	YouTubeChannel = WW.Tmpl(YouTube,'channel/',undefined),
 	YouTubeCustomURL = WW.Tmpl(YouTube,'c/',undefined),
+	YouTubePlayList = WW.Tmpl(YouTube,'playlist?list=',undefined),
+	YouTubeEmbed = WW.Tmpl(YouTube,'embed/',undefined),
+	YouTubeShort = WW.Tmpl(YouTube,'shorts/',undefined),
 	YouTubeFeed = YouTube + 'feed/',
 	YouTubeFeedSubscription = YouTubeFeed + 'subscriptions',
 	YouTubeFeedSubscriptionShort = YouTubeFeedSubscription + '/shorts',
@@ -294,6 +298,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		Map : [
 		{
 			Name : O.NameFind,
+			Example :
+			[
+				'メイドインアビス'
+			],
 			View : function(ID,Page,Pref)
 			{
 				return GoogleAPIReq(GoogleAPIYouTubeSearch(WC.UE(ID),Page ? WC.PageToken(O.Size * Page) : '',Pref ? '&' + WC.QSS(Pref) : ''))
@@ -333,6 +341,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},{
 			Name : 'User',
 			Judge : O.Word('User'),
+			Example :
+			[
+				'xbox',
+				{
+					As : 'Inp',
+					Val : YouTubeUser('xbox'),
+					ID : 'xbox'
+				}
+			],
 			View : function(ID,Page)
 			{
 				return Channel2PlayList(GoogleAPIYouTubeChannel('forUsername',ID))
@@ -341,27 +358,40 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},{
 			Name : 'Channel',
 			Judge : O.Word('Channel'),
+			Example :
+			[
+				'UCnUYZLuoy1rq1aVMwx4aTzw',
+				{
+					As : 'Inp',
+					Val : YouTubeChannel('UCnUYZLuoy1rq1aVMwx4aTzw'),
+					ID : 'UCnUYZLuoy1rq1aVMwx4aTzw'
+				}
+			],
 			View : function(ID,Page)
 			{
 				return Channel2PlayList(GoogleAPIYouTubeChannel('id',ID))
 					.FMap(function(ID){return SolvePlayList(ID,Page)})
 			}
 		},{
-			Name : 'CustomURL',
-			Judge : O.Word('CustomURL|C'),
-			View : function(ID,Page)
-			{
-				return SolveChannelIDByCustomURL(YouTubeCustomURL(ID))
-					.FMap(function(ID){return Channel2PlayList(GoogleAPIYouTubeChannel('id',ID))})
-					.FMap(function(ID){return SolvePlayList(ID,Page)})
-			}
-		},{
 			Name : 'PlayList',
 			Judge : O.Word('PlayList(?:\\b.*\\bList\\b)?'),
+			Example :
+			[
+				'PLg8EsA-33oqEpMVgBFu1B3362rsmdSbVJ',
+				{
+					As : 'Inp',
+					Val : YouTubePlayList('PLg8EsA-33oqEpMVgBFu1B3362rsmdSbVJ'),
+					ID : 'PLg8EsA-33oqEpMVgBFu1B3362rsmdSbVJ'
+				}
+			],
 			View : SolvePlayList
 		},{
 			Name : O.NameUP,
 			JudgeVal : false,
+			Example :
+			[
+				''
+			],
 			View : MakeFeed(YouTubeFeedChannel,function(I,V,K)
 			{
 				return 'channelRenderer' === K && I.push(
@@ -376,9 +406,45 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				})
 			})
 		},{
+			Name : 'Video',
+			Judge :
+			[
+				/^[-_\dA-Z]+$/i,
+				O.Word('Embed|V|Video|Shorts?'),
+				/\.be\/([-_\dA-Z]+)/i
+			],
+			Example :
+			[
+				'qqTnAWL7-v0',
+				{
+					As : 'Inp',
+					Val : YouTubeWatch('qqTnAWL7-v0'),
+					ID : 'qqTnAWL7-v0'
+				},
+				{
+					As : 'Inp',
+					Val : YouTubeShort('ZseN5AxE8-c'),
+					ID : 'ZseN5AxE8-c'
+				},
+				{
+					As : 'Inp',
+					Val : YouTubeEmbed('qqTnAWL7-v0'),
+					ID : 'qqTnAWL7-v0'
+				}
+			],
+			View : function(ID)
+			{
+				return GoogleAPIReq(GoogleAPIYouTubeVideo('id,snippet,contentDetails',ID))
+					.Map(SolveSnippet)
+			}
+		},{
 			Name : 'SubscriptionShort',
 			Judge : /(?:\bShorts\b)/i,
 			JudgeVal : false,
+			Example :
+			[
+				''
+			],
 			View : MakeFeed(YouTubeFeedSubscriptionShort,function(I,V,K)
 			{
 				return 'richItemRenderer' === K ||
@@ -400,6 +466,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Name : 'Subscription',
 			Judge : /^$/,
 			JudgeVal : false,
+			Example :
+			[
+				'',
+				{
+					As : 'Sub',
+					Val : ''
+				}
+			],
 			View : MakeFeed(YouTubeFeedSubscription,function(I,V,K)
 			{
 				var
@@ -448,24 +522,26 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				})
 			})
 		},{
-			Name : 'Video',
+			// www.youtube.com/handle
+			Name : 'Handle',
 			Judge :
 			[
-				/^[-_\dA-Z]+$/i,
-				O.Word('Embed|V|Video|Shorts?'),
-				/\.be\/([-_\dA-Z]+)/i
+				/YouTube[^/]+\/((?:C\/)?[^/]+)$/i,
+				O.Word('Handle')
 			],
-			View : function(ID)
-			{
-				return GoogleAPIReq(GoogleAPIYouTubeVideo('id,snippet,contentDetails',ID))
-					.Map(SolveSnippet)
-			}
-		},{
-			Name : 'DirectCustomURL',
-			Judge :
+			Example :
 			[
-				/YouTube[^/]+\/([^/]+)$/i,
-				O.Word('DirectCustomURL')
+				'@ChromeDevs',
+				{
+					As : 'Inp',
+					Val : YouTube + '@ChromeDevs',
+					ID : '@ChromeDevs'
+				},
+				{
+					As : 'Inp',
+					Val : YouTubeCustomURL('3blue1brown'),
+					ID : 'c/3blue1brown'
+				}
 			],
 			View : function(ID,Page)
 			{
