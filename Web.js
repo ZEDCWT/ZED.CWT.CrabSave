@@ -1233,6 +1233,10 @@
 		[LangSolve('Bro'),function(V,_,K)
 		{
 			var
+			ClassHintSite = WW.Key(),
+			ClassHintAct = WW.Key(),
+			ClassHintID = WW.Key(),
+			ClassHintFuzzy = WW.Key(),
 			ClassBrief = WW.Key(),
 			ClassList = WW.Key(),
 			ClassCard = WW.Key(),
@@ -1270,8 +1274,8 @@
 			},
 			SolveID = function(S,Q)
 			{
-				return 2 < Q.length ?
-					Q.slice(1).join(WR.Default('#',S.Join)) :
+				return false === S.JudgeVal ? '' :
+					2 < Q.length ? Q.slice(1).join(WR.Default('#',S.Join)) :
 					Q[~-Q.length]
 			},
 			/*
@@ -1422,7 +1426,7 @@
 					{
 						if (!Inp && /\s$/.test(Prefix))
 							ActCand = Site.Map
-						else if (!K)
+						else if (!K || K[3])
 							ActCand = null
 						ActCand && WR.Each(function(V)
 						{
@@ -1434,7 +1438,7 @@
 								Fuzzy : true,
 								Inp : Q,
 								InpSite : Prefix,
-								InpAct : Prefix + V.Name[0] + ' '
+								InpAct : Prefix + V.Name[0] + (false === V.JudgeVal ? '' : ' ')
 							})
 						},ActCand)
 					}
@@ -1831,20 +1835,23 @@
 				else if (WW.IsArr(S))
 				{
 					HintCurrent = false
-					Keyword.Hint(undefined,null)
+					Keyword
 						.Drop(WR.Map(function(B)
 						{
 							return [
 								B,
-								SiteSolveName(B.Site) + ' ' + B.Act.Name[0] +
-								(
+								[
+									WV.T(WV.Rock(ClassHintSite,'span'),SiteSolveName(B.Site)),
+									WV.T(WV.Rock(ClassHintAct,'span'),' ' + B.Act.Name[0]),
 									B.Fuzzy ?
-										false === B.Act.JudgeVal ? '' : ' <ID>' :
-										B.ID && ' ' + B.ID
-								),
-								(B.InpAct + (B.ID || '')).replace(/\s+$/,'')
+										false !== B.Act.JudgeVal && WV.T(WV.Rock(ClassHintFuzzy,'span'),' ...') :
+										B.ID && WV.T(WV.Rock(ClassHintID,'span'),' ' + B.ID)
+								],
+								B.InpAct + (B.ID || '')
 							]
 						},S),false)
+						// Put Hint after Drop so that it does not cost an unnecessary hide & show
+						.Hint(undefined,null)
 				}
 				else
 				{
@@ -1944,6 +1951,8 @@
 				Site || WW.Throw('Bad Site')
 				WR.Each(function(Act)
 				{
+					var
+					Seen = {};
 					WR.EachU(function(B,F)
 					{
 						var I,T;
@@ -1966,7 +1975,8 @@
 						T = T[0]
 						T.Act === Act || WW.Throw(['Bad Act',I,T,F,B,Act])
 						B.ID && B.ID !== T.ID && WW.Throw(['Bad ID',I,T,F,B,Act])
-						All.push(T)
+						WR.Has(T.ID,Seen) ||
+							(Seen[T.ID] = All.push(T))
 					},Act.Example)
 				},Site.Map)
 				return WX.From(All)
@@ -1990,6 +2000,11 @@
 						'#`R`>.`I` .`D`{line-height:normal}' +
 						'#`R`>.`I` input{padding-left:6px;height:34px}' +
 						'#`R`>.`I` .`B`{padding:0;min-width:60px}' +
+						'.`HS`{color:#AA30AA}' +
+						'.`HA`{color:#4080F0}' +
+						'.`HI`{color:#55AA55}' +
+						'.`HF`{color:#A0A0A0}' +
+						'.`O`>.`HS`,.`O`>.`HA`,.`O`>.`HI`,.`O`>.`HF`{color:inherit}' +
 						'.`E`{padding:`h`px;`e`}' +
 						'.`L`{margin-left:-`l`px;margin-right:-`l`px;text-align:center}' +
 						'.`C`' +
@@ -2025,6 +2040,10 @@
 							h : ConfPaddingHalf,
 							l : ConfPaddingHalf / 2,
 
+							HS : ClassHintSite,
+							HA : ClassHintAct,
+							HI : ClassHintID,
+							HF : ClassHintFuzzy,
 							E : ClassBrief,
 							e : WV.Exp('box-shadow','inset 0 0 3px 2px rgba(0,0,0,.2)'),
 							L : ClassList,

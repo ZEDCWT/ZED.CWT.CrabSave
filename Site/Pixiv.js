@@ -178,6 +178,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 		},
 		{
 			Name : 'Bookmark',
+			Judge : /^$/,
 			JudgeVal : false,
 			View : function(_,Page)
 			{

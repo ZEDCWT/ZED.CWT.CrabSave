@@ -229,6 +229,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				MakePatternSiteList('/(?:Article|News)'),
 				O.Word('SiteNews')
 			],
+			JudgeVal : /[-.\w]+/,
 			View : function(Site,Page)
 			{
 				return SolveSiteID(Site).FMap(function(ID)
@@ -259,6 +260,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				MakePatternSiteList(''),
 				O.Word('Site')
 			],
+			JudgeVal : /[-.\w]+/,
 			View : function(Site,Page)
 			{
 				return SolveSiteID(Site).FMap(function(ID)

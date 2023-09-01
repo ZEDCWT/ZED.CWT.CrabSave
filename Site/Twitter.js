@@ -6,11 +6,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	// /"[^"]+/main[^"]+/ https://abs.twimg.com/responsive-web/web/main.713ccc64.js
 	Twitter = 'https://twitter.com/',
 	TwitterTweet = WW.Tmpl(Twitter,'_/status/',undefined),
+	TwitterUser = WW.Tmpl(Twitter,undefined),
+	TwitterUserTweet = WW.Tmpl(Twitter,undefined,'/status/',undefined),
+	TwitterUserMedia = WW.Tmpl(Twitter,undefined,'/media'),
 	TwitterAPI = 'https://api.twitter.com/',
 	// TwitterAPITypeHome = 'timeline/home',
-	TwitterAPITypeConversation = 'timeline/conversation/',
+	// TwitterAPITypeConversation = 'timeline/conversation/',
 	TwitterAPITypeMedia = 'timeline/media/',
-	TwitterAPITypeSearch = 'search/adaptive',
+	// TwitterAPITypeSearch = 'search/adaptive',
 	TwitterAPITypeGuide = 'guide',
 	TwitterAPISearchSug = WW.Tmpl(TwitterAPI,'1.1/search/typeahead.json?q=',undefined,'&tweet_mode=extended&count=',O.Size),
 	TwitterAPIFollowing = WW.Tmpl(TwitterAPI,'1.1/friends/list.json?user_id=',undefined,'&cursor=',undefined,'&count=',O.Size),
@@ -23,6 +26,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	TwitterAPIGraphQLUserByScreen = WW.Tmpl(TwitterAPIGraphQL,'G6Lk7nZ6eEKd7LBBZw9MYw/UserByScreenName?variables=%7B%22screen_name%22%3A',undefined,'%2C%22withHighlightedLabel%22%3Atrue%7D'),
 	// TwitterAPIGraphQLHomeTimeline = TwitterAPIGraphQL + '6VUR2qFhg6jw55JEvJEmmA/HomeTimeline',
 	TwitterAPIGraphQLHomeLatestTimeline = TwitterAPIGraphQL + 'AKmCZTyU1gWxo41b4PrQGA/HomeLatestTimeline',
+	TwitterAPIGraphQLSearchTimeline = TwitterAPIGraphQL + 'NA567V_8AFwu0cZEkAAKcw/SearchTimeline',
 	TwitterAPIGraphQLFeature = WC.OTJ(
 	{
 		blue_business_profile_image_shape_enabled : false,
@@ -68,6 +72,19 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			}
 		},Q.errors)
 		return Q
+	},
+	SolveUser = function(User)
+	{
+		return {
+			Non : true,
+			ID : User.screen_name,
+			View : '@' + User.screen_name,
+			URL : Twitter + User.screen_name,
+			Img : User.profile_image_url_https,
+			UP : User.name,
+			UPURL : Twitter + User.screen_name,
+			Desc : (User.location ? '[[' + User.location + ']]\n\n' : '') + User.description
+		}
 	},
 	SolveTweet = function(Tweet,User,ID)
 	{
@@ -215,6 +232,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	{
 		var
 		R = [],
+		CheckTypeUser = function(V)
+		{
+			return V && 'User' === V.__typename &&
+				R.push(SolveUser(V.legacy))
+		},
 		CheckTypeTweet = function(V)
 		{
 			return V && 'Tweet' === V.__typename &&
@@ -236,6 +258,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				var Begin = R.length;
 				return V.promotedMetadata ||
 					/^(TweetDetailRelatedTweets)-/i.test(V.entryId) ||
+					CheckTypeUser(V) ||
 					CheckTypeTweet(V) &&
 					(-~Begin === R.length ||
 						WR.Each(function(V){V.Group = R.length},R.slice(Begin)))
@@ -287,6 +310,17 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			withReactionsMetadata : true,
 			withReactionsPerspective : true,
 		})
+	},
+	MakeSearchTimeline = function(Query,Cursor)
+	{
+		return MakeGraphQL(TwitterAPIGraphQLSearchTimeline,
+		{
+			rawQuery : Query,
+			count : O.Size,
+			cursor : Cursor,
+			querySource : 'typed_query',
+			product : 'Top'
+		})
 	};
 	return {
 		ID : 'Twitter',
@@ -304,10 +338,23 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		Map : [
 		{
 			Name : O.NameFind,
+			Example :
+			[
+				'メイドインアビス'
+			],
+			/*
 			View : MakeTimeline(function(ID)
 			{
 				return WX.Just(MakeHead(TwitterAPIJSON(TwitterAPITypeSearch) + '&q=' + WC.UE(ID)))
 			}),
+			*/
+			View : O.More(function(ID)
+			{
+				return MakeSearchTimeline(ID)
+			},function(I,Page,ID)
+			{
+				return MakeSearchTimeline(ID,I[Page])
+			},SolveGraphQLTweet),
 			Hint : function(Q)
 			{
 				return O.Req(MakeHead(TwitterAPISearchSug(WC.UE(Q)))).Map(function(B)
@@ -326,16 +373,21 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			Name : 'Tweet',
 			Judge : [/^\d+$/,O.Num('Tweet|Status(?:es)?')],
 			JudgeVal : O.ValNum,
-			View : [function(ID)
-			{
-				return O.Req(MakeHead(TwitterAPIJSON(TwitterAPITypeConversation + ID))).Map(function(B)
+			Example :
+			[
+				'1667068832064708608',
 				{
-					B = Common(B)
-					return {
-						Item : [SolveTweetIDB(ID,B)]
-					}
-				})
-			},function(ID)
+					As : 'Sub',
+					Val : '1667068832064708608',
+					ID : '1667068832064708608'
+				},
+				{
+					As : 'Inp',
+					Val : TwitterUserTweet('ChromeDevTools','1667068832064708608'),
+					ID : '1667068832064708608'
+				}
+			],
+			View : function(ID)
 			{
 				return MakeGraphQL(TwitterAPIGraphQLTweetDetail,
 				{
@@ -351,13 +403,34 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				{
 					return SolveGraphQLTweet(B)[1]
 				})
-			}][1]
+			}
+			/*
+			View : function(ID)
+			{
+				return O.Req(MakeHead(TwitterAPIJSON(TwitterAPITypeConversation + ID))).Map(function(B)
+				{
+					B = Common(B)
+					return {
+						Item : [SolveTweetIDB(ID,B)]
+					}
+				})
+			}
+			*/
 		},{
 			Name : 'UserMedia',
 			Judge :
 			[
 				/\.com\/([^/?]+)\/Media\b/i,
 				O.Word('UserMedia')
+			],
+			Example :
+			[
+				'code',
+				{
+					As : 'Inp',
+					Val : TwitterUserMedia('code'),
+					ID : 'code'
+				}
 			],
 			View : O.More(function(ID,I)
 			{
@@ -375,6 +448,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			[
 				/(?:@|\.com\/)([^/?]+)/i,
 				O.Word('User')
+			],
+			Example :
+			[
+				'github',
+				{
+					As : 'Inp',
+					Val : TwitterUser('github'),
+					ID : 'github'
+				}
 			],
 			View : O.More(function(ID,I)
 			{
@@ -397,13 +479,26 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			Name : 'UserID',
 			Judge : O.Num('UserID'),
 			JudgeVal : O.ValNum,
+			Example :
+			[
+				'2142731' // FireFox
+			],
 			View : MakeTimeline(function(ID)
 			{
 				return WX.Just(MakeHead(TwitterAPIJSON(TwitterAPITypeMedia + ID)))
 			})
 		},{
 			Name : 'Timeline',
+			Judge : /^$/,
 			JudgeVal : false,
+			Example :
+			[
+				'',
+				{
+					As : 'Sub',
+					Val : ''
+				}
+			],
 			// View : MakeTimeline(WR.Const(WX.Just(TwitterAPIJSON(TwitterAPITypeHome))))
 			View : O.More(function()
 			{
@@ -415,6 +510,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		},{
 			Name : O.NameUP,
 			JudgeVal : false,
+			Example :
+			[
+				''
+			],
 			View : O.More(function(_,I)
 			{
 				return O.Req(MakeHead(TwitterAPIJSON(TwitterAPITypeGuide))).FMap(function(U)
@@ -430,19 +529,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				B = Common(B)
 				return [B.users.length && B.next_cursor_str,
 				{
-					Item : WR.Map(function(V)
-					{
-						return {
-							Non : true,
-							ID : V.screen_name,
-							View : '@' + V.screen_name,
-							URL : Twitter + V.screen_name,
-							Img : V.profile_image_url_https,
-							UP : V.name,
-							UPURL : Twitter + V.screen_name,
-							Desc : (V.location ? '[[' + V.location + ']]\n\n' : '') + V.description
-						}
-					},B.users)
+					Item : WR.Map(SolveUser,B.users)
 				}]
 			})
 		}],
