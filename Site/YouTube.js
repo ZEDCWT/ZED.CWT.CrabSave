@@ -410,7 +410,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Judge :
 			[
 				/^[-_\dA-Z]+$/i,
-				O.Word('Embed|V|Video|Shorts?'),
+				O.Word('Embed|Live|V|Video|Shorts?'),
 				/\.be\/([-_\dA-Z]+)/i
 			],
 			Example :

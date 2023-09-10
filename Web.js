@@ -4051,6 +4051,7 @@
 			'NicoNico',
 
 			'AcFun',
+			'DouYin',
 			'Facebook',
 			'FanBox',
 			'Fantia',
