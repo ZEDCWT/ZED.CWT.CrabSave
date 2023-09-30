@@ -148,6 +148,18 @@ module.exports = O =>
 			Info = {},Meta,
 			Reply = [],
 			Sep = ['',WR.RepS('\u2014',63),''],
+			AddMaybe = B =>
+			{
+				switch (B?.__typename)
+				{
+					case 'Tweet' :
+						AddTweet(B)
+						return true
+					case 'TweetWithVisibilityResults' :
+						AddTweet(B.tweet)
+						return true
+				}
+			},
 			AddTweet = V =>
 			{
 				var
@@ -156,7 +168,7 @@ module.exports = O =>
 				Legacy.id_str === ID ?
 					SolveTweet(Legacy,User,Meta = [],Info) :
 					SolveTweet(Legacy,User,Meta ? Reply : Prelude)
-				WR.Each(B => {'Tweet' === B?.__typename && AddTweet(B)},
+				WR.Each(AddMaybe,
 				[
 					V.quoted_status_result?.result,
 					Legacy.retweeted_status_result?.result,
@@ -173,11 +185,7 @@ module.exports = O =>
 				/^(Tweet|ConversationThread)-/i.test(V.entryId) && O.Walk(V,V =>
 				{
 					var R = V.promotedMetadata;
-					if (!R && 'Tweet' === V.__typename)
-					{
-						R = true
-						AddTweet(V)
-					}
+					R = R || AddMaybe(V)
 					return R
 				})
 			},V.entries))

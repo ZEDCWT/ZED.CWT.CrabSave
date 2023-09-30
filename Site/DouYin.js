@@ -91,8 +91,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 			},
 			QS : QS + '&X-Bogus=' + WC.B64S(
 				WC.Con([[2,255],WC.RC4([255],Bogus)]),
-				'Dkdpgh4ZKsQB80/Mfvw36XI1R25-WUAlEi7NLboqYTOPuzmFjJnryx9HVGcaStCe'),
-			JSON : Body
+				'Dkdpgh4ZKsQB80/Mfvw36XI1R25-WUAlEi7NLboqYTOPuzmFjJnryx9HVGcaStCe')
 		}).Map(Common)
 	},
 
@@ -127,7 +126,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 				B.preview_title !== B.desc && B.desc,
 				B.music &&
 				[
-					O.Ah(B.music.title,DouYinMusic(B.music.id_str)),
+					O.Ah('\u266B ' + B.music.title,DouYinMusic(B.music.id_str)),
 					B.music.sec_uid !== B.author.sec_uid &&
 						O.Ah('@' + B.music.author,DouYinUser(B.music.sec_uid))
 				]

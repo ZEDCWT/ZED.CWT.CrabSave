@@ -22,7 +22,7 @@ module.exports = O =>
 			{
 				B || WW.Throw('Signature Failure')
 				B = WC.JTO(B)
-				B.status_code && O.Bad(B.status_code,B.status_msg)
+				B.status_code && O.Bad(B)
 				return B
 			},
 			API = (Q,S,B) =>
@@ -78,7 +78,6 @@ module.exports = O =>
 					QS : QS + '&X-Bogus=' + WC.B64S(
 						WC.Con([[2,255],WC.RC4([255],Bogus)]),
 						'Dkdpgh4ZKsQB80/Mfvw36XI1R25-WUAlEi7NLboqYTOPuzmFjJnryx9HVGcaStCe'),
-					JSON : Body
 				})).Map(Common)
 			},
 

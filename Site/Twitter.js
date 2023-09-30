@@ -88,6 +88,20 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	},
 	SolveTweet = function(Tweet,User,ID)
 	{
+		if (!Tweet)
+		{
+			/*
+				1542440303566524416
+					Removed? Can still view comments
+			*/
+			return {
+				Non : true,
+				ID : ID,
+				UP : User.name,
+				UPURL : Twitter + User.screen_name
+			}
+		}
+
 		var
 		Media = WR.Path(['extended_entities','media'],Tweet),
 		Retweet = Tweet.retweeted_status_id_str ||
@@ -237,15 +251,26 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			return V && 'User' === V.__typename &&
 				R.push(SolveUser(V.legacy))
 		},
+		AddTweet = function(V)
+		{
+			R.push(SolveTweet(V.legacy,V.core.user_results.result.legacy,V.rest_id)) &&
+			WR.Each(CheckTypeTweet,
+			[
+				WR.Path(['quoted_status_result','result'],V),
+				WR.Path(['legacy','retweeted_status_result','result'],V)
+			])
+		},
 		CheckTypeTweet = function(V)
 		{
-			return V && 'Tweet' === V.__typename &&
-				R.push(SolveTweet(V.legacy,V.core.user_results.result.legacy)) &&
-				WR.Each(CheckTypeTweet,
-				[
-					WR.Path(['quoted_status_result','result'],V),
-					WR.Path(['legacy','retweeted_status_result','result'],V)
-				])
+			switch (V && V.__typename)
+			{
+				case 'Tweet' :
+					AddTweet(V)
+					return true
+				case 'TweetWithVisibilityResults' :
+					AddTweet(V.tweet)
+					return true
+			}
 		};
 		B = Common(B)
 		O.Walk(B,function(V,F)
