@@ -471,7 +471,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			Name : 'User',
 			Judge :
 			[
-				/(?:@|\.com\/)([^/?]+)/i,
+				/(?:@|\.com\/)\s*([^&?#\s/]+)/i,
 				O.Word('User')
 			],
 			Example :

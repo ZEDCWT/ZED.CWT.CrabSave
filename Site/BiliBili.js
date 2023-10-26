@@ -784,8 +784,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								V.value,
 								SolveHighLight(V.name)
 							]
-						},WR.Unnest(WR.Val(B.result))),
-						Desc : WR.MapU(WR.Join(' '),WR.Ent(B.cost.about)).join(', ')
+						},WR.Unnest(WR.Val(B.result)))
+						// Desc : WR.MapU(WR.Join(' '),WR.Ent(B.cost.about)).join(', ')
 					}
 				})
 			}

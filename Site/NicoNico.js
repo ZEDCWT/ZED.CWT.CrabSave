@@ -19,8 +19,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	NicoNVAPIUser = WW.Tmpl(NicoNVAPI,'v1/users/',undefined,'/videos?sortKey=registeredAt&sortOrder=desc&pageSize=',O.Size,'&page=',undefined),
 	NicoNVAPIFollowing = WW.Tmpl(NicoNVAPI,'v1/users/me/following/users?pageSize=',O.Size,'&cursor=',undefined),
 	NicoNVAPIMyList = WW.Tmpl(NicoNVAPI,'v2/mylists/',undefined,'?pageSize=',O.Size,'&page=',undefined),
-	NicoPublicAPI = 'https://public.api.nicovideo.jp/',
-	NicoPublicAPITop = WW.Tmpl(NicoPublicAPI,'v1/timelines/nicorepo/last-1-month/my/pc/entries.json?list=followingUser&untilId=',undefined),
+	// NicoPublicAPI = 'https://public.api.nicovideo.jp/',
+	// NicoPublicAPITop = WW.Tmpl(NicoPublicAPI,'v1/timelines/nicorepo/last-1-month/my/pc/entries.json?list=followingUser&untilId=',undefined),
+	NicoPublicAPIRepo = 'https://api.repoline.nicovideo.jp/',
+	NicoPublicAPIRepoTop = WW.Tmpl(NicoPublicAPIRepo,'v1/timelines/nicorepo/last-1-month/my/pc/entries.json?untilId=',undefined),
 	NicoChannel = 'https://ch.nicovideo.jp/',
 	NicoChannelCH = NicoChannel + 'ch',
 	NicoChannelVideo = WW.Tmpl(NicoChannel,undefined,'/video?sort=f&order=d&page=',undefined),
@@ -485,10 +487,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			JudgeVal : false,
 			View : O.More(function()
 			{
-				return O.Req(NicoPublicAPITop(''))
+				return O.Req(NicoPublicAPIRepoTop(''))
 			},function(I,Page)
 			{
-				return O.Req(NicoPublicAPITop(I[Page]))
+				return O.Req(NicoPublicAPIRepoTop(I[Page]))
 			},function(B)
 			{
 				B = CommonMeta(B)
