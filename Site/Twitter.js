@@ -118,7 +118,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 					Title = Title.replace(RegExp('\\s*' + WR.SafeRX(B.url) + '\\s*','g'),'_')
 					TitleMap[B.url] = function()
 					{
-						return 'media' === F || Retweet && RegExp(Twitter + '[^/]+/status/' + Retweet).test(B.expanded_url) ?
+						return 'media' === F || Retweet && RegExp('https://(?:twitter|x).com/[^/]+/status/' + Retweet).test(B.expanded_url) ?
 							'' :
 							O.Ah(B.expanded_url,B.expanded_url)
 					}
@@ -350,7 +350,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	return {
 		ID : 'Twitter',
 		Alias : 'T',
-		Judge : /\bTwitter\b/i,
+		Judge : /\bTwitter\b|\bX\.com\b/i,
 		Min : 'auth_token ct0 guest_id rweb_optin',
 		Sign : function()
 		{
