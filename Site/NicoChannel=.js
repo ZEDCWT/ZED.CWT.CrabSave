@@ -45,7 +45,7 @@ module.exports = O =>
 			Site = (ID = ID.split`/`)[0],
 			Prefix = (ID = ID[1]).slice(0,2),
 
-			Common = function(B)
+			Common = B =>
 			{
 				B = WC.JTO(B)
 				B.error && O.Bad(B.error.message)

@@ -23,7 +23,7 @@ module.exports = O =>
 		B.error && O.Bad(B.message)
 		return B.body
 	},
-	CommonSketch = function(B)
+	CommonSketch = B =>
 	{
 		B = WC.JTO(B)
 		B.error && B.error.length && O.Bad(B.error)

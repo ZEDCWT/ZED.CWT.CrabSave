@@ -83,7 +83,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			Img : User.profile_image_url_https,
 			UP : User.name,
 			UPURL : Twitter + User.screen_name,
-			Desc : (User.location ? '[[' + User.location + ']]\n\n' : '') + User.description
+			More : (User.location ? '[[' + User.location + ']]\n\n' : '') + User.description
 		}
 	},
 	SolveTweet = function(Tweet,User,ID)

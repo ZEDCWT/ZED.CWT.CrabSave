@@ -103,6 +103,7 @@ module.exports = Option =>
 		'NicoNico',
 
 		'AcFun',
+		'BSky',
 		'DouYin',
 		'Facebook',
 		'FanBox',

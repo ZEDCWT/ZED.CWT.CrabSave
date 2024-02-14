@@ -4051,6 +4051,7 @@
 			'NicoNico',
 
 			'AcFun',
+			'BSky',
 			'DouYin',
 			'Facebook',
 			'FanBox',

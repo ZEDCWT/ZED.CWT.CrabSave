@@ -134,12 +134,12 @@ module.exports = O =>
 								{
 									if ((Q = T.playback_list) && Q.length)
 										Q = 1 - Q.length ?
-												O.Best('bitrate',WR.Where(function(V)
-												{
-													// KuTqsBzth | meta.label = scrubber_hd & play_info.type = 3
-													return !/^image\//.test(V.mime)
-												},WR.Pluck('play_info',Q))).url :
-												Q[0].play_info.url
+											O.Best('bitrate',WR.Where(V =>
+											{
+												// KuTqsBzth | meta.label = scrubber_hd & play_info.type = 3
+												return !/^image\//.test(V.mime)
+											},WR.Pluck('play_info',Q))).url :
+											Q[0].play_info.url
 									else
 										Q = T.h265_mp4_hd ||
 											T.mp4_hd_url ||
@@ -375,7 +375,7 @@ module.exports = O =>
 							if (Comment.length)
 							{
 								Meta.push('',WR.RepS('\u2014',63))
-								WR.Each(function(V)
+								WR.Each(V =>
 								{
 									Meta.push
 									(

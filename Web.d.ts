@@ -31,7 +31,7 @@ declare module CrabSaveNS
 		Head(Q : WishNS.ReqAccept,K : string,V : string) : WishNS.ReqO
 		Auth() : boolean
 		Coke() : string
-		CokeU() : any
+		CokeU(Q : string) : any
 		CokeC<U>(Q : () => WishNS.Provider<U>) : () => WishNS.Provider<U>
 		DB(Key : string,Q : any) : WishNS.Provider<any>
 		Bad(Code? : any,Message : any) : never

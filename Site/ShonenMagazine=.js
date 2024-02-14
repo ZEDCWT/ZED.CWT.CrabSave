@@ -17,7 +17,7 @@ module.exports = O =>
 			{
 				var
 				R;
-				WW.MR(function(_,V)
+				WW.MR((_,V) =>
 				{
 					if (WW.MF(/episode\/(\d+)/,V) === ID) R =
 					{
