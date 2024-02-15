@@ -60,7 +60,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	},
 	MakeNV = function(Q)
 	{
-		return O.Head(Q,'X-Frontend-Id',WW.Rnd(3389))
+		return WW.N.ReqOH(Q,'X-Frontend-Id',WW.Rnd(3389))
 	},
 	CommonMeta = function(Q)
 	{

@@ -456,7 +456,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	},
 	EP2AV = WX.CacheM(function(ID)
 	{
-		return O.API(O.Head(BiliBiliBgmEP(ID),'Cookie','stardustpgcv=0')).Map(function(B)
+		return O.API(WW.N.ReqOH(BiliBiliBgmEP(ID),'Cookie','stardustpgcv=0')).Map(function(B)
 		{
 			B = SolveInitState(B)
 			B = WR.Find(function(V)
@@ -464,9 +464,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				return /pgc\/view/.test(V.queryHash)
 			},B.props.pageProps.dehydratedState.queries)
 				.state.data
+				.seasonInfo
+				.mediaInfo
 			return [
-				B.epMap[ID].aid,
-				B.mediaInfo.season_id
+				WR.Find(WR.PropEq('ep_id',+ID),B.episodes).aid,
+				B.season_id
 			]
 		})
 	}),
@@ -1081,7 +1083,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					{
 						var CID = R[1].CID;
 						R.pop()
-						return O.API(O.Head(BiliBiliAPIPlayerSo(ID,CID),'Referer',BiliBili)).FMap(function(B)
+						return O.API(WW.N.ReqOH(BiliBiliAPIPlayerSo(ID,CID),'Referer',BiliBili)).FMap(function(B)
 						{
 							var
 							Loaded = 0,Max = 0,
@@ -1406,7 +1408,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			{
 				return (Page ? WX.Just([]) : ReqWBI(BiliBiliAPISpaceWBIInfo(ID)).FMap(function(UP)
 				{
-					return O.API(O.Head(BiliBiliAPISpaceNavNum(ID),'Referer',BiliBili)).Map(function(Nav)
+					return O.API(WW.N.ReqOH(BiliBiliAPISpaceNavNum(ID),'Referer',BiliBili)).Map(function(Nav)
 					{
 						Nav = Common(Nav)
 						return [

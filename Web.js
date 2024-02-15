@@ -101,7 +101,7 @@
 		WW.IsObj(E) && (E = WC.OTJ(E))
 		return '{ERR} ' + E
 	},
-	DTS = function(Q){return WW.StrDate(Q,WW.DateColS)},
+	DTS = function(Q){return WW.StrDate(Q).replace(/\.000$/,'')},
 	SolveURL = function(Q,S)
 	{
 		if (WR.StartW('//',Q))
@@ -3811,10 +3811,6 @@
 				ReqAPI : function(Q,ForceReq,ForceAPI)
 				{
 					return (!ForceAPI && (ForceReq || WSAuthInited && CookieMap[V.Cookie]) ? WebToolReq : WebToolAPI)(Q)
-				},
-				Head : function(Q,K,V)
-				{
-					return WW.N.ReqOH(Q,K,V)
 				},
 				Auth : function()
 				{

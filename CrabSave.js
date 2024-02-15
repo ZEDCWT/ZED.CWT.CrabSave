@@ -262,13 +262,6 @@ module.exports = Option =>
 	CookieE = Q => WC.B91S(WC.AESE(WebToken.slice(0,32),WebToken.slice(-16),Q)),
 	CookieD = Q => WC.U16S(WC.AESD(WebToken.slice(0,32),WebToken.slice(-16),WC.B91P(Q))),
 
-	RequestHead = SiteO.Head = (Q,K,V,Force) =>
-	{
-		Q = WW.IsObj(Q) ? Q : {URL : Q}
-		WR.Has(K,Q.Head || (Q.Head = {})) && !Force ||
-			(Q.Head[K] = V)
-		return Q
-	},
 	RequestComm = SiteO.Req = LoopO.Req = Q =>
 	{
 		Q = WW.IsObj(Q) ? Q : {URL : Q}
@@ -280,7 +273,7 @@ module.exports = Option =>
 			(Q.Pro = Setting.ProxyURL())
 		return Q
 	},
-	RequestCoke = SiteO.Coke = (Q,V) => RequestHead(Q,'Cookie',CookieMap[V]),
+	RequestCoke = SiteO.Coke = (Q,V) => WN.ReqOH(Q,'Cookie',CookieMap[V]),
 
 	WebServerEntryMtx = WX.Mtx(),
 	WebServerEntryKey,

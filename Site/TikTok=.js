@@ -1,7 +1,7 @@
 'use strict'
 var
 WW = require('@zed.cwt/wish'),
-{R : WR,C : WC,N : WN,X : WX} = WW,
+{R : WR,X : WX,C : WC,N : WN} = WW,
 
 TikTok = 'https://www.tiktok.com/',
 TikTokShareItemList = WW.Tmpl(TikTok,'share/item/list?id=',undefined,'&count=1&maxCursor=0&minCursor=0&type=4'),

@@ -1,7 +1,7 @@
 'use strict'
 var
 WW = require('@zed.cwt/wish'),
-{R : WR,X : WX,C : WC} = WW,
+{R : WR,X : WX,C : WC,N : WN} = WW,
 
 PrefixTimeline = 'TL',
 // PrefixShortVideo = 'vc',
@@ -284,7 +284,7 @@ module.exports = O =>
 					Part
 				}
 				return (AV.stein_guide_cid ?
-					Ext.ReqB(O.Coke(O.Head(BiliBiliAPIPlayerSo(ID,CIDFirst),'Referer',BiliBili))).FMap(G =>
+					Ext.ReqB(O.Coke(WN.ReqOH(BiliBiliAPIPlayerSo(ID,CIDFirst),'Referer',BiliBili))).FMap(G =>
 					{
 						var
 						Graph = WW.MF(/graph_version":(\d+)/,G),

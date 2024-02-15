@@ -28,7 +28,6 @@ declare module CrabSaveNS
 		API(Q : WishNS.ReqAccept,H : true) : WishNS.Provider<[object,string,XMLHttpRequest]>
 		ReqAPI(Q : WishNS.ReqAccept | WishNS.ReqO,ForceReq : boolean,ForceAPI : boolean) : WishNS.Provider<string>
 		Head<U extends keyof WishNS.ReqHead>(Q : WishNS.ReqAccept,K : U,V : string) : WishNS.ReqO
-		Head(Q : WishNS.ReqAccept,K : string,V : string) : WishNS.ReqO
 		Auth() : boolean
 		Coke() : string
 		CokeU(Q : string) : any

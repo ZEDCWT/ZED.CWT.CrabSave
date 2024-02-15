@@ -224,7 +224,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		ID : 'BSky',
 		Alias : 'BS',
 		Judge : /\bBSky\b|did:plc/i,
-		SignHint : "copy(JSON.parse(localStorage.getItem('BSKY_STORAGE')).session.currentAccount).refreshJwt)",
+		SignHint : "copy(JSON.parse(localStorage.getItem('BSKY_STORAGE')).session.currentAccount.refreshJwt)",
 		Sign : function()
 		{
 			return SolveSession().Map(function(Session){return Session.handle})

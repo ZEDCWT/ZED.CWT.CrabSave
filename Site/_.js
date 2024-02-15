@@ -38,7 +38,6 @@ module.exports = Option =>
 		S = require(`./${V}=`)(
 		{
 			Cmp : D => Option.Cmp.D(V,D),
-			Head : (Q,K,V) => Option.Head(Q,K,V),
 			Req : Q => Option.Req(Q),
 			Coke : Q => Option.Coke(Option.Req(Q),V),
 			CokeRaw : () => Option.CokeRaw(V),

@@ -83,7 +83,6 @@ declare module CrabSaveNS
 		{
 			Cmp() : any
 			Cmp(D : any) : any
-			Head(Q : string | WishNS.ReqAccept,K : string,V : string,Force? : boolean) : WishNS.ReqAccept
 			Req(Q : string | WishNS.ReqAccept) : WishNS.ReqAccept
 			Coke(Q : string | WishNS.ReqAccept) : WishNS.ReqAccept
 			CokeRaw() : string
@@ -139,7 +138,6 @@ declare module CrabSaveNS
 		{
 			Cmp : WishNS.JSONU<{}>
 			CokeRaw(Q : string) : string
-			Head(Q : string | WishNS.ReqAccept,K : string,V : string,Force? : boolean) : WishNS.ReqAccept
 			Req(Q : string | WishNS.ReqAccept) : WishNS.ReqAccept
 			Coke(Q : string | WishNS.ReqAccept,Q : string) : WishNS.ReqAccept
 		}) : {
