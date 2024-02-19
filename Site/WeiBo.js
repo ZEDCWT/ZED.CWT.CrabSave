@@ -259,6 +259,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			More.push(T)
 		if (T = B.source)
 			More.push(O.Text(T))
+		if (T = B.content_auth_list)
+		{
+			// O1bRhFWYk
+			WR.Each(function(V)
+			{
+				More.push(V.content_auth_info.content_auth_title)
+			},T)
+		}
 		if (T = B.screen_name_suffix_new)
 		{
 			More.push(WR.Map(function(V)

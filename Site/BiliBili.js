@@ -63,6 +63,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliAPIPolymer = BiliBiliAPI + 'x/polymer/',
 	BiliBiliAPIPolymerSeries = WW.Tmpl(BiliBiliAPIPolymer,'space/seasons_series_list?mid=',undefined,'&page_num=',undefined,'&page_size=20'),
 	BiliBiliAPIPolymerArchive = WW.Tmpl(BiliBiliAPIPolymer,'space/seasons_archives_list?mid=0&season_id=',undefined,'&page_num=',undefined,'&page_size=',O.Size),
+	BiliBiliAPIPolymerDynamicSpace = WW.Tmpl(BiliBiliAPIPolymer,'web-dynamic/v1/feed/space?platform=web&features=itemOpusStyle,listOnlyfans,opusBigCover,onlyfansVote&host_mid=',undefined,'&offset=',undefined),
 	BiliBiliAPISeries = BiliBiliAPI + 'x/series/',
 	// BiliBiliAPISeriesDetail = WW.Tmpl(BiliBiliAPISeries,'series?series_id=',undefined),
 	BiliBiliAPISeriesArchive = WW.Tmpl(BiliBiliAPISeries,'archives?mid=',undefined,'&series_id=',undefined,'&pn=',undefined,'&ps=',O.Size),
@@ -103,7 +104,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliVCAPIDynamicHistory = WW.Tmpl(BiliBiliVCAPIDynamicAPIRoot,'dynamic_history?uid=&type=',BiliBiliVCAPIDynamicType,'&offset_dynamic_id=',undefined),
 	BiliBiliVCAPIDynamicDetail = WW.Tmpl(BiliBiliVCAPIDynamicAPIRoot,'get_dynamic_detail?dynamic_id=',undefined),
 	BiliBiliVCAPIDynamicDetailType2 = WW.Tmpl(BiliBiliVCAPIDynamicAPIRoot,'get_dynamic_detail?type=2&rid=',undefined),
-	BiliBiliVCAPIDynamicUser = WW.Tmpl(BiliBiliVCAPIDynamicAPIRoot,'space_history?host_uid=',undefined,'&offset_dynamic_id=',undefined),
+	// BiliBiliVCAPIDynamicUser = WW.Tmpl(BiliBiliVCAPIDynamicAPIRoot,'space_history?host_uid=',undefined,'&offset_dynamic_id=',undefined),
 	BiliBiliTimeline = 'https://t.bilibili.com/',
 	BiliBiliTimelineVote = WW.Tmpl(BiliBiliTimeline,'vote/h5/index/#/result?vote_id=',undefined),
 	BiliBiliLive = 'https://live.bilibili.com/',
@@ -443,6 +444,82 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						return !Q.Unk - !S.Unk || Q.F - S.F
 					})
 			}]
+	},
+	SolvePolymerDynamic = function(B,R)
+	{
+		var
+		IsTop = !R,
+		ModAuthor = B.modules.module_author,
+		ModDynamic = B.modules.module_dynamic,
+		// ModInteraction = B.modules.module_interaction,
+		// ModMore = B.modules.module_more,
+		// ModStat = B.modules.module_stat,
+		Card = {},
+		SetUnk = function(Q)
+		{
+			Card.Non = Card.Unk = true
+			Card.Title = 'Unknown ' + Q
+		},
+		SolveMajor = function()
+		{
+			var
+			Major = ModDynamic.major,
+			T;
+			switch (Major.type)
+			{
+				case 'MAJOR_TYPE_ARCHIVE' :
+					T = Major.archive
+					Card.ID = T.aid
+					Card.Img = T.cover
+					Card.Title = T.title
+					Card.Len = T.duration_text
+					break
+				case 'MAJOR_TYPE_OPUS' :
+					T = Major.opus
+					Card.Img = WR.Pluck('url',T.pics)
+					Card.Title = T.summary.text
+					break
+				default :
+					SetUnk(Major.type)
+			}
+		};
+
+		R = R || []
+		R.push(Card)
+
+		Card.ID = PrefixTimeline + B.id_str
+		if (ModAuthor)
+		{
+			Card.UP = ModAuthor.name
+			Card.UPURL = BiliBiliSpace + ModAuthor.mid
+			Card.Date = 1E3 * ModAuthor.pub_ts
+		}
+		switch (B.type)
+		{
+			case 'DYNAMIC_TYPE_AV' :
+			case 'DYNAMIC_TYPE_DRAW' :
+			case 'DYNAMIC_TYPE_WORD' :
+				SolveMajor()
+				break
+			case 'DYNAMIC_TYPE_FORWARD' :
+				Card.Title = ModDynamic.desc.text
+				SolvePolymerDynamic(B.orig,R)
+				break
+			default :
+				SetUnk(B.type)
+		}
+
+		if (IsTop && 1 < R.length)
+			WR.Each(function(V){V.Group = R},R)
+		return R
+	},
+	SolvePolymerDynamicResponse = function(B)
+	{
+		B = Common(B)
+		return [B.has_more && B.offset,
+		{
+			Item : WR.Flatten(WR.Map(SolvePolymerDynamic,B.items))
+		}]
 	},
 	SolveHighLightRaw,
 	SolveHighLight = function(V)
@@ -800,7 +877,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Judge :
 			[
 				O.Num('T(?:\\.\\w+)+|Dynamic(?=\\W+\\d{10})|TL'),
-				/\bT(?:\.\w+)+\/(\d+).*?\b(Type=2)\b/i
+				/\bT(?:\.\w+)+\/(\d+).*?\b(Type=2)\b/i,
+				O.Num('Opus') // bilibili.com/opus/\d+
 			],
 			JudgeVal : O.ValNum,
 			Example :
@@ -839,6 +917,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					ID : '2'
 				}
 			],
+			/*
+			// Even though the proper response does not seem to include any special items
+			// The old API will fail on certain timeline returning an absurd result
+			// {"code":0,"msg":"","message":"","data":{"has_more":1,"next_offset":0,"_gt_":0}}
 			View : O.More(function(ID)
 			{
 				return O.API(BiliBiliVCAPIDynamicUser(ID,''))
@@ -846,6 +928,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			{
 				return O.API(BiliBiliVCAPIDynamicUser(ID,I[Page]))
 			},SolveDynamicResponse)
+			*/
+			View : O.More(function(ID)
+			{
+				return O.ReqAPI(BiliBiliAPIPolymerDynamicSpace(ID,''))
+			},function(I,Page,ID)
+			{
+				return O.ReqAPI(BiliBiliAPIPolymerDynamicSpace(ID,I[Page]))
+			},SolvePolymerDynamicResponse)
 		}/*,{
 			Name : 'VC',
 			Judge : [O.Num('VC'),/\bVC\..*?Video\/(\d+)/i],
