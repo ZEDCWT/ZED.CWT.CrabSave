@@ -477,7 +477,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				case 'MAJOR_TYPE_OPUS' :
 					T = Major.opus
 					Card.Img = WR.Pluck('url',T.pics)
-					Card.Title = T.summary.text
+					if (T.title)
+					{
+						Card.ID =
+							WW.MU(RegExp('\\b' + PrefixArticle + '\\d+'),T.jump_url) ||
+							Card.ID
+						Card.Title = T.title
+					}
+					else Card.Title = T.summary.text
 					break
 				default :
 					SetUnk(Major.type)
@@ -496,10 +503,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		}
 		switch (B.type)
 		{
+			case 'DYNAMIC_TYPE_NONE' :
+				R.pop()
+				break
 			case 'DYNAMIC_TYPE_AV' :
 			case 'DYNAMIC_TYPE_DRAW' :
 			case 'DYNAMIC_TYPE_WORD' :
 				SolveMajor()
+				break
+			case 'DYNAMIC_TYPE_ARTICLE' :
 				break
 			case 'DYNAMIC_TYPE_FORWARD' :
 				Card.Title = ModDynamic.desc.text

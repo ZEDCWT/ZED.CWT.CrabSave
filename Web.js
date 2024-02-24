@@ -2017,7 +2017,16 @@
 							'word-break:break-all' +
 						'}' +
 						'.`C` legend{padding:0 `l`px `l`px;font-weight:bold}' +
-						'.`N`{padding:0 `h`px `h`px `h`px}' +
+						'.`N`' +
+						'{' +
+							'padding:0 `h`px `h`px `h`px;' +
+							/*
+								This is required so that sub content like `、`.repeat(100) would not expand the container,
+								even though we already have word-break set.
+								Well, there may be a more elegant way...
+							*/
+							'width:`c`px' +
+						'}' +
 						'.`K`{cursor:pointer}' +
 						'.`S`{color:#F7F7F7;font-weight:bold;text-align:center}' +
 						'.`K`:hover .`S`,.`K`.`A` .`S`{background:rgba(102,175,224,.7)}' +
