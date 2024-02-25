@@ -824,7 +824,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							.FP(WX.Empty)
 				).Reduce(function(D,V)
 				{
-					return [WR.Max(D[0],V[0]),D[1] + V[1],WR.Concat(D[2],V[2])]
+					return [WR.Max(D[0],V[0]),D[1] + V[1],WR.Cat(D[2],V[2])]
 				}).Map(function(V)
 				{
 					return {
@@ -1455,7 +1455,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								Date : 1E3 * (V.mtime || V.ptime),
 								More : V.description
 							}
-						},WR.Concat(B.seasons_list,B.series_list))
+						},WR.Cat(B.seasons_list,B.series_list))
 					}
 				})
 			}
@@ -1539,7 +1539,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					{
 						return {
 							Len : V.page.count,
-							Item : WR.Concat(UP,WR.MapU(function(V,F)
+							Item : WR.Cat(UP,WR.MapU(function(V,F)
 							{
 								V = SolveAV(V)
 								Page || (V.Index = F)
@@ -1720,7 +1720,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					return O.API(BiliBiliAPIPGCSeasonSection(ID)).Map(function(B)
 					{
 						B = Common(B)
-						return WR.Concat(R,WR.Unnest(WR.Map(function(V)
+						return WR.Cat(R,WR.Unnest(WR.Map(function(V)
 						{
 							return WR.Map(function(B)
 							{

@@ -89,6 +89,7 @@ module.exports = O =>
 			{
 				var
 				Meta = [],
+				Comment = [],
 				Part = [];
 				Video = Video.video_page
 				Meta.push(Video.description)
@@ -109,12 +110,10 @@ module.exports = O =>
 							B = WC.JTO(B)
 							B.forEach((V,F) =>
 							{
-								if (!Offset && !F)
-									Meta.push('',WR.RepS('\u2014',63),'')
 								if (!Seen.has(V.id))
 								{
 									++New
-									Meta.push
+									Comment.push
 									(
 										`${WW.StrDate(V.created_at)} [${WR.PadS0(4,Seen.size)}] ${WW.StrS(V.playback_time)} ${V.nickname}`,
 										'	' + V.message,
@@ -141,7 +140,11 @@ module.exports = O =>
 				{
 					Title : Video.title,
 					Date : Video.released_at,
-					Meta,
+					Meta : O.MetaJoin
+					(
+						Meta,
+						Comment,
+					),
 					Cover : Video.thumbnail_url,
 					Part,
 				}))

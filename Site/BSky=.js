@@ -51,7 +51,6 @@ module.exports = O =>
 				Prelude = [],
 				Info = {},Meta = [],
 				Reply = [],
-				Sep = ['',WR.RepS('\u2014',63),''],
 				SolvePost = (B,Meta,Prefix,Info) =>
 				{
 					var
@@ -129,14 +128,12 @@ module.exports = O =>
 					WR.Each(V => SolvePost(V,Info ? Reply : Meta,Info ? Prefix : Prefix + '	'),B.replies)
 				};
 				SolvePost(B.thread,Meta,'',Info)
-				Info.Meta =
-				[
-					...Prelude,
-					...Prelude.length ? Sep : [],
-					...Meta,
-					...Reply.length ? Sep : [],
-					...Reply,
-				]
+				Info.Meta = O.MetaJoin
+				(
+					Prelude,
+					Meta,
+					Reply,
+				)
 				return Info
 			})
 		},

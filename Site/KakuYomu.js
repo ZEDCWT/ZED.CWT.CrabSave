@@ -121,7 +121,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				return O.ReqAPI(KakuYomuAPIAPPWork(ID)).Map(function(B)
 				{
 					B = WC.JTO(B)
-					return WR.Concat([SolveWork(B)],WR.Rev(WR.Map(function(V)
+					return WR.Cat([SolveWork(B)],WR.Rev(WR.Map(function(V)
 					{
 						return {
 							ID : MakeID(B.id,V.id),

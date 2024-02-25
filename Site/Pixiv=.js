@@ -4,11 +4,13 @@ WW = require('@zed.cwt/wish'),
 {R : WR,X : WX,C : WC,N : WN} = WW,
 
 PrefixSketch = 'S',
+PrefixNovel = 'N',
 
 Pixiv = 'https://www.pixiv.net/',
 PixivAJAX = Pixiv + 'ajax/',
 PixivAJAXIllust = WW.Tmpl(PixivAJAX,'illust/',undefined),
 PixivAJAXUgoiraMeta = WW.Tmpl(PixivAJAX,'illust/',undefined,'/ugoira_meta'),
+PixivAJAXNovel = WW.Tmpl(PixivAJAX,'novel/',undefined),
 PixivSketch = 'https://sketch.pixiv.net/',
 PixivSketchAPI = PixivSketch + 'api/',
 PixivSketchAPIReply = WW.Tmpl(PixivSketchAPI,'replies/',undefined,'.json');
@@ -77,12 +79,37 @@ module.exports = O =>
 							case 'tag' :
 								R = '	<Tag> ' + V.body
 								break
+							case 'url' :
+								R = '	<URL> ' + V.body
+								break
 							default :
 								WW.Throw('Unknown Sketch Text Type #' + V.type)
 						}
 						return R
 					}),
 					Part : [{URL : U,Ext : E}]
+				}
+			})
+
+			if (PrefixNovel === Prefix) return Ext.ReqB(O.Coke(PixivAJAXNovel(ID))).Map(B =>
+			{
+				var
+				Part = [],
+				T;
+				B = Common(B)
+				if (T = B.textEmbeddedImages)
+					Part.push({URL : WR.Val(T).map(V => V.urls.original)})
+				return {
+					Title : B.title,
+					UP : B.userName,
+					Date : B.createDate,
+					Meta : O.MetaJoin
+					(
+						B.description,
+						B.content
+					),
+					Cover : B.coverUrl,
+					Part,
 				}
 			})
 

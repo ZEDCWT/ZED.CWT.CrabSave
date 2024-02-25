@@ -95,6 +95,7 @@ declare module CrabSaveNS
 			{
 				Raw : WishNS.M3U
 			}>
+			MetaJoin(...Q : (string | string[])[]) : string[]
 			Part(Q : (SitePart | WishNS.Provider<SitePart>)[],Ext? : SiteExt) : WishNS.Provider<SitePart[]>
 		}) : {
 			URL(ID : string,Ext : SiteExt) : WishNS.Provider<SiteURL>

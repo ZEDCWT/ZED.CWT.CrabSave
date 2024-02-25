@@ -163,12 +163,11 @@ module.exports = O =>
 					// Things getting pretty complicated due to the three name design
 					UP : B.fanclub.creator_name + '.' + B.fanclub.fanclub_name,
 					Date : B.posted_at,
-					Meta : Meta.length && MetaContent.length ?
-					[
-						...Meta,
-						'','',WR.RepS('\u2014',63),
-						...MetaContent
-					] : MetaContent.length ? MetaContent : Meta,
+					Meta : O.MetaJoin
+					(
+						Meta,
+						MetaContent
+					),
 					Cover : B.thumb?.original || B.thumb_micro,
 					Part,
 				}

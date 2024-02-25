@@ -105,7 +105,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 								Img : V.hashtag.profile_pic_url,
 								More : '#' + V.hashtag.media_count
 							}
-						},WR.Concat(B.users,B.hashtags).sort(function(Q,S)
+						},WR.Cat(B.users,B.hashtags).sort(function(Q,S)
 						{
 							return Q.position - S.position
 						}))
@@ -126,7 +126,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 									V.user.full_name + ' @' + V.user.username] :
 								[InstagramExploreTag(V.hashtag.name),
 									'#' + V.hashtag.name + ' (' + V.hashtag.media_count + ')']
-						},WR.Concat(B.users,B.hashtags).sort(function(Q,S)
+						},WR.Cat(B.users,B.hashtags).sort(function(Q,S)
 						{
 							return Q.position - S.position
 						})),

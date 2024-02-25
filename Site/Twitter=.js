@@ -147,7 +147,6 @@ module.exports = O =>
 			Prelude = [],
 			Info = {},Meta,
 			Reply = [],
-			Sep = ['',WR.RepS('\u2014',63),''],
 			AddMaybe = B =>
 			{
 				switch (B?.__typename)
@@ -189,14 +188,12 @@ module.exports = O =>
 					return R
 				})
 			},V.entries))
-			Info.Meta =
-			[
-				...Prelude,
-				...Prelude.length ? Sep : [],
-				...Meta,
-				...Reply.length ? Sep : [],
-				...Reply,
-			]
+			Info.Meta = O.MetaJoin
+			(
+				Prelude,
+				Meta,
+				Reply,
+			)
 			return Info
 		}),
 		/*

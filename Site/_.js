@@ -82,6 +82,14 @@ module.exports = Option =>
 				}))
 				.replace(/.+/g,WR.Trim),
 			M3U,
+			MetaJoin : (...Q) => Q.filter(V => V && V.length)
+				.flatMap((V,F) => F ?
+				[
+					'',
+					WR.RepS('\u2014',63),
+					'',
+					...WW.IsArr(V) ? V : [V]
+				] : V),
 			Part : (Q,Ext = WN) => WX.From(Q)
 				.FMapE(V => WX.Any(V).FMap(V =>
 				{
