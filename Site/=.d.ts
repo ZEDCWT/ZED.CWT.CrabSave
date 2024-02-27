@@ -19,6 +19,7 @@ declare module CrabSaveNS
 		Name : string | string[]
 		Judge? : RegExp | RegExp[]
 		JudgeVal? : false | RegExp
+		JudgeMap?(Q : RegExpExecArray) : string
 		Join? : string
 		Example? : (string | SiteMapExampleVal | SiteMapExampleSub | SiteMapExampleInp)[]
 		View(ID : string,Page : number,Pref? : object) : WishNS.Provider<SitePage>

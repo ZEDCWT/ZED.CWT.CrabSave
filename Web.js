@@ -1275,6 +1275,7 @@
 			SolveID = function(S,Q)
 			{
 				return false === S.JudgeVal ? '' :
+					S.JudgeMap ? S.JudgeMap(Q) :
 					2 < Q.length ? Q.slice(1).join(WR.Default('#',S.Join)) :
 					Q[~-Q.length]
 			},
@@ -3986,13 +3987,13 @@
 						},Q.split(RegExp(WW.QuoP(WR.Map(WR.SafeRX,K).join('|'),true)))) :
 						Q
 				},
-				Ah : function(Q,S)
+				Ah : function(Title,URL)
 				{
-					return WV.X(WV.Ah(Q,S))
+					return WV.X(WV.Ah(Title,URL))
 				},
-				Img : function(Q)
+				Img : function(URL,Title)
 				{
-					return WV.Attr(WV.A('img'),'src',MakeImgURL(Q))
+					return URL && WV.Ti(WV.Attr(WV.A('img'),'src',MakeImgURL(URL)),Title || '')
 				},
 				Text : function(Q)
 				{

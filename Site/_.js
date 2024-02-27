@@ -71,7 +71,7 @@ module.exports = Option =>
 						return /^("|')([^]*?)\1/.exec(M)?.[2] ?? WW.MU(/^\S*/,M)
 					},
 					T;
-					if (T = /^<img\b.*\bsrc=/.exec(V))
+					if (T = /^<(?:img|figure)\b.*\bsrc=/.exec(V))
 					{
 						(Collect.Img || (Collect.Img = [])).push(WC.HED(T = SolveAttr(T)))
 						return '{Img} ' + T + ' '

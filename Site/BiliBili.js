@@ -23,10 +23,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 
 	BiliBili = 'https://www.bilibili.com/',
 	BiliBiliVideo = WW.Tmpl(BiliBili,'video/av',undefined),
-	BiliBiliBgmMD = WW.Tmpl(BiliBili,'bangumi/media/md',undefined),
-	BiliBiliBgmSS = WW.Tmpl(BiliBili,'bangumi/play/ss',undefined),
-	BiliBiliBgmEP = WW.Tmpl(BiliBili,'bangumi/play/ep',undefined),
-	BiliBiliMediaListFav = WW.Tmpl(BiliBili,'medialist/detail/ml',undefined),
+	BiliBiliBgmMedia = WW.Tmpl(BiliBili,'bangumi/media/md',undefined),
+	BiliBiliBgmSeason = WW.Tmpl(BiliBili,'bangumi/play/ss',undefined),
+	BiliBiliBgmEpisode = WW.Tmpl(BiliBili,'bangumi/play/ep',undefined),
+	// BiliBiliOpus = WW.Tmpl(BiliBili,'opus/',undefined), // Basically a timeline
+	// BiliBiliMediaListFav = WW.Tmpl(BiliBili,'medialist/detail/ml',undefined),
 	// BiliBiliMyList = WW.Tmpl(BiliBili,'mylist/mylist-',undefined,'.js'),
 	BiliBiliAudio = BiliBili + 'audio/',
 	BiliBiliAudioURL = BiliBili + 'audio/au',
@@ -37,12 +38,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliAudioWebMenu = WW.Tmpl(BiliBiliAudioWeb,'song/of-menu?sid=',undefined,'&pn=',undefined,'&ps=',O.Size),
 	BiliBiliArticleRead = BiliBili + 'read/cv',
 	BiliBiliArticleReadList = BiliBili + 'read/readlist/rl',
-	BiliBiliArticleReadContent = WW.Tmpl(BiliBili,'read/native?id=',undefined),
+	// BiliBiliArticleReadContent = WW.Tmpl(BiliBili,'read/native?id=',undefined),
 	BiliBiliCheese = BiliBili + 'cheese/',
 	BiliBiliCheeseSeason = WW.Tmpl(BiliBiliCheese,'play/ss',undefined),
 	BiliBiliCheeseEpisode = WW.Tmpl(BiliBiliCheese,'play/ep',undefined),
 	BiliBiliAPI = 'https://api.bilibili.com/',
-	BiliBiliAPIArticleList = WW.Tmpl(BiliBiliAPI,'x/article/list/articles?id=',undefined),
+	BiliBiliAPIArticle = BiliBiliAPI + 'x/article/',
+	BiliBiliAPIArticleList = WW.Tmpl(BiliBiliAPIArticle,'list/articles?id=',undefined),
+	BiliBiliAPIArticleView = WW.Tmpl(BiliBiliAPIArticle,'view?id=',undefined),
 	// BiliBiliAPIArticleInfo = WW.Tmpl(BiliBiliAPI,'x/article/viewinfo?id=',undefined,'&mobi_app=unknown'),
 	BiliBiliAPIFavList = WW.Tmpl(BiliBiliAPI,'x/v3/fav/folder/created/list-all?up_mid=',undefined),
 	BiliBiliAPIFav = WW.Tmpl(BiliBiliAPI,'medialist/gateway/base/spaceDetail?media_id=',undefined,'&pn=',undefined,'&ps=20'),
@@ -63,7 +66,17 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliAPIPolymer = BiliBiliAPI + 'x/polymer/',
 	BiliBiliAPIPolymerSeries = WW.Tmpl(BiliBiliAPIPolymer,'space/seasons_series_list?mid=',undefined,'&page_num=',undefined,'&page_size=20'),
 	BiliBiliAPIPolymerArchive = WW.Tmpl(BiliBiliAPIPolymer,'space/seasons_archives_list?mid=0&season_id=',undefined,'&page_num=',undefined,'&page_size=',O.Size),
-	BiliBiliAPIPolymerDynamicSpace = WW.Tmpl(BiliBiliAPIPolymer,'web-dynamic/v1/feed/space?platform=web&features=itemOpusStyle,listOnlyfans,opusBigCover,onlyfansVote&host_mid=',undefined,'&offset=',undefined),
+	BiliBiliAPIPolymerDynamic = BiliBiliAPIPolymer + 'web-dynamic/v1/',
+	BiliBiliAPIPolymerDynamicFeature = '&features=' +
+	[
+		// 'itemOpusStyle', // Enabling this will convert `module_dynamic.major.type` to `MAJOR_TYPE_OPUS`
+		'listOnlyfans',
+		'opusBigCover',
+		'onlyfansVote'
+	],
+	BiliBiliAPIPolymerDynamicDetail = WW.Tmpl(BiliBiliAPIPolymerDynamic,'detail?id=',undefined),
+	BiliBiliAPIPolymerDynamicNew = WW.Tmpl(BiliBiliAPIPolymerDynamic,'feed/all?type=all',BiliBiliAPIPolymerDynamicFeature,'&offset=',undefined),
+	BiliBiliAPIPolymerDynamicSpace = WW.Tmpl(BiliBiliAPIPolymerDynamic,'feed/space?',BiliBiliAPIPolymerDynamicFeature,'&host_mid=',undefined,'&offset=',undefined),
 	BiliBiliAPISeries = BiliBiliAPI + 'x/series/',
 	// BiliBiliAPISeriesDetail = WW.Tmpl(BiliBiliAPISeries,'series?series_id=',undefined),
 	BiliBiliAPISeriesArchive = WW.Tmpl(BiliBiliAPISeries,'archives?mid=',undefined,'&series_id=',undefined,'&pn=',undefined,'&ps=',O.Size),
@@ -95,18 +108,18 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliSpaceFav = WW.Tmpl(BiliBiliSpace,undefined,'/favlist?fid=',undefined),
 	// BiliBiliVC = 'https://vc.bilibili.com/',
 	// BiliBiliVCVideo = WW.Tmpl(BiliBiliVC,'video/',undefined),
-	BiliBiliVCAPI = 'https://api.vc.bilibili.com/',
+	// BiliBiliVCAPI = 'https://api.vc.bilibili.com/',
 	// BiliBiliVCAPIDetail = WW.Tmpl(BiliBiliVCAPI,'clip/v1/video/detail?video_id=',undefined),
 	// BiliBiliVCAPIOnes = WW.Tmpl(BiliBiliVCAPI,'clip/v1/video/ones?poster_uid=',undefined,'&need_playurl=0&page_size=',O.Size,'&next_offset=',undefined),
-	BiliBiliVCAPIDynamicAPIRoot = BiliBiliVCAPI + 'dynamic_svr/v1/dynamic_svr/',
-	BiliBiliVCAPIDynamicType = 268435455,
-	BiliBiliVCAPIDynamicNew = BiliBiliVCAPIDynamicAPIRoot + 'dynamic_new?uid=&type_list=' + BiliBiliVCAPIDynamicType,
-	BiliBiliVCAPIDynamicHistory = WW.Tmpl(BiliBiliVCAPIDynamicAPIRoot,'dynamic_history?uid=&type=',BiliBiliVCAPIDynamicType,'&offset_dynamic_id=',undefined),
-	BiliBiliVCAPIDynamicDetail = WW.Tmpl(BiliBiliVCAPIDynamicAPIRoot,'get_dynamic_detail?dynamic_id=',undefined),
-	BiliBiliVCAPIDynamicDetailType2 = WW.Tmpl(BiliBiliVCAPIDynamicAPIRoot,'get_dynamic_detail?type=2&rid=',undefined),
+	// BiliBiliVCAPIDynamicAPIRoot = BiliBiliVCAPI + 'dynamic_svr/v1/dynamic_svr/',
+	// BiliBiliVCAPIDynamicType = 268435455,
+	// BiliBiliVCAPIDynamicNew = BiliBiliVCAPIDynamicAPIRoot + 'dynamic_new?uid=&type_list=' + BiliBiliVCAPIDynamicType,
+	// BiliBiliVCAPIDynamicHistory = WW.Tmpl(BiliBiliVCAPIDynamicAPIRoot,'dynamic_history?uid=&type=',BiliBiliVCAPIDynamicType,'&offset_dynamic_id=',undefined),
+	// BiliBiliVCAPIDynamicDetail = WW.Tmpl(BiliBiliVCAPIDynamicAPIRoot,'get_dynamic_detail?dynamic_id=',undefined),
+	// BiliBiliVCAPIDynamicDetailType2 = WW.Tmpl(BiliBiliVCAPIDynamicAPIRoot,'get_dynamic_detail?type=2&rid=',undefined),
 	// BiliBiliVCAPIDynamicUser = WW.Tmpl(BiliBiliVCAPIDynamicAPIRoot,'space_history?host_uid=',undefined,'&offset_dynamic_id=',undefined),
 	BiliBiliTimeline = 'https://t.bilibili.com/',
-	BiliBiliTimelineVote = WW.Tmpl(BiliBiliTimeline,'vote/h5/index/#/result?vote_id=',undefined),
+	// BiliBiliTimelineVote = WW.Tmpl(BiliBiliTimeline,'vote/h5/index/#/result?vote_id=',undefined),
 	BiliBiliLive = 'https://live.bilibili.com/',
 	// Appkey = '20bee1f7a18a425c',
 	ReqWBISalt = 'bdab7be0a313f1d847ccd8999e1b4370',ReqWBILast,
@@ -181,13 +194,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			UP : WR.Default(V.author,V.owner && V.owner.name) ||
 				V.apiSeasonInfo && V.apiSeasonInfo.title + ' ' + PrefixBgmSeason + V.apiSeasonInfo.season_id,
 			UPURL : (UP = WR.Default(V.mid,V.owner && V.owner.mid)) ? BiliBiliSpace + UP :
-				V.apiSeasonInfo ? BiliBiliBgmSS(V.apiSeasonInfo.season_id) :
+				V.apiSeasonInfo ? BiliBiliBgmSeason(V.apiSeasonInfo.season_id) :
 				null,
 			Date : 1E3 * WR.Default(V.created,V.pubdate),
 			Len : WR.Default(V.length,V.duration),
-			Desc : WR.Default(V.description,V.desc),
-			More : WR.Cat
-			(
+			More :
+			[
+				V.dynamic,
+				WR.Default(V.description,V.desc),
 				WR.Map(function(B)
 				{
 					return O.Ah(B.title + ' ' + B.name,BiliBiliSpace + B.mid)
@@ -197,11 +211,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					V.stein_guide_cid &&
 						O.Ah('Stein ' + V.stein_guide_cid + ' (' + V.videos + ')',
 							BiliBiliVideo(V.aid) + '#Stein'),
-					(EP = V.redirect_url) && O.Ah(EP = WW.MU(/ep\d+/,V.redirect_url),BiliBiliBgmEP(EP = EP.slice(2))),
+					(EP = V.redirect_url) && O.Ah(EP = WW.MU(/ep\d+/,V.redirect_url),BiliBiliBgmEpisode(EP = EP.slice(2))),
 					V.season_id && O.Ah(PrefixUGCSeason + V.season_id,BiliBiliSpaceChannelSeason(UP,V.season_id)),
 					V.is_union_video ? '{UnionVideo}' : ''
 				]
-			),
+			],
 			EP : EP
 		}
 	},
@@ -210,7 +224,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		return {
 			NonAV : true,
 			ID : PrefixArticle + V.id,
-			Img : V.banner_url,
+			Img : V.banner_url || V.origin_image_urls,
 			Title : V.title,
 			UP : V.author.name,
 			UPURL : BiliBiliSpace + V.author.mid,
@@ -222,6 +236,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			]
 		}
 	},
+	/*
 	SolveDynamicSingle = function(Desc,Card,User)
 	{
 		var
@@ -249,11 +264,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			case 1 : // Forward
 				MakePost()
 				R.More.push(O.Ah(Desc.origin.dynamic_id_str,BiliBiliTimeline + Desc.origin.dynamic_id_str))
-				/*
 					TL784351038127734807
 					Weird that the user field in this card points to an absurd target
 					{"code":0,"msg":"","message":"","data":{"card":{"desc":{"uid":9099524,"type":2,"rid":235910203,"acl":1024,"view":57117,"repost":6351,"comment":528,"like":1323,"is_liked":0,"dynamic_id":784351038127734807,"timestamp":1681459357,"pre_dy_id":0,"orig_dy_id":0,"orig_type":0,"user_profile":{"info":{"uid":9099524,"uname":"李旎CarlyLee","face":"https://i2.hdslb.com/bfs/app/6ad0e27720eeabd1c85873e82af5027a7994f911.jpg","face_nft":0},"card":{"official_verify":{"type":0,"desc":"bilibili副董事长兼COO"}},"vip":{"vipType":2,"vipDueDate":1944489600000,"vipStatus":1,"themeType":0,"label":{"path":"","text":"十年大会员","label_theme":"ten_annual_vip","text_color":"#FFFFFF","bg_style":1,"bg_color":"#FB7299","border_color":""},"avatar_subscript":1,"nickname_color":"#FB7299","role":7,"avatar_subscript_url":""},"pendant":{"pid":0,"name":"","image":"","expire":0,"image_enhance":"","image_enhance_frame":""},"rank":"10000","sign":"destiny","level_info":{"current_level":6}},"uid_type":1,"stype":0,"r_type":0,"inner_id":0,"status":1,"dynamic_id_str":"784351038127734807","pre_dy_id_str":"0","orig_dy_id_str":"0","rid_str":"235910203"},"card":"{\"item\":{\"at_control\":\"[{\\\"location\\\":30,\\\"length\\\":4,\\\"data\\\":\\\"4\\\",\\\"type\\\":2}]\",\"category\":\"daily\",\"description\":\"送10个年度大会员，我们在B站一起看《流浪地球2》 [OK]互动抽奖\",\"id\":235910203,\"is_fav\":0,\"pictures\":[{\"img_height\":1920,\"img_size\":2821.0732421875,\"img_src\":\"https:\\/\\/i0.hdslb.com\\/bfs\\/new_dyn\\/7e24022e0e1ffe67ba8496ad99e386df3493270688631292.png\",\"img_tags\":null,\"img_width\":1080}],\"pictures_count\":1,\"reply\":528,\"role\":[],\"settings\":{\"copy_forbidden\":\"0\"},\"source\":[],\"title\":\"\",\"upload_time\":1681459357},\"user\":{\"head_url\":\"https:\\/\\/i0.hdslb.com\\/bfs\\/face\\/member\\/noface.jpg\",\"name\":\"bili_31310634183\",\"uid\":3493270688631292,\"vip\":{\"avatar_subscript\":0,\"due_date\":0,\"label\":{\"label_theme\":\"\",\"path\":\"\",\"text\":\"\"},\"nickname_color\":\"\",\"status\":0,\"theme_type\":0,\"type\":0,\"vip_pay_type\":0}}}","extension":{"lott":"{\"lottery_id\":146091}"},"extend_json":"{\"ctrl\":[{\"data\":\"4\",\"length\":4,\"location\":30,\"type\":2}],\"from\":{\"from\":\"create.dynamic.web\",\"verify\":{\"dc\":{},\"verify_first\":true}},\"like_icon\":{\"action\":\"\",\"action_url\":\"\",\"end\":\"\",\"end_url\":\"\",\"start\":\"\",\"start_url\":\"\"},\"lott\":{\"lottery_id\":146091}}","display":{"emoji_info":{"emoji_details":[{"emoji_name":"[OK]","id":1950,"package_id":1,"state":0,"type":1,"attr":0,"text":"[OK]","url":"https://i0.hdslb.com/bfs/emote/4683fd9ffc925fa6423110979d7dcac5eda297f4.png","meta":{"size":1},"mtime":1668688325}]},"relation":{"status":1,"is_follow":0,"is_followed":0}}},"result":0,"_gt_":0}}
-				*/
 				Card.origin ?
 					R = [R,SolveDynamicSingle(Desc.origin,Card.origin,WR.Path(['origin_user','info'],Card))] :
 					R.More.push(Card.item.tips)
@@ -445,6 +458,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					})
 			}]
 	},
+	*/
 	SolvePolymerDynamic = function(B,R)
 	{
 		var
@@ -454,18 +468,44 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		// ModInteraction = B.modules.module_interaction,
 		// ModMore = B.modules.module_more,
 		// ModStat = B.modules.module_stat,
-		Card = {},
+		More = [],
+		Card = {More : More},
 		SetUnk = function(Q)
 		{
-			Card.Non = Card.Unk = true
-			Card.Title = 'Unknown ' + Q
+			More.push('Unknown ' + Q)
+		},
+		SolveRichText = function(Q)
+		{
+			return WR.Map(function(V)
+			{
+				var
+				Link,
+				Ele;
+				switch (V.type)
+				{
+					case 'RICH_TEXT_NODE_TYPE_AT' :
+						Link = BiliBiliSpace + V.rid
+						break
+					case 'RICH_TEXT_NODE_TYPE_EMOJI' :
+						Link = WR.Path(['emoji','icon_url'],V) || V.jump_url
+						Ele = O.Img(Link,V.text)
+						WV.CSS(Ele,
+						{
+							width : 22,
+							height : 22
+						})
+						break
+					default :
+						Link = V.jump_url
+				}
+				return Ele || (Link ? WV.Ah(V.text,Link) : V.orig_text)
+			},Q)
 		},
 		SolveMajor = function()
 		{
 			var
-			Major = ModDynamic.major,
-			T;
-			switch (Major.type)
+			Major = ModDynamic.major;
+			if (Major) switch (Major.type)
 			{
 				case 'MAJOR_TYPE_ARCHIVE' :
 					T = Major.archive
@@ -474,51 +514,97 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					Card.Title = T.title
 					Card.Len = T.duration_text
 					break
+				case 'MAJOR_TYPE_ARTICLE' :
+					T = Major.article
+					Card.ID = PrefixArticle + T.id
+					Card.Img = T.covers
+					Card.Title = T.title
+					Card.Desc = T.desc
+					break
+				case 'MAJOR_TYPE_DRAW' :
+					T = Major.draw
+					Card.Img = WR.Pluck('src',T.items)
+					break
+				case 'MAJOR_TYPE_LIVE_RCMD' :
+					T = WC.JTO(Major.live_rcmd.content).live_play_info
+					Card.Non = true
+					Card.ID = T.room_id
+					Card.URL = BiliBiliLive + T.room_id
+					Card.Img = T.cover
+					Card.Title = T.title
+					More.push(T.area_id + ':' + T.area_name)
+					break
 				case 'MAJOR_TYPE_OPUS' :
 					T = Major.opus
 					Card.Img = WR.Pluck('url',T.pics)
-					if (T.title)
-					{
-						Card.ID =
-							WW.MU(RegExp('\\b' + PrefixArticle + '\\d+'),T.jump_url) ||
-							Card.ID
-						Card.Title = T.title
-					}
-					else Card.Title = T.summary.text
+					Card.Title = T.summary.text
+					break
+				case 'MAJOR_TYPE_PGC' :
+					T = Major.pgc
+					Card.ID = PrefixBgmEpisode + T.epid
+					Card.Img = T.cover
+					Card.Title = T.title
 					break
 				default :
 					SetUnk(Major.type)
 			}
-		};
+		},
+		T;
 
 		R = R || []
 		R.push(Card)
 
 		Card.ID = PrefixTimeline + B.id_str
-		if (ModAuthor)
+		if (ModAuthor) switch (ModAuthor.type)
 		{
-			Card.UP = ModAuthor.name
-			Card.UPURL = BiliBiliSpace + ModAuthor.mid
-			Card.Date = 1E3 * ModAuthor.pub_ts
+			case 'AUTHOR_TYPE_NORMAL' :
+				Card.UP = ModAuthor.name
+				Card.UPURL = BiliBiliSpace + ModAuthor.mid
+				Card.Date = 1E3 * ModAuthor.pub_ts
+				ModAuthor.pub_action && More.push(ModAuthor.pub_action)
+				break
+			case 'AUTHOR_TYPE_PGC' :
+				Card.UP = ModAuthor.name
+				Card.UPURL = BiliBiliBgmSeason(ModAuthor.mid)
+				Card.Date = ModAuthor.pub_time
+				break
+			default :
+				SetUnk(ModAuthor.type)
 		}
 		switch (B.type)
 		{
 			case 'DYNAMIC_TYPE_NONE' :
 				R.pop()
 				break
+			case 'DYNAMIC_TYPE_ARTICLE' :
 			case 'DYNAMIC_TYPE_AV' :
 			case 'DYNAMIC_TYPE_DRAW' :
+			case 'DYNAMIC_TYPE_LIVE_RCMD' :
+			case 'DYNAMIC_TYPE_PGC_UNION' :
 			case 'DYNAMIC_TYPE_WORD' :
 				SolveMajor()
 				break
-			case 'DYNAMIC_TYPE_ARTICLE' :
-				break
 			case 'DYNAMIC_TYPE_FORWARD' :
-				Card.Title = ModDynamic.desc.text
 				SolvePolymerDynamic(B.orig,R)
 				break
 			default :
 				SetUnk(B.type)
+		}
+		if (T = ModDynamic && ModDynamic.desc)
+		{
+			if (Card.Title)
+			{
+				More.push(SolveRichText(T.rich_text_nodes))
+			}
+			else
+			{
+				Card.Title = T.text
+				Card.TitleView = SolveRichText(T.rich_text_nodes)
+			}
+		}
+		if (T = ModDynamic && ModDynamic.additional)
+		{
+			// We may handle this to display more content
 		}
 
 		if (IsTop && 1 < R.length)
@@ -545,7 +631,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	},
 	EP2AV = WX.CacheM(function(ID)
 	{
-		return O.API(WW.N.ReqOH(BiliBiliBgmEP(ID),'Cookie','stardustpgcv=0')).Map(function(B)
+		return O.API(WW.N.ReqOH(BiliBiliBgmEpisode(ID),'Cookie','stardustpgcv=0')).Map(function(B)
 		{
 			B = SolveInitState(B)
 			B = WR.Find(function(V)
@@ -628,7 +714,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			}
 			return (R[0].EP ? EP2AV(R[0].EP).Tap(function(Q)
 			{
-				R[0].More.push(O.Ah(PrefixBgmSeason + Q[1],BiliBiliBgmSS(Q[1])))
+				R[0].More.push(O.Ah(PrefixBgmSeason + Q[1],BiliBiliBgmSeason(Q[1])))
 			}) : WX.Just())
 				.Map(WR.Const(R))
 		})
@@ -713,7 +799,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		Name : '\u55F6\u54E9\u55F6\u54E9',
 		Alias : 'B \u55F6\u54E9 \u54D4\u54E9\u54D4\u54E9 \u54D4\u54E9',
 		Judge : /\bBiliBili\b|\b[AB]V\d+/i,
-		Min : 'SESSDATA',
+		Min :
+		[
+			'SESSDATA',
+			'buvid3' // Required to read articles
+		],
 		Sign : function()
 		{
 			return O.Req(BiliBiliAPIWebNav).Map(function(B)
@@ -724,6 +814,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		Map : [
 		{
 			Name : O.NameFind,
+			Judge : /\bSearch\b.*?\bKeyword=([^&?#]+)/i,
+			JudgeMap : function(V)
+			{
+				return WC.UD(V[1])
+			},
 			Example :
 			[
 				'メイドインアビス'
@@ -744,12 +839,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								Non : true,
 								ID : V.pgc_season_id,
 								View : PrefixBgmSeason + V.pgc_season_id,
-								URL : BiliBiliBgmSS,
+								URL : BiliBiliBgmSeason,
 								Img : V.cover,
 								Title : (V.org_title && V.org_title !== V.title ? V.org_title + '\n' : '') +
 									V.title,
 								UP : PrefixBgmMedia + V.media_id,
-								UPURL : BiliBiliBgmMD(V.media_id),
+								UPURL : BiliBiliBgmMedia(V.media_id),
 								Date : 1E3 * V.pubtime
 							}
 							V.Index = Index + WR.PadL(B.result.length + ~-B.page * B.pagesize,F + ~-B.page * B.pagesize)
@@ -883,14 +978,19 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},{
 			Name :
 			[
+				'Opus',
 				'Timeline',
 				'DynamicPost'
 			],
 			Judge :
 			[
-				O.Num('T(?:\\.\\w+)+|Dynamic(?=\\W+\\d{10})|TL'),
-				/\bT(?:\.\w+)+\/(\d+).*?\b(Type=2)\b/i,
-				O.Num('Opus') // bilibili.com/opus/\d+
+				O.Num('T(?:\\.\\w+)+|Dynamic(?=\\W+\\d{10})|TL|Opus'),
+				/*
+					`Type=2` may be a lottery sub view
+					Since we have not recorded the sample and we are upgrading to the polymer API
+					Just ignore it
+					/\bT(?:\.\w+)+\/(\d+).*?\b(Type=2)\b/i,
+				*/
 			],
 			JudgeVal : O.ValNum,
 			Example :
@@ -902,6 +1002,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					ID : '406709711895875057'
 				}
 			],
+			/*
 			View : function(ID)
 			{
 				ID = ID.split('#')
@@ -915,6 +1016,17 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							Item : WR.Flatten([SolveDynamic(B.card)])
 						}
 					})
+			}
+			*/
+			View : function(ID)
+			{
+				return O.ReqAPI(BiliBiliAPIPolymerDynamicDetail(ID)).Map(function(B)
+				{
+					B = Common(B)
+					return {
+						Item : SolvePolymerDynamic(B.item)
+					}
+				})
 			}
 		},{
 			Name : 'UserDynamic',
@@ -1067,6 +1179,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					ID : '3112593'
 				}
 			],
+			/*
 			View : function(ID)
 			{
 				return O.API(BiliBiliArticleReadContent(ID))
@@ -1092,6 +1205,17 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							}]
 						}
 					})
+			}
+			*/
+			View : function(ID)
+			{
+				return O.ReqAPI(BiliBiliAPIArticleView(ID)).Map(function(B)
+				{
+					B = Common(B)
+					return {
+						Item : [SolveCV(B)]
+					}
+				})
 			}
 		},{
 			Name : ['ArticleList','ReadList'],
@@ -1595,6 +1719,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					Val : ''
 				}
 			],
+			/*
 			View : O.More(function()
 			{
 				return O.Req(BiliBiliVCAPIDynamicNew)
@@ -1602,6 +1727,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			{
 				return O.Req(BiliBiliVCAPIDynamicHistory(I[Page]))
 			},SolveDynamicResponse)
+			*/
+			View : O.More(function()
+			{
+				return O.ReqAPI(BiliBiliAPIPolymerDynamicNew(''))
+			},function(I,Page)
+			{
+				return O.ReqAPI(BiliBiliAPIPolymerDynamicNew(I[Page]))
+			},SolvePolymerDynamicResponse)
 		},{
 			Name : PrefixCheeseSeason,
 			Judge : O.Num('Cheese.*SS'),
@@ -1645,7 +1778,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				'340931',
 				{
 					As : 'Inp',
-					Val : BiliBiliBgmEP(340931),
+					Val : BiliBiliBgmEpisode(340931),
 					ID : '340931'
 				}
 			],
@@ -1665,7 +1798,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				'34543',
 				{
 					As : 'Inp',
-					Val : BiliBiliBgmSS(34543),
+					Val : BiliBiliBgmSeason(34543),
 					ID : '34543'
 				}
 			],
@@ -1690,11 +1823,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						{
 							Non : true,
 							ID : PrefixBgmSeason + B.season_id,
-							URL : BiliBiliBgmSS(B.season_id),
+							URL : BiliBiliBgmSeason(B.season_id),
 							Img : B.cover,
 							Title : B.title,
 							UP : PrefixBgmMedia + B.media_id,
-							UPURL : BiliBiliBgmMD(B.media_id),
+							UPURL : BiliBiliBgmMedia(B.media_id),
 							Date : B.publish.pub_time,
 							Desc : B.evaluate,
 							More : B.time_length_show
@@ -1703,11 +1836,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							return {
 								Index : F,
 								ID : SingleExpanded ? V.aid + '#' + V.cid : V.aid,
-								URL : BiliBiliBgmEP(V.id),
+								URL : BiliBiliBgmEpisode(V.id),
 								Img : V.cover,
 								Title : WR.Trim(V.title + ' ' + V.long_title),
 								UP : 'ep' + V.id,
-								UPURL : BiliBiliBgmEP(V.id),
+								UPURL : BiliBiliBgmEpisode(V.id),
 								More :
 								[
 									SingleExpanded && ShowCID(V.cid,CID)
@@ -1726,11 +1859,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							{
 								return {
 									ID : B.aid,
-									URL : BiliBiliBgmEP(B.id),
+									URL : BiliBiliBgmEpisode(B.id),
 									Img : B.cover,
 									Title : WR.Trim(V.title + ' | ' + B.title + ' ' + B.long_title),
 									UP : PrefixBgmEpisode + B.id,
-									UPURL : BiliBiliBgmEP(B.id),
+									UPURL : BiliBiliBgmEpisode(B.id),
 								}
 							},V.episodes)
 						},B.section)))
@@ -1746,7 +1879,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				'28230043',
 				{
 					As : 'Inp',
-					Val : BiliBiliBgmMD(28230043),
+					Val : BiliBiliBgmMedia(28230043),
 					ID : '28230043'
 				}
 			],
@@ -1764,11 +1897,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								return {
 									Non : true,
 									ID : PrefixBgmSeason + V.season_id,
-									URL : BiliBiliBgmSS(V.season_id),
+									URL : BiliBiliBgmSeason(V.season_id),
 									Img : V.cover,
 									Title : J ? B.title : V.season_title,
 									UP : PrefixBgmMedia + V.media_id,
-									UPURL : BiliBiliBgmMD(V.media_id),
+									UPURL : BiliBiliBgmMedia(V.media_id),
 									Date : J && B.publish.pub_time,
 									Desc : J && B.evaluate,
 									More : J && B.time_length_show
@@ -1805,7 +1938,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Q = /^([A-Z]*)(\d+)$/i.exec(Q) || ['','',Q]
 			return PrefixTimeline === Q[1] ? BiliBiliTimeline + Q[2] :
 				PrefixAudio === Q[1] ? BiliBiliAudioURL + Q[2] :
+				PrefixArticleList === Q[1] ? BiliBiliArticleReadList + Q[2] :
 				PrefixArticle === Q[1] ? BiliBiliArticleRead + Q[2] :
+				PrefixBgmMedia === Q[1] ? BiliBiliBgmMedia(Q[2]) :
+				PrefixBgmSeason === Q[1] ? BiliBiliBgmSeason(Q[2]) :
+				PrefixBgmEpisode === Q[1] ? BiliBiliBgmEpisode(Q[2]) :
+				PrefixCheeseSeason === Q[1] ? BiliBiliCheeseSeason(Q[2]) :
 				PrefixCheeseEpisode === Q[1] ? BiliBiliCheeseEpisode(Q[2]) :
 				BiliBiliVideo(Q[2].replace(/#\d+$/,''))
 		}

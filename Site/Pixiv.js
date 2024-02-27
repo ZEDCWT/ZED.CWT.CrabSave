@@ -79,7 +79,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			UP : V.userName,
 			UPURL : PixivUser(V.userId),
 			Date : V.createDate,
-			More : V.description
+			More : O.Text(V.description)
 		}
 	},
 	SolveUserAll = function(ID)
@@ -215,37 +215,28 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			Judge :
 			[
 				/^$/,
-				/Bookmark.*Illust/i
+				/Bookmark/i
 			],
 			JudgeVal : false,
 			View : function(_,Page)
 			{
-				return O.Req(PixivAJAXFollowLatestIllust(-~Page)).Map(function(B)
+				return WX.Merge
+				(
+					O.Req(PixivAJAXFollowLatestIllust(-~Page)).Map(function(B)
+					{
+						return WR.Map(SolveIllustBrief,Common(B).thumbnails.illust)
+					}),
+					O.Req(PixivAJAXFollowLatestNovel(-~Page)).Map(function(B)
+					{
+						return WR.Map(SolveNovelBrief,Common(B).thumbnails.novel)
+					})
+				).All().Map(function(B)
 				{
-					B = Common(B)
 					return {
 						Max : 100,
-						Size : 60,
-						Item : WR.Map(SolveIllustBrief,B.thumbnails.illust)
-					}
-				})
-			}
-		},{
-			Name : 'BookmarkNovel',
-			Judge :
-			[
-				/Novel.*Bookmark/i
-			],
-			JudgeVal : false,
-			View : function(_,Page)
-			{
-				return O.Req(PixivAJAXFollowLatestNovel(-~Page)).Map(function(B)
-				{
-					B = Common(B)
-					return {
-						Max : 100,
-						Size : 60,
-						Item : WR.Map(SolveNovelBrief,B.thumbnails.novel)
+						Size : 60 * B.length,
+						Item : WR.SortBy(function(V){return V.Date},WR.Flatten(B))
+							.reverse()
 					}
 				})
 			}
@@ -439,7 +430,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 										S.next && O.Ah('\u2192 ' + S.next.title,PixivNovel(S.next.id))
 									]
 								}(B.seriesNavData),
-								B.description
+								O.Text(B.description)
 							]
 						}]
 					}

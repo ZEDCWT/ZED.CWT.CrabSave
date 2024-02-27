@@ -10,12 +10,17 @@ PrefixArticle = 'cv',
 PrefixCheeseEpisode = 'CheeseEpisode',
 
 BiliBili = 'https://www.bilibili.com/',
+BiliBiliVideo = WW.Tmpl(BiliBili,'video/av',undefined),
+BiliBiliBgmEpisode = WW.Tmpl(BiliBili,'bangumi/play/ep',undefined),
 BiliBiliAudio = BiliBili + 'audio/',
 BiliBiliAudioWeb = BiliBiliAudio + 'music-service-c/web/',
 BiliBiliAudioWebInfo = WW.Tmpl(BiliBiliAudioWeb,'song/info?sid=',undefined),
 BiliBiliAudioWebURL = WW.Tmpl(BiliBiliAudioWeb,'url?sid=',undefined,'&privilege=2&quality=2'),
-BiliBiliArticleReadContent = WW.Tmpl(BiliBili,'read/native?id=',undefined),
+BiliBiliArticleRead = BiliBili + 'read/cv',
+// BiliBiliArticleReadContent = WW.Tmpl(BiliBili,'read/native?id=',undefined),
 BiliBiliAPI = 'https://api.bilibili.com/',
+BiliBiliAPIArticle = BiliBiliAPI + 'x/article/',
+BiliBiliAPIArticleView = WW.Tmpl(BiliBiliAPIArticle,'view?id=',undefined),
 BiliBiliAPIWebView = WW.Tmpl(BiliBiliAPI,'x/web-interface/view?aid=',undefined),
 BiliBiliAPIPlayURL = WW.Tmpl(BiliBiliAPI,'x/player/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=4048&fourk=1'),
 BiliBiliAPIPlayURLPGC = WW.Tmpl(BiliBiliAPI,'pgc/player/web/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=4048&fourk=1'),
@@ -30,10 +35,13 @@ BiliBiliAPIPUGV = BiliBiliAPI + 'pugv/',
 BiliBiliAPIPUGVViewSeasonByEP = WW.Tmpl(BiliBiliAPIPUGV,'view/web/season?ep_id=',undefined),
 BiliBiliAPIPUGVPlayURL = WW.Tmpl(BiliBiliAPIPUGV,'player/web/playurl?ep_id=',undefined,'&qn=',undefined,'&fnver=0&fnval=4048&fourk=1'),
 // BiliBiliAPINotoInfo = WW.Tmpl(BiliBiliAPI,'x/note/publish/info?cvid=',undefined),
-BiliBiliVCAPI = 'https://api.vc.bilibili.com/',
+BiliBiliAPIPolymer = BiliBiliAPI + 'x/polymer/',
+BiliBiliAPIPolymerDynamic = BiliBiliAPIPolymer + 'web-dynamic/v1/',
+BiliBiliAPIPolymerDynamicDetail = WW.Tmpl(BiliBiliAPIPolymerDynamic,'detail?id=',undefined),
+// BiliBiliVCAPI = 'https://api.vc.bilibili.com/',
 // BiliBiliVCAPIDetail = WW.Tmpl(BiliBiliVCAPI,'clip/v1/video/detail?video_id=',undefined,'&need_playurl=1'),
-BiliBiliVCAPIDynamicAPIRoot = BiliBiliVCAPI + 'dynamic_svr/v1/dynamic_svr/',
-BiliBiliVCAPIDynamicDetail = WW.Tmpl(BiliBiliVCAPIDynamicAPIRoot,'get_dynamic_detail?dynamic_id=',undefined),
+// BiliBiliVCAPIDynamicAPIRoot = BiliBiliVCAPI + 'dynamic_svr/v1/dynamic_svr/',
+// BiliBiliVCAPIDynamicDetail = WW.Tmpl(BiliBiliVCAPIDynamicAPIRoot,'get_dynamic_detail?dynamic_id=',undefined),
 
 Common = V => (V = WC.JTO(V)).code ?
 	WW.Throw(V) :
@@ -51,8 +59,8 @@ Common = V => (V = WC.JTO(V)).code ?
 /**@type {CrabSaveNS.SiteO}*/
 module.exports = O =>
 {
-	var
-	SolveInitState = B => O.JOM(/__INITIAL_STATE__=/,B);
+	// var
+	// SolveInitState = B => O.JOM(/__INITIAL_STATE__=/,B);
 
 	return {
 		URL : (Q,Ext) =>
@@ -79,6 +87,7 @@ module.exports = O =>
 			}
 			else ID = Q[0]
 
+			/*
 			if (PrefixTimeline === Prefix) return Ext.ReqB(O.Coke(BiliBiliVCAPIDynamicDetail(ID))).Map(B =>
 			{
 				var
@@ -123,6 +132,102 @@ module.exports = O =>
 				}
 				return R
 			})
+			*/
+
+			if (PrefixTimeline === Prefix) return Ext.ReqB(O.Coke(BiliBiliAPIPolymerDynamicDetail(ID))).Map(B =>
+			{
+				var
+				SetUnk = Q => O.Bad('Unknown ' + Q),
+				SolveCard = (B,IsTop) =>
+				{
+					var
+					ModAuthor = B.modules.module_author,
+					ModDynamic = B.modules.module_dynamic,
+					Meta = [],Part = [],
+					Card = {},
+					NonTopCheck = () => IsTop && O.Bad('BadTop ' + B.type),
+					SolveMajor = () =>
+					{
+						var
+						Major = ModDynamic.major;
+						if (Major) switch (Major.type)
+						{
+							case 'MAJOR_TYPE_ARCHIVE' :
+								T = Major.archive
+								Card.Link = BiliBiliVideo(T.aid)
+								Meta.push(T.title)
+								break
+							case 'MAJOR_TYPE_ARTICLE' :
+								T = Major.article
+								Card.Link = BiliBiliArticleRead + T.id
+								Meta.push(T.title)
+								break
+							case 'MAJOR_TYPE_DRAW' :
+								T = Major.draw
+								Part.push({URL : WR.Pluck('src',T.items)})
+								break
+							// case 'MAJOR_TYPE_LIVE_RCMD' :
+							// case 'MAJOR_TYPE_OPUS' :
+							case 'MAJOR_TYPE_PGC' :
+								T = Major.pgc
+								Card.Link = BiliBiliBgmEpisode(T.epid)
+								Meta.push(T.title)
+								break
+							default :
+								SetUnk(Major.type)
+						}
+					},
+					T;
+					if (ModAuthor) switch(ModAuthor.type)
+					{
+						case 'AUTHOR_TYPE_NORMAL' :
+							Card.UP = ModAuthor.name
+							Card.Date = 1E3 * ModAuthor.pub_ts
+							break
+						case 'AUTHOR_TYPE_PGC' :
+							Card.UP = ModAuthor.name
+							Card.Date = ModAuthor.pub_time
+							break
+						default :
+							SetUnk(ModAuthor.type)
+					}
+					if (T = ModDynamic && ModDynamic.desc)
+						Meta.push(Card.Title = T.text)
+					switch (B.type)
+					{
+						case 'DYNAMIC_TYPE_NONE' :
+							NonTopCheck()
+							break
+						case 'DYNAMIC_TYPE_DRAW' :
+						case 'DYNAMIC_TYPE_LIVE_RCMD' :
+						case 'DYNAMIC_TYPE_WORD' :
+							SolveMajor()
+							break
+						case 'DYNAMIC_TYPE_ARTICLE' :
+						case 'DYNAMIC_TYPE_AV' :
+						case 'DYNAMIC_TYPE_PGC_UNION' :
+							NonTopCheck()
+							SolveMajor()
+							break
+						case 'DYNAMIC_TYPE_FORWARD' :
+							T = SolveCard(B.orig,false)
+							Meta = O.MetaJoin(Meta,
+							[
+								...T.Link ? [T.Link] : [],
+								(WW.IsStr(T.Date) ? T.Date : WW.StrDate(T.Date)) + ' ' + T.UP,
+								...T.Meta,
+							])
+							break
+						default :
+							SetUnk(B.type)
+					}
+					Card.Meta = Meta
+					Card.Part = Part
+					return Card
+				};
+				B = Common(B).item
+				return SolveCard(B,true)
+			})
 
 			/*
 			if (PrefixShortVideo === Prefix) return Ext.ReqB(O.Coke(BiliBiliVCAPIDetail(ID))).Map(B =>
@@ -162,6 +267,7 @@ module.exports = O =>
 				})
 			})
 
+			/*
 			if (PrefixArticle === Prefix) return Ext.ReqB(O.Coke(BiliBiliArticleReadContent(ID))).Map(B =>
 			{
 				B = SolveInitState(B).readInfo
@@ -176,7 +282,6 @@ module.exports = O =>
 						Ext : '.htm'
 					},...WW.MR((D,V) =>
 					{
-						/*
 							Some resources refuse to load
 							cv17652147
 							s1.hdslb.com/bfs/static/jinkela/article-web/article-web.bc81fcb45c9ad64666de79b78421e5c2518e97f7.js
@@ -184,10 +289,75 @@ module.exports = O =>
 							r = n.clientW,c = r - 32
 							st = nt.d > 2 ? 2 : 1.5
 							@942w_progressive.webp
-						*/
 						D.push({URL : [V[2]]})
 						return D
 					},[],/<img[^>]+src=(['"])(.+?)\1/g,B.content)]
+				}
+			})
+			*/
+
+			if (PrefixArticle === Prefix) return Ext.ReqB(O.Coke(BiliBiliAPIArticleView(ID))).Map(Article =>
+			{
+				var
+				Meta = [],
+				Part = [],
+				Img = [],
+				T;
+				Article = Common(Article)
+				if (T = Article.opus)
+				{
+					T.content.paragraphs.forEach(V =>
+					{
+						var Line = '';
+						switch (V.para_type)
+						{
+							case 1 :
+								V.text.nodes.forEach(B =>
+								{
+									switch (B.node_type)
+									{
+										case 1 :
+											Line += B.word.words
+											break
+										default :
+											O.Bad('Unknown NodeType #' + B.node_type)
+									}
+								})
+								break
+							case 2 :
+								V.pic.pics.forEach(B =>
+								{
+									Img.push(B.url)
+									Meta.push('<Img> ' + B.url)
+								})
+								break
+							case 3 :
+								// CutOff
+								Line = WR.RepS('\u2014',63)
+								break
+							case 4 :
+							case 5 :
+							case 6 :
+							case 7 :
+							default :
+								O.Bad('Unknown ParaType #' + Article.para_type)
+						}
+						Line && Meta.push(Line.replace(/\n+$/,''))
+					})
+				}
+				else
+				{
+					T = Article.content
+					Meta.push(O.Text(T,{Img : Img}))
+				}
+				Img.length && Part.push({URL : Img})
+				return {
+					Title : Article.title,
+					UP : Article.author.name,
+					Date : 1E3 * Article.publish_time,
+					Meta,
+					Cover : Article.origin_image_urls?.[0],
+					Part,
 				}
 			})
 
@@ -279,7 +449,11 @@ module.exports = O =>
 					Title : AV.title,
 					UP : AV.owner.name,
 					Date : 1E3 * AV.pubdate,
-					Meta : AV.desc,
+					Meta : O.MetaJoin
+					(
+						AV.dynamic,
+						AV.desc,
+					),
 					Cover : AV.pic,
 					Part
 				}

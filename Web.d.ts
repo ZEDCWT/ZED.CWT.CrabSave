@@ -63,7 +63,7 @@ declare module CrabSaveNS
 		High(Q : string) : WishNS.EleContent
 		RepCon(Q : string,S : {[K : string] : (Q : string) => WishNS.EleContent}) : WishNS.EleContent
 		Ah(Title : string,URL : string) : WishNS.Ele
-		Img(URL : WishNS.ReqAccept) : WishNS.Ele
+		Img(URL : WishNS.ReqAccept,Title? : string) : WishNS.Ele
 		Text(Q : string) : string
 		Progress(Q : string) : any
 	}

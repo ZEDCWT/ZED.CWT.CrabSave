@@ -105,7 +105,7 @@ module.exports = O =>
 					Date : B.createDate,
 					Meta : O.MetaJoin
 					(
-						B.description,
+						O.Text(B.description),
 						B.content
 					),
 					Cover : B.coverUrl,
