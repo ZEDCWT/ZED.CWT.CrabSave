@@ -180,6 +180,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					Img.push(V.fullsize)
 				},PostEmbed.images)
 				break
+			case 'app.bsky.embed.external#view' :
+				Img.push(PostEmbed.external.thumb)
+				More.push(O.Ah(PostEmbed.external.title,PostEmbed.external.uri))
+				break
 			default :
 				More.push('Unknown Embed ' + PostEmbed.$type)
 		}

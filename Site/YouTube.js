@@ -286,7 +286,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			'__Secure-1PSIDTS',
 			'__Secure-3PSID',
 			'__Secure-3PAPISID',
-			'PREF'
+			'PREF',
+			'GOOGLE_ABUSE_EXEMPTION' // Set after the Robot test
 		],
 		Sign : function()
 		{

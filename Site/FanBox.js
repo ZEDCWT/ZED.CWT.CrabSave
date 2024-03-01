@@ -147,13 +147,14 @@ CrabSave.Site(function(O,WW,WC,WR)
 							Img : V.user.iconUrl,
 							UP : WW.Quo(V.user.userId) + V.user.name,
 							UPURL : FanBoxUser(V.creatorId),
-							More : WR.Cat(WR.Map(function(N)
-							{
-								return O.Ah(N,N)
-							},V.profileLinks),
+							More :
 							[
+								WR.Map(function(N)
+								{
+									return O.Ah(N,N)
+								},V.profileLinks),
 								V.description
-							])
+							]
 						}
 					},B)
 				})

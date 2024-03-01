@@ -2970,7 +2970,7 @@
 				C : function(T)
 				{
 					CookieSaving = Site.V()
-					T = Cookie.V()
+					T = WR.Trim(Cookie.V())
 					if (CookieMin.V().length && SiteMap[CookieSaving].Min)
 					{
 						T = WW.IsFunc(SiteMap[CookieSaving].Min) ?

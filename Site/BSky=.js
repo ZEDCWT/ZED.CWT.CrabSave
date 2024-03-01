@@ -61,7 +61,8 @@ module.exports = O =>
 					Title,
 					PostID,
 					Part = [],
-					PartURL,PartExt;
+					PartURL,PartExt,
+					T;
 
 					switch (B.$type)
 					{
@@ -115,6 +116,17 @@ module.exports = O =>
 										URL : PartURL,
 										Ext : PartExt,
 									})
+								break
+							case 'app.bsky.embed.external#view' :
+								T = PostEmbed.external
+								Meta.push
+								(
+									'',
+									T.uri,
+									T.title,
+									T.description
+								)
+								Part.push({URL : [T.thumb],Ext : '.jpg'})
 								break
 							default :
 								WW.Throw('Unknown Embed ' + PostEmbed.$type)

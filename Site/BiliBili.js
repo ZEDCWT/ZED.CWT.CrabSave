@@ -212,27 +212,74 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						O.Ah('Stein ' + V.stein_guide_cid + ' (' + V.videos + ')',
 							BiliBiliVideo(V.aid) + '#Stein'),
 					(EP = V.redirect_url) && O.Ah(EP = WW.MU(/ep\d+/,V.redirect_url),BiliBiliBgmEpisode(EP = EP.slice(2))),
-					V.season_id && O.Ah(PrefixUGCSeason + V.season_id,BiliBiliSpaceChannelSeason(UP,V.season_id)),
+					!!V.season_id && O.Ah(PrefixUGCSeason + V.season_id,BiliBiliSpaceChannelSeason(UP,V.season_id)),
 					V.is_union_video ? '{UnionVideo}' : ''
 				]
 			],
 			EP : EP
 		}
 	},
-	SolveCV = function(V)
+	SolveCV = function(B)
 	{
+		var
+		Img = B.banner_url || B.origin_image_urls,
+		Article;
+		WW.IsArr(Img) || (Img = Img ? [Img] : [])
+		if (Article = B.opus)
+			Article = WR.Map(function(V)
+			{
+				var Line = '';
+				switch (V.para_type)
+				{
+					case 1 :
+						WR.Each(function(B)
+						{
+							switch (B.node_type)
+							{
+								case 1 :
+									Line += B.word.words
+									break
+								default :
+									Line += WC.OTJ(B)
+							}
+						},V.text.nodes)
+						break
+					case 2 :
+						Line = []
+						WR.Each(function(B)
+						{
+							Img.push(B.url)
+							Line.push(B.url)
+						},V.pic.pics)
+						Line = '<Img> ' + Line.join(' ')
+						break
+					case 3 :
+						// CutOff
+						Line = WR.RepS('\u2014',63)
+						break
+					case 4 :
+					case 5 :
+					case 6 :
+					case 7 :
+					default :
+						Line = WC.OTJ(V)
+				}
+				return Line.replace(/\n+$/,'')
+			},Article.content.paragraphs).join('\n')
+		else Article = O.Text(B.content)
 		return {
 			NonAV : true,
-			ID : PrefixArticle + V.id,
-			Img : V.banner_url || V.origin_image_urls,
-			Title : V.title,
-			UP : V.author.name,
-			UPURL : BiliBiliSpace + V.author.mid,
-			Date : 1E3 * V.publish_time,
-			Desc : V.summary,
+			ID : PrefixArticle + B.id,
+			Img : Img,
+			Title : B.title,
+			UP : B.author.name,
+			UPURL : BiliBiliSpace + B.author.mid,
+			Date : 1E3 * B.publish_time,
+			Desc : Article,
 			More :
 			[
-				SolveCTime(V.ctime)
+				SolveCTime(B.ctime),
+				B.summary
 			]
 		}
 	},
@@ -519,7 +566,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					Card.ID = PrefixArticle + T.id
 					Card.Img = T.covers
 					Card.Title = T.title
-					Card.Desc = T.desc
+					More.push(T.desc)
 					break
 				case 'MAJOR_TYPE_DRAW' :
 					T = Major.draw
@@ -1730,10 +1777,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			*/
 			View : O.More(function()
 			{
-				return O.ReqAPI(BiliBiliAPIPolymerDynamicNew(''))
+				return O.Req(BiliBiliAPIPolymerDynamicNew(''))
 			},function(I,Page)
 			{
-				return O.ReqAPI(BiliBiliAPIPolymerDynamicNew(I[Page]))
+				return O.Req(BiliBiliAPIPolymerDynamicNew(I[Page]))
 			},SolvePolymerDynamicResponse)
 		},{
 			Name : PrefixCheeseSeason,
