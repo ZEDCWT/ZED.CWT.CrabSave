@@ -3791,19 +3791,30 @@
 			var
 			WebToolReq = function(Q,H)
 			{
-				var ID,R = WX.R();
-				for (;WR.Has(ID = WW.Rnd(0xFFFFFFFF),WSProxyMap););
+				var
+				Count = 0,
+				Param;
 				Q = WW.IsObj(Q) ? Q : {URL : Q}
 				if (!WR.Has('Cookie',Q))
 					Q.Cookie = V.Cookie
-				return WSSend(Proto.AuthReq,{ID : ID,JSON : WC.OTJ(Q)}) ?
-					(WSProxyMap[ID] = R).Map(function(B)
-					{
-						ReqFeed(Q,B)
-						Q.AC || /^2/.test(B.Code) || WW.Throw(WW.Err.NetBadStatus(B.Code))
-						return H ? B : B.B
-					}) :
-					WX.Throw(LangSolve('ErrOff'))
+				Param = WC.OTJ(Q)
+				return WX.Just().FMap(function()
+				{
+					var
+					Current = Count++,
+					ID,
+					R = WX.R();
+					for (;WR.Has(ID = WW.Rnd(0xFFFFFFFF),WSProxyMap););
+					return WSSend(Proto.AuthReq,{ID : ID,JSON : Param}) ?
+						(WSProxyMap[ID] = R).Map(function(B)
+						{
+							ReqFeed(Q,B)
+							Q.AC || /^2/.test(B.Code) || WW.Throw(WW.Err.NetBadStatus(B.Code))
+							B.Retry = Current
+							return H ? B : B.B
+						}) :
+						WX.Throw(LangSolve('ErrOff'))
+				})
 			},
 			WebToolAPI = function(Q,H)
 			{
@@ -3949,16 +3960,17 @@
 							Q(ID,Cache = [],Count = [],Len = 0))
 							.Map(function(R)
 							{
+								var Index;
 								R = M(R,Cache,Page)
 								if (R[0]) Cache[-~Page] = R[0]
 								R = R[1]
 								Len -= (Count[Page] || 0) - (Count[Page] = R.Item.length)
 								if (null == R.Len) R.Len = Len
 								if (null == R.Max) R.Max = Cache.length
-								Page = WR.Sum(Count.slice(0,Page))
+								Index = WR.Sum(Count.slice(0,Page))
 								WR.Each(function(V)
 								{
-									if (null == V.Index) V.Index = Page++
+									if (null == V.Index) V.Index = Index++
 								},R.Item)
 								return R
 							})

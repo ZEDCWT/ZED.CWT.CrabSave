@@ -319,7 +319,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 								ID : V.userId,
 								URL : PixivUser,
 								Img : PackImg(V.profileImageUrl),
-								Title : V.userName,
+								UP : V.userName,
+								UPURL : PixivUser(V.userId),
 								More : V.userComment
 							}
 						},B.users)
