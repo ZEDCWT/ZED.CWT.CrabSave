@@ -63,16 +63,44 @@ module.exports = O =>
 	SolveTweet = (Tweet,User,Meta,Info) =>
 	{
 		var
-		Title = WC.HED(Tweet.full_text),
+		Legacy = Tweet.legacy,
+		Card = Tweet.card,
+
+		Retweet = Tweet.retweeted_status_id_str ||
+			WR.Path(['retweeted_status_result','result','rest_id'],Tweet) ||
+			Tweet.quoted_status_id_str,
+
+		Title = WC.HED(Legacy.full_text),
+		Cover,
 		Part = [],
 		MediaURL = [],
 		MediaExt = [],
+
+		SolveMedia = V =>
+		{
+			var T;
+			if (T = V.video_info)
+			{
+				T = T.variants
+				T = O.Best('bitrate',T.filter(V => WW.IsNum(V.bitrate)))
+				MediaURL.push(T.url)
+				MediaExt.push('.' + WW.MF(/\/(\w+)/,T.content_type))
+			}
+			else if (T = V.media_url_https)
+			{
+				MediaURL.push(T)
+				MediaExt.push(null)
+			}
+			else WW.Throw('Unknown Media Type #' + V.type)
+		},
+
 		T;
+
 		Meta.length && Meta.push('')
 		Meta.push
 		(
-			TwitterTweetFull(User.screen_name,Tweet.id_str),
-			WW.StrDate(Tweet.created_at,WW.DateColS) + ' ' + User.name,
+			TwitterTweetFull(User.screen_name,Legacy.id_str),
+			WW.StrDate(Legacy.created_at,WW.DateColS) + ' ' + User.name,
 			Title
 		)
 		WR.EachU((V,F) =>
@@ -87,45 +115,119 @@ module.exports = O =>
 						'\t' + B.expanded_url)
 				}
 			},V)
-		},Tweet.entities)
+		},Legacy.entities)
+
+		WR.Each(V =>
+		{
+			if (V.source_status_id_str && V.source_status_id_str !== Legacy.id_str)
+				return
+			SolveMedia(V)
+		},WR.Path(['extended_entities','media'],Legacy) || [])
+
+		if (!Retweet && Card)
+		{
+			Meta.length && Meta.push('')
+			Card = Card.legacy
+			T = WR.FromPair(Card.binding_values.map(V => [V.key,V.value]))
+			switch (Card.name)
+			{
+				case 'player' :
+					if (T.player_image_original)
+						Cover = T.player_image_original.image_value.url
+					Meta.push
+					(
+						T.player_url.string_value,
+						T.title.string_value,
+					)
+					T.description && Meta.push(T.description.string_value)
+					break
+				case 'summary' :
+				case 'summary_large_image' :
+					Meta.push(T.title.string_value)
+					T.description && Meta.push(T.description.string_value)
+					T.photo_image_full_size_original && Part.push({URL : [T.photo_image_full_size_original.image_value.url],Ext : '.jpg'})
+					break
+				case 'unified_card' :
+					T = WC.JTO(T.unified_card.string_value)
+					switch (T.type)
+					{
+						case undefined :
+							break
+						case 'video_website' :
+							WR.Each(V =>
+							{
+								var D = V.data;
+								switch (V.type)
+								{
+									case 'details' :
+										break
+									case 'media' :
+										SolveMedia(T.media_entities[D.id])
+										Meta.push(T.destination_objects[D.destination].data.url_data.url)
+										break
+									default :
+										WW.Throw('Unknown VideoWebsite.Component #' + T.name + ' ' + WC.OTJ(T))
+								}
+							},T.component_objects)
+							break
+						default :
+							WW.Throw('Unknown UnifiedCard #' + T.type + ' ' + WC.OTJ(T))
+					}
+					break
+				default :
+					if (/^poll\d+choice_text_only$/.test(Card.name)) (() =>
+					{
+						var
+						Vote,
+						Sum = 0;
+						Meta.push(WW.Quo('Vote') + WW.StrDate(T.end_datetime_utc.string_value,WW.DateColS))
+						Vote = WR.ReduceU((D,V,F) =>
+						{
+							var C;
+							if (C = /^choice(\d+)_(label)$/.exec(F))
+							{
+								D[C[1] = ~-C[1]] || (D[C[1]] = ['',0])
+								if ('label' === C[2])
+									D[C[1]][0] = V.string_value
+								else
+									Sum += D[C[1]][1] = +V.string_value
+							}
+						},[],T)
+						WR.EachU((V,F) =>
+						{
+							Meta.push(WW.Quo(F) +
+								V[1] +
+								':' +
+								(Sum ? WR.ToFix(2,100 * V[1] / Sum) + '%' : '0%') +
+								' ' +
+								V[0])
+						},Vote)
+					})()
+					else WW.Throw('Unknown Card #' + Card.name + ' ' + WC.OTJ(T))
+			}
+		}
+
+		MediaURL.length && Part.push({URL : MediaURL,Ext : MediaExt})
+		Part.forEach(V =>
+		{
+			V.URL = V.URL.map(V =>
+			{
+				if (/\/\/pbs.twimg.com/.test(V))
+				{
+					V = V.split('?')
+					V = V[0] + '?' +
+						WC.QSS(V = WC.QSP(V[1] || ''),V.name = 'orig')
+				}
+				return V
+			})
+		})
+
 		if (Info)
 		{
-			WR.Each(V =>
-			{
-				if (V.source_status_id_str && V.source_status_id_str !== Tweet.id_str)
-					return
-
-				if (T = V.video_info)
-				{
-					T = T.variants
-					T = O.Best('bitrate',T.filter(V => WW.IsNum(V.bitrate)))
-					MediaURL.push(T.url)
-					MediaExt.push('.' + WW.MF(/\/(\w+)/,T.content_type))
-				}
-				else if (T = V.media_url_https)
-				{
-					MediaURL.push(T)
-					MediaExt.push(null)
-				}
-				else WW.Throw('Unknown Media Type #' + V.type)
-			},WR.Path(['extended_entities','media'],Tweet) || [])
-			MediaURL.length && Part.push({URL : MediaURL,Ext : MediaExt})
-			Part.forEach(V =>
-			{
-				V.URL = V.URL.map(V =>
-				{
-					if (/\/\/pbs.twimg.com/.test(V))
-					{
-						V = V.split('?')
-						V = V[0] + '?' +
-							WC.QSS(V = WC.QSP(V[1] || ''),V.name = 'orig')
-					}
-					return V
-				})
-			})
+			Info.Cover = Cover
 			Info.Title = WR.Trim(Title)
 			Info.UP = User.name
-			Info.Date = Tweet.created_at
+			Info.Date = Legacy.created_at
 			Info.Part = Part
 		}
 	};
@@ -165,8 +267,8 @@ module.exports = O =>
 				Legacy = V.legacy,
 				User = V.core.user_results.result.legacy;
 				Legacy.id_str === ID ?
-					SolveTweet(Legacy,User,Meta = [],Info) :
-					SolveTweet(Legacy,User,Meta ? Reply : Prelude)
+					SolveTweet(V,User,Meta = [],Info) :
+					SolveTweet(V,User,Meta ? Reply : Prelude)
 				WR.Each(AddMaybe,
 				[
 					V.quoted_status_result?.result,

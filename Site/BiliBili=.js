@@ -42,6 +42,7 @@ BiliBiliAPIPolymerDynamicDetail = WW.Tmpl(BiliBiliAPIPolymerDynamic,'detail?id='
 // BiliBiliVCAPIDetail = WW.Tmpl(BiliBiliVCAPI,'clip/v1/video/detail?video_id=',undefined,'&need_playurl=1'),
 // BiliBiliVCAPIDynamicAPIRoot = BiliBiliVCAPI + 'dynamic_svr/v1/dynamic_svr/',
 // BiliBiliVCAPIDynamicDetail = WW.Tmpl(BiliBiliVCAPIDynamicAPIRoot,'get_dynamic_detail?dynamic_id=',undefined),
+BiliBiliTimeline = 'https://t.bilibili.com/',
 
 Common = V => (V = WC.JTO(V)).code ?
 	WW.Throw(V) :
@@ -153,14 +154,25 @@ module.exports = O =>
 						if (Major) switch (Major.type)
 						{
 							case 'MAJOR_TYPE_ARCHIVE' :
+								// NonTop
 								T = Major.archive
 								Card.Link = BiliBiliVideo(T.aid)
 								Meta.push(T.title)
 								break
 							case 'MAJOR_TYPE_ARTICLE' :
+								// NonTop
 								T = Major.article
 								Card.Link = BiliBiliArticleRead + T.id
 								Meta.push(T.title)
+								break
+							case 'MAJOR_TYPE_COMMON' :
+								T = Major.common
+								Meta.push
+								(
+									T.jump_url,
+									T.title,
+									T.desc,
+								)
 								break
 							case 'MAJOR_TYPE_DRAW' :
 								T = Major.draw
@@ -193,11 +205,13 @@ module.exports = O =>
 					}
 					if (T = ModDynamic && ModDynamic.desc)
 						Meta.push(Card.Title = T.text)
+					Card.Link = BiliBiliTimeline + B.id_str
 					switch (B.type)
 					{
 						case 'DYNAMIC_TYPE_NONE' :
 							NonTopCheck()
 							break
+						case 'DYNAMIC_TYPE_COMMON_SQUARE' :
 						case 'DYNAMIC_TYPE_DRAW' :
 						case 'DYNAMIC_TYPE_LIVE_RCMD' :
 						case 'DYNAMIC_TYPE_WORD' :

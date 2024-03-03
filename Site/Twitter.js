@@ -86,7 +86,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			More : (User.location ? '[[' + User.location + ']]\n\n' : '') + User.description
 		}
 	},
-	SolveTweet = function(Tweet,User,ID)
+	SolveTweet = function(Tweet,User,ID,Ext)
 	{
 		if (!Tweet)
 		{
@@ -103,12 +103,26 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		}
 
 		var
-		Media = WR.Path(['extended_entities','media'],Tweet),
 		Retweet = Tweet.retweeted_status_id_str ||
 			WR.Path(['retweeted_status_result','result','rest_id'],Tweet) ||
 			Tweet.quoted_status_id_str,
+		Media = WR.Path(['extended_entities','media'],Tweet),
+		Img = [],
+		Len = 0,
 		Title = WC.HED(Tweet.full_text),
-		TitleMap = {};
+		TitleMap = {},
+		TitleView,
+		More = [],
+		Card,
+
+		SolveMedia = function(V)
+		{
+			Img.push(V.media_url_https)
+			Len += WR.Path(['video_info','duration_millis'],V) || 0
+		},
+
+		T;
+
 		WR.EachU(function(V,F)
 		{
 			WR.Each(function(B)
@@ -125,25 +139,140 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				}
 			},V)
 		},Tweet.entities)
+		TitleView = O.RepCon(WC.HED(Tweet.full_text),TitleMap)
+
+		Retweet && More.push(O.Ah('RT ' + Retweet,TwitterTweet(Retweet)))
+
+		Media && WR.Each(SolveMedia,Media)
+
+		if (!Retweet && Ext)
+		{
+			if (Card = Ext.card)
+			{
+				Card = Card.legacy
+				T = WR.FromPair(WR.Map(function(V)
+				{
+					return [V.key,V.value]
+				},Card.binding_values))
+				switch (Card.name)
+				{
+					case 'player' :
+						/*
+							1763876724335591433
+								A video link from other sites
+						*/
+						T.player_image_original && Img.push(T.player_image_original.image_value.url)
+						More.push(O.Ah(T.title.string_value,T.player_url.string_value))
+						T.description && More.push(T.description.string_value)
+						break
+					case 'summary' :
+						/*
+							1763900977298681910
+								A link to an app
+						*/
+					case 'summary_large_image' :
+						/*
+							1763885406448439554
+								A shared content
+								Card contains image + desc
+								`full_text` is the link
+							1762820559015199221
+								A link
+								With NO image... Why
+						*/
+						T.photo_image_full_size_original && Img.push(T.photo_image_full_size_original.image_value.url)
+						More.push(O.Ah(T.title.string_value,T.card_url.string_value))
+						T.description && More.push(T.description.string_value)
+						break
+					case 'unified_card' :
+						T = WC.JTO(T.unified_card.string_value)
+						switch (T.type)
+						{
+							case undefined :
+								/*
+									1763928542067462593
+										A link to a community
+										Also contains the banner
+								*/
+								break
+							case 'video_website' :
+								/*
+									1763942349531398254
+										A media
+										Which is linked to other site
+								*/
+								WR.Each(function(V)
+								{
+									var D = V.data;
+									switch (V.type)
+									{
+										case 'details' :
+											break
+										case 'media' :
+											SolveMedia(T.media_entities[D.id])
+											D = T.destination_objects[D.destination].data.url_data.url
+											More.push(O.Ah(D,D))
+											break
+										default :
+											More.push('Unknown VideoWebsite.Component #' + T.name)
+									}
+								},T.component_objects)
+								break
+							default :
+								More.push('Unknown UnifiedCard #' + T.name)
+						}
+						break
+					default :
+						if (/^poll\d+choice_text_only$/.test(Card.name)) ~function()
+						{
+							/*
+								1764169483302977708
+									A vote
+							*/
+							var
+							Vote,
+							Sum = 0;
+							More.push(WW.Quo('Vote') + WW.StrDate(T.end_datetime_utc.string_value,WW.DateColS))
+							Vote = WR.ReduceU(function(D,V,F)
+							{
+								var C;
+								if (C = /^choice(\d+)_(label)$/.exec(F))
+								{
+									D[C[1] = ~-C[1]] || (D[C[1]] = ['',0])
+									if ('label' === C[2])
+										D[C[1]][0] = V.string_value
+									else
+										Sum += D[C[1]][1] = +V.string_value
+								}
+							},[],T)
+							WR.EachU(function(V,F)
+							{
+								More.push(WW.Quo(F) +
+									V[1] +
+									':' +
+									(Sum ? WR.ToFix(2,100 * V[1] / Sum) + '%' : '0%') +
+									' ' +
+									V[0])
+							},Vote)
+						}()
+						else More.push('Unknown Card #' + Card.name)
+				}
+			}
+		}
+
 		return {
 			NonAV : !Media || Retweet,
 			Group : WR.Path(['self_thread','id_str'],Tweet),
 			ID : Tweet.id_str || ID,
-			Img : Media && WR.Pluck('media_url_https',Media),
+			Img : Img,
 			Title : Title,
-			TitleView : O.RepCon(WC.HED(Tweet.full_text),TitleMap),
+			TitleView : TitleView,
 			UP : User.name,
 			UPURL : Twitter + User.screen_name,
 			Date : Tweet.created_at,
-			Len : WR.Reduce(function(D,V)
-			{
-				return D += WR.Path(['video_info','duration_millis'],V) || 0
-			},0,Media) / 1E3,
+			Len : Len,
 			Desc : WC.HED(Tweet.full_text),
-			More :
-			[
-				Retweet && O.Ah('RT ' + Retweet,TwitterTweet(Retweet))
-			]
+			More : More
 		}
 	},
 	SolveTweetIDB = function(ID,B)
@@ -253,7 +382,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		},
 		AddTweet = function(V)
 		{
-			R.push(SolveTweet(V.legacy,V.core.user_results.result.legacy,V.rest_id)) &&
+			R.push(SolveTweet(V.legacy,V.core.user_results.result.legacy,V.rest_id,V)) &&
 			WR.Each(CheckTypeTweet,
 			[
 				WR.Path(['quoted_status_result','result'],V),

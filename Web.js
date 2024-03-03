@@ -85,11 +85,22 @@
 	},
 	LangSolve = /**@type {<U extends keyof _$_Lang['EN']>(Q : U,S? : any[]) => string}*/ function(Q,S)
 	{
+		var
+		Solve = function(O)
+		{
+			return O[Q].replace(/~([^~]*)~/g,function(_,V)
+			{
+				return !V ? '~' :
+					S && WR.Has(V,S) ? S[V] :
+					WR.Has(V,O) ? O[V] : // It is not currently reasonable to support recursive here
+					'${' + V + '}'
+			})
+		};
 		WW.IsArr(Q) && (S = Q.slice(1),Q = Q[0])
 		WW.IsArr(S) && !S.length && (S = null)
-		return WR.Has(Q,LangNow) ? S ? WW.Fmt(LangNow[Q],S,'~') : LangNow[Q] :
-			WR.Has(Q,LangDefault) ? S ? WW.Fmt(LangDefault[Q],S,'~') : LangDefault[Q] :
-			'{' + Q + (S ? '|' + S.join(':') : '') + '}'
+		return WR.Has(Q,LangNow) ? Solve(LangNow) :
+			WR.Has(Q,LangDefault) ? Solve(LangDefault) :
+			'${' + Q + (S ? '|' + S.join(':') : '') + '}'
 	},
 	ErrorS = function(E)
 	{
@@ -488,6 +499,7 @@
 	WSOnCookie,
 	WSOnSC,
 	WSOnSetting,
+	WSOnSettingProxy,
 
 	MultiMap = function()
 	{
@@ -3196,7 +3208,7 @@
 				})()
 				WV.ApR(
 				[
-					WV.T(WV.Rock(ClassTitle),LangSolve('Sot' + Key,LangNow)),
+					WV.T(WV.Rock(ClassTitle),LangSolve('Sot' + Key)),
 					WV.But(
 					{
 						X : LangSolve('SotAdd'),
@@ -3309,7 +3321,7 @@
 			var
 			SetD = {},SetC = {},
 			PC,
-			Key = function(Q){return PC = Pref.C(Q),Q},
+			Key = function(/**@type {keyof CrabSaveNS.Setting}*/ Q){return PC = Pref.C(Q),Q},
 			ChoOF = [[false,LangSolve('GenDisabled')],[true,LangSolve('GenEnabled')]],
 			UnstableZone,
 			Pref = WV.Pref(
@@ -3426,6 +3438,16 @@
 					InpU : PC
 				})
 			],[
+				LangSolve('SetURLCand'),
+				Key('ProxyCand'),
+				WV.Inp(
+				{
+					Row : 3,
+					Hint : LangSolve('SetURLCandH'),
+					InpU : PC,
+				}),
+				''
+			],[
 				LangSolve('SetImg'),
 				Key('ProxyView'),
 				WV.Cho(
@@ -3454,6 +3476,15 @@
 					Map : Number
 				}),
 				60
+			],[
+				LangSolve('SetHTTP429Auto'),
+				Key('HTTP429Auto'),
+				WV.Cho(
+				{
+					Set : ChoOF,
+					Inp : PC
+				}),
+				false
 			],[
 				LangSolve('SetSize'),
 				Key('Size'),
@@ -3524,6 +3555,12 @@
 					LangTo(Data.Lang)
 					UnstableZone = false
 				}
+			}
+			WSOnSettingProxy = function(Data)
+			{
+				Data = Data.URL
+				SetC.ProxyURL(Data)
+				Noti.S(LangSolve('SetURLChanged',[Data]))
 			}
 			WR.Has(Conf.Lang,Lang) && SetC.Lang(Conf.Lang)
 			MakeShortCutToggle(ShortCutGeneralProxy,OptionProxy,'Proxy')
@@ -3748,6 +3785,7 @@
 		},
 
 		Proto.AuthSetting,WSOnSetting,
+		Proto.AuthSettingProxy,WSOnSettingProxy,
 
 		Proto.AuthTaskInfo,TaskFullInfoUpdate,
 

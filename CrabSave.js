@@ -39,6 +39,7 @@ Proto =
 
 	AuthShortCut : 0x8200,
 	AuthSetting : 0x8202,
+	AuthSettingProxy : 0x8204,
 
 	AuthTaskNew : 0x8400,
 	AuthTaskInfo : 0x8402,
@@ -195,11 +196,18 @@ module.exports = Option =>
 		Max : SettingMake('Max',Q => WW.IsIn(Q,1,25),4),
 		Proxy : SettingMake('Proxy',WR.T,false),
 		ProxyURL : SettingMake('ProxyURL',WW.IsStr,undefined),
+		ProxyURLUpdate : Q =>
+		{
+			DataSetting.D('ProxyURL',Q)
+			WebSocketBroadcast(Proto.AuthSettingProxy,{URL : Q})
+		},
+		ProxyCand : SettingMake('ProxyCand',WW.IsStr,''),
 		Delay : SettingMake('Delay',WW.IsNum,20),
 		Size : SettingMake('Size',WR.T,true),
 		Meta : SettingMake('Meta',WR.T,true),
 		Cover : SettingMake('Cover',WR.T,true),
 		HTTP429 : SettingMake('HTTP429',WW.IsNum,60),
+		HTTP429Auto : SettingMake('HTTP429Auto',WR.T,false),
 	},
 	SiteO =
 	{

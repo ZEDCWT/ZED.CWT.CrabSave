@@ -568,6 +568,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					Card.Title = T.title
 					More.push(T.desc)
 					break
+				case 'MAJOR_TYPE_COMMON' :
+					T = Major.common
+					Card.Img = T.cover
+					More.push(O.Ah(WW.Quo(T.title) + T.desc,T.jump_url))
+					break
 				case 'MAJOR_TYPE_DRAW' :
 					T = Major.draw
 					Card.Img = WR.Pluck('src',T.items)
@@ -592,6 +597,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					Card.Img = T.cover
 					Card.Title = T.title
 					break
+				case 'MAJOR_TYPE_UGC_SEASON' :
+					T = Major.ugc_season
+					Card.ID = T.aid
+					Card.Img = T.cover
+					Card.Title = T.title
+					Card.Len = T.duration_text
+					break
 				default :
 					SetUnk(Major.type)
 			}
@@ -615,6 +627,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				Card.UPURL = BiliBiliBgmSeason(ModAuthor.mid)
 				Card.Date = ModAuthor.pub_time
 				break
+			case 'AUTHOR_TYPE_UGC_SEASON' :
+				Card.UP = ModAuthor.name
+				// MID is the video ID
+				Card.Date = 1E3 * ModAuthor.pub_ts
+				ModAuthor.pub_action && More.push(ModAuthor.pub_action)
+				break
 			default :
 				SetUnk(ModAuthor.type)
 		}
@@ -625,9 +643,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				break
 			case 'DYNAMIC_TYPE_ARTICLE' :
 			case 'DYNAMIC_TYPE_AV' :
+			case 'DYNAMIC_TYPE_COMMON_SQUARE' :
+				// 904252656351969304 Link to mall/suit
 			case 'DYNAMIC_TYPE_DRAW' :
 			case 'DYNAMIC_TYPE_LIVE_RCMD' :
 			case 'DYNAMIC_TYPE_PGC_UNION' :
+			case 'DYNAMIC_TYPE_UGC_SEASON' :
 			case 'DYNAMIC_TYPE_WORD' :
 				SolveMajor()
 				break

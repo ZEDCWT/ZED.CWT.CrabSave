@@ -79,14 +79,19 @@ declare module CrabSaveNS
 		Max : number
 		Proxy : boolean
 		ProxyURL : boolean
+		ProxyCand : string
+		/** Front end only */
 		ProxyView : boolean
 		Delay : number
 		HTTP429 : number
+		HTTP429Auto : boolean
 		Size : boolean
 		Meta : boolean
 		Cover : boolean
-		// NonAV : boolean // Front end only
-		// SPUP : string // Front end only
+		/** Front end only */
+		NonAV : boolean
+		/** Front end only */
+		SPUP : string
 	}
 	interface SettingO
 	{
@@ -95,8 +100,11 @@ declare module CrabSaveNS
 		Max() : number
 		Proxy() : boolean
 		ProxyURL() : boolean
+		ProxyURLUpdate(Q : string) : void
+		ProxyCand() : string
 		Delay() : number
 		HTTP429() : number
+		HTTP429Auto() : boolean
 		Size() : boolean
 		Meta() : boolean
 		Cover() : boolean

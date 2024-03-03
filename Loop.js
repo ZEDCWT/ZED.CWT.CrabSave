@@ -65,10 +65,78 @@ module.exports = Option =>
 	},
 	PartSpecialTypeInv = WR.Inv(PartSpecialType),
 
+	HTTP429Store = new Map,
+	HTTP429Prepare = (Site,Proxy,ProxyURL) =>
+	{
+		var
+		Store = HTTP429Store.get(Site),
+		Key = Proxy && ProxyURL || false;
+		Store || HTTP429Store.set(Site,Store = new Map)
+		return [Store,Key]
+	},
+	HTTP429Check = (Site,Proxy,ProxyURL) =>
+	{
+		var
+		Now = WW.Now(),
+		[Store,Key] = HTTP429Prepare(Site,Proxy,ProxyURL),
+		Last,
+		After;
+		Last = Store.get(Key)
+		if (Last)
+		{
+			After = 1E3 * Setting.HTTP429() + Last[0]
+			if (Now < After)
+				return After
+			Store.delete(Key)
+			Last[1]()
+		}
+	},
+	HTTP429CandidateLast,HTTP429CandidateCache = [],
+	HTTP429Candidate = () =>
+	{
+		if (HTTP429CandidateLast !== (HTTP429CandidateLast = Setting.ProxyCand()))
+		{
+			HTTP429CandidateCache = WR.Match(/^.+:.+$/mg,HTTP429CandidateLast)
+		}
+		return HTTP429CandidateCache
+	},
+	HTTP429Record = (Site,Proxy,ProxyURL) =>
+	{
+		var
+		Now = WW.Now(),
+		[Store,Key] = HTTP429Prepare(Site,Proxy,ProxyURL),
+		Cand,
+		CandCurrent,
+		CandValid,
+		CandCheck = Q => Store.has(Q) || (CandValid = true,Setting.ProxyURLUpdate(Q)),
+		F;
+		Store.has(Key) || Store.set(Key,
+		[
+			Now,
+			WW.To(1E3,() =>
+			{
+				if (1E3 * Setting.HTTP429() + Now <= WW.Now())
+				{
+					Store.delete(Key)
+					return false
+				}
+			},true).F
+		])
+		if (Proxy &&
+			Setting.HTTP429Auto() &&
+			Setting.Proxy() &&
+			ProxyURL === Setting.ProxyURL())
+		{
+			Cand = HTTP429Candidate()
+			CandCurrent = Cand.indexOf(ProxyURL)
+			for (F = CandCurrent;!CandValid && ++F < Cand.length && CandCheck(Cand[F]););
+			for (F = 0;!CandValid && F < CandCurrent && CandCheck(Cand[F]);) ++F
+		}
+	},
+
 	InfoRunning = new Map,
 	InfoDispatching,InfoDispatchAgain,
 	InfoDispatchOnErr = WX.EndL(),
-	InfoErrorHTTP429 = new Map,
 	InfoDispatch = () =>
 	{
 		if (!InfoDispatching && InfoRunning.size < ConfigInfoLimit)
@@ -80,6 +148,9 @@ module.exports = Option =>
 				WR.Each(V =>
 				{
 					var
+					SettingProxy = Setting.Proxy(),
+					SettingProxyURL = Setting.ProxyURL(),
+
 					ExtReqRecordCount = 0,
 					ExtReqRecord = [],
 					ExtReqRecordIndex = [],
@@ -241,17 +312,16 @@ module.exports = Option =>
 								})
 								.Tap(Z => Option.OnSize(V.Row,Down.length,Z))
 						}),
+					Err429,
 					T;
+
 					V.Error && Option.ErrT(V.Row)
 					Option.OnRenew(V.Row)
-					if ((T = InfoErrorHTTP429.get(V.Site)) &&
-						T[0] === Setting.Proxy() &&
-						(!T[0] || T[1] === Setting.ProxyURL()) &&
-						WW.Now() < 1E3 * Setting.HTTP429() + T[2])
-					{
-						Run = WX.Throw(['ErrHTTP429',WW.StrDate(1E3 * Setting.HTTP429() + T[2])])
+
+					if (T = HTTP429Check(V.Site,SettingProxy,SettingProxyURL))
+						Run = WX.Throw(Err429 = ['ErrHTTP429',WW.StrDate(T)])
 							.Delay(5E2)
-					}
+
 					InfoRunning.set(V.Row,Run
 						.Now(null,E =>
 						{
@@ -269,9 +339,9 @@ module.exports = Option =>
 							(
 								429 === E.Arg[0] ||
 								Extra429Test[V.Site]?.(E.Arg[0])
-							))
+							) || Err429 === E)
 							{
-								InfoErrorHTTP429.set(V.Site,[Setting.Proxy(),Setting.ProxyURL(),WW.Now()])
+								HTTP429Record(V.Site,SettingProxy,SettingProxyURL)
 							}
 							InfoRunning.set(V.Row,DB.Err(V.Row,2,At).Now(null,O =>
 							{

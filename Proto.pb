@@ -1,5 +1,5 @@
 
-Ì
+ò
 Proto.proto"Œ
 DBTask
 Row (RRow
@@ -136,7 +136,9 @@ AuthCookie
 AuthShortCut
 JSON (	RJSON"!
 AuthSetting
-JSON (	RJSON"-
+JSON (	RJSON"$
+AuthSettingProxy
+URL (	RURL"-
 AuthTaskNew
 Task (2
 .DBTaskNewRTask"O

@@ -228,6 +228,11 @@ message AuthSetting
 	string JSON = 1;
 }
 
+message AuthSettingProxy
+{
+	string URL = 1;
+}
+
 
 
 message AuthTaskNew
