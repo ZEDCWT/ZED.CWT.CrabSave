@@ -220,6 +220,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							V.content)
 					},Q.vote_list)
 					break
+				case 'media_abstract' : // 0
+					/*
+						O3BiDj99X
+							AI总结
+							Used to be a video
+					*/
+					break
 				case 'webpage' : // 0 23
 					More.push(Q.page_desc)
 					break

@@ -253,6 +253,8 @@ module.exports = O =>
 									(0 | 100 * V.part_ratio) + '% ' +
 									V.content),T.vote_list)
 								break
+							// case 'media_abstract' : // 0
+							// 	break
 							case 'panorama' : // 29
 								break
 							case 'story' : // 31

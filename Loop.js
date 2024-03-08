@@ -96,7 +96,7 @@ module.exports = Option =>
 	{
 		if (HTTP429CandidateLast !== (HTTP429CandidateLast = Setting.ProxyCand()))
 		{
-			HTTP429CandidateCache = WR.Match(/^.+:.+$/mg,HTTP429CandidateLast)
+			HTTP429CandidateCache = WR.Match(/^.+:\d+$/mg,HTTP429CandidateLast)
 		}
 		return HTTP429CandidateCache
 	},
@@ -319,7 +319,7 @@ module.exports = Option =>
 					Option.OnRenew(V.Row)
 
 					if (T = HTTP429Check(V.Site,SettingProxy,SettingProxyURL))
-						Run = WX.Throw(Err429 = ['ErrHTTP429',WW.StrDate(T)])
+						Run = WX.Throw(Err429 = ['ErrHTTP429',WW.StrDate(T),SettingProxy && SettingProxyURL])
 							.Delay(5E2)
 
 					InfoRunning.set(V.Row,Run

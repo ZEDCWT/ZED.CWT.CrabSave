@@ -5,6 +5,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	MangledURL =
 	[
 		'b23.tv',
+		'pixiv.me',
 		't.cn',
 		't.co',
 		'url.cn'

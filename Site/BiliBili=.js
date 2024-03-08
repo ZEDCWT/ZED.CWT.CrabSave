@@ -43,6 +43,7 @@ BiliBiliAPIPolymerDynamicDetail = WW.Tmpl(BiliBiliAPIPolymerDynamic,'detail?id='
 // BiliBiliVCAPIDynamicAPIRoot = BiliBiliVCAPI + 'dynamic_svr/v1/dynamic_svr/',
 // BiliBiliVCAPIDynamicDetail = WW.Tmpl(BiliBiliVCAPIDynamicAPIRoot,'get_dynamic_detail?dynamic_id=',undefined),
 BiliBiliTimeline = 'https://t.bilibili.com/',
+BiliBiliLive = 'https://live.bilibili.com/',
 
 Common = V => (V = WC.JTO(V)).code ?
 	WW.Throw(V) :
@@ -153,6 +154,12 @@ module.exports = O =>
 						Major = ModDynamic.major;
 						if (Major) switch (Major.type)
 						{
+							case 'MAJOR_TYPE_NONE' :
+								T = Major.none
+								NonTopCheck()
+								Meta.push(T.tips)
+								break
+
 							case 'MAJOR_TYPE_ARCHIVE' :
 								// NonTop
 								T = Major.archive
@@ -174,11 +181,43 @@ module.exports = O =>
 									T.desc,
 								)
 								break
+							case 'MAJOR_TYPE_COURSES' :
+								T = Major.courses
+								Card.Cover = T.cover
+								Meta.push
+								(
+									T.jump_url,
+									T.title,
+									T.sub_title,
+									T.desc,
+								)
+								break
 							case 'MAJOR_TYPE_DRAW' :
 								T = Major.draw
 								Part.push({URL : WR.Pluck('src',T.items)})
 								break
-							// case 'MAJOR_TYPE_LIVE_RCMD' :
+							case 'MAJOR_TYPE_LIVE' :
+								T = Major.live
+								Card.Cover = T.cover
+								Meta.push
+								(
+									Card.Title = T.title,
+									T.jump_url,
+									T.badge.text,
+									T.desc_first,
+									T.desc_second,
+								)
+								break
+							case 'MAJOR_TYPE_LIVE_RCMD' :
+								T = WC.JTO(Major.live_rcmd.content).live_play_info
+								Card.Cover = T.cover
+								Meta.push
+								(
+									Card.Title = T.title,
+									BiliBiliLive + T.room_id,
+									T.area_id + ':' + T.area_name,
+								)
+								break
 							// case 'MAJOR_TYPE_OPUS' :
 							case 'MAJOR_TYPE_PGC' :
 								T = Major.pgc
@@ -212,7 +251,10 @@ module.exports = O =>
 							NonTopCheck()
 							break
 						case 'DYNAMIC_TYPE_COMMON_SQUARE' :
+						case 'DYNAMIC_TYPE_COMMON_VERTICAL' :
+						case 'DYNAMIC_TYPE_COURSES_SEASON' :
 						case 'DYNAMIC_TYPE_DRAW' :
+						case 'DYNAMIC_TYPE_LIVE' :
 						case 'DYNAMIC_TYPE_LIVE_RCMD' :
 						case 'DYNAMIC_TYPE_WORD' :
 							SolveMajor()

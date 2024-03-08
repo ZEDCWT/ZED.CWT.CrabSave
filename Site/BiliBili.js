@@ -554,6 +554,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Major = ModDynamic.major;
 			if (Major) switch (Major.type)
 			{
+				case 'MAJOR_TYPE_NONE' :
+					/*
+						148659959260614422
+							Though the original user has been deleted, the post can still be accessed directly
+							But not by the API anyway which responses `{code:500,message:'MISS_DRAW_DATA: id = 6327475',ttl:1}`
+					*/
+					T = Major.none
+					More.push(T.tips)
+					break
+
 				case 'MAJOR_TYPE_ARCHIVE' :
 					T = Major.archive
 					Card.ID = T.aid
@@ -573,18 +583,34 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					Card.Img = T.cover
 					More.push(O.Ah(WW.Quo(T.title) + T.desc,T.jump_url))
 					break
+				case 'MAJOR_TYPE_COURSES' :
+					T = Major.courses
+					Card.Img = T.cover
+					More.push
+					(
+						O.Ah(T.title,T.jump_url),
+						T.sub_title,
+						T.desc
+					)
+					break
 				case 'MAJOR_TYPE_DRAW' :
 					T = Major.draw
 					Card.Img = WR.Pluck('src',T.items)
 					break
+				case 'MAJOR_TYPE_LIVE' :
+					T = Major.live
+					Card.Title = T.title
+					Card.Img = T.cover
+					More.push(
+						O.Ah(T.badge.text,T.jump_url),
+						T.desc_first,
+						T.desc_second)
+					break
 				case 'MAJOR_TYPE_LIVE_RCMD' :
 					T = WC.JTO(Major.live_rcmd.content).live_play_info
-					Card.Non = true
-					Card.ID = T.room_id
-					Card.URL = BiliBiliLive + T.room_id
-					Card.Img = T.cover
 					Card.Title = T.title
-					More.push(T.area_id + ':' + T.area_name)
+					Card.Img = T.cover
+					More.push(O.Ah(T.area_id + ':' + T.area_name,BiliBiliLive + T.room_id))
 					break
 				case 'MAJOR_TYPE_OPUS' :
 					T = Major.opus
@@ -645,7 +671,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			case 'DYNAMIC_TYPE_AV' :
 			case 'DYNAMIC_TYPE_COMMON_SQUARE' :
 				// 904252656351969304 Link to mall/suit
+			case 'DYNAMIC_TYPE_COMMON_VERTICAL' :
+				// 505308039164421683 Link to a bangumi
+			case 'DYNAMIC_TYPE_COURSES_SEASON' :
 			case 'DYNAMIC_TYPE_DRAW' :
+			case 'DYNAMIC_TYPE_LIVE' :
 			case 'DYNAMIC_TYPE_LIVE_RCMD' :
 			case 'DYNAMIC_TYPE_PGC_UNION' :
 			case 'DYNAMIC_TYPE_UGC_SEASON' :

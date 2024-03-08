@@ -4,12 +4,15 @@ WW = require('@zed.cwt/wish'),
 {R : WR,C : WC,N : WN} = WW,
 
 Twitter = 'https://twitter.com/',
+TwitterTweet = WW.Tmpl(Twitter,'_/status/',undefined),
 TwitterTweetFull = WW.Tmpl(Twitter,undefined,'/status/',undefined),
 TwitterAPI = 'https://api.twitter.com/',
 // TwitterAPITimelineConversation = WW.Tmpl(TwitterAPI,'2/timeline/conversation/',undefined,'.json?tweet_mode=extended&count=20'),
 TwitterAPIGraphQL = TwitterAPI + 'graphql/',
 TwitterAPIGraphQLTweetDetail = TwitterAPIGraphQL + '3XDB26fBve-MmjHaWTUZxA/TweetDetail',
 TwitterAuth = 'AAAAAAAAAAAAAAAAAAAAANRILgAAAAAAnNwIzUejRCOuH5E6I8xnZz4puTs%3D1Zv7ttfk8LF81IUq16cHjhLTvJu4FA33AGWWjCpTnA',
+TwitterAPIBroadcastShow = WW.Tmpl(TwitterAPI,'1.1/broadcasts/show.json?ids=',undefined),
+TwitterAPILiveStream = WW.Tmpl(TwitterAPI,'1.1/live_video_stream/status/',undefined),
 
 TwitterAPIGraphQLFeature = WC.OTJ(
 {
@@ -58,246 +61,362 @@ module.exports = O =>
 			variables : WC.OTJ(Data),
 			features : TwitterAPIGraphQLFeature,
 		}
-	}),
-
-	SolveTweet = (Tweet,User,Meta,Info) =>
-	{
-		var
-		Legacy = Tweet.legacy,
-		Card = Tweet.card,
-
-		Retweet = Tweet.retweeted_status_id_str ||
-			WR.Path(['retweeted_status_result','result','rest_id'],Tweet) ||
-			Tweet.quoted_status_id_str,
-
-		Title = WC.HED(Legacy.full_text),
-		Cover,
-		Part = [],
-		MediaURL = [],
-		MediaExt = [],
-
-		SolveMedia = V =>
-		{
-			var T;
-			if (T = V.video_info)
-			{
-				T = T.variants
-				T = O.Best('bitrate',T.filter(V => WW.IsNum(V.bitrate)))
-				MediaURL.push(T.url)
-				MediaExt.push('.' + WW.MF(/\/(\w+)/,T.content_type))
-			}
-			else if (T = V.media_url_https)
-			{
-				MediaURL.push(T)
-				MediaExt.push(null)
-			}
-			else WW.Throw('Unknown Media Type #' + V.type)
-		},
-
-		T;
-
-		Meta.length && Meta.push('')
-		Meta.push
-		(
-			TwitterTweetFull(User.screen_name,Legacy.id_str),
-			WW.StrDate(Legacy.created_at,WW.DateColS) + ' ' + User.name,
-			Title
-		)
-		WR.EachU((V,F) =>
-		{
-			WR.EachU((B,G) =>
-			{
-				if (B.url)
-				{
-					Title = Title.replace(RegExp(`\\s*${WR.SafeRX(B.url)}\\s*`,'g'),'_')
-					Meta.push(
-						WR.Pascal(F).replace(/s$/,'') + ' ' + WW.Quo(WW.ShowLI(V.length,G)) + ' ' + B.url,
-						'\t' + B.expanded_url)
-				}
-			},V)
-		},Legacy.entities)
-
-		WR.Each(V =>
-		{
-			if (V.source_status_id_str && V.source_status_id_str !== Legacy.id_str)
-				return
-			SolveMedia(V)
-		},WR.Path(['extended_entities','media'],Legacy) || [])
-
-		if (!Retweet && Card)
-		{
-			Meta.length && Meta.push('')
-			Card = Card.legacy
-			T = WR.FromPair(Card.binding_values.map(V => [V.key,V.value]))
-			switch (Card.name)
-			{
-				case 'player' :
-					if (T.player_image_original)
-						Cover = T.player_image_original.image_value.url
-					Meta.push
-					(
-						T.player_url.string_value,
-						T.title.string_value,
-					)
-					T.description && Meta.push(T.description.string_value)
-					break
-				case 'summary' :
-				case 'summary_large_image' :
-					Meta.push(T.title.string_value)
-					T.description && Meta.push(T.description.string_value)
-					T.photo_image_full_size_original && Part.push({URL : [T.photo_image_full_size_original.image_value.url],Ext : '.jpg'})
-					break
-				case 'unified_card' :
-					T = WC.JTO(T.unified_card.string_value)
-					switch (T.type)
-					{
-						case undefined :
-							break
-						case 'video_website' :
-							WR.Each(V =>
-							{
-								var D = V.data;
-								switch (V.type)
-								{
-									case 'details' :
-										break
-									case 'media' :
-										SolveMedia(T.media_entities[D.id])
-										Meta.push(T.destination_objects[D.destination].data.url_data.url)
-										break
-									default :
-										WW.Throw('Unknown VideoWebsite.Component #' + T.name + ' ' + WC.OTJ(T))
-								}
-							},T.component_objects)
-							break
-						default :
-							WW.Throw('Unknown UnifiedCard #' + T.type + ' ' + WC.OTJ(T))
-					}
-					break
-				default :
-					if (/^poll\d+choice_text_only$/.test(Card.name)) (() =>
-					{
-						var
-						Vote,
-						Sum = 0;
-						Meta.push(WW.Quo('Vote') + WW.StrDate(T.end_datetime_utc.string_value,WW.DateColS))
-						Vote = WR.ReduceU((D,V,F) =>
-						{
-							var C;
-							if (C = /^choice(\d+)_(label)$/.exec(F))
-							{
-								D[C[1] = ~-C[1]] || (D[C[1]] = ['',0])
-								if ('label' === C[2])
-									D[C[1]][0] = V.string_value
-								else
-									Sum += D[C[1]][1] = +V.string_value
-							}
-						},[],T)
-						WR.EachU((V,F) =>
-						{
-							Meta.push(WW.Quo(F) +
-								V[1] +
-								':' +
-								(Sum ? WR.ToFix(2,100 * V[1] / Sum) + '%' : '0%') +
-								' ' +
-								V[0])
-						},Vote)
-					})()
-					else WW.Throw('Unknown Card #' + Card.name + ' ' + WC.OTJ(T))
-			}
-		}
-
-		MediaURL.length && Part.push({URL : MediaURL,Ext : MediaExt})
-		Part.forEach(V =>
-		{
-			V.URL = V.URL.map(V =>
-			{
-				if (/\/\/pbs.twimg.com/.test(V))
-				{
-					V = V.split('?')
-					V = V[0] + '?' +
-						WC.QSS(V = WC.QSP(V[1] || ''),V.name = 'orig')
-				}
-				return V
-			})
-		})
-
-		if (Info)
-		{
-			Info.Cover = Cover
-			Info.Title = WR.Trim(Title)
-			Info.UP = User.name
-			Info.Date = Legacy.created_at
-			Info.Part = Part
-		}
-	};
+	});
 
 	return {
-		URL : (ID,Ext) => Ext.ReqB(O.Coke(MakeGraphQL(TwitterAPIGraphQLTweetDetail,
-		{
-			focalTweetId : ID,
-			includePromotedContent : false,
-			with_rux_injections : false,
-			withBirdwatchNotes : true,
-			withCommunity : true,
-			withQuickPromoteEligibilityTweetFields : true,
-			withVoice : true,
-			withV2Timeline : true
-		}))).Map(B =>
+		URL : (ID,Ext) =>
 		{
 			var
-			Prelude = [],
-			Info = {},Meta,
-			Reply = [],
-			AddMaybe = B =>
-			{
-				switch (B?.__typename)
-				{
-					case 'Tweet' :
-						AddTweet(B)
-						return true
-					case 'TweetWithVisibilityResults' :
-						AddTweet(B.tweet)
-						return true
-				}
-			},
-			AddTweet = V =>
+			SolveTweet = (Tweet,User,Meta,Info) =>
 			{
 				var
-				Legacy = V.legacy,
-				User = V.core.user_results.result.legacy;
-				Legacy.id_str === ID ?
-					SolveTweet(V,User,Meta = [],Info) :
-					SolveTweet(V,User,Meta ? Reply : Prelude)
-				WR.Each(AddMaybe,
-				[
-					V.quoted_status_result?.result,
-					Legacy.retweeted_status_result?.result,
-				])
-			};
-			B = Common(B)
-			O.Walk(B,V => 'TimelineAddEntries' === V.type && WR.Each(V =>
-			{
-				/*
-				{component:'related_tweet',details:{conversationDetails:{conversationSection:'RelatedTweet'}}}
-				Though we could check `content.item[...].item.clientEventInfo` to see if we care it or not
-				Well, let us do it the easy (unstable?) way
-				*/
-				/^(Tweet|ConversationThread)-/i.test(V.entryId) && O.Walk(V,V =>
+				Legacy = Tweet.legacy,
+				Card = Tweet.card,
+				UnifiedCard,
+
+				Retweet = Legacy.retweeted_status_id_str ||
+					WR.Path(['retweeted_status_result','result','rest_id'],Legacy) ||
+					Legacy.quoted_status_id_str,
+
+				Title = WC.HED(Legacy.full_text),
+				Cover,
+				Part = [],
+				MediaURL = [],
+				MediaExt = [],
+
+				SolveMediaContentType = V => '.' + WW.MF(/\/(\w+)/,V),
+				SolveMedia = V =>
 				{
-					var R = V.promotedMetadata;
-					R = R || AddMaybe(V)
-					return R
+					var T;
+					if (T = V.video_info)
+					{
+						T = T.variants
+						T = O.Best('bitrate',T.filter(V => WW.IsNum(V.bitrate)))
+						MediaURL.push(T.url)
+						MediaExt.push(SolveMediaContentType(T.content_type))
+					}
+					else if (T = V.media_url_https)
+					{
+						MediaURL.push(T)
+						MediaExt.push(null)
+					}
+					else WW.Throw('Unknown Media Type #' + V.type)
+				},
+				SolveMediaBroadcast = V =>
+				{
+					Part.push(Ext.ReqB(O.Coke(MakeHead(TwitterAPIBroadcastShow(V)))).FMap(Broadcast =>
+					{
+						Broadcast = Common(Broadcast).broadcasts[V]
+						return Ext.ReqB(O.Coke(MakeHead(TwitterAPILiveStream(Broadcast.media_key)))).Map(Live =>
+						{
+							Live = Common(Live).source
+							return {URL : [Live.noRedirectPlaybackUrl]}
+						})
+					}))
+				},
+				SolveMediaAuto = (URL,Type) =>
+				{
+					if (/\.vmap$/i.test(URL))
+						Part.push(Ext.ReqB(O.Req(URL)).Map(B =>
+						{
+							B = WC.XMLP(WC.XMLS({}) + B)
+							B = O.Best('bit_rate',B.All['tw:videoVariant']
+								.map(V => V.Attr)
+								.filter(V => V.bit_rate))
+							return {URL : [WC.UD(B.url)],Ext : SolveMediaContentType(B.content_type)}
+						}))
+					else
+					{
+						MediaURL.push(URL)
+						MediaExt.push(Type)
+					}
+				},
+				SolveUnifiedCardComponent = V =>
+				{
+					var D = V.data;
+					switch (V.type)
+					{
+						case 'app_store_details' :
+						case 'button_group' :
+							break
+						case 'details' :
+							Meta.push(
+								D.title.content,
+								'\t' + UnifiedCard.destination_objects[D.destination].data.url_data.url)
+							break
+						case 'swipeable_media' :
+							WR.Each(V => SolveMedia(UnifiedCard.media_entities[V.id]),D.media_list)
+							break
+						case 'media' :
+							SolveMedia(UnifiedCard.media_entities[D.id])
+							break
+						default :
+							WW.Throw('Unknown VideoWebsite.Component #' + UnifiedCard.name + ' ' + WC.OTJ(UnifiedCard))
+					}
+				},
+
+				T;
+
+				Meta.length && Meta.push('')
+				Meta.push
+				(
+					TwitterTweetFull(User.screen_name,Legacy.id_str),
+					WW.StrDate(Legacy.created_at,WW.DateColS) + ' ' + User.name,
+					Title
+				)
+				WR.EachU((V,F) =>
+				{
+					WR.EachU((B,G) =>
+					{
+						if (B.url)
+						{
+							Title = Title.replace(RegExp(`\\s*${WR.SafeRX(B.url)}\\s*`,'g'),'_')
+							Meta.push(
+								WR.Pascal(F).replace(/s$/,'') + ' ' + WW.Quo(WW.ShowLI(V.length,G)) + ' ' + B.url,
+								'\t' + B.expanded_url)
+						}
+					},V)
+				},Legacy.entities)
+
+				WR.Each(V =>
+				{
+					if (V.source_status_id_str && V.source_status_id_str !== Legacy.id_str)
+						return
+					SolveMedia(V)
+				},WR.Path(['extended_entities','media'],Legacy) || [])
+
+				if (!Retweet && Card)
+				{
+					Meta.length && Meta.push('')
+					Card = Card.legacy
+					T = WR.FromPair(Card.binding_values.map(V => [V.key,V.value]))
+					switch (Card.name.replace(/^\d+:/,''))
+					{
+						case 'audiospace' :
+							break
+						case 'broadcast' :
+							if (T.broadcast_thumbnail_original)
+								Cover = T.broadcast_thumbnail_original.image_value.url
+							Meta.push(Title = T.broadcast_title.string_value)
+							SolveMediaBroadcast(T.broadcast_id.string_value)
+							break
+						case 'live_event' :
+							Meta.push
+							(
+								TwitterTweet(T.media_tweet_id.string_value),
+								T.event_title.string_value,
+								T.event_subtitle.string_value,
+							)
+							break
+						case 'periscope_broadcast' :
+							if (T.thumbnail_original)
+								Cover = T.thumbnail_original.image_value.url
+							Meta.push(Title = T.title.string_value)
+							SolveMediaBroadcast(T.id.string_value)
+							break
+						case 'player' :
+							if (T.player_image_original)
+								Cover = T.player_image_original.image_value.url
+							Meta.push
+							(
+								T.player_url.string_value,
+								T.title.string_value,
+							)
+							T.description && Meta.push(T.description.string_value)
+							break
+						case 'promo_image_convo' :
+							if (T.promo_image_original)
+							{
+								MediaURL.push(T.promo_image_original.image_value.url)
+								MediaExt.push(null)
+							}
+						case 'promo_video_convo' :
+							if (T.player_image_original)
+								Cover = T.player_image_original.image_value.url
+							T.title && Meta.push(T.title.string_value)
+							Meta.push('\t' + T.thank_you_text.string_value)
+							WR.Each(V =>
+							{
+								V = 'cta_' + V
+								WR.Has(V,T) && Meta.push(T[V].string_value)
+								V += '_tweet'
+								WR.Has(V,T) && Meta.push('\t' + T[V].string_value)
+							},[
+								'one',
+								'two',
+								'three',
+								'four',
+								'five',
+								'six',
+								'seven',
+								'eight',
+								'nine'
+							])
+							T.player_stream_url && SolveMediaAuto(T.player_stream_url.string_value,SolveMediaContentType(T.player_stream_content_type.string_value))
+							break
+						case 'summary' :
+						case 'summary_large_image' :
+							Meta.push(T.title.string_value)
+							T.description && Meta.push(T.description.string_value)
+							T.photo_image_full_size_original && Part.push({URL : [T.photo_image_full_size_original.image_value.url],Ext : '.jpg'})
+							break
+						case 'unified_card' :
+							UnifiedCard = WC.JTO(T.unified_card.string_value)
+							switch (UnifiedCard.type)
+							{
+								case undefined :
+									break
+								case 'image_carousel_website' :
+									WR.Each(V => SolveUnifiedCardComponent(UnifiedCard.component_objects[V]),UnifiedCard.components)
+									break
+								case 'image_multi_dest_carousel_website' :
+									switch (UnifiedCard.layout.type)
+									{
+										case 'swipeable' :
+											WR.Each(V => WR.Each(B => SolveUnifiedCardComponent(UnifiedCard.component_objects[B]),V),
+												UnifiedCard.layout.data.slides)
+											break
+										default :
+											WW.Throw('Unknown UnifiedCard.ImageMulti.Layout #' + UnifiedCard.layout.type)
+									}
+									break
+								case 'image_website' :
+								case 'video_app' :
+								case 'video_website' :
+									WR.Each(SolveUnifiedCardComponent,UnifiedCard.component_objects)
+									break
+								default :
+									WW.Throw('Unknown UnifiedCard #' + UnifiedCard.type + ' ' + WC.OTJ(UnifiedCard))
+							}
+							break
+						default :
+							if (/^poll\d+choice_text_only$/.test(Card.name)) (() =>
+							{
+								var
+								Vote,
+								Sum = 0;
+								Meta.push(WW.Quo('Vote') + WW.StrDate(T.end_datetime_utc.string_value,WW.DateColS))
+								Vote = WR.ReduceU((D,V,F) =>
+								{
+									var C;
+									if (C = /^choice(\d+)_(label)$/.exec(F))
+									{
+										D[C[1] = ~-C[1]] || (D[C[1]] = ['',0])
+										if ('label' === C[2])
+											D[C[1]][0] = V.string_value
+										else
+											Sum += D[C[1]][1] = +V.string_value
+									}
+								},[],T)
+								WR.EachU((V,F) =>
+								{
+									Meta.push(WW.Quo(F) +
+										V[1] +
+										':' +
+										(Sum ? WR.ToFix(2,100 * V[1] / Sum) + '%' : '0%') +
+										' ' +
+										V[0])
+								},Vote)
+							})()
+							else WW.Throw('Unknown Card #' + Card.name + ' ' + WC.OTJ(T))
+					}
+				}
+
+				MediaURL.length && Part.push({URL : MediaURL,Ext : MediaExt})
+				Part.forEach(V =>
+				{
+					if (V.URL) V.URL = V.URL.map(V =>
+					{
+						if (/\/\/pbs.twimg.com/.test(V))
+						{
+							V = V.split('?')
+							V = V[0] + '?' +
+								WC.QSS(V = WC.QSP(V[1] || ''),V.name = 'orig')
+						}
+						return V
+					})
 				})
-			},V.entries))
-			Info.Meta = O.MetaJoin
-			(
-				Prelude,
-				Meta,
-				Reply,
-			)
-			return Info
-		}),
+
+				if (Info)
+				{
+					Info.Cover = Cover
+					Info.Title = WR.Trim(Title)
+					Info.UP = User.name
+					Info.Date = Legacy.created_at
+					Info.Part = Part
+				}
+			};
+
+			return Ext.ReqB(O.Coke(MakeGraphQL(TwitterAPIGraphQLTweetDetail,
+			{
+				focalTweetId : ID,
+				includePromotedContent : false,
+				with_rux_injections : false,
+				withBirdwatchNotes : true,
+				withCommunity : true,
+				withQuickPromoteEligibilityTweetFields : true,
+				withVoice : true,
+				withV2Timeline : true
+			}))).FMap(B =>
+			{
+				var
+				Prelude = [],
+				Info = {},Meta,
+				Reply = [],
+				AddMaybe = B =>
+				{
+					switch (B?.__typename)
+					{
+						case 'Tweet' :
+							AddTweet(B)
+							return true
+						case 'TweetWithVisibilityResults' :
+							AddTweet(B.tweet)
+							return true
+					}
+				},
+				AddTweet = V =>
+				{
+					var
+					Legacy = V.legacy,
+					User = V.core.user_results.result.legacy;
+					Legacy.id_str === ID ?
+						SolveTweet(V,User,Meta = [],Info) :
+						SolveTweet(V,User,Meta ? Reply : Prelude)
+					WR.Each(AddMaybe,
+					[
+						V.quoted_status_result?.result,
+						Legacy.retweeted_status_result?.result,
+					])
+				};
+				B = Common(B)
+				O.Walk(B,V => 'TimelineAddEntries' === V.type && WR.Each(V =>
+				{
+					/*
+					{component:'related_tweet',details:{conversationDetails:{conversationSection:'RelatedTweet'}}}
+					Though we could check `content.item[...].item.clientEventInfo` to see if we care it or not
+					Well, let us do it the easy (unstable?) way
+					*/
+					/^(Tweet|ConversationThread)-/i.test(V.entryId) && O.Walk(V,V =>
+					{
+						var R = V.promotedMetadata;
+						R = R || AddMaybe(V)
+						return R
+					})
+				},V.entries))
+				Info.Meta = O.MetaJoin
+				(
+					Prelude,
+					Meta,
+					Reply,
+				)
+				return O.Part(Info.Part,Ext).Map(Part => (
+				{
+					...Info,
+					Part,
+				}))
+			})
+		},
 		/*
 		// Why did they terminate such a simple endpoint...
 		URL : (ID,Ext) => Ext.ReqB(O.Coke(MakeHead(TwitterAPITimelineConversation(ID)))).Map(B =>

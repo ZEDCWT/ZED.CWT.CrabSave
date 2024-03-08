@@ -3846,9 +3846,9 @@
 					return WSSend(Proto.AuthReq,{ID : ID,JSON : Param}) ?
 						(WSProxyMap[ID] = R).Map(function(B)
 						{
+							B.Retry = Current
 							ReqFeed(Q,B)
 							Q.AC || /^2/.test(B.Code) || WW.Throw(WW.Err.NetBadStatus(B.Code))
-							B.Retry = Current
 							return H ? B : B.B
 						}) :
 						WX.Throw(LangSolve('ErrOff'))

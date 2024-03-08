@@ -239,7 +239,7 @@ module.exports = Option =>
 				and
 				Error < ?
 			order by
-				State desc,
+				(case when 0 = State then 1 else 0 end),
 				Row
 			limit ?
 		`,[From,Count]).FMap(R => WX.From(R)
