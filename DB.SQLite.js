@@ -8,8 +8,6 @@ SQLite = require('sqlite3');
 module.exports = Option =>
 {
 	var
-	DebugPerformance = false,
-
 	PathData = Option.PathData,
 	PathDB = WN.JoinP(PathData,'DB.db'),
 
@@ -47,27 +45,29 @@ module.exports = Option =>
 				var
 				WrapCount = 0,
 				WrapOnLog,
-				WrapLog = (...Q) => WrapOnLog(WW.StrDate(),WW.Tick(),'|',...Q),
 				Wrap = H =>
 				{
 					var
 					Count = 0,
 					R = WX.WrapNode(DB[H],DB);
-					if (!DebugPerformance) return R
-
-					WrapOnLog = WrapOnLog || WN.RollLog(
-					{
-						Pre : WN.JoinP(Option.PathData,'DBPerformance'),
-					})
 					return (...Q) => WX.P(O =>
 					{
 						var
-						Prefix = `[${WrapCount++}] ${H} {${Count++}}`,
+						Prefix,
+						Log = (...Q) =>
+						{
+							WrapOnLog ||= WN.RollLog(
+							{
+								Pre : WN.JoinP(Option.PathData,'DBPerf/DBPerf'),
+							})
+							Prefix ||= `[${WrapCount++}] ${H} {${Count++}}`
+							WrapOnLog(WW.StrDate(),WW.Tick(),'|',Prefix,...Q)
+						},
 						Begin = WW.Now();
-						WrapLog(Prefix,WW.C.OTJ(Q,{Apos : 9}))
+						Option.Debug && Log(WW.C.OTJ(Q,{Apos : 9}))
 						return R(...Q)
-							.Tap(B => WrapLog(Prefix,WW.Now() - Begin,WW.StrMS(WW.Now() - Begin),WW.Tag(B)),
-								E => WrapLog(Prefix,WW.Now() - Begin,WW.StrMS(WW.Now() - Begin),E))
+							.Tap(B => Option.Debug && Log(WW.Now() - Begin,WW.StrMS(WW.Now() - Begin),WW.Tag(B)),
+								E => Option.Debug && Log(WW.Now() - Begin,WW.StrMS(WW.Now() - Begin),E))
 							.Now(O)
 					})
 				}

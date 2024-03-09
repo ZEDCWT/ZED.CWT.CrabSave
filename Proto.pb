@@ -1,5 +1,5 @@
 
-ò
+ÿ
 Proto.proto"Œ
 DBTask
 Row (RRow
@@ -198,7 +198,8 @@ AuthVacuum
 Take (RTake
 From (RFrom
 To (RTo
-Err (	RErr"A
+Err (	RErr"
+	AuthDebug"A
 AuthErr
 Row (RRow
 Err (	RErr

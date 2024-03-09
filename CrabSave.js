@@ -58,6 +58,7 @@ Proto =
 	AuthInspect : 0x8A00,
 	AuthReload : 0x8A02,
 	AuthVacuum : 0x8A04,
+	AuthDebug : 0x8A06,
 
 	AuthErr : 0xCC00,
 	AuthErrFile : 0xCC02,
@@ -215,10 +216,12 @@ module.exports = Option =>
 		CokeRaw : Q => CookieMap[Q]
 	},
 	Site = require('./Site/_')(SiteO),
-	DB = require('./DB.SQLite')(
+	DBOpt =
 	{
-		PathData
-	}),
+		PathData,
+		Debug : false,
+	},
+	DB = require('./DB.SQLite')(DBOpt),
 	DBVersion = WW.Now(),
 
 	LoopO =
@@ -854,6 +857,10 @@ module.exports = Option =>
 						Err : ErrorS(E),
 					})))
 					.Now(null,WW.O)
+			}),
+			[Proto.AuthDebug] : WithAuth(() =>
+			{
+				DBOpt.Debug = !DBOpt.Debug
 			}),
 		};
 

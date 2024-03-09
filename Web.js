@@ -217,6 +217,7 @@
 	ShortCutGeneralTabPrev = 'GenTabPrev',
 	ShortCutGeneralTabNext = 'GenTabNext',
 	ShortCutGeneralProxy = 'GenProxy',
+	ShortCutGeneralProxyNext = 'GenProxyNext',
 	ShortCutGeneralNonAV = 'GenNonAV',
 	ShortCutGeneralFocus = 'GenFocusKeywordInput',
 	ShortCutGeneralFocusAuth = 'GenFocusAuth',
@@ -265,6 +266,15 @@
 		}
 		V = SettingIsSPUPNormalize(V)
 		return TopSet ? WW.SetHas(SettingIsSPUPSet,V) : WR.Has(V,SettingIsSPUPSet)
+	},
+	SettingProxyCandLast,SettingProxyCandCache = [],
+	SettingProxyCand = function()
+	{
+		if (SettingProxyCandLast !== (SettingProxyCandLast = Setting.ProxyCand))
+		{
+			SettingProxyCandCache = WR.Match(/^.+:\d+$/mg,SettingProxyCandLast)
+		}
+		return SettingProxyCandCache
 	},
 	BrowserOnProgress,
 	TickQueue = [],
@@ -3238,6 +3248,9 @@
 				ShortCutGeneralProxy,
 				'Alt+p',WB.SCD | WB.SCI
 			],[
+				ShortCutGeneralProxyNext,
+				'Alt+]',WB.SCD | WB.SCI
+			],[
 				ShortCutGeneralNonAV,
 				'Alt+o',WB.SCD | WB.SCI
 			],[
@@ -3334,6 +3347,8 @@
 				}
 			}),
 			OptionProxy,
+			OptionProxyURL,
+			OptionProxyURLPC,
 			OptionNonAV,
 			OptionSPUP,
 			OptionSPUPUpdateStat = function(V)
@@ -3432,10 +3447,10 @@
 			],[
 				LangSolve('SetURL'),
 				Key('ProxyURL'),
-				WV.Inp(
+				OptionProxyURL = WV.Inp(
 				{
 					Hint : LangSolve('SetURLH'),
-					InpU : PC
+					InpU : OptionProxyURLPC = PC
 				})
 			],[
 				LangSolve('SetURLCand'),
@@ -3564,6 +3579,18 @@
 			}
 			WR.Has(Conf.Lang,Lang) && SetC.Lang(Conf.Lang)
 			MakeShortCutToggle(ShortCutGeneralProxy,OptionProxy,'Proxy')
+			ShortCut.On(ShortCutGeneralProxyNext,function()
+			{
+				var T;
+				if (WSAuthPrecheck() && (T = SettingProxyCand()).length)
+				{
+					WV.Inp().V()
+					T = T[-~T.indexOf(Setting.ProxyURL) % T.length]
+					OptionProxyURL.V(T,true)
+					OptionProxyURLPC(T)
+					Noti.S(LangSolve('SetURLChanged',[T]))
+				}
+			})
 			MakeShortCutToggle(ShortCutGeneralNonAV,OptionNonAV,'NonAV')
 			return {
 				CSS : function(ID)
@@ -4075,6 +4102,10 @@
 		CrabSave.Vacuum = function()
 		{
 			WSSend(Proto.AuthVacuum)
+		}
+		CrabSave.Debug = function()
+		{
+			WSSend(Proto.AuthDebug)
 		}
 		CrabSave.Cut = function()
 		{

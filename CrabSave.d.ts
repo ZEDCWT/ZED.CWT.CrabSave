@@ -26,6 +26,7 @@ declare module CrabSaveNS
 		(Q :
 		{
 			PathData : string
+			Debug : boolean
 		}) : {
 			Init : WishNS.Provider<any>
 
