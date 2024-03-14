@@ -1,5 +1,5 @@
 'use strict'
-CrabSave.Site(function(O,WW,WC,WR,WX)
+CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 {
 	var
 	// We may need to resolve some tokens automatically if it changes in the future
@@ -9,10 +9,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	TwitterUser = WW.Tmpl(Twitter,undefined),
 	TwitterUserTweet = WW.Tmpl(Twitter,undefined,'/status/',undefined),
 	TwitterUserMedia = WW.Tmpl(Twitter,undefined,'/media'),
+	TwitterHashTag = WW.Tmpl(Twitter,'hashtag/',undefined),
+	TwitterSearch = WW.Tmpl(Twitter,'search?q=',undefined),
 	TwitterAPI = 'https://api.twitter.com/',
 	// TwitterAPITypeHome = 'timeline/home',
 	// TwitterAPITypeConversation = 'timeline/conversation/',
-	TwitterAPITypeMedia = 'timeline/media/',
+	// TwitterAPITypeMedia = 'timeline/media/',
 	// TwitterAPITypeSearch = 'search/adaptive',
 	TwitterAPITypeGuide = 'guide',
 	TwitterAPISearchSug = WW.Tmpl(TwitterAPI,'1.1/search/typeahead.json?q=',undefined,'&tweet_mode=extended&count=',O.Size),
@@ -79,12 +81,107 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			Non : true,
 			ID : User.screen_name,
 			View : '@' + User.screen_name,
-			URL : Twitter + User.screen_name,
+			URL : TwitterUser(User.screen_name),
 			Img : User.profile_image_url_https,
 			UP : User.name,
-			UPURL : Twitter + User.screen_name,
+			UPURL : TwitterUser(User.screen_name),
 			More : (User.location ? '[[' + User.location + ']]\n\n' : '') + User.description
 		}
+	},
+	SolveStringSpread = function(B)
+	{
+		var
+		R = [],T,C,F = 0;
+		for (;F < B.length;)
+		{
+			T = B.charAt(F)
+			if ('\uD7FF' < T && T < '\uDC00' &&
+				'\uDBFF' < (C = B.charAt(-~F)) && C < '\uE000')
+			{
+				R.push(T + C)
+				F += 2
+			}
+			else
+			{
+				R.push(T)
+				++F
+			}
+		}
+		return R
+	},
+	SolveRichText = function(Q,S)
+	{
+		var
+		Text = '',
+		View = [],
+		All = [],
+		Pos = 0;
+		Q = SolveStringSpread(Q)
+		WR.EachU(function(V,F)
+		{
+			WR.Each(function(B)
+			{
+				WR.Each(function(N)
+				{
+					All.push([N,F,B])
+				},WR.SplitAll(2,B.indices))
+			},V)
+		},S)
+		All.sort(function(Q,S)
+		{
+			return Q[0][0] - S[0][0] || Q[0][1] - S[0][1]
+		})
+		WR.Each(function(V)
+		{
+			var
+			Index = V[0],
+			Type = V[1],
+			SingleText,SingleView;
+			V = V[2]
+			if (Pos < Index[0])
+			{
+				SingleText = WC.HED(Q.slice(Pos,Index[0]).join(''))
+				Text += SingleText
+				View.push(SingleText)
+				Pos = Index[0]
+			}
+			if (Pos === Index[0])
+			{
+				SingleText = Q.slice(Index[0],Index[1]).join('')
+				SingleView = SingleText
+				switch (Type)
+				{
+					case 'media' :
+						SingleText = SingleView = null
+						break
+					case 'user_mentions' :
+						SingleView = WV.Ah('@' + V.name,TwitterUser(V.screen_name))
+						break
+					case 'urls' :
+						SingleText = V.expanded_url
+						SingleView = WV.Ah(V.expanded_url,V.expanded_url)
+						break
+					case 'hashtags' :
+						SingleView = WV.Ah('#' + V.text,TwitterHashTag(WC.UE(V.text)))
+						break
+					case 'symbols' :
+						// CashTag
+						SingleView = WV.Ah('$' + V.text,TwitterSearch(WC.UE('$' + V.text)))
+						break
+				}
+				if (SingleText)
+					Text += SingleText
+				SingleView && View.push(SingleView)
+				Pos = Index[1]
+			}
+		},All)
+		if (Pos < Q.length)
+		{
+			Pos = WC.HED(Q.slice(Pos).join(''))
+			Text += Pos
+			View.push(Pos)
+		}
+		return [Text,View]
 	},
 	SolveTweet = function(Tweet,User,ID,Ext)
 	{
@@ -98,7 +195,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				Non : true,
 				ID : ID,
 				UP : User.name,
-				UPURL : Twitter + User.screen_name
+				UPURL : TwitterUser(User.screen_name)
 			}
 		}
 
@@ -109,8 +206,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		Media = WR.Path(['extended_entities','media'],Tweet),
 		Img = [],
 		Len = 0,
-		Title = WC.HED(Tweet.full_text),
-		TitleMap = {},
+		Title = Tweet.full_text,
 		TitleView,
 		More = [],
 		Card,
@@ -152,23 +248,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 
 		T;
 
-		WR.EachU(function(V,F)
-		{
-			WR.Each(function(B)
-			{
-				if (B.url)
-				{
-					Title = Title.replace(RegExp('\\s*' + WR.SafeRX(B.url) + '\\s*','g'),'_')
-					TitleMap[B.url] = function()
-					{
-						return 'media' === F || Retweet && RegExp('https://(?:twitter|x).com/[^/]+/status/' + Retweet).test(B.expanded_url) ?
-							'' :
-							O.Ah(B.expanded_url,B.expanded_url)
-					}
-				}
-			},V)
-		},Tweet.entities)
-		TitleView = O.RepCon(WC.HED(Tweet.full_text),TitleMap)
+		Title = SolveRichText(Title,Tweet.entities)
+		TitleView = Title[1]
+		Title = Title[0]
 
 		Retweet && More.push(O.Ah('RT ' + Retweet,TwitterTweet(Retweet)))
 
@@ -389,13 +471,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			Title : Title,
 			TitleView : TitleView,
 			UP : User.name,
-			UPURL : Twitter + User.screen_name,
+			UPURL : TwitterUser(User.screen_name),
 			Date : Tweet.created_at,
 			Len : Len && WW.StrMS(Len),
-			Desc : WC.HED(Tweet.full_text),
 			More : More
 		}
 	},
+	/*
 	SolveTweetIDB = function(ID,B)
 	{
 		var Tweet = B.globalObjects.tweets[ID];
@@ -462,6 +544,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			}]
 		})
 	},
+	*/
 	SolveCursor = function(B)
 	{
 		var
@@ -496,23 +579,40 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	{
 		var
 		R = [],
+		Prompt = [],
 		CheckTypePrompt = function(V)
 		{
 			/*
 				Happens when we hit the request limit
-				Not really motivated to parse it
+				{"contentType":"TimelineInlinePrompt","headerText":"サブスクライブしてより多くの投稿を表示する","bodyText":"本日の投稿表示制限に達しました。1日に表示可能な投稿数を増やすにはサブスクライブしてください。","primaryButtonAction":{"text":"購読する","action":{"url":"https://twitter.com/i/twitter_blue_sign_up","dismissOnClick":false}}}
+
+				Also the direct premium prompt...
+				{"contentType":"TimelineInlinePrompt","headerText":"広告をなくす","bodyText":"Xプレミアムプラスで [おすすめ] と [フォロー中] に表示される広告をなくす","primaryButtonAction":{"text":"サブスクライブする","action":{"url":"https://x.com/i/premium_sign_up?referring_page=timeline_prompt","dismissOnClick":true,"onClickCallbacks":[{"endpoint":"/1.1/onboarding/fatigue.json?flow_name=premium-plus-upsell-prompt&fatigue_group_name=PremiumPlusUpsellFatigueGroup&action_name=click&scribe_name=primary_cta&display_location=home_latest&served_time_secs=1710247323&injection_type=inline_message"}],"clientEventInfo":{"action":"primary_cta"}}},"headerRichText":{"text":"広告をなくす","entities":[]},"bodyRichText":{"text":"Xプレミアムプラスで [おすすめ] と [フォロー中] に表示される広告をなくす","entities":[]}}
 			*/
 			return V && 'TimelineMessagePrompt' === V.__typename &&
-				R.push(
+				Prompt.push(
 				{
 					Non : true,
-					More : WC.OTJ(V.content)
+					Title : V.content.headerText,
+					More :
+					[
+						V.content.bodyText,
+						O.Ah(V.content.primaryButtonAction.text,V.content.primaryButtonAction.action.url)
+					]
 				})
 		},
+		CheckTypeCommunity = function(V)
+		{
+			return V && 'Community' === V.__typename
+		},
+		UserHas = {},
 		CheckTypeUser = function(V)
 		{
 			return V && 'User' === V.__typename &&
-				R.push(SolveUser(V.legacy))
+			(
+				V = SolveUser(V.legacy),
+				WR.Has(V.ID,UserHas) || (UserHas[V.ID] = R.push(V))
+			)
 		},
 		AddTweet = function(V)
 		{
@@ -547,13 +647,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 				return V.promotedMetadata ||
 					/^(TweetDetailRelatedTweets)-/i.test(V.entryId) ||
 					CheckTypePrompt(V) ||
+					CheckTypeCommunity(V) ||
 					CheckTypeUser(V) ||
 					CheckTypeTweet(V) &&
 					(-~Begin === R.length ||
 						WR.Each(function(V){V.Group = R.length},R.slice(Begin)))
 			})
 		})
-		return [R.length && SolveCursor(B),{Item : R}]
+		return [R.length && SolveCursor(B),{Item : R.length ? R : Prompt}]
 	},
 	MakeUserTweet = function(User,Cursor)
 	{
@@ -607,7 +708,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			rawQuery : Query,
 			count : O.Size,
 			cursor : Cursor,
-			querySource : 'typed_query',
+			querySource : '',
 			product : 'Top'
 		})
 	};
@@ -627,6 +728,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		Map : [
 		{
 			Name : O.NameFind,
+			Judge : /\bSearch\b.*?\bQ=([^#&?]+)/i,
+			JudgeMap : function(V)
+			{
+				return WC.UD(V[1])
+			},
 			Example :
 			[
 				'メイドインアビス'
@@ -706,6 +812,24 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			}
 			*/
 		},{
+			Name : 'HashTag',
+			Judge :
+			[
+				/\bHashTag\/([^#/?]+)/i,
+				O.Word('HashTag')
+			],
+			JudgeMap : function(V)
+			{
+				return WC.UD(V[1])
+			},
+			View : O.More(function(ID)
+			{
+				return MakeSearchTimeline('#' + ID)
+			},function(I,Page,ID)
+			{
+				return MakeSearchTimeline('#' + ID,I[Page])
+			},SolveGraphQLTweet),
+		},{
 			Name : 'UserMedia',
 			Judge :
 			[
@@ -764,7 +888,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 					return TwitterAPIJSON(TwitterAPITypeMedia + Common(U).data.user.rest_id)
 				})
 			})*/
-		},{
+		}/*,{
 			Name : 'UserID',
 			Judge : O.Num('UserID'),
 			JudgeVal : O.ValNum,
@@ -776,7 +900,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			{
 				return WX.Just(MakeHead(TwitterAPIJSON(TwitterAPITypeMedia + ID)))
 			})
-		},{
+		}*/,{
 			Name : 'Timeline',
 			Judge : /^$/,
 			JudgeVal : false,

@@ -912,7 +912,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		Map : [
 		{
 			Name : O.NameFind,
-			Judge : /\bSearch\b.*?\bKeyword=([^&?#]+)/i,
+			Judge : /\bSearch\b.*?\bKeyword=([^#&?]+)/i,
 			JudgeMap : function(V)
 			{
 				return WC.UD(V[1])

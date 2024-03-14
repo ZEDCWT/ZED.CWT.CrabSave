@@ -1264,6 +1264,7 @@
 			ClassCard = WW.Key(),
 			ClassCardGroup = WW.Key(),
 			ClassCardContent = WW.Key(),
+			ClassCardUP = WW.Key(),
 			ClassCardClick = WW.Key(),
 			ClassCardBar = WW.Key(),
 			ClassImgMulti = WW.Key(),
@@ -1703,9 +1704,13 @@
 									V.TitleView ?
 										WV.Con(WV.Rock(WV.FmtW),V.TitleView) :
 										!!V.Title && WV.T(WV.Rock(WV.FmtW),V.Title),
-									WV.X(V.UPURL ?
-										WV.Ah(V.UP,V.UPURL) :
-										V.UP),
+									WV.ClsA
+									(
+										WV.X(V.UPURL ?
+											WV.Ah(V.UP,V.UPURL) :
+											V.UP),
+										ClassCardUP
+									),
 									!!V.Date && WV.X(function(Q)
 									{
 										var R;
@@ -2050,6 +2055,7 @@
 							*/
 							'width:`c`px' +
 						'}' +
+						'.`U`,.`U`>.`B`{color:#ECA100}' +
 						'.`K`{cursor:pointer}' +
 						'.`S`{color:#F7F7F7;font-weight:bold;text-align:center}' +
 						'.`K`:hover .`S`,.`K`.`A` .`S`{background:rgba(102,175,224,.7)}' +
@@ -2082,6 +2088,7 @@
 							C : ClassCard,
 							G : ClassCardGroup,
 							N : ClassCardContent,
+							U : ClassCardUP,
 							K : ClassCardClick,
 							S : ClassCardBar,
 							c : ConfSizeCardWidth,

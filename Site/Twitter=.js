@@ -78,12 +78,67 @@ module.exports = O =>
 					WR.Path(['retweeted_status_result','result','rest_id'],Legacy) ||
 					Legacy.quoted_status_id_str,
 
-				Title = WC.HED(Legacy.full_text),
+				Title = Legacy.full_text,
 				Cover,
 				Part = [],
 				MediaURL = [],
 				MediaExt = [],
 
+				SolveRichText = (Q,S) =>
+				{
+					var
+					Text = '',
+					Meta = [],
+					All = [],
+					Pos = 0;
+					Q = [...Q]
+					WR.EachU((V,F) => WR.Each(B =>
+						WR.Each(N => All.push([N,F,B]),WR.SplitAll(2,B.indices)),V),S)
+					All.sort((Q,S) => Q[0][0] - S[0][0] || Q[0][1] - S[0][1])
+					All.forEach(V =>
+					{
+						var
+						Index = V[0],
+						Type = V[1],
+						SingleText,SingleMeta;
+						V = V[2]
+						if (Pos < Index[0])
+						{
+							SingleText = WC.HED(Q.slice(Pos,Index[0]).join``)
+							Text += SingleText
+							Pos = Index[0]
+						}
+						if (Pos === Index[0])
+						{
+							SingleText = Q.slice(...Index).join``
+							switch (Type)
+							{
+								case 'media' :
+									SingleText = null
+									break
+								// case 'user_mentions' :
+								// 	break
+								case 'urls' :
+									SingleText = V.expanded_url
+									break
+								// case 'hashtags' :
+								// 	break
+								// case 'symbols' :
+								// 	break
+							}
+							if (SingleText)
+								Text += SingleText
+							SingleMeta && Meta.push(SingleMeta)
+							Pos = Index[1]
+						}
+					})
+					if (Pos < Q.length)
+					{
+						Pos = WC.HED(Q.slice(Pos).join(''))
+						Text += Pos
+					}
+					return [Text,...Meta]
+				},
 				SolveMediaContentType = V => '.' + WW.MF(/\/(\w+)/,V),
 				SolveMedia = V =>
 				{
@@ -162,17 +217,18 @@ module.exports = O =>
 				(
 					TwitterTweetFull(User.screen_name,Legacy.id_str),
 					WW.StrDate(Legacy.created_at,WW.DateColS) + ' ' + User.name,
-					Title
 				)
+				Title = SolveRichText(Title,Legacy.entities)
+				Meta.push(...Title)
+				Title = Title[0]
 				WR.EachU((V,F) =>
 				{
 					WR.EachU((B,G) =>
 					{
 						if (B.url)
 						{
-							Title = Title.replace(RegExp(`\\s*${WR.SafeRX(B.url)}\\s*`,'g'),'_')
 							Meta.push(
-								WR.Pascal(F).replace(/s$/,'') + ' ' + WW.Quo(WW.ShowLI(V.length,G)) + ' ' + B.url,
+								WR.Pascal(F).replace(/s$/,'') + ' ' + WW.Quo(WW.ShowLI(V.length,G)) + B.url,
 								'\t' + B.expanded_url)
 						}
 					},V)
