@@ -355,7 +355,7 @@ module.exports = O =>
 								Vote = WR.ReduceU((D,V,F) =>
 								{
 									var C;
-									if (C = /^choice(\d+)_(label)$/.exec(F))
+									if (C = /^choice(\d+)_(count|label)$/.exec(F))
 									{
 										D[C[1] = ~-C[1]] || (D[C[1]] = ['',0])
 										if ('label' === C[2])

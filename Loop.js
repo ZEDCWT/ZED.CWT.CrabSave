@@ -526,8 +526,7 @@ module.exports = Option =>
 								{
 									Site : V.Site,
 									ID : WR.SafeFile(Site.IDView ? Site.IDView(V.ID) : V.ID),
-									Title : WR.SafeFile(V.Title || '') ||
-										'[Untitled.' + WR.SafeFile(V.ID) + ']',
+									Title : WR.SafeFile(V.Title || ''),
 									Up : WR.SafeFile(V.UP || '[Anonymous]'),
 									Date : WW.StrDate(UPAt,WW.DateDotS),
 									Y : UPAt.getFullYear(),

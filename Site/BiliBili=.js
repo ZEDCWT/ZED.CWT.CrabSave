@@ -21,7 +21,8 @@ BiliBiliArticleRead = BiliBili + 'read/cv',
 BiliBiliAPI = 'https://api.bilibili.com/',
 BiliBiliAPIArticle = BiliBiliAPI + 'x/article/',
 BiliBiliAPIArticleView = WW.Tmpl(BiliBiliAPIArticle,'view?id=',undefined),
-BiliBiliAPIWebView = WW.Tmpl(BiliBiliAPI,'x/web-interface/view?aid=',undefined),
+// BiliBiliAPIWebView = WW.Tmpl(BiliBiliAPI,'x/web-interface/view?aid=',undefined),
+BiliBiliAPIWebViewDetail = WW.Tmpl(BiliBiliAPI,'x/web-interface/view/detail?aid=',undefined),
 BiliBiliAPIPlayURL = WW.Tmpl(BiliBiliAPI,'x/player/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=4048&fourk=1'),
 BiliBiliAPIPlayURLPGC = WW.Tmpl(BiliBiliAPI,'pgc/player/web/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=4048&fourk=1'),
 BiliBiliAPIPlayURLList =
@@ -483,19 +484,20 @@ module.exports = O =>
 
 			if (Prefix) return WX.Throw('Unexpected Prefix ' + Prefix)
 
-			return WX.TCO((_,I) => Ext.ReqB(O.Coke(BiliBiliAPIWebView(ID))).FMap(B =>
+			return WX.TCO((_,I) => Ext.ReqB(O.Coke(BiliBiliAPIWebViewDetail(ID))).FMap(B =>
 			{
 				B = Common(B)
-				if (!B.owner.name && !B.owner.face)
+				if (!B.View?.owner?.name && !B.View?.owner?.face)
 				{
 					if (3 < I)
 						WW.Throw('Unexpected Fatal | Empty Owner Response')
 					return WX.Just([true]).Delay(1E3)
 				}
 				return WX.Just([false,B])
-			})).FMap(AV =>
+			})).FMap(B =>
 			{
 				var
+				AV = B.View,
 				Part = [],
 				CIDFirst,
 				R;
@@ -508,7 +510,11 @@ module.exports = O =>
 					Meta : O.MetaJoin
 					(
 						AV.dynamic,
-						AV.desc,
+						[
+							AV.desc,
+							...B.Tags.map(V => WW.Quo(V.tag_id) + `#${V.tag_name}#` +
+								(V.jump_url ? ' ' + V.jump_url : '')),
+						]
 					),
 					Cover : AV.pic,
 					Part

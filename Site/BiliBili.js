@@ -51,8 +51,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliAPIFav = WW.Tmpl(BiliBiliAPI,'medialist/gateway/base/spaceDetail?media_id=',undefined,'&pn=',undefined,'&ps=20'),
 	BiliBiliAPIWeb = BiliBiliAPI + 'x/web-interface/',
 	BiliBiliAPIWebNav = BiliBiliAPIWeb + 'nav',
-	BiliBiliAPIWebView = WW.Tmpl(BiliBiliAPIWeb,'view?aid=',undefined),
-	BiliBiliAPIWebViewBV = WW.Tmpl(BiliBiliAPIWeb,'view/detail?bvid=',undefined),
+	// BiliBiliAPIWebView = WW.Tmpl(BiliBiliAPIWeb,'view?aid=',undefined),
+	BiliBiliAPIWebViewDetail = WW.Tmpl(BiliBiliAPIWeb,'view/detail?aid=',undefined),
+	BiliBiliAPIWebViewDetailBV = WW.Tmpl(BiliBiliAPIWeb,'view/detail?bvid=',undefined),
 	BiliBiliAPIPlayerSo = WW.Tmpl(BiliBiliAPI,'x/player.so?aid=',undefined,'&id=cid:',undefined),
 	BiliBiliAPISteinNode = WW.Tmpl(BiliBiliAPI,'x/stein/nodeinfo?aid=',undefined,'&graph_version=',undefined,'&node_id=',undefined),
 	BiliBiliAPIFo = WW.Tmpl(BiliBiliAPI,'x/relation/followings?vmid=',undefined,'&ps=',O.Size,'&pn=',undefined),
@@ -94,6 +95,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliAPIPUGVViewSeasonByEP = WW.Tmpl(BiliBiliAPIPUGV,'view/web/season?ep_id=',undefined),
 	BiliBiliAPIPUGVByUser = WW.Tmpl(BiliBiliAPIPUGV,'app/web/season/page?mid=',undefined,'&pn=',undefined,'&ps=',O.Size),
 	BiliBiliSearch = 'https://search.bilibili.com/',
+	BiliBiliSearchKeyword = WW.Tmpl(BiliBiliSearch,'all?keyword=',undefined),
 	BiliBiliSearchS = 'https://s.search.bilibili.com/',
 	BiliBiliSearchSuggestion = WW.Tmpl(BiliBiliSearchS,'main/suggest?main_ver=v1&highlight&term=',undefined),
 	BiliBiliSpace = 'https://space.bilibili.com/',
@@ -183,7 +185,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	{
 		return null != V && 'CTime ' + O.DTS(1E3 * V)
 	},
-	SolveAV = function(V)
+	SolveAV = function(V,Detail)
 	{
 		var
 		UP,EP;
@@ -202,6 +204,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			[
 				V.dynamic,
 				WR.Default(V.description,V.desc),
+				Detail && WR.Map(function(V)
+				{
+					return O.Ah(WW.Quo(V.tag_id) + '#' + V.tag_name + '#',
+						V.jump_url || BiliBiliSearchKeyword(WC.UE(V.tag_name)))
+				},Detail.Tags),
 				WR.Map(function(B)
 				{
 					return O.Ah(B.title + ' ' + B.name,BiliBiliSpace + B.mid)
@@ -752,16 +759,19 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	},
 	AV = function(ID,CID)
 	{
-		return O.API(BiliBiliAPIWebView(ID)).FMap(function(V)
+		return O.API(BiliBiliAPIWebViewDetail(ID)).FMap(function(V)
 		{
 			V = WC.JTO(V)
 			return -403 === V.code && O.Auth() ?
-				O.Req(BiliBiliAPIWebView(ID)) :
+				O.Req(BiliBiliAPIWebViewDetail(ID)) :
 				WX.Just(V)
-		}).FMap(function(V,R,T)
+		}).FMap(function(B,R,T)
 		{
-			V = Common(V)
-			R = SolveAV(V)
+			var
+			V;
+			B = Common(B)
+			V = B.View
+			R = SolveAV(V,B)
 			R = [R].concat(WR.MapU(function(B,F)
 			{
 				return {
@@ -1509,7 +1519,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			],
 			View : O.Less(function(ID)
 			{
-				return O.API(BiliBiliAPIWebViewBV(ID)).FMap(function(B)
+				return O.API(BiliBiliAPIWebViewDetailBV(ID)).FMap(function(B)
 				{
 					return AVWithCID(Common(B).View.aid)
 				})
