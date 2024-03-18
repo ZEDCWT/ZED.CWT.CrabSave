@@ -108,7 +108,7 @@ module.exports = O =>
 						{
 							var New = 0;
 							B = WC.JTO(B)
-							B.forEach((V,F) =>
+							B.forEach(V =>
 							{
 								if (!Seen.has(V.id))
 								{
@@ -126,9 +126,10 @@ module.exports = O =>
 						.FP(WX.Empty),
 					Req(NicoChannelAPIFCVideoSession(ID),{})
 						.FMap(Session => O.M3U(Video.video_stream.authenticated_url.replace(/{session_id}/,Session.session_id),Ext))
-						.FMap(Part => Ext.ReqB(O.Req({URL : Part.Raw.KEY.URI,Enc : false}))
+						.FMap(Part => Ext.ReqB(O.Req({URL : Part.Raw.KEY.URI,Enc : 'Base64'}))
 							.Map(B =>
 							{
+								B = WC.B64P(B)
 								16 === B.length || WW.Throw('Key is ' + WC.U16S(B))
 								B = ' ' + WC.B91S(B)
 								Part.URL = Part.URL.map(V => V + B)
