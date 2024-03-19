@@ -321,13 +321,18 @@ module.exports = O =>
 							switch (UnifiedCard.type)
 							{
 								case undefined :
-									break
 								case 'image_carousel_website' :
+								case 'image_website' :
+								case 'video_app' :
+								case 'video_carousel_app' :
+								case 'video_website' :
 									WR.Each(V => SolveUnifiedCardComponent(UnifiedCard.component_objects[V]),UnifiedCard.components)
 									break
+								case 'image_collection_website' :
 								case 'image_multi_dest_carousel_website' :
 									switch (UnifiedCard.layout.type)
 									{
+										case 'collection' :
 										case 'swipeable' :
 											WR.Each(V => WR.Each(B => SolveUnifiedCardComponent(UnifiedCard.component_objects[B]),V),
 												UnifiedCard.layout.data.slides)
@@ -335,11 +340,6 @@ module.exports = O =>
 										default :
 											WW.Throw('Unknown UnifiedCard.ImageMulti.Layout #' + UnifiedCard.layout.type)
 									}
-									break
-								case 'image_website' :
-								case 'video_app' :
-								case 'video_website' :
-									WR.Each(SolveUnifiedCardComponent,UnifiedCard.component_objects)
 									break
 								default :
 									WW.Throw('Unknown UnifiedCard #' + UnifiedCard.type + ' ' + WC.OTJ(UnifiedCard))

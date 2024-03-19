@@ -201,6 +201,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		}
 
 		var
+		GroupKey = WR.Path(['self_thread','id_str'],Tweet),
 		Retweet = Tweet.retweeted_status_id_str ||
 			WR.Path(['retweeted_status_result','result','rest_id'],Tweet) ||
 			Tweet.quoted_status_id_str,
@@ -213,10 +214,33 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		Card,
 		UnifiedCard,
 
+		U = [],
+
 		SolveMedia = function(V)
 		{
 			Img.push(V.media_url_https)
 			Len += WR.Path(['video_info','duration_millis'],V) || 0
+		},
+		SolveLink = function(V)
+		{
+			var T;
+			if (/\.com\/intent\/tweet\?/.test(V))
+			{
+				T = WC.QSP(V).text
+				T && WW.MR(function(_,V)
+				{
+					if (User.screen_name === V[1])
+					{
+						U.push(
+						{
+							Group : GroupKey,
+							ID : V[2],
+							UP : User.name,
+							UPURL : TwitterUser(User.screen_name)
+						})
+					}
+				},null,/\.com\/([^/]+)\/status\/(\d+)/g,T)
+			}
 		},
 		SolveUnifiedCardComponent = function(V)
 		{
@@ -230,8 +254,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					/*
 						Both `details` and `media` have `destination`
 						Of course they are ALWAYS pointing the same target, right?
+
+						1769936840084340831
+							Links of this contains `intent` to tweet
+							And ending with a photo link to a tweet (by the same author, same created_at)
+							Where the photo only tweets are EXCLUDED from the user post list, even INVISIBLE through the media type tab
+							Seems to be a formal way to general tweet template with image
 					*/
-					More.push(O.Ah(D.title.content,UnifiedCard.destination_objects[D.destination].data.url_data.url))
+					More.push(O.Ah(D.title.content,D = UnifiedCard.destination_objects[D.destination].data.url_data.url))
+					SolveLink(D)
 					break
 				case 'swipeable_media' :
 					WR.Each(function(V)
@@ -374,14 +405,43 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 										A link to a community
 										Also contains the banner
 								*/
-								break
 							case 'image_carousel_website' :
 								/*
 									1569998075627970562
 										A slide show linked to other site
 								*/
+							case 'image_website' :
+								/*
+									1733464007770845576
+										An image
+								*/
+							case 'video_app' :
+								/*
+									1727303783024349509
+										A media
+										Linked to platform related app store
+								*/
+							case 'video_carousel_app' :
+								/*
+									1744991688094089226
+										A slide of videos
+										And a link to an app
+								*/
+							case 'video_website' :
+								/*
+									1763942349531398254
+										A media
+										Which is linked to other site
+								*/
 								WR.Each(function(V){SolveUnifiedCardComponent(UnifiedCard.component_objects[V])},UnifiedCard.components)
 								break
+							case 'image_collection_website' :
+								/*
+									1769936840084340831
+										A key image
+										And a slide show of buttons
+										Building up a `collection`
+								*/
 							case 'image_multi_dest_carousel_website' :
 								/*
 									1707176656329482544
@@ -390,6 +450,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								*/
 								switch (UnifiedCard.layout.type)
 								{
+									case 'collection' :
+										// Where the first item being the key view, the rest are the actual slides
 									case 'swipeable' :
 										WR.Each(function(V)
 										{
@@ -402,25 +464,6 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 									default :
 										More.push('Unknown UnifiedCard.ImageMulti.Layout #' + UnifiedCard.layout.type)
 								}
-								break
-							case 'image_website' :
-								/*
-									1733464007770845576
-										An image
-								*/
-							case 'video_app' :
-								/*
-									1727303783024349509
-										A media
-										Linked to platform related app store
-								*/
-							case 'video_website' :
-								/*
-									1763942349531398254
-										A media
-										Which is linked to other site
-								*/
-								WR.Each(SolveUnifiedCardComponent,UnifiedCard.component_objects)
 								break
 							default :
 								More.push('Unknown UnifiedCard #' + UnifiedCard.type)
@@ -464,9 +507,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			}
 		}
 
-		return {
+		return WR.Pre(
+		{
 			NonAV : !Media || Retweet,
-			Group : WR.Path(['self_thread','id_str'],Tweet),
+			Group : GroupKey,
 			ID : Tweet.id_str || ID,
 			Img : Img,
 			Title : Title,
@@ -476,7 +520,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Date : Tweet.created_at,
 			Len : Len && WW.StrMS(Len),
 			More : More
-		}
+		},U)
 	},
 	/*
 	SolveTweetIDB = function(ID,B)
@@ -617,7 +661,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},
 		AddTweet = function(V)
 		{
-			R.push(SolveTweet(V.legacy,V.core.user_results.result.legacy,V.rest_id,V)) &&
+			WR.Each(function(V){R.push(V)},SolveTweet(V.legacy,V.core.user_results.result.legacy,V.rest_id,V))
 			WR.Each(CheckTypeTweet,
 			[
 				WR.Path(['quoted_status_result','result'],V),
