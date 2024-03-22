@@ -102,7 +102,7 @@ module.exports = Option =>
 					Size integer,
 					Root text,
 					Format text,
-					-- 0 Paused 1 Online 2 Error
+					-- 0 Paused 1 Online 2 Error 3 Done
 					State integer,
 					Error integer not null,
 					Done integer
@@ -143,7 +143,8 @@ module.exports = Option =>
 				);
 				insert into SQLite_Sequence(Name,Seq)
 					select 'Task',799999999 where not exists(select * from SQLite_Sequence where 'Task' = Name);
-				update Task set State = 1 where 2 = State;
+				update Task set State = 1 where 2 = State and Done is null;
+				update Task set State = 3 where 3 <> State and Done is not null;
 				update Task set Error = 0 where 0 <> Error;
 			`.replace(/^	{4}/mg,'').trim())),
 
@@ -423,9 +424,16 @@ module.exports = Option =>
 			where ? = Task and ? = Part and ? = File
 		`,[Done,Row,Part,File]),
 
+		/*
+			Previously we leave the `State` as is
+			Forcing it scan the whole history part whenever querying `TopErr`, `TopQueue`
+			Which is REALLY bad...
+			For record, with about 12E5 history tasks, a `Top` query may take 800ms
+		*/
 		Final : (Row,Done) => Run(
 		`
 			update Task set
+				State = 3,
 				Error = 0,
 				Done = ?
 			where ? = Row
