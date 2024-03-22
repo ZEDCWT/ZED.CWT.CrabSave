@@ -86,6 +86,9 @@ module.exports = Option =>
 		})
 			.FMap(() => Exec(
 			`
+				pragma Journal_Mode = WAL;
+				pragma Synchronous = NORMAL;
+
 				create table if not exists Task
 				(
 					Row integer primary key autoincrement,

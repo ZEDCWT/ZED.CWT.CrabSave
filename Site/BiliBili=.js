@@ -365,21 +365,23 @@ module.exports = O =>
 				{
 					T.content.paragraphs.forEach(V =>
 					{
-						var Line = '';
+						var
+						Line = '',
+						SolveText = Q => Q.nodes.forEach(B =>
+						{
+							switch (B.node_type)
+							{
+								case 1 :
+									Line += B.word.words || ''
+									break
+								default :
+									O.Bad('Unknown NodeType #' + B.node_type)
+							}
+						});
 						switch (V.para_type)
 						{
 							case 1 :
-								V.text.nodes.forEach(B =>
-								{
-									switch (B.node_type)
-									{
-										case 1 :
-											Line += B.word.words
-											break
-										default :
-											O.Bad('Unknown NodeType #' + B.node_type)
-									}
-								})
+								SolveText(V.text)
 								break
 							case 2 :
 								V.pic.pics.forEach(B =>
@@ -393,11 +395,20 @@ module.exports = O =>
 								Line = WR.RepS('\u2014',63)
 								break
 							case 4 :
+								// Quote
+								SolveText(V.text)
+								Line =
+								[
+									'```',
+									Line,
+									'```',
+								].join`\n`
+								break
 							case 5 :
 							case 6 :
 							case 7 :
 							default :
-								O.Bad('Unknown ParaType #' + Article.para_type)
+								O.Bad('Unknown ParaType #' + V.para_type)
 						}
 						Line && Meta.push(Line.replace(/\n+$/,''))
 					})

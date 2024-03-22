@@ -235,21 +235,26 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		if (Article = B.opus)
 			Article = WR.Map(function(V)
 			{
-				var Line = '';
+				var
+				Line = '',
+				SolveText = function(Q)
+				{
+					WR.Each(function(B)
+					{
+						switch (B.node_type)
+						{
+							case 1 :
+								Line += B.word.words || ''
+								break
+							default :
+								Line += WC.OTJ(B)
+						}
+					},Q.nodes)
+				};
 				switch (V.para_type)
 				{
 					case 1 :
-						WR.Each(function(B)
-						{
-							switch (B.node_type)
-							{
-								case 1 :
-									Line += B.word.words
-									break
-								default :
-									Line += WC.OTJ(B)
-							}
-						},V.text.nodes)
+						SolveText(V.text)
 						break
 					case 2 :
 						Line = []
@@ -265,6 +270,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						Line = WR.RepS('\u2014',63)
 						break
 					case 4 :
+						// Quote
+						SolveText(V.text)
+						Line =
+						[
+							'```',
+							Line,
+							'```'
+						].join('\n')
+						break
 					case 5 :
 					case 6 :
 					case 7 :

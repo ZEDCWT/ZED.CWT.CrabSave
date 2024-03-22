@@ -90,6 +90,7 @@ module.exports = O =>
 				var
 				Meta = [],
 				Comment = [],
+				CommentCount = new Map,
 				Part = [];
 				Video = Video.video_page
 				Meta.push(Video.description)
@@ -115,9 +116,16 @@ module.exports = O =>
 									++New
 									Comment.push
 									(
-										`${WW.StrDate(V.created_at)} [${WR.PadS0(4,Seen.size)}] ${WW.StrS(V.playback_time)} ${V.nickname}`,
+										[
+											WW.StrDate(V.created_at),
+											WW.Quo(WR.PadS0(4,Seen.size),true),
+											WW.StrS(V.playback_time),
+											V.nickname,
+											`{${~~CommentCount.get(V.nickname)}}`,
+										].join` `,
 										'	' + V.message,
 									)
+									CommentCount.set(V.nickname,-~CommentCount.get(V.nickname))
 									Seen.add(V.id)
 								}
 							})
