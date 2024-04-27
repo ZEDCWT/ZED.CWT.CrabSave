@@ -54,7 +54,7 @@ module.exports = O =>
 					X = WW.MF(/xmlUrl[ ='"]+([^'"]+)/,X)
 					X || O.Bad('No record data')
 					return WN.ReqB(O.Req(X)).FMap(Record =>
-						O.M3U(WN.JoinU(X,WW.MF(/hls="([^"]+)/,Record))).Map(M => (
+						O.M3U(WN.JoinU(X,WW.MF(/hls="([^"]+)/,Record))).Map(Part => (
 						{
 							Title : Lesson.modelName + '.' + Lesson.lessonName +
 								'.' + Lesson.teachersName,
@@ -75,7 +75,7 @@ module.exports = O =>
 									})
 								},null,/<page.*?>/g,V)
 								return D
-							},[M],/<document[^]+?<\/document/g,Record)
+							},[Part],/<document[^]+?<\/document/g,Record)
 						})))
 				})
 			})

@@ -23,7 +23,7 @@ module.exports = O =>
 			Play = WC.JTO(B.currentVideoInfo.ksPlayJson).adaptationSet
 			1 - Play.length && O.Bad('Unexpected AdaptationSet')
 			Play = O.Best('maxBitrate',Play[0].representation)
-			return O.M3U(Play.url).Map(URL => (
+			return O.M3U(Play.url).Map(Part => (
 			{
 				Title : B.title,
 				UP : B.user.name,
@@ -36,7 +36,7 @@ module.exports = O =>
 						Part.fileName !== Part.title && Part.fileName
 					].filter(V => V && V !== B.title)
 						.join('.'),
-					...URL
+					...Part
 				}]
 			}))
 		})

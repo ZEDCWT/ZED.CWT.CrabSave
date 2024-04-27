@@ -20,12 +20,12 @@ module.exports = O =>
 
 			if ('M' === Type)
 			{
-				return O.M3U(URL).Map(URL => (
+				return O.M3U(URL).Map(Part => (
 				{
 					Title : Pref.T,
 					UP : Pref.U,
 					Date : D,
-					Part : [URL]
+					Part : [Part]
 				}))
 			}
 

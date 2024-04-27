@@ -2,7 +2,6 @@
 var
 WW = require('@zed.cwt/wish'),
 {R : WR,X : WX,C : WC,N : WN} = WW,
-Crypto = require('crypto'),
 
 PrefixSeiga = 'im',
 PrefixMangaEpisode = 'mg',
@@ -315,52 +314,31 @@ module.exports = O =>
 						}
 					})).FMap(([H,B]) =>
 					{
+						var Opt =
+						{
+							ReqB : Q => Ext.ReqB(CokeDomand(Q)),
+							Init : V =>
+							{
+								var
+								Q = CMFPathRX.exec(V[3].MAP.URI),
+								S = CMFPathRX.exec(V[1]);
+								return Q[1] === S[1] && Q[3] === S[3] ?
+									Q[2] :
+									WW.Throw('Unhandled M3U Structure')
+							},
+						};
 						WR.Each(V =>
 							WR.EachU((V,F) => {CokeDomandROI.has(F) && (CokeDomandCurrent[F] = V)},WC.CokeP(V,WR.Id)),
 							H.H['set-cookie'])
-						return Ext.ReqB(CokeDomand(Common(B).contentUrl))
-					}).FMap(M3U =>
-					{
-						var
-						Sub = [],
-						T;
-						M3U = WC.M3U(M3U)
-
-						T = M3U['STREAM-INF']
-						T = O.Best([0,'BANDWIDTH'],T)
-						T || WW.Throw('Unable to solve video')
-						Sub.push([T[1],'.mp4'])
-
-						T = M3U.MEDIA[0]
-						'AUDIO' === T.TYPE || WW.Throw('Unable to solve audio')
-						Sub.push([T.URI,'.mp3'])
-
-						return WX.From(Sub).FMapE(([URL,X]) =>
-							Ext.ReqB(CokeDomand(URL)).FMap(List =>
-							{
-								var
-								Init;
-								List = WC.M3U(List)
-								Init = CMFPathRX.exec(List.MAP.URI)
-								return Ext.ReqB(CokeDomand({URL : List.KEY.URI,Enc : 'Base64'})).Map(B =>
-								{
-									B = WC.B64P(B)
-									16 === B.length || WW.Throw('Key is ' + WC.U16S(B))
-									B = ' ' + WC.B91S(B) +
-										' ' + WC.B91S(List.KEY.IV)
-									Part.push(
-									{
-										URL : List.INF.map(V =>
-										{
-											var T = CMFPathRX.exec(V = V[1]);
-											return T[1] === Init[1] && T[3] === Init[3] ?
-												V + ' ' + Init[2] + B :
-												WW.Throw('Unhandled M3U Structure')
-										}),
-										Ext : X,
-									})
-								})
-							}))
+						return O.M3U(Common(B).contentUrl,Ext,{...Opt,Ext : '.mp4'}).FMap(PartMP4 =>
+						{
+							var T;
+							Part.push(PartMP4)
+							T = PartMP4.Raw.find(V => V.MEDIA).MEDIA[0]
+							'AUDIO' === T.TYPE || WW.Throw('Unable to solve audio')
+							return O.M3U(T.URI,Ext,{...Opt,Ext : '.mp3'})
+								.Map(PartMP3 => Part.push(PartMP3))
+						})
 					}))
 				}
 				else WW.Throw('Unsupported Media ' + WC.OTJ(WR.Key(Media).filter(V => Media[V])))
@@ -385,27 +363,11 @@ module.exports = O =>
 			})
 		},
 		IDView : PadSM,
-		Pack : Q =>
+		Pack : O.PackM3U(
 		{
-			var
-			CMFTask = /^(.+\.cmf[av]\S*) (\S+) (\S+) (\S+)$/.exec(Q);
-			if (CMFTask) return CMFInitSolve(CMFTask[1],CMFTask[2]).FMap(Init => WX.P(S =>
-			{
-				var
-				Key = WC.B91P(CMFTask[3]),
-				IV = WC.B91P(CMFTask[4]),
-				D = Crypto.createDecipheriv('AES-128-CBC',WC.Buff(Key),WC.Buff(IV));
-				S.D(Init)
-				return WN.Req(CokeDomand(
-				{
-					URL : CMFTask[1],
-					OnD : B => S.D(D.update(B)),
-					OnE : () => S.U(D.final()),
-				})).On('Err',S.E)
-					.End
-			}))
-			return Q
-		},
+			Init : CMFInitSolve,
+			Req : Q => WN.Req(CokeDomand(Q)),
+		}),
 		Range : false,
 	}
 }

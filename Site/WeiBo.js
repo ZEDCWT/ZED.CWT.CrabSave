@@ -115,7 +115,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		B.msg &&
 			'success' !== B.msg &&
 			'succ' !== B.msg &&
-			O.Bad(B.code,B.msg)
+			O.Bad(B.code || B.error_type,B.msg)
 		return B.data
 	},
 	PackImg = function(V){return WW.IsArr(V) ? WR.Map(PackImg,V) : V && {URL : V,Head : {Referer : WeiBo}}},
@@ -207,6 +207,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					NonAV = false
 					Len = WR.Path(['playback_list',0,'play_info','duration'],Q) ||
 						WR.Path(['media_info','duration'],Q)
+					break
+
+				case 'campaign' : // 0
+					More.push(
+						Q.page_title,
+						Q.page_desc,
+						Q.tips)
 					break
 
 				case 'hudongvote' : // 23

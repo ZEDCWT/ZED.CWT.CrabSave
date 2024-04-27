@@ -114,9 +114,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			}]
 		})
 	},
-	SolvePost = function(B)
+	SolvePost = function(B,R)
 	{
 		var
+		IsTop = !WW.IsArr(R),
 		TopPost = B.post,
 		TopReply = B.reply,
 		TopParent = B.parent,
@@ -126,11 +127,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		UserDID,
 		PostID,
 		Img = [],
-		More = [],
-		R = [];
+		More = [];
 
-		if (B.$type && 'app.bsky.feed.defs#threadViewPost' !== B.$type) switch(B.$type)
+		IsTop && (R = [])
+
+		/*
+			For a recursive call, we may omit the $type part
+		*/
+		if (B.$type) switch(B.$type)
 		{
+			case 'app.bsky.feed.defs#threadViewPost' : break
 			case 'app.bsky.feed.defs#notFoundPost' : return R
 			default : return [
 			{
@@ -140,8 +146,22 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			}]
 		}
 
-		PostRecord = TopPost.record,
-		PostEmbed = TopPost.embed,
+		if (TopPost.notFound) return R
+
+		/*
+			$type : 'app.bsky.feed.defs#threadViewPost'
+			record
+			embed
+				$type : 'app.bsky.embed.record#view'
+				record
+					$type : 'app.bsky.embed.record#viewRecord'
+					value
+					embeds
+		*/
+		PostRecord = TopPost.record || TopPost.value,
+		PostEmbed = TopPost.embed ?
+			[TopPost.embed] :
+			TopPost.embeds,
 		UserDID = TopPost.author.did,
 		PostID = WW.MF(/\/([^/]+)$/,TopPost.uri),
 		WR.StartW(DIDPrefix,UserDID) && (UserDID = UserDID.slice(DIDPrefix.length))
@@ -164,7 +184,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		if (TopParent)
 		{
 			// When accessing the post directly
-			WR.Each(function(V){R.push(V)},SolvePost(TopParent))
+			SolvePost(TopParent,R)
 		}
 
 		if (TopPost.indexedAt !== PostRecord.createdAt)
@@ -172,21 +192,28 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			// wpyvghtrmnflwxmknbz67vct/3k5mfs5jt4c22
 			More.push('IndexedAt ' + WW.StrDate(TopPost.indexedAt))
 		}
-		if (PostEmbed) switch (PostEmbed.$type)
+		WR.Each(function(Embed)
 		{
-			case 'app.bsky.embed.images#view' :
-				WR.Each(function(V)
-				{
-					Img.push(V.fullsize)
-				},PostEmbed.images)
-				break
-			case 'app.bsky.embed.external#view' :
-				Img.push(PostEmbed.external.thumb)
-				More.push(O.Ah(PostEmbed.external.title,PostEmbed.external.uri))
-				break
-			default :
-				More.push('Unknown Embed ' + PostEmbed.$type)
-		}
+			switch (Embed.$type)
+			{
+				case 'app.bsky.embed.external#view' :
+					Img.push(Embed.external.thumb)
+					More.push(O.Ah(Embed.external.title,Embed.external.uri))
+					break
+				case 'app.bsky.embed.images#view' :
+					WR.Each(function(V)
+					{
+						Img.push(V.fullsize)
+					},Embed.images)
+					break
+				case 'app.bsky.embed.record#view' :
+					// Repost
+					SolvePost({post : Embed.record},R)
+					break
+				default :
+					More.push('Unknown Embed ' + Embed.$type)
+			}
+		},PostEmbed)
 		if (TopReason) switch (TopReason.$type)
 		{
 			case 'app.bsky.feed.defs#reasonRepost' :
@@ -212,6 +239,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Date : PostRecord.createdAt,
 			More : More
 		})
+
+		if (1 < R.length) WR.Each(function(V)
+		{
+			V.Group = R[0].ID
+		},R)
 
 		WR.Each(function(V)
 		{

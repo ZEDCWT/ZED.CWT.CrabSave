@@ -251,7 +251,10 @@
 	},
 	Setting = {},
 	SettingIsSPUPLast,SettingIsSPUPSet,
-	SettingIsSPUPNormalize = function(V){return WR.Trim(V).replace(/^\w+:\/\//,'')},
+	SettingIsSPUPNormalize = function(V)
+	{
+		return WR.Up(WR.Trim(V).replace(/^\w+:\/\//,''))
+	},
 	SettingIsSPUP = function(V)
 	{
 		if (!V || !WW.IsStr(V)) return

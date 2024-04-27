@@ -244,7 +244,18 @@ module.exports = O =>
 							SetUnk(ModAuthor.type)
 					}
 					if (T = ModDynamic && ModDynamic.desc)
+					{
 						Meta.push(Card.Title = T.text)
+						WR.Each(V =>
+						{
+							switch (V.type)
+							{
+								case 'RICH_TEXT_NODE_TYPE_VIEW_PICTURE' :
+									Part.push({URL : WR.Pluck('src',V.pics)})
+									break
+							}
+						},T.rich_text_nodes)
+					}
 					Card.Link = BiliBiliTimeline + B.id_str
 					switch (B.type)
 					{
@@ -635,6 +646,11 @@ module.exports = O =>
 			/^(?=\d)/,'av',
 			/#\d+$/,'',
 		]),
+		/*
+			HTTP/1.1 412 Precondition Failed
+			{"code":-412,"message":"请求被拦截","ttl":1,"data":null}
+		*/
+		Is429 : E => WW.ErrIs(WW.Err.NetBadStatus,E) && 412 === E.Arg[0],
 		Pack : Q => (
 		{
 			URL : Q,

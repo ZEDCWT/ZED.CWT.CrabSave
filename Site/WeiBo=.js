@@ -67,7 +67,7 @@ module.exports = O =>
 		B.msg &&
 			'success' !== B.msg &&
 			'ok' !== B.msg &&
-			O.Bad(WW.Quo(B.code) + B.msg)
+			O.Bad(WW.Quo(B.code || B.error_type) + B.msg)
 		return B.data
 	};
 
@@ -80,6 +80,8 @@ module.exports = O =>
 			{
 				Status = WC.JTO(Status)
 				Status.error_code && O.Bad(WW.Quo(Status.error_code) + Status.message)
+				// {ok:0,msg:'访问频次过高，请稍后再试',error_type:'toast'}
+				Status.error_type && O.Bad(WW.Quo(Status.error_type) + Status.msg)
 				// LlJq26YJu	Unexpected `isLongText` flag
 				return (Status.isLongText ? Ext.ReqB(O.Coke(WeiBoAJAXStatusLong(ID[1]))) : WX.Just()).FMap(Long =>
 				{
@@ -149,6 +151,14 @@ module.exports = O =>
 									else if (!VideoIgnoreDomainRX.test(T.h5_url))
 										WW.Throw('Unable to solve video URL')
 								}
+								break
+
+							case 'campaign' : // 0
+								Meta.push(
+									'',
+									Q.page_title,
+									Q.page_desc,
+									Q.tips)
 								break
 
 							case 'article' : // 2 5
@@ -383,7 +393,7 @@ module.exports = O =>
 									(
 										'',
 										WW.StrDate(V.created_at,WW.DateColS) + ' ' + V.user.idstr + ':' + V.user.screen_name,
-										V.source + ' Like ' + V.like_counts,
+										(V.source ? V.source + ' ' : '') + 'Like ' + V.like_counts,
 										V.text_raw,
 									)
 									WR.Each(B =>
@@ -494,6 +504,7 @@ module.exports = O =>
 				})
 			})*/
 		},
+		Is429 : E => WW.IsStr(E) && /频次过高/.test(E),
 		Pack : Q => (
 		{
 			URL : Q,

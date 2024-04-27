@@ -193,6 +193,7 @@ module.exports = O =>
 					{
 						case 'app_store_details' :
 						case 'button_group' :
+						case 'community_details' :
 							break
 						case 'details' :
 							Meta.push(
@@ -206,7 +207,7 @@ module.exports = O =>
 							SolveMedia(UnifiedCard.media_entities[D.id])
 							break
 						default :
-							WW.Throw('Unknown VideoWebsite.Component #' + UnifiedCard.name + ' ' + WC.OTJ(UnifiedCard))
+							WW.Throw('Unknown Component #' + V.type + ' ' + WC.OTJ(UnifiedCard))
 					}
 				},
 
@@ -249,7 +250,9 @@ module.exports = O =>
 					switch (Card.name.replace(/^\d+:/,''))
 					{
 						case 'audiospace' :
+						case 'message_me' :
 							break
+
 						case 'broadcast' :
 							if (T.broadcast_thumbnail_original)
 								Cover = T.broadcast_thumbnail_original.image_value.url
@@ -257,12 +260,11 @@ module.exports = O =>
 							SolveMediaBroadcast(T.broadcast_id.string_value)
 							break
 						case 'live_event' :
-							Meta.push
-							(
-								TwitterTweet(T.media_tweet_id.string_value),
-								T.event_title.string_value,
-								T.event_subtitle.string_value,
-							)
+							if (T.event_thumbnail_original)
+								Cover = T.event_thumbnail_original.image_value.url
+							T.media_tweet_id && Meta.push(TwitterTweet(T.media_tweet_id.string_value))
+							Meta.push(T.event_title.string_value)
+							T.event_subtitle && Meta.push(T.event_subtitle.string_value)
 							break
 						case 'periscope_broadcast' :
 							if (T.thumbnail_original)
@@ -310,19 +312,29 @@ module.exports = O =>
 							])
 							T.player_stream_url && SolveMediaAuto(T.player_stream_url.string_value,SolveMediaContentType(T.player_stream_content_type.string_value))
 							break
+
+						case 'app' :
 						case 'summary' :
 						case 'summary_large_image' :
 							Meta.push(T.title.string_value)
 							T.description && Meta.push(T.description.string_value)
-							T.photo_image_full_size_original && Part.push({URL : [T.photo_image_full_size_original.image_value.url],Ext : '.jpg'})
+							T.photo_image_full_size_original ? Part.push({URL : [T.photo_image_full_size_original.image_value.url],Ext : '.jpg'}) :
+								T.thumbnail_original ? Part.push({URL : [T.thumbnail_original.image_value.url],Ext : '.jpg'}) :
+								null
 							break
+
 						case 'unified_card' :
 							UnifiedCard = WC.JTO(T.unified_card.string_value)
 							switch (UnifiedCard.type)
 							{
 								case undefined :
+								case 'image_app' :
+								case 'image_carousel_app' :
 								case 'image_carousel_website' :
 								case 'image_website' :
+								case 'mixed_media_multi_dest_carousel_website' :
+								case 'mixed_media_single_dest_carousel_app' :
+								case 'mixed_media_single_dest_carousel_website' :
 								case 'video_app' :
 								case 'video_carousel_app' :
 								case 'video_website' :
@@ -330,6 +342,7 @@ module.exports = O =>
 									break
 								case 'image_collection_website' :
 								case 'image_multi_dest_carousel_website' :
+								case 'video_multi_dest_carousel_website' :
 									switch (UnifiedCard.layout.type)
 									{
 										case 'collection' :
@@ -346,7 +359,7 @@ module.exports = O =>
 							}
 							break
 						default :
-							if (/^poll\d+choice_text_only$/.test(Card.name)) (() =>
+							if (/^poll\d+choice_(text_only|video)$/.test(Card.name)) (() =>
 							{
 								var
 								Vote,
@@ -373,6 +386,7 @@ module.exports = O =>
 										' ' +
 										V[0])
 								},Vote)
+								T.player_stream_url && SolveMediaAuto(T.player_stream_url.string_value,null)
 							})()
 							else WW.Throw('Unknown Card #' + Card.name + ' ' + WC.OTJ(T))
 					}
@@ -493,6 +507,7 @@ module.exports = O =>
 			return Info
 		}),
 		*/
-		Range : false
+		Pack : O.PackM3U(),
+		Range : false,
 	}
 }

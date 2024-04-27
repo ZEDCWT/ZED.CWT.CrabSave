@@ -8,6 +8,9 @@ SQLite = require('sqlite3');
 module.exports = Option =>
 {
 	var
+	OptionEnableWAL = false,
+	WhenEnableWAL = Q => OptionEnableWAL ? Q : '',
+
 	PathData = Option.PathData,
 	PathDB = WN.JoinP(PathData,'DB.db'),
 
@@ -86,8 +89,8 @@ module.exports = Option =>
 		})
 			.FMap(() => Exec(
 			`
-				pragma Journal_Mode = WAL;
-				pragma Synchronous = NORMAL;
+				pragma Journal_Mode = ${OptionEnableWAL ? 'WAL' : 'TRUNCATE'};
+				${WhenEnableWAL('pragma Synchronous = NORMAL;')}
 
 				create table if not exists Task
 				(
@@ -439,7 +442,10 @@ module.exports = Option =>
 			where ? = Row
 		`,[Done,Row]),
 
-		Vacuum : () => Exec('vacuum'),
+		Vacuum : () => Exec(`
+			vacuum;
+			${WhenEnableWAL('pragma WAL_CheckPoint(Truncate)')}
+		`),
 		Stat : () => WN.Exist(PathDB),
 
 		Site :

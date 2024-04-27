@@ -5,7 +5,6 @@ PrefixArticle = 'ar',
 
 WW = require('@zed.cwt/wish'),
 {R : WR,X : WX,C : WC,N : WN} = WW,
-Crypto = require('crypto'),
 
 NicoChannel = 'https://nicochannel.jp/',
 NicoChannelAPI = 'https://nfc-api.nicochannel.jp/',
@@ -133,17 +132,14 @@ module.exports = O =>
 						}),[0,new Set]))
 						.FP(WX.Empty),
 					Req(NicoChannelAPIFCVideoSession(ID),{})
-						.FMap(Session => O.M3U(Video.video_stream.authenticated_url.replace(/{session_id}/,Session.session_id),Ext))
-						.FMap(Part => Ext.ReqB(O.Req({URL : Part.Raw.KEY.URI,Enc : 'Base64'}))
-							.Map(B =>
-							{
-								B = WC.B64P(B)
-								16 === B.length || WW.Throw('Key is ' + WC.U16S(B))
-								B = ' ' + WC.B91S(B)
-								Part.URL = Part.URL.map(V => V + B)
-								Part.Ext = '.ts'
-								return Part
-							})),
+						.FMap(Session => O.M3U(Video.video_stream.authenticated_url.replace(/{session_id}/,Session.session_id),Ext,
+						{
+							// createInitializationVector
+							IV : (_,F) => WC.BV()
+								.U4(0).U4(0)
+								.U4(0).U4(1 + F)
+								.B(),
+						})),
 				)
 				return O.Part(Part,Ext).FMap(Part => PadSiteInfo(
 				{
@@ -187,32 +183,14 @@ module.exports = O =>
 
 			return WX.Throw('Unexpected Prefix ' + Prefix)
 		},
-		Pack : Q =>
+		Pack : O.PackM3U(
 		{
-			var TS = /^(.+\/(\d+)\/[^.]+_(\d+)\.ts) (.+)$/.exec(Q);
-			if (TS) return WX.P(S =>
+			Pack : Q => (
 			{
-				var
-				Key = WC.B91P(TS[4]),
-				IV = WC.BV() // createInitializationVector
-					.U4(0).U4(0)
-					.U4(0).U4(100 * TS[2] + +TS[3])
-					.B(),
-				D = Crypto.createDecipheriv('AES-128-CBC',WC.Buff(Key),WC.Buff(IV));
-				return WN.Req(O.Req(
-				{
-					URL : TS[1],
-					OnD : B => S.D(D.update(B)),
-					OnE : () => S.U(D.final()),
-				})).On('Err',S.E)
-					.End
-			})
-
-			return {
 				URL : Q,
 				Head : {Referer : NicoChannel}
-			}
-		},
+			}),
+		}),
 		Range : false,
 	}
 }

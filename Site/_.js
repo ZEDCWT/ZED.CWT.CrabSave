@@ -1,37 +1,90 @@
 'use strict'
 var
 WW = require('@zed.cwt/wish'),
-{R : WR,X : WX,C : WC,N : WN} = WW;
+{R : WR,X : WX,C : WC,N : WN} = WW,
+Crypto = require('crypto');
 
 /**@type {CrabSaveNS.SiteAll}*/
 module.exports = Option =>
 {
 	var
 	All = [],
-	Map = {},
+	SiteMap = {},
 
 	Best = (S,Q) => WR.Reduce(
 		(D,V) => !D || (WW.IsArr(S) ? +WR.Path(S,D) < +WR.Path(S,V) : +D[S] < +V[S]) ? V : D,
 		null,Q) || {},
 	Bad = Q => WW.Throw(['ErrBadRes',WW.IsStr(Q) ? Q : WC.OTJ(Q)]),
-	M3U = (Q,Ext = WN) => WX.TCO((Q,I) => I < 10 ? Ext.ReqB(Option.Req(Q)).Map(V =>
+	/*
+		NicoChannel
+			Single Key
+			Runtime IV
+		NicoNico
+			Single Key & IV
+			Using MAP & MEDIA
+		Twitter
+			Multiple Key & IV
+	*/
+	M3U = (Q,Ext = WN,Opt = {}) =>
 	{
-		var B = WC.M3U(V);
-		if (WW.IsArr(B['STREAM-INF']))
+		var
+		ReqB = Opt.ReqB || (Q => Ext.ReqB(Option.Req(Q)));
+		return WX.TCO((Q,I) => I < 10 ? ReqB(Q.URL).FMap(V =>
 		{
-			B = Best([0,'BANDWIDTH'],B['STREAM-INF'])
-			B || Bad(V)
-			return [true,WN.JoinU(Q,B[1])]
-		}
-		if (WW.IsArr(B.INF))
-			return [false,
+			var
+			B = WC.M3U(V),
+			Raw = [...Q.Raw,B],
+			Key = new Map;
+			if (WW.IsArr(B['STREAM-INF']))
 			{
-				URL : B.INF.map(V => WN.JoinU(Q,V[1])),
-				Size : B.INF.length < 4 ? null : WR.RepA(1,B.INF.length),
-				Raw : B,
-			}]
-		Bad(V)
-	}) : Bad('Too many M3U | ' + Q),Q);
+				B = Best([0,'BANDWIDTH'],B['STREAM-INF'])
+				B || Bad(V)
+				return WX.Just([true,
+				{
+					URL : WN.JoinU(Q.URL,B[1]),
+					Raw,
+				}])
+			}
+			if (WW.IsArr(B.INF))
+			{
+				B.INF.forEach(V =>
+				{
+					if (V[3].KEY)
+						Key.set(V[3].KEY.URI,null)
+				})
+				return WX.From([...Key.keys()])
+					.FMapE(K => ReqB({URL : K,Enc : 'Base64'})
+						.Map(B => Key.set(K,WC.B91S(WC.B64P(B)))))
+					.Fin()
+					.Map(() => [false,
+					{
+						URL : B.INF.map((V,F) =>
+						[
+							WN.JoinU(Q.URL,V[1]),
+							...V[3].KEY ?
+							[
+								Key.get(V[3].KEY.URI),
+								V[3].KEY.IV ? WC.B91S(V[3].KEY.IV) :
+									Opt.IV ? WC.B91S(Opt.IV(V,F)) :
+									'',
+							] : [],
+							...V[3].MAP ?
+							[
+								Opt.Init(V),
+							] : [],
+						].join` `),
+						Size : B.INF.length < 4 ? null : WR.RepA(1,B.INF.length),
+						Ext : Opt.Ext || '.ts',
+						Raw,
+					}])
+			}
+			Bad(V)
+		}) : Bad('Too many M3U | ' + Q),
+		{
+			URL : Q,
+			Raw : [],
+		})
+	};
 
 	WR.Each((V,S) =>
 	{
@@ -97,13 +150,42 @@ module.exports = Option =>
 					{
 						1 < V.length && Bad('Unexpected content following M3U')
 						return M3U(V.URL[0],Ext)
+							.Map(B => ({...V,...B}))
 					}
 					return WX.Just(V)
 				}))
 				.Reduce((D,V) => D.push(V) && D,[]),
+			PackM3U : (Opt = {}) => Q =>
+			{
+				var
+				Req = Opt.Req || (Q => WN.Req(Option.Req(Q))),
+				T = Q.split` `,
+				Key,IV,Init;
+
+				if (1 === T.length)
+					return Opt.Pack?.(Q) ?? Q
+
+				Q = T[0]
+				Key = WC.Buff(WC.B91P(T[1]))
+				IV = WC.Buff(WC.B91P(T[2]))
+				Init = T[3]
+
+				return (Init ? Opt.Init(Q,Init) : WX.Just()).FMap(Init => WX.P(S =>
+				{
+					var D = Crypto.createDecipheriv('AES-128-CBC',Key,IV);
+					Init && S.D(Init)
+					return Req(
+					{
+						URL : Q,
+						OnD : B => S.D(D.update(B)),
+						OnE : () => S.U(D.final()),
+					}).On('Err',S.E)
+						.End
+				}))
+			},
 		})
 		All.push(S)
-		Map[S.ID = V] = S
+		SiteMap[S.ID = V] = S
 	},[
 		'BiliBili',
 		'YouTube',
@@ -132,13 +214,13 @@ module.exports = Option =>
 	])
 	return {
 		A : All,
-		M : Map,
-		H : Q => WR.Has(Q,Map),
-		D : Q => Map[Q],
-		P : Q => WR.Has(Q,Map) ? WX.Just(Map[Q]) : WX.Throw(['ErrUnkSite',Q]),
+		M : SiteMap,
+		H : Q => WR.Has(Q,SiteMap),
+		D : Q => SiteMap[Q],
+		P : Q => WR.Has(Q,SiteMap) ? WX.Just(SiteMap[Q]) : WX.Throw(['ErrUnkSite',Q]),
 		F : () =>
 		{
-			WR.EachU((_,F) => WR.Del(require.resolve(`./${F}=`),require.cache),Map)
+			WR.EachU((_,F) => WR.Del(require.resolve(`./${F}=`),require.cache),SiteMap)
 			WR.Del(__filename,require.cache)
 		}
 	}

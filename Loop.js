@@ -326,20 +326,10 @@ module.exports = Option =>
 						.Now(null,E =>
 						{
 							var
-							At = WW.Now(),
-							Extra429Test =
-							{
-								/*
-									HTTP/1.1 412 Precondition Failed
-									{"code":-412,"message":"请求被拦截","ttl":1,"data":null}
-								*/
-								BiliBili : Code => 412 === Code,
-							};
-							if (WW.ErrIs(WW.Err.NetBadStatus,E) &&
-							(
-								429 === E.Arg[0] ||
-								Extra429Test[V.Site]?.(E.Arg[0])
-							) || Err429 === E)
+							At = WW.Now();
+							if (Err429 === E ||
+								WW.ErrIs(WW.Err.NetBadStatus,E) && 429 === E.Arg[0] ||
+								Option.Site.D(V.Site).Is429?.(E))
 							{
 								HTTP429Record(V.Site,SettingProxy,SettingProxyURL)
 							}

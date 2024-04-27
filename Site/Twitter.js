@@ -70,6 +70,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		{
 			switch (V.code)
 			{
+				case 131 :
+					// {message:'Dependency: Internal error. (131)',locations:[{line:2606,column:3}],path:['user','result','timeline_v2','timeline','instructions',1,'entries',13,'content','itemContent','tweet_results','result','tweet','legacy','retweeted_status_result','result','tweet','quoted_status_result','result'],extensions:{name:'DependencyError',source:'Server',retry_after:0,code:131,kind:'Operational',tracing:{trace_id:...}},code:131,kind:'Operational',name:'DependencyError',source:'Server',retry_after:0,tracing:{trace_id:...}}
 				case 214 :
 					// {message:'BadRequest: Failed to get part of the tweet',locations:[{line:2317,column:3}],path:['user','result','timeline','timeline','instructions',0,'entries',5,'content','itemContent','tweet_results','result','legacy','retweeted_status_result','result','vibe'],extensions:{name:'BadRequestError',source:'Client',code:214,kind:'Validation',tracing:{trace_id:'...'}},code:214,kind:'Validation',name:'BadRequestError',source:'Client',tracing:{trace_id:'...'}}
 					break
@@ -252,6 +254,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			{
 				case 'app_store_details' :
 				case 'button_group' :
+				case 'community_details' :
 					break
 				case 'details' :
 					/*
@@ -307,7 +310,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							1714316253840728170
 								Linked to /i/spaces/.*
 						*/
+					case 'message_me' :
+						/*
+							1534968887606910977
+								A button to DM
+						*/
 						break
+
 					case 'broadcast' :
 						/*
 							1453638301756248064
@@ -324,8 +333,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								With a media of `.media_type` that from an exist tweet `.media_tweet_id`
 								And it will ask `TweetResultByRestId` for media playback
 						*/
-						More.push(O.Ah(T.event_title.string_value,TwitterTweet(T.media_tweet_id.string_value)),
-							T.event_subtitle.string_value)
+						T.event_thumbnail_original && Img.push(T.event_thumbnail_original.image_value.url)
+						More.push(T.media_tweet_id ?
+							O.Ah(T.event_title.string_value,TwitterTweet(T.media_tweet_id.string_value)) :
+							T.event_title.string_value)
+						T.event_subtitle && More.push(T.event_subtitle.string_value)
 						break
 					case 'periscope_broadcast' :
 						/*
@@ -379,6 +391,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							'nine'
 						])
 						break
+
+					case 'app' :
+						/*
+							926756857200254978
+								A link to external site
+						*/
 					case 'summary' :
 						/*
 							1763900977298681910
@@ -394,10 +412,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								A link
 								With NO image... Why
 						*/
-						T.photo_image_full_size_original && Img.push(T.photo_image_full_size_original.image_value.url)
+						T.photo_image_full_size_original ? Img.push(T.photo_image_full_size_original.image_value.url) :
+							T.thumbnail_original ? Img.push(T.thumbnail_original.image_value.url) :
+							null
 						More.push(O.Ah(T.title.string_value,T.card_url.string_value))
 						T.description && More.push(T.description.string_value)
 						break
+
 					case 'unified_card' :
 						UnifiedCard = WC.JTO(T.unified_card.string_value)
 						switch (UnifiedCard.type)
@@ -408,6 +429,18 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 										A link to a community
 										Also contains the banner
 								*/
+							case 'image_app' :
+								/*
+									1688838930634866688
+										An image
+										And a button linked to an app
+								*/
+							case 'image_carousel_app' :
+								/*
+									1540286698696847360
+										A slide show linked to other site
+										And a button linked to an app
+								*/
 							case 'image_carousel_website' :
 								/*
 									1569998075627970562
@@ -417,6 +450,22 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								/*
 									1733464007770845576
 										An image
+								*/
+							case 'mixed_media_multi_dest_carousel_website' :
+								/*
+									1783692484025143535
+										A slide show including images and videos
+								*/
+							case 'mixed_media_single_dest_carousel_app' :
+								/*
+									1734477459255677210
+										A slide show including images and videos
+										And a link to an app
+								*/
+							case 'mixed_media_single_dest_carousel_website' :
+								/*
+									1638556135392423937
+										A slide show including images and videos
 								*/
 							case 'video_app' :
 								/*
@@ -451,6 +500,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 										A slide show linked to other site
 										Each image with different description
 								*/
+							case 'video_multi_dest_carousel_website' :
+								/*
+									1649223927993106432
+										A slide show of videos
+								*/
 								switch (UnifiedCard.layout.type)
 								{
 									case 'collection' :
@@ -473,11 +527,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						}
 						break
 					default :
-						if (/^poll\d+choice_text_only$/.test(Card.name)) ~function()
+						if (/^poll\d+choice_(text_only|video)$/.test(Card.name)) ~function()
 						{
 							/*
 								1764169483302977708
 									A vote
+								1014798461546348545
+									A video
+									The vote is hidden
 							*/
 							var
 							Vote,
@@ -515,6 +572,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			NonAV : !Media || Retweet,
 			Group : GroupKey,
 			ID : Tweet.id_str || ID,
+			URL : TwitterUserTweet(User.screen_name,Tweet.id_str || ID),
 			Img : Img,
 			Title : Title,
 			TitleView : TitleView,

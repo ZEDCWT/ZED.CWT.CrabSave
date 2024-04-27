@@ -78,6 +78,7 @@ declare module CrabSaveNS
 		Jump? : boolean
 	}
 
+	type SitePack = (Q : string) => WishNS.DownloadO['Req'] | WishNS.DownloadO['Obs']
 	interface SiteO
 	{
 		(Q :
@@ -92,16 +93,29 @@ declare module CrabSaveNS
 			JOM(S : RegExp,Q : string) : object
 			Walk(Q : object,H : (V : object,F : string) => boolean) : void
 			Text(Q : string,Collect? : {Img? : string[]}) : string
-			M3U(Q : string,Ext? : SiteExt) : WishNS.Provider<SitePart &
+			M3U(Q : string,Ext? : SiteExt,Opt? :
 			{
-				Raw : WishNS.M3U
+				ReqB(Q : WishNS.ReqAccept) : string
+				Init?(V : WishNS.M3UPropINF) : string
+				IV?(V : WishNS.M3UPropINF,F : number) : WishNS.Buff
+				Ext? : string
+			}) : WishNS.Provider<SitePart &
+			{
+				Raw : WishNS.M3U[]
 			}>
 			MetaJoin(...Q : (string | string[])[]) : string[]
 			Part(Q : (SitePart | WishNS.Provider<SitePart>)[],Ext? : SiteExt) : WishNS.Provider<SitePart[]>
+			PackM3U(Opt? :
+			{
+				Pack? : SitePack
+				Init?(Base : string,Init : string) : WishNS.Provider<WishNS.Buff>
+				Req?(Q : WishNS.ReqAccept) : WishNS.ReqU
+			}) : SitePack
 		}) : {
 			URL(ID : string,Ext : SiteExt) : WishNS.Provider<SiteURL>
 			IDView?(Q : string) : string
-			Pack?(Q : string) : WishNS.DownloadO['Req'] | WishNS.DownloadO['Obs']
+			Is429?(E : any) : boolean
+			Pack? : SitePack
 			Range? : boolean
 			RefSpeed? : number
 		}

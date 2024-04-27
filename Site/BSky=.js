@@ -74,8 +74,17 @@ module.exports = O =>
 						default : O.Bad(B)
 					}
 
-					PostRecord = TopPost.record,
-					PostEmbed = TopPost.embed,
+					if (TopPost.notFound)
+					{
+						Meta.length && Meta.push('')
+						Meta.push(Prefix + '{NotFound} ' + TopPost.uri)
+						return
+					}
+
+					PostRecord = TopPost.record || TopPost.value,
+					PostEmbed = TopPost.embed ?
+						[TopPost.embed] :
+						TopPost.embeds,
 					Title = PostRecord.text,
 					PostID = WW.MF(/\/([^/]+)$/,TopPost.uri),
 
@@ -90,47 +99,57 @@ module.exports = O =>
 					)
 					if (Info)
 					{
-						if (PostEmbed) switch (PostEmbed.$type)
+						WR.Each(Embed =>
 						{
-							case 'app.bsky.embed.images#view' :
-								PartURL = []
-								PartExt = []
-								WR.Each(V =>
-								{
-									PartURL.push(V = V.fullsize)
-									PartExt.push(WN.ExtN(V.replace(/@(?=\w+$)/,'.')))
-								},PostEmbed.images)
-
-								WR.Any(V => V.alt,PostEmbed.images) ?
-									WR.EachU((V,F) =>
+							switch (Embed.$type)
+							{
+								case 'app.bsky.embed.external#view' :
+									T = Embed.external
+									Meta.push
+									(
+										'',
+										T.uri,
+										T.title,
+										T.description
+									)
+									Part.push({URL : [T.thumb],Ext : '.jpg'})
+									break
+								case 'app.bsky.embed.images#view' :
+									PartURL = []
+									PartExt = []
+									WR.Each(V =>
 									{
+										PartURL.push(V = V.fullsize)
+										PartExt.push(WN.ExtN(V.replace(/@(?=\w+$)/,'.')))
+									},Embed.images)
+
+									WR.Any(V => V.alt,Embed.images) ?
+										WR.EachU((V,F) =>
+										{
+											Part.push(
+											{
+												Title : V.alt,
+												URL : [PartURL[F]],
+												Ext : PartExt[F],
+											})
+										},Embed.images) :
 										Part.push(
 										{
-											Title : V.alt,
-											URL : [PartURL[F]],
-											Ext : PartExt[F],
+											URL : PartURL,
+											Ext : PartExt,
 										})
-									},PostEmbed.images) :
-									Part.push(
+									break
+								case 'app.bsky.embed.record#view' :
+									SolvePost(
 									{
-										URL : PartURL,
-										Ext : PartExt,
-									})
-								break
-							case 'app.bsky.embed.external#view' :
-								T = PostEmbed.external
-								Meta.push
-								(
-									'',
-									T.uri,
-									T.title,
-									T.description
-								)
-								Part.push({URL : [T.thumb],Ext : '.jpg'})
-								break
-							default :
-								WW.Throw('Unknown Embed ' + PostEmbed.$type)
-						}
+										$type : 'app.bsky.feed.defs#threadViewPost',
+										post : Embed.record,
+									},Info ? Prelude : Meta,Prefix)
+									break
+								default :
+									WW.Throw('Unknown Embed ' + Embed.$type)
+							}
+						},PostEmbed)
 						Info.Title = Title
 						Info.UP = TopPost.author.displayName,
 						Info.Date = PostRecord.createdAt
