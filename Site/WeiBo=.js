@@ -69,6 +69,16 @@ module.exports = O =>
 			'ok' !== B.msg &&
 			O.Bad(WW.Quo(B.code || B.error_type) + B.msg)
 		return B.data
+	},
+	SolveTextWithStruct = (Text,URLStruct) =>
+	{
+		var
+		Entity = {};
+		Text = Text.replace(/\u200B+$/,'')
+		WR.Each(V => Entity[V.short_url] = `<${V.url_title}> ${V.long_url}`,URLStruct)
+		return WR.Key(Entity).length ?
+			Text.replace(RegExp(WR.Map(WR.SafeRX,WR.Key(Entity)).join('|'),'g'),V => Entity[V]) :
+			Text
 	};
 
 	return {
@@ -301,17 +311,16 @@ module.exports = O =>
 						}
 					},
 					T;
-					Long = Long && WR.Path(['data','longTextContent'],WC.JTO(Long))
-					Title = Status.text_raw.replace(/\u200B+$/,'')
-					Meta.push(Long ? WC.HED(Long) : Title)
+
+					Long = Long && WC.JTO(Long).data
+					if (Long && !Long.longTextContent) Long = null
+					Title = Long ?
+						SolveTextWithStruct(WC.HED(Long.longTextContent),Long.url_struct) :
+						SolveTextWithStruct(Status.text_raw,Status.url_struct)
+					Meta.push(Title)
 					if (Forwarded)
 						Title = Title.replace(/\/\/@.*/,'')
-					WR.EachU((V,F) =>
-					{
-						Title = Title.replace(RegExp(`\\s*${WR.SafeRX(V.short_url)}\\s*`,'g'),' ')
-						Meta.push(`URL [${WW.ShowLI(Status.url_struct.length,F)}] ${WC.HED(V.url_title)} ${V.short_url}`)
-						V.long_url && Meta.push('\t' + V.long_url)
-					},Status.url_struct)
+
 					if (T = Status.mix_media_info)
 					{
 						WR.Each(V =>
@@ -441,7 +450,7 @@ module.exports = O =>
 							PicVariant.length && Part.unshift({URL : PicVariant})
 							PicAll.length && Part.unshift({URL : PicAll,ExtDefault : '.jpg'})
 							return {
-								Title : Title.trim(),
+								Title : Title,
 								UP : Status.user.screen_name,
 								Date : Status.created_at,
 								Meta,
@@ -504,7 +513,9 @@ module.exports = O =>
 				})
 			})*/
 		},
-		Is429 : E => WW.IsStr(E) && /频次过高/.test(E),
+		Is429 : E => WW.IsArr(E) &&
+			WW.IsStr(E[1]) &&
+			/频次过高/.test(E[1]),
 		Pack : Q => (
 		{
 			URL : Q,

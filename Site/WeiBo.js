@@ -4,6 +4,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	var
 	WeiBo = 'https://weibo.com/',
 	// WeiBoUser = WW.Tmpl(WeiBo,'u/',undefined),
+	WeiBoUserNick = WW.Tmpl(WeiBo,'n/',undefined),
 	// WeiBoUserAll = WW.Tmpl(WeiBo,undefined,'?is_all=1&page=',undefined),
 	// WeiBoUserAllSub = WW.Tmpl(WeiBo,'p/aj/v6/mblog/mbloglist?script_uri=/',undefined,'&id=',undefined,'&pl_name=Pl_Official_MyProfileFeed__20&domain=100505&is_all=1&page=',undefined,'&pre_page=',undefined,'&pagebar=',undefined),
 	// WeiBoHome = WW.Tmpl(WeiBo,'aj/mblog/fsearch?',undefined),
@@ -12,6 +13,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	// WeiBoArticle = WW.Tmpl(WeiBo,'ttarticle/p/show?id=',undefined),
 	WeiBoAJAX = WeiBo + 'ajax/',
 	WeiBoAJAXStatus = WeiBoAJAX + 'statuses/',
+	WeiBoAJAXStatusConfig = WeiBoAJAXStatus + 'config',
 	WeiBoAJAXStatusShow = WW.Tmpl(WeiBoAJAXStatus,'show?id=',undefined),
 	WeiBoAJAXStatusLong = WW.Tmpl(WeiBoAJAXStatus,'longtext?id=',undefined),
 	WeiBoAJAXStatusMBlog = WW.Tmpl(WeiBoAJAXStatus,'mymblog?feature=0&uid=',undefined,'&page=',undefined),
@@ -25,7 +27,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	WeiBoAJAXProfileFollow = WW.Tmpl(WeiBoAJAXProfile,'followContent?page=',undefined),
 	WeiBoSearch = 'https://s.weibo.com/',
 	WeiBoSearchSugg = WW.Tmpl(WeiBoSearch,'Ajax_Search/suggest?where=weibo&type=weibo&key=',undefined),
-	WeiBoSearchQuery = WW.Tmpl(WeiBoSearch,'weibo?q=',undefined,'&page=',undefined),
+	WeiBoSearchQuery = WW.Tmpl(WeiBoSearch,'weibo?q=',undefined),
+	WeiBoSearchQueryPage = WW.Tmpl(WeiBoSearch,'weibo?q=',undefined,'&page=',undefined),
 	SinaLogin = 'https://login.sina.com.cn/',
 	SinaLoginSSO = SinaLogin + 'sso/login.php',
 	SinaLoginCross = SinaLogin + 'crossdomain2.php?action=login',
@@ -182,16 +185,79 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			WR.Map(SolveCard,B.match(/feed_list_item"[^]+?WB_feed_handle/g)))
 	},
 	*/
+	SolveTextNormalize = function(Q)
+	{
+		return Q.replace(/\u200B+/g,'')
+	},
+	// app.js transText
+	StatusConfigEmoticon,
+	SolveStatusConfig = function(Origin)
+	{
+		return StatusConfigEmoticon ?
+			WX.Just(Origin) :
+			Req(WeiBoAJAXStatusConfig).Map(function(B)
+			{
+				B = Common(B)
+				StatusConfigEmoticon = {}
+				O.Walk(B.emoticon,function(V)
+				{
+					return WW.IsArr(V) && WR.Each(function(B)
+					{
+						StatusConfigEmoticon[B.phrase] = B.url
+					},V)
+				})
+			}).FinErr().Map(WR.Const(Origin))
+	},
+	SolveTextWithStruct = function(Text,TopicStruct,URLStruct)
+	{
+		var
+		Entity = {},
+		EntityRX;
+		WR.Each(function(V)
+		{
+			V = '#' + V.topic_title + '#'
+			Entity[V] = function(){return WV.Ah(V,WeiBoSearchQuery(WC.UE(V)))}
+		},TopicStruct)
+		WR.Each(function(V)
+		{
+			Entity[V.short_url] = function(){return WV.Ah(V.url_title,V.long_url)}
+		},URLStruct)
+		EntityRX = WR.Map(WR.SafeRX,WR.Key(Entity))
+		EntityRX.push
+		(
+			'@[-\\w·\u4E00-\u9FA5\uE7C7-\uE7F3]+',
+			'\\[.*?\\](?!#)'
+		)
+		EntityRX = EntityRX.join('|')
+		return WR.MapU(function(V,F)
+		{
+			F = 1 & F
+			return F && WR.Has(V,Entity) ? Entity[V]() :
+				F && WR.StartW('@',V) ? WV.Ah(V,WeiBoUserNick(WC.UE(V.slice(1)))) :
+				F && WR.Has(V,StatusConfigEmoticon) ?
+					WV.CSS(O.Img(StatusConfigEmoticon[V],V),
+					{
+						width : 18,
+						height : 18
+					}) :
+				V
+		},Text.split(RegExp(WW.QuoP(EntityRX,true),'g')))
+	},
 	SolveStatus = function(B,Long)
 	{
 		var
 		NonAV = true,
 		Img,
+		Title,
+		TitleView,
 		Len,
+		/*
 		More = WR.Map(function(V)
 		{
 			return O.Ah(V.url_title && WC.HED(V.url_title) || '<No Title>',V.long_url)
 		},B.url_struct),
+		*/
+		More = [],
 		ProcessObject = function(Q)
 		{
 			var
@@ -266,7 +332,20 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			}
 		},
 		T;
+
 		Long = Long && WC.JTO(Long).data
+		// N8tYvti03. With isLongText but not having long text data
+		if (Long && Long.longTextContent)
+		{
+			Title = SolveTextNormalize(WC.HED(Long.longTextContent))
+			TitleView = SolveTextWithStruct(Title,Long.topic_struct,Long.url_struct)
+		}
+		else
+		{
+			Title = SolveTextNormalize(B.text_raw)
+			TitleView = SolveTextWithStruct(Title,B.topic_struct,B.url_struct)
+		}
+
 		if (T = B.title)
 			More.push(T.text)
 		if (T = B.region_name)
@@ -332,13 +411,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			NonAV : B.retweeted_status || NonAV,
 			ID : B.user.idstr + '/' + B.mblogid,
 			Img : PackImg(Img),
-			Title : B.text_raw.replace(/\u200B+$/,''),
+			Title : Title,
+			TitleView : TitleView,
 			UP : ShowName(B.user.screen_name,B.user.remark),
 			UPURL : WeiBo + B.user.profile_url.replace(/^\//,''),
 			Date : B.created_at,
 			Len : Len,
-			// N8tYvti03. With isLongText but not having long text data
-			Desc : Long && WC.HED(Long.longTextContent || ''),
 			More : More
 		}
 	},
@@ -402,9 +480,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		Map : [
 		{
 			Name : O.NameFind,
+			Judge : /\bS\.WeiBo\b.*?\bQ=([^#&?]+)/i,
+			JudgeMap : function(V)
+			{
+				return WC.UD(V[1])
+			},
 			View : function(ID,Page)
 			{
-				return Req(WeiBoSearchQuery(WC.UE(ID),-~Page)).Map(function(B)
+				return Req(WeiBoSearchQueryPage(WC.UE(ID),-~Page)).Map(function(B)
 				{
 					return {
 						Max : WW.MR(function(D,V)
@@ -518,12 +601,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				{
 					B = WC.JTO(B)
 					B.error_code && O.Bad(B.error_code,B.message)
-					return (B.isLongText ? Req(WeiBoAJAXStatusLong(ID)) : WX.Just()).Map(function(Long)
-					{
-						return {
-							Item : [SolveStatus(B,Long)]
-						}
-					})
+					return (B.isLongText ? Req(WeiBoAJAXStatusLong(ID)) : WX.Just())
+						.FMap(SolveStatusConfig)
+						.Map(function(Long)
+						{
+							return {
+								Item : [SolveStatus(B,Long)]
+							}
+						})
 				})
 			}
 		},{
@@ -633,7 +718,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				return (/\D/.test(ID) ? SolveUIDByCustom(ID) : WX.Just(ID)).FMap(function(ID)
 				{
 					return Req(WeiBoAJAXStatusMBlog(ID,-~Page))
-				}).Map(function(B)
+				}).FMap(SolveStatusConfig).Map(function(B)
 				{
 					B = Common(B)
 					return {
@@ -651,7 +736,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				return (/\D/.test(ID) ? SolveUIDByScreen(ID) : WX.Just(ID)).FMap(function(ID)
 				{
 					return Req(WeiBoAJAXStatusMBlog(ID,-~Page))
-				}).Map(function(B)
+				}).FMap(SolveStatusConfig).Map(function(B)
 				{
 					B = Common(B)
 					return {
@@ -686,7 +771,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			*/
 			View : O.More(function(_,I)
 			{
-				return SolveFeedGroup().FMap(function(ID)
+				return SolveFeedGroup().FMap(SolveStatusConfig).FMap(function(ID)
 				{
 					return Req(WeiBoAJAXFeedFriendTimeline(I[0] = ID,''))
 				})
