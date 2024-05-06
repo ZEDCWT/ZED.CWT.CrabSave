@@ -4,6 +4,7 @@ WW = require('@zed.cwt/wish'),
 {R : WR,X : WX,C : WC,N : WN} = WW,
 
 WeiBo = 'https://weibo.com/',
+WeiBoPage = WW.Tmpl(WeiBo,'p/',undefined),
 WeiBoAJAX = WeiBo + 'ajax/',
 WeiBoAJAXStatusShow = WW.Tmpl(WeiBoAJAX,'statuses/show?id=',undefined),
 WeiBoAJAXStatusLong = WW.Tmpl(WeiBoAJAX,'statuses/longtext?id=',undefined),
@@ -75,7 +76,7 @@ module.exports = O =>
 		var
 		Entity = {};
 		Text = Text.replace(/\u200B+$/,'')
-		WR.Each(V => Entity[V.short_url] = `<${V.url_title}> ${V.long_url}`,URLStruct)
+		WR.Each(V => Entity[V.short_url] = `<${V.url_title}> ${V.long_url || WeiBoPage(V.page_id)}`,URLStruct)
 		return WR.Key(Entity).length ?
 			Text.replace(RegExp(WR.Map(WR.SafeRX,WR.Key(Entity)).join('|'),'g'),V => Entity[V]) :
 			Text

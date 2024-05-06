@@ -117,7 +117,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			Desc : V.description,
 			More :
 			[
-				V.display_date && 'Display ' + WW.StrDate(V.display_date,WW.DateColS)
+				V.display_date && 'Display ' + WW.StrDate(V.display_date,WW.DateColS),
+				V.video_delivery_target.display_name || 1 === V.video_delivery_target.id && '会員限定',
+				!!V.video_free_periods.length && '一部無料'
 			]
 		}
 	},

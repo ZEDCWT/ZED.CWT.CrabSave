@@ -195,7 +195,7 @@ module.exports = Option =>
 		Over : Row => Get(
 		`
 			select
-				Title,File,Size,State,
+				Title,UP,File,Size,State,
 				Error,
 				(select sum(Has) from Down where ? = Task) Has
 			from Task where ? = Row

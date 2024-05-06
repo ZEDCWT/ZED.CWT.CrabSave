@@ -129,6 +129,8 @@
 	ClassPadding = WW.Key(),
 	ClassHighLight = WW.Key(),
 	ClassSingle = WW.Key(),
+	ClassBriefSite = WW.Key(),
+	ClassBriefUP = WW.Key(),
 	ClassTask = WW.Key(),
 	ClassOverlay = WW.Key(),
 	ClassHeader = WW.Key(),
@@ -142,6 +144,33 @@
 	MakeSingle = function(Q)
 	{
 		return WV.T(WV.Rock(ClassSingle + (Q ? ' ' + Q : '')),'\xA0')
+	},
+	MakeSingleBrief = function()
+	{
+		var
+		R = MakeSingle(),
+		Site = WV.Rock(ClassBriefSite,'span'),
+		UP = WV.Rock(ClassBriefUP,'span'),
+		Title = WV.E();
+		WV.ClsA(R,WV.Alt)
+		WV.Con(R,[Site,UP,Title])
+		return {
+			R : R,
+			U : function(Task,Loading)
+			{
+				if (Loading)
+				{
+					WV.T(Site,Task.Site + ' ')
+					WV.Clr(UP)
+					WV.T(Title,'#' + Task.Row + ' ' + Task.ID)
+				}
+				else
+				{
+					WV.T(UP,Task.UP + ' ')
+					WV.T(Title,Task.Title || LangSolve('GenUntitle'))
+				}
+			}
+		}
 	},
 	SingleFill = function(Q,W,A)
 	{
@@ -777,6 +806,12 @@
 			Part = WV.Rock(),
 			ErrReq = WV.Rock(WV.FmtW + ' ' + WV.None),
 			Err = WV.Rock(WV.FmtW + ' ' + WV.None),
+			TaskKeyFileDone = WW.Key(),
+			LineKeyEle = 0,
+			LineKeySolve = 1,
+			LineKeyTextNode = 2,
+			LineFileCount,
+			LineDone,
 			Line =
 			[
 				[LangSolve('DetRow'),WR.Const(Q.Row)],
@@ -798,15 +833,15 @@
 				{
 					return S.Part && S.Part.length
 				}],
-				[LangSolve('DetFileC'),function(S)
+				LineFileCount = [LangSolve('DetFileC'),function(S)
 				{
-					return S.File
+					return WR.Has('File',S) && S[TaskKeyFileDone] + ' / ' + S.File
 				}],
 				[LangSolve('DetRoot'),function(S)
 				{
 					return S.Root
 				}],
-				[LangSolve('DetDone'),function(S)
+				LineDone = [LangSolve('DetDone'),function(S)
 				{
 					return S.Done &&
 						WW.StrDate(S.Done) +
@@ -830,23 +865,27 @@
 				Down = S.Down
 				WR.Has('Title',S) &&
 					WV.T(Title,S.Title)
+				S[TaskKeyFileDone] = WR.Reduce(function(D,V)
+				{
+					return D + !!V.Done
+				},0,S.Down)
 				WR.Each(function(V,T)
 				{
-					if (!V[2])
+					if (!V[LineKeyTextNode])
 					{
-						V[0] = WV.Con(WV.Rock(),
+						V[LineKeyEle] = WV.Con(WV.Rock(),
 						[
-							MakeHigh(V[0] + ' '),
-							V[2] = WV.E()
+							MakeHigh(V[LineKeyEle] + ' '),
+							V[LineKeyTextNode] = WV.E()
 						])
 					}
-					T = V[1](S)
+					T = V[LineKeySolve](S)
 					if (null == T || false == T)
-						WV.Del(V[0])
+						WV.Del(V[LineKeyEle])
 					else
 					{
-						WV.T(V[2],T)
-						WV.Ap(V[0],Detail)
+						WV.T(V[LineKeyTextNode],T)
+						WV.Ap(V[LineKeyEle],Detail)
 					}
 				},Line)
 				WR.Each(function(V)
@@ -909,19 +948,23 @@
 							},
 							Proto.AuthDownPlay,function(Data)
 							{
+								V.Play = Data.Play
 								Prog.P(Data.Play)
 							},
 							Proto.AuthDownConn,function(Data)
 							{
+								V.First = Data.First
 								Prog.C(WW.StrDate(Data.First))
 							},
 							Proto.AuthDownPath,function(Data)
 							{
+								V.Path = Data.Path
 								WV.T(Name,Data.Path)
 							},
 							Proto.AuthDownHas,function(Data)
 							{
 								Prog.G(MakeProgress(V.Size,V.Has = Data.Has))
+								V.Task = Data.Take
 								Prog.T(WW.StrMS(Data.Take))
 									.V(MakeSpeed(V.Has / (Data.Take || 1)))
 							},
@@ -932,6 +975,12 @@
 							},
 							Proto.AuthDownDone,function(Data)
 							{
+								if (!V.Done)
+								{
+									V.Done = Data.Done
+									++S[TaskKeyFileDone]
+									WV.T(LineFileCount[LineKeyTextNode],LineFileCount[LineKeySolve](S))
+								}
 								Prog.D(WW.StrDate(Data.Done))
 							}
 						)
@@ -963,11 +1012,10 @@
 					P = P && P[Data.File]
 					P && P[WSProtoCurrentID](Data)
 				},
-				F : function(Done,T)
+				F : function(Done)
 				{
-					T = WR.Last(Line)
-					WV.T(T[2],T[1](Done))
-					WV.Ap(T[0],Detail)
+					WV.T(LineDone[LineKeyTextNode],LineDone[LineKeySolve](Done))
+					WV.Ap(LineDone[LineKeyEle],Detail)
 				}
 			}
 			return WX.EndI(
@@ -1181,6 +1229,8 @@
 		'.`H`{color:#2672EC}' +
 		'.`F`>.`H`{color:inherit}' +
 		'.`I`{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}' +
+		'.`BS`,.`BU`{font-weight:bold}' +
+		'.`BU`{color:#ECA100}' +
 
 		'.`K`{line-height:1.4}' +
 		'.`K` .`I`.`L`{margin:`h`px 0 0 `h`px}' +
@@ -1238,6 +1288,8 @@
 			P : ClassPadding,
 			H : ClassHighLight,
 			I : ClassSingle,
+			BS : ClassBriefSite,
+			BU : ClassBriefUP,
 			K : ClassTask,
 			Y : ClassOverlay,
 			R : ClassHeader,
@@ -2340,7 +2392,7 @@
 					Row,
 					Task,
 					R = WV.Div(2,['',ConfTaskButtonSize]),
-					Title = MakeSingle(),
+					Title = MakeSingleBrief(),
 					Status = MakeSingle(ClassStatus),
 					PlayCurrent = 9,
 					Play = WV.But(
@@ -2431,7 +2483,6 @@
 							Row = HotShownCurrent = false
 						}
 					};
-					WV.ClsA(Title,WV.Alt)
 					WV.On('click',WV.StopProp,Play.R)
 					WV.Con(Status,[Play.R,Running.R,Renew])
 					WV.ApR([Title,Status],R[1])
@@ -2447,7 +2498,7 @@
 							LoadErr = null
 							HasError = false
 							Play.X('').Off()
-							SingleFill(Title,'#' + V.Row + ' ' + V.Site + ' ' + V.ID)
+							Title.U(V,true)
 							WV.ClsA(Running.R,WV.None)
 							OnTick()
 							OnState(false)
@@ -2455,7 +2506,7 @@
 							LoadO(TaskOverviewLoad(V.Row).Now(function(B)
 							{
 								Task = B
-								SingleFill(Title,B.Title || LangSolve('GenUntitle'))
+								Title.U(Task)
 								WR.Has('Size',B) && WV.ClsR(Running.R,WV.None)
 								if (B.Error)
 								{
@@ -2514,7 +2565,8 @@
 								T : function(Q)
 								{
 									if (null == Task) return
-									SingleFill(Title,Q || LangSolve('GenUntitle'))
+									Task.Title = Q
+									Title.U(Task)
 								},
 								Z : function(Data)
 								{
@@ -2786,7 +2838,7 @@
 					var
 					Task,
 					R = WV.Div(2,['',ConfTaskButtonSize]),
-					Title = MakeSingle(),
+					Title = MakeSingleBrief(),
 					Status = MakeSingle(),
 					Done = WV.E(),
 					Pending = WV.A('span'),
@@ -2812,7 +2864,6 @@
 						}
 					}),
 					LoadO = WX.EndL();
-					WV.ClsA(Title,WV.Alt)
 					WV.Con(Status,[Done,Pending])
 					WV.ApR([Title,Status],R[1])
 					WV.On('click',WV.StopProp,More.R)
@@ -2824,13 +2875,13 @@
 						U : function(V)
 						{
 							Task = null
-							SingleFill(Title,'#' + V.Row + ' ' + V.Site + ' ' + V.ID)
+							Title.U(V,true)
 							WV.T(Done,WW.StrDate(V.Done) + ' ')
 							WV.T(Pending,LangSolve('LstLoad'))
 							LoadO(TaskOverviewLoad(V.Row).Now(function(B)
 							{
 								Task = B
-								SingleFill(Title,B.Title || LangSolve('GenUntitle'))
+								Title.U(Task)
 								WV.Con(Pending,Size.R)
 								Size
 									.F(B.File)

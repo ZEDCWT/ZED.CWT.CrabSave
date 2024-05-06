@@ -36,6 +36,7 @@ message DBTaskBrief
 message DBTaskOverview
 {
 	string Title = 1;
+	string UP = 7;
 	sint64 File = 2;
 	sint64 Size = 3;
 	sint64 Has = 4;

@@ -20,7 +20,7 @@ declare module CrabSaveNS
 
 	type TaskBriefHot = Pick<Task,'Row' | 'Site' | 'ID' | 'Size'>
 	type TaskBriefHist = TaskBriefHot & Pick<Task,'Done'>
-	type TaskOverview = Pick<Task,'Title' | 'File' | 'Size' | 'Has' | 'State' | 'Error'>
+	type TaskOverview = Pick<Task,'Title' | 'UP' | 'File' | 'Size' | 'Has' | 'State' | 'Error'>
 	interface DB
 	{
 		(Q :

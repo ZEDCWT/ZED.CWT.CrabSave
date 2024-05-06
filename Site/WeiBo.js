@@ -5,6 +5,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	WeiBo = 'https://weibo.com/',
 	// WeiBoUser = WW.Tmpl(WeiBo,'u/',undefined),
 	WeiBoUserNick = WW.Tmpl(WeiBo,'n/',undefined),
+	WeiBoPage = WW.Tmpl(WeiBo,'p/',undefined),
 	// WeiBoUserAll = WW.Tmpl(WeiBo,undefined,'?is_all=1&page=',undefined),
 	// WeiBoUserAllSub = WW.Tmpl(WeiBo,'p/aj/v6/mblog/mbloglist?script_uri=/',undefined,'&id=',undefined,'&pl_name=Pl_Official_MyProfileFeed__20&domain=100505&is_all=1&page=',undefined,'&pre_page=',undefined,'&pagebar=',undefined),
 	// WeiBoHome = WW.Tmpl(WeiBo,'aj/mblog/fsearch?',undefined),
@@ -220,7 +221,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},TopicStruct)
 		WR.Each(function(V)
 		{
-			Entity[V.short_url] = function(){return WV.Ah(V.url_title,V.long_url)}
+			Entity[V.short_url] = function()
+			{
+				return WV.Ah(V.url_title,V.long_url || WeiBoPage(V.page_id))
+			}
 		},URLStruct)
 		EntityRX = WR.Map(WR.SafeRX,WR.Key(Entity))
 		EntityRX.push
@@ -243,10 +247,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				V
 		},Text.split(RegExp(WW.QuoP(EntityRX,true),'g')))
 	},
-	SolveStatus = function(B,Long)
+	SolveStatus = function(B,Long,R,Top)
 	{
 		var
 		NonAV = true,
+		User = B.user,
 		Img,
 		Title,
 		TitleView,
@@ -333,6 +338,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},
 		T;
 
+		R = R || []
+
 		Long = Long && WC.JTO(Long).data
 		// N8tYvti03. With isLongText but not having long text data
 		if (Long && Long.longTextContent)
@@ -343,7 +350,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		else
 		{
 			Title = SolveTextNormalize(B.text_raw)
-			TitleView = SolveTextWithStruct(Title,B.topic_struct,B.url_struct)
+			TitleView = SolveTextWithStruct(Title,B.topic_struct || Top && Top.topic_struct,B.url_struct || Top && Top.url_struct)
 		}
 
 		if (T = B.title)
@@ -369,15 +376,6 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				// Note that we want the <a> to be inline
 				return (V = V.scheme) ? WV.Ah(R,V) : R
 			},T.slice(1)))
-		}
-		if (T = B.retweeted_status)
-		{
-			More.push
-			(
-				O.Ah(O.DTS(T.created_at) + (T.user ? ' @' + T.user.screen_name : ''),
-					WeiBo + (T.user ? T.user.idstr : '_') + '/' + T.mblogid),
-				T.text_raw
-			)
 		}
 		if (T = B.mix_media_info)
 		{
@@ -407,18 +405,24 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Img = []
 			ProcessObject(T)
 		}
-		return {
+		R.push(
+		{
 			NonAV : B.retweeted_status || NonAV,
-			ID : B.user.idstr + '/' + B.mblogid,
+			ID : (User ? User.idstr : '_') + '/' + B.mblogid,
 			Img : PackImg(Img),
 			Title : Title,
 			TitleView : TitleView,
-			UP : ShowName(B.user.screen_name,B.user.remark),
-			UPURL : WeiBo + B.user.profile_url.replace(/^\//,''),
+			UP : User && ShowName(User.screen_name,User.remark),
+			UPURL : User && WeiBo + User.profile_url.replace(/^\//,''),
 			Date : B.created_at,
 			Len : Len,
 			More : More
-		}
+		})
+		if (T = B.retweeted_status)
+			SolveStatus(T,null,R,B)
+		if (!Top && 1 < R.length)
+			WR.Each(function(V){V.Group = R[0].ID},R)
+		return R
 	},
 	/*
 	SolveSelfUID = O.CokeC(function()
@@ -606,7 +610,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						.Map(function(Long)
 						{
 							return {
-								Item : [SolveStatus(B,Long)]
+								Item : SolveStatus(B,Long)
 							}
 						})
 				})
@@ -669,7 +673,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			}
 		},{
 			Name : 'User',
-			Judge : [/\.com\/(?!n\/)(?:u\/(?=\d))?([%\w]+)/,O.Word('User')],
+			Judge : [/\.com\/(?![np]\b)(?:u\/(?=\d))?([%\w]+)/,O.Word('User')],
 			/*
 			// Terminated endpoint, 'old' UI only
 			View : function(ID,Page)
@@ -724,7 +728,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					return {
 						Size : 20,
 						Len : B.total,
-						Item : WR.Map(SolveStatus,B.list)
+						Item : WR.Flatten(WR.Map(SolveStatus,B.list))
 					}
 				})
 			}
@@ -742,7 +746,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					return {
 						Size : 20,
 						Len : B.total,
-						Item : WR.Map(SolveStatus,B.list)
+						Item : WR.Flatten(WR.Map(SolveStatus,B.list))
 					}
 				})
 			}
@@ -785,7 +789,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				{
 					Size : 25,
 					Len : B.total_number,
-					Item : WR.Map(SolveStatus,B.statuses)
+					Item : WR.Flatten(WR.Map(SolveStatus,B.statuses))
 				}]
 			})
 		},{

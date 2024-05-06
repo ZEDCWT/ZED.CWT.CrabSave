@@ -1,5 +1,5 @@
 
-ˇ
+è
 Proto.proto"å
 DBTask
 Row (RRow
@@ -26,9 +26,10 @@
 Site (	RSite
 ID (	RID
 Size (RSize
-Done (RDone"å
+Done (RDone"ú
 DBTaskOverview
-Title (	RTitle
+Title (	RTitle
+UP (	RUP
 File (RFile
 Size (RSize
 Has (RHas
