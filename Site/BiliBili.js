@@ -58,7 +58,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliAPISteinNode = WW.Tmpl(BiliBiliAPI,'x/stein/nodeinfo?aid=',undefined,'&graph_version=',undefined,'&node_id=',undefined),
 	BiliBiliAPIFo = WW.Tmpl(BiliBiliAPI,'x/relation/followings?vmid=',undefined,'&ps=',O.Size,'&pn=',undefined),
 	BiliBiliAPISpace = BiliBiliAPI + 'x/space/',
-	BiliBiliAPISpaceNavNum = WW.Tmpl(BiliBiliAPISpace,'navnum?platform=web&mid=',undefined,'&callback='),
+	BiliBiliAPISpaceNavNum = WW.Tmpl(BiliBiliAPISpace,'navnum?mid=',undefined),
 	// BiliBiliAPISpaceChannel = WW.Tmpl(BiliBiliAPISpace,'channel/video?mid=',undefined,'&cid=',undefined,'&pn=',undefined,'&ps=',O.Size),
 	BiliBiliAPISpaceWBI = BiliBiliAPISpace + 'wbi/',
 	BiliBiliAPISpaceWBIInfo = WW.Tmpl(BiliBiliAPISpaceWBI,'acc/info?platform=web&mid=',undefined),
@@ -127,6 +127,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	ReqWBISalt = 'bdab7be0a313f1d847ccd8999e1b4370',ReqWBILast,
 	ReqWBI = function(Q)
 	{
+		Q = WW.N.ReqOH(Q,'Referer',BiliBili)
 		return (ReqWBILast && WW.Now() < 144E5 + ReqWBILast ? WX.Just() : O.API(BiliBiliSpace + 2).FMap(function(Space)
 		{
 			Space = WW.MR(function(D,V){return D.push(V[1]),D},[],/<script[^>]+src="([^"]+space[^"]+)/g,Space)
@@ -150,12 +151,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				})
 		})).FMap(function()
 		{
-			if (WR.StartW(BiliBiliAPISpaceWBI,Q))
+			if (WR.StartW(BiliBiliAPISpaceWBI,Q.URL))
 			{
-				Q += '&wts=' + ~~(WW.Now() / 1E3)
-				Q += '&w_rid=' + WR.Low(WC.HEXS(WC.MD5
+				Q.URL += '&wts=' + ~~(WW.Now() / 1E3)
+				Q.URL += '&w_rid=' + WR.Low(WC.HEXS(WC.MD5
 				(
-					Q.split('?')[1].split('&').sort().join('&') +
+					Q.URL.split('?')[1].split('&').sort().join('&') +
 					ReqWBISalt
 				)))
 			}
@@ -1764,7 +1765,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			{
 				return (Page ? WX.Just([]) : ReqWBI(BiliBiliAPISpaceWBIInfo(ID)).FMap(function(UP)
 				{
-					return O.API(WW.N.ReqOH(BiliBiliAPISpaceNavNum(ID),'Referer',BiliBili)).Map(function(Nav)
+					return O.Req(WW.N.ReqOH(BiliBiliAPISpaceNavNum(ID),'Referer',BiliBili)).Map(function(Nav)
 					{
 						Nav = Common(Nav)
 						return [

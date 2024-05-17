@@ -27,6 +27,49 @@ module.exports = O =>
 		B = WC.JTO(B)
 		B.error && O.Bad(B)
 		return B
+	},
+	SolveRichText = (RawText,Facet) =>
+	{
+		var
+		Text = '',
+		Pos = 0;
+
+		if (!Facet?.length)
+			return RawText
+
+		RawText = WC.U16P(RawText)
+		Facet.sort((Q,S) => Q.index.byteStart - S.index.byteStart)
+		WR.Each(V =>
+		{
+			var
+			IndexStart = V.index.byteStart,
+			IndexEnd = V.index.byteEnd,
+			SingleText;
+			V = V.features[0]
+			if (Pos < IndexStart)
+			{
+				Text += WC.U16S(WC.Slice(RawText,Pos,IndexStart))
+				Pos = IndexStart
+			}
+			if (Pos === IndexStart)
+			{
+				SingleText = WC.U16S(WC.Slice(RawText,IndexStart,IndexEnd))
+				switch (V.$type)
+				{
+					case 'app.bsky.richtext.facet#link' :
+						SingleText = V.uri
+						break
+					// case 'app.bsky.richtext.facet#mention' :
+					// case 'app.bsky.richtext.facet#tag' :
+				}
+				if (SingleText)
+					Text += SingleText
+				Pos = IndexEnd
+			}
+		},Facet)
+		if (Pos < RawText.length)
+			Text += WC.U16S(WC.Slice(RawText,Pos))
+		return Text
 	};
 
 	return {
@@ -81,12 +124,12 @@ module.exports = O =>
 						return
 					}
 
-					PostRecord = TopPost.record || TopPost.value,
+					PostRecord = TopPost.record || TopPost.value
 					PostEmbed = TopPost.embed ?
 						[TopPost.embed] :
-						TopPost.embeds,
-					Title = PostRecord.text,
-					PostID = WW.MF(/\/([^/]+)$/,TopPost.uri),
+						TopPost.embeds
+					Title = SolveRichText(PostRecord.text,PostRecord.facets)
+					PostID = WW.MF(/\/([^/]+)$/,TopPost.uri)
 
 					TopParent && SolvePost(TopParent,Info ? Prelude : Meta,Prefix)
 
@@ -101,6 +144,7 @@ module.exports = O =>
 					{
 						WR.Each(Embed =>
 						{
+							var Record;
 							switch (Embed.$type)
 							{
 								case 'app.bsky.embed.external#view' :
@@ -112,7 +156,7 @@ module.exports = O =>
 										T.title,
 										T.description
 									)
-									Part.push({URL : [T.thumb],Ext : '.jpg'})
+									T.thumb && Part.push({URL : [T.thumb],Ext : '.jpg'})
 									break
 								case 'app.bsky.embed.images#view' :
 									PartURL = []
@@ -140,11 +184,22 @@ module.exports = O =>
 										})
 									break
 								case 'app.bsky.embed.record#view' :
-									SolvePost(
+									Record = Embed.record
+									switch (Record.$type)
 									{
-										$type : 'app.bsky.feed.defs#threadViewPost',
-										post : Embed.record,
-									},Info ? Prelude : Meta,Prefix)
+										case 'app.bsky.embed.record#viewNotFound' :
+										case 'app.bsky.embed.record#viewRecord' :
+											SolvePost(
+											{
+												$type : 'app.bsky.feed.defs#threadViewPost',
+												post : Embed.record,
+											},Info ? Prelude : Meta,Prefix)
+											break
+										case 'app.bsky.feed.defs#generatorView' :
+											break
+										default :
+											WW.Throw('Unknown Record Type ' + Record.$type)
+									}
 									break
 								default :
 									WW.Throw('Unknown Embed ' + Embed.$type)

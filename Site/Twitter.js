@@ -4,14 +4,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	var
 	// We may need to resolve some tokens automatically if it changes in the future
 	// /"[^"]+/main[^"]+/ https://abs.twimg.com/responsive-web/web/main.713ccc64.js
-	Twitter = 'https://twitter.com/',
+	// Twitter = 'https://twitter.com/',
+	Twitter = 'https://x.com/',
 	TwitterTweet = WW.Tmpl(Twitter,'_/status/',undefined),
 	TwitterUser = WW.Tmpl(Twitter,undefined),
 	TwitterUserTweet = WW.Tmpl(Twitter,undefined,'/status/',undefined),
 	TwitterUserMedia = WW.Tmpl(Twitter,undefined,'/media'),
 	TwitterHashTag = WW.Tmpl(Twitter,'hashtag/',undefined),
 	TwitterSearch = WW.Tmpl(Twitter,'search?q=',undefined),
-	TwitterAPI = 'https://api.twitter.com/',
+	// TwitterAPI = 'https://api.twitter.com/',
+	TwitterAPI = 'https://api.x.com/',
 	// TwitterAPITypeHome = 'timeline/home',
 	// TwitterAPITypeConversation = 'timeline/conversation/',
 	// TwitterAPITypeMedia = 'timeline/media/',
@@ -70,6 +72,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		{
 			switch (V.code)
 			{
+				case 37 :
+					// {message:'Authorization: unauthorized',locations:[{line:2348,column:3}],path:['threaded_conversation_with_injections_v2','instructions',0,'entries',1,'content','itemContent','tweet_results','result','voiceInfo'],extensions:{name:'AuthorizationError',source:'Client',code:37,kind:'Permissions',tracing:{trace_id:'...'}},code:37,kind:'Permissions',name:'AuthorizationError',source:'Client',tracing:{trace_id:'...'}}
 				case 131 :
 					// {message:'Dependency: Internal error. (131)',locations:[{line:2606,column:3}],path:['user','result','timeline_v2','timeline','instructions',1,'entries',13,'content','itemContent','tweet_results','result','tweet','legacy','retweeted_status_result','result','tweet','quoted_status_result','result'],extensions:{name:'DependencyError',source:'Server',retry_after:0,code:131,kind:'Operational',tracing:{trace_id:...}},code:131,kind:'Operational',name:'DependencyError',source:'Server',retry_after:0,tracing:{trace_id:...}}
 				case 214 :
@@ -270,17 +274,24 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					More.push(O.Ah(D.title.content,D = UnifiedCard.destination_objects[D.destination].data.url_data.url))
 					SolveLink(D)
 					break
+				case 'media' :
+					SolveMedia(UnifiedCard.media_entities[D.id])
+					break
 				case 'swipeable_media' :
 					WR.Each(function(V)
 					{
 						SolveMedia(UnifiedCard.media_entities[V.id])
 					},D.media_list)
 					break
-				case 'media' :
-					SolveMedia(UnifiedCard.media_entities[D.id])
+				case 'twitter_list_details' :
+					/*
+						1741731499936973130
+							Link to /i/lists/.*
+					*/
+					More.push(O.Ah(D.name.content,UnifiedCard.destination_objects[D.destination].data.url_data.url))
 					break
 				default :
-					More.push('Unknown VideoWebsite.Component #' + UnifiedCard.name)
+					More.push('Unknown Component #' + V.type)
 			}
 		},
 

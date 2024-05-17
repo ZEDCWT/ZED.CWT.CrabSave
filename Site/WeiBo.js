@@ -221,10 +221,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},TopicStruct)
 		WR.Each(function(V)
 		{
-			Entity[V.short_url] = function()
-			{
-				return WV.Ah(V.url_title,V.long_url || WeiBoPage(V.page_id))
-			}
+			var
+			U = V.long_url;
+			if (!U) U =
+				V.page_id ? WeiBoPage(V.page_id) :
+				/\bSearchAll\b/i.test(V.ori_url) ? WeiBoSearchQuery(WC.UE(V.url_title)) :
+				null
+			if (U) Entity[V.short_url] = function(){return WV.Ah(V.url_title,U)}
 		},URLStruct)
 		EntityRX = WR.Map(WR.SafeRX,WR.Key(Entity))
 		EntityRX.push

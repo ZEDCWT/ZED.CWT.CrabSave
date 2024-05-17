@@ -3,10 +3,12 @@ var
 WW = require('@zed.cwt/wish'),
 {R : WR,C : WC,N : WN} = WW,
 
-Twitter = 'https://twitter.com/',
+// Twitter = 'https://twitter.com/',
+Twitter = 'https://x.com/',
 TwitterTweet = WW.Tmpl(Twitter,'_/status/',undefined),
 TwitterTweetFull = WW.Tmpl(Twitter,undefined,'/status/',undefined),
-TwitterAPI = 'https://api.twitter.com/',
+// TwitterAPI = 'https://api.twitter.com/',
+TwitterAPI = 'https://api.x.com/',
 // TwitterAPITimelineConversation = WW.Tmpl(TwitterAPI,'2/timeline/conversation/',undefined,'.json?tweet_mode=extended&count=20'),
 TwitterAPIGraphQL = TwitterAPI + 'graphql/',
 TwitterAPIGraphQLTweetDetail = TwitterAPIGraphQL + '3XDB26fBve-MmjHaWTUZxA/TweetDetail',
@@ -42,10 +44,15 @@ TwitterAPIGraphQLFeature = WC.OTJ(
 module.exports = O =>
 {
 	var
+	CommonErrorIgnore = new Set(
+	[
+		37,
+		214,
+	]),
 	Common = Q =>
 	{
 		Q = WC.JTO(Q)
-		Q.errors?.some(V => 214 - V.code) && O.Bad(Q.errors)
+		Q.errors?.some(V => !CommonErrorIgnore.has(V.code)) && O.Bad(Q.errors)
 		return Q
 	},
 	MakeHead = Q => WN.ReqOH(Q,
@@ -200,11 +207,16 @@ module.exports = O =>
 								D.title.content,
 								'\t' + UnifiedCard.destination_objects[D.destination].data.url_data.url)
 							break
+						case 'media' :
+							SolveMedia(UnifiedCard.media_entities[D.id])
+							break
 						case 'swipeable_media' :
 							WR.Each(V => SolveMedia(UnifiedCard.media_entities[V.id]),D.media_list)
 							break
-						case 'media' :
-							SolveMedia(UnifiedCard.media_entities[D.id])
+						case 'twitter_list_details' :
+							Meta.push(
+								D.name.content,
+								'\t' + UnifiedCard.destination_objects[D.destination].data.url_data.url)
 							break
 						default :
 							WW.Throw('Unknown Component #' + V.type + ' ' + WC.OTJ(UnifiedCard))

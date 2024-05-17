@@ -166,6 +166,36 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	{
 		return V && (V.runs ? V.runs[0].text : V.simpleText)
 	},
+	CookieROI =
+	[
+		'SID',
+		'SSID',
+		'SAPISID',
+		'HSID',
+		'LOGIN_INFO',
+		'__Secure-1PSIDTS',
+		'__Secure-3PSID',
+		'__Secure-3PAPISID',
+		'PREF',
+		'GOOGLE_ABUSE_EXEMPTION' // Set after the Robot test
+	],
+	UpdateCookie = function(H)
+	{
+		var
+		Coke = WC.CokeP(O.Coke(),WR.Id),
+		New = 0;
+		WR.Each(function(V)
+		{
+			V = WR.SplitBy(';',V)[0]
+			V = WR.SplitBy('=',V)
+			if (WR.Include(V[0],CookieROI))
+			{
+				++New
+				Coke[V[0]] = V[1]
+			}
+		},H.H['Set-Cookie'])
+		New && O.CokeU(WC.CokeS(Coke,WR.Id))
+	},
 	ClientName,ClientVersion,
 	APIKey,
 	PageID,
@@ -221,14 +251,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			{
 				URL : Feed,
 				UA : ''
-			}).FMap(function(B)
+			},true).FMap(function(H)
 			{
 				var
+				B = H.B,
 				SolveJSONIfPresent = function(Q)
 				{
 					Q = WW.MF(Q,B)
 					return Q && WC.JTO(Q)
 				};
+				UpdateCookie(H)
 				ClientName = SolveJSONIfPresent(/CLIENT_NAME":("[^"]+")/)
 				ClientVersion = SolveJSONIfPresent(/CLIENT_VERSION":("[^"]+")/)
 				APIKey = SolveJSONIfPresent(/API_KEY":("[^"]+")/)
@@ -276,19 +308,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		ID : 'YouTube',
 		Alias : 'Y',
 		Judge : /\bYouTube\b|\bY[\dA-Z]+\.be\b/i,
-		Min :
-		[
-			'SID',
-			'SSID',
-			'SAPISID',
-			'HSID',
-			'LOGIN_INFO',
-			'__Secure-1PSIDTS',
-			'__Secure-3PSID',
-			'__Secure-3PAPISID',
-			'PREF',
-			'GOOGLE_ABUSE_EXEMPTION' // Set after the Robot test
-		],
+		Min : CookieROI,
 		Sign : function()
 		{
 			return O.Req({URL : YouTubeAccount,Red : false}).Map(function(B)

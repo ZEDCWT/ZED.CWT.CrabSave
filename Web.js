@@ -160,14 +160,16 @@
 			{
 				if (Loading)
 				{
-					WV.T(Site,Task.Site + ' ')
+					WV.T(Site,SiteSolveName(Task.Site) + ' ')
 					WV.Clr(UP)
 					WV.T(Title,'#' + Task.Row + ' ' + Task.ID)
+					WV.Ti(R,null)
 				}
 				else
 				{
 					WV.T(UP,Task.UP + ' ')
 					WV.T(Title,Task.Title || LangSolve('GenUntitle'))
+					Task.Title && WV.Ti(R,Task.Title)
 				}
 			}
 		}
@@ -282,7 +284,11 @@
 	SettingIsSPUPLast,SettingIsSPUPSet,
 	SettingIsSPUPNormalize = function(V)
 	{
-		return WR.Up(WR.Trim(V).replace(/^\w+:\/\//,''))
+		return WR.Up(WR.RepL(
+		[
+			/^\w+:\/\//,'',
+			/\bTwitter\.com\b/i,'X.com'
+		],WR.Trim(V)))
 	},
 	SettingIsSPUP = function(V)
 	{

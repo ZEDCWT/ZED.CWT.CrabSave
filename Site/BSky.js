@@ -10,6 +10,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BSkyApp = 'https://bsky.app/',
 	BSkyAppProfile = BSkyApp + 'profile/',
 	BSkyAppProfilePost = WW.Tmpl(BSkyAppProfile,undefined,'/post/',undefined),
+	BSkyAppHashTag = WW.Tmpl(BSkyApp,'hashtag/',undefined),
 	BSkySocial = 'https://bsky.social/',
 	BSkySocialRPC = BSkySocial + 'xrpc/',
 	BSkyMethodSession = 'com.atproto.server.getSession',
@@ -114,6 +115,66 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			}]
 		})
 	},
+	SolveRichText = function(RawText,Facet)
+	{
+		var
+		Text = '',
+		View = [],
+		Pos = 0;
+
+		if (!Facet || !Facet.length)
+			return [RawText,RawText]
+
+		RawText = WC.U16P(RawText)
+		Facet.sort(function(Q,S)
+		{
+			return Q.index.byteStart - S.index.byteStart
+		})
+		WR.Each(function(V)
+		{
+			var
+			IndexStart = V.index.byteStart,
+			IndexEnd = V.index.byteEnd,
+			SingleText,SingleView;
+			V = V.features[0]
+			if (Pos < IndexStart)
+			{
+				SingleText = WC.U16S(WC.Slice(RawText,Pos,IndexStart))
+				Text += SingleText
+				View.push(SingleText)
+				Pos = IndexStart
+			}
+			if (Pos === IndexStart)
+			{
+				SingleText = WC.U16S(WC.Slice(RawText,IndexStart,IndexEnd))
+				SingleView = SingleText
+				switch (V.$type)
+				{
+					case 'app.bsky.richtext.facet#link' :
+						SingleText = V.uri
+						SingleView = WV.Ah(V.uri,V.uri)
+						break
+					case 'app.bsky.richtext.facet#mention' :
+						SingleView = WV.Ah(SingleText,BSkyAppProfile + V.did)
+						break
+					case 'app.bsky.richtext.facet#tag' :
+						SingleView = WV.Ah('#' + V.tag,BSkyAppHashTag(WC.UE(V.tag)))
+						break
+				}
+				if (SingleText)
+					Text += SingleText
+				SingleView && View.push(SingleView)
+				Pos = IndexEnd
+			}
+		},Facet)
+		if (Pos < RawText.length)
+		{
+			Pos = WC.U16S(WC.Slice(RawText,Pos))
+			Text += Pos
+			View.push(Pos)
+		}
+		return [Text,View]
+	},
 	SolvePost = function(B,R)
 	{
 		var
@@ -123,6 +184,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		TopParent = B.parent,
 		TopReason = B.reason,
 		PostRecord,
+		Title,TitleView,
 		PostEmbed,
 		UserDID,
 		PostID,
@@ -158,12 +220,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					value
 					embeds
 		*/
-		PostRecord = TopPost.record || TopPost.value,
+		PostRecord = TopPost.record || TopPost.value
+		Title = SolveRichText(PostRecord.text,PostRecord.facets)
+		TitleView = Title[1]
+		Title = Title[0]
 		PostEmbed = TopPost.embed ?
 			[TopPost.embed] :
 			TopPost.embeds,
-		UserDID = TopPost.author.did,
-		PostID = WW.MF(/\/([^/]+)$/,TopPost.uri),
+		UserDID = TopPost.author.did
+		PostID = WW.MF(/\/([^/]+)$/,TopPost.uri)
 		WR.StartW(DIDPrefix,UserDID) && (UserDID = UserDID.slice(DIDPrefix.length))
 
 		if (TopReply)
@@ -187,6 +252,20 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			SolvePost(TopParent,R)
 		}
 
+		R.push(
+		{
+			ID : UserDID + '/' + PostID,
+			Group : R.length && R[0].Group,
+			URL : BSkyAppProfilePost(TopPost.author.handle,PostID),
+			Img : Img,
+			Title : Title,
+			TitleView : TitleView,
+			UP : TopPost.author.displayName,
+			UPURL : BSkyAppProfile + TopPost.author.handle,
+			Date : PostRecord.createdAt,
+			More : More
+		})
+
 		if (TopPost.indexedAt !== PostRecord.createdAt)
 		{
 			// wpyvghtrmnflwxmknbz67vct/3k5mfs5jt4c22
@@ -194,11 +273,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		}
 		WR.Each(function(Embed)
 		{
+			var Record;
 			switch (Embed.$type)
 			{
 				case 'app.bsky.embed.external#view' :
-					Img.push(Embed.external.thumb)
-					More.push(O.Ah(Embed.external.title,Embed.external.uri))
+					Embed.external.thumb && Img.push(Embed.external.thumb)
+					More.push(
+						O.Ah(Embed.external.title,Embed.external.uri),
+						Embed.external.description)
 					break
 				case 'app.bsky.embed.images#view' :
 					WR.Each(function(V)
@@ -207,8 +289,37 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					},Embed.images)
 					break
 				case 'app.bsky.embed.record#view' :
-					// Repost
-					SolvePost({post : Embed.record},R)
+					Record = Embed.record
+					switch (Record.$type)
+					{
+						case 'app.bsky.embed.record#viewNotFound' :
+						case 'app.bsky.embed.record#viewRecord' :
+							SolvePost({post : Record},R)
+							break
+						case 'app.bsky.feed.defs#generatorView' :
+							// z72i7hdynmk6r22z27h6tvur/3kpsprrzdo52u
+							R.push(
+							{
+								Non : true,
+								ID : Record.did,
+								URL : Record.uri,
+								Title : Record.displayName,
+								UP : Record.creator.displayName,
+								UPURL : BSkyAppProfile + Record.creator.handle,
+								Date : Record.indexedAt,
+								More :
+								[
+									Record.description
+								]
+							})
+							break
+						default :
+							R.push(
+							{
+								Non : true,
+								More : 'Unknown Record Type ' + Record.$type
+							})
+					}
 					break
 				default :
 					More.push('Unknown Embed ' + Embed.$type)
@@ -227,18 +338,6 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			default :
 				More.push('Unknown Reason ' + TopReason.$type)
 		}
-		R.push(
-		{
-			ID : UserDID + '/' + PostID,
-			Group : R.length && R[0].Group,
-			URL : BSkyAppProfilePost(TopPost.author.handle,PostID),
-			Img : Img,
-			Title : PostRecord.text,
-			UP : TopPost.author.displayName,
-			UPURL : BSkyAppProfile + TopPost.author.handle,
-			Date : PostRecord.createdAt,
-			More : More
-		})
 
 		if (1 < R.length) WR.Each(function(V)
 		{
