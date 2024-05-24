@@ -9,7 +9,7 @@ CrabSave.Site(function(O,WW,WC,WR)
 	DouYinUser = WW.Tmpl(DouYin,'user/',undefined),
 	DouYinMusic = WW.Tmpl(DouYin,'music/',undefined),
 	DouYinCollection = WW.Tmpl(DouYin,'collection/',undefined),
-	DouYinUserSelf = DouYinUser('self'),
+	// DouYinUserSelf = DouYinUser('self'),
 	DouYinAPI = DouYin + 'aweme/v1/',
 	DouYinAPIWeb = DouYinAPI + 'web/',
 	DouYinAPIWebAwemeDetail = DouYinAPIWeb + 'aweme/detail',
@@ -153,9 +153,9 @@ CrabSave.Site(function(O,WW,WC,WR)
 		Min : '__ac_nonce __ac_signature sessionid_ss',
 		Sign : function()
 		{
-			return O.Req(DouYinUserSelf).Map(function(B)
+			return SolveUserSelf().Map(function(User)
 			{
-				return O.JOM(/"name":(?=[^{}]+\/user\/)/,B)
+				return User.nickname
 			})
 		},
 		Map : [

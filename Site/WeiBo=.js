@@ -517,11 +517,7 @@ module.exports = O =>
 		Is429 : E => WW.IsArr(E) &&
 			WW.IsStr(E[1]) &&
 			/频次过高/.test(E[1]),
-		Pack : Q => (
-		{
-			URL : Q,
-			Head : {Referer : WeiBo}
-		}),
+		Pack : Q => WN.ReqOH(Q,'Referer',WeiBo),
 		Range : false,
 	}
 }

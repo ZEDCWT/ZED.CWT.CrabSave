@@ -651,11 +651,7 @@ module.exports = O =>
 			{"code":-412,"message":"请求被拦截","ttl":1,"data":null}
 		*/
 		Is429 : E => WW.ErrIs(WW.Err.NetBadStatus,E) && 412 === E.Arg[0],
-		Pack : Q => (
-		{
-			URL : Q,
-			Head : {Referer : BiliBiliAPI}
-		}),
+		Pack : Q => WN.ReqOH(Q,'Referer',BiliBiliAPI),
 		Range : false,
 	}
 }

@@ -158,12 +158,13 @@ module.exports = Option =>
 			PackM3U : (Opt = {}) => Q =>
 			{
 				var
+				Pack = Opt.Pack || WR.Id,
 				Req = Opt.Req || (Q => WN.Req(Option.Req(Q))),
 				T = Q.split` `,
 				Key,IV,Init;
 
 				if (1 === T.length)
-					return Opt.Pack?.(Q) ?? Q
+					return Pack(Q)
 
 				Q = T[0]
 				Key = WC.Buff(WC.B91P(T[1]))
@@ -174,12 +175,12 @@ module.exports = Option =>
 				{
 					var D = Crypto.createDecipheriv('AES-128-CBC',Key,IV);
 					Init && S.D(Init)
-					return Req(
+					return Req(Pack(
 					{
 						URL : Q,
 						OnD : B => S.D(D.update(B)),
 						OnE : () => S.U(D.final()),
-					}).On('Err',S.E)
+					})).On('Err',S.E)
 						.End
 				}))
 			},

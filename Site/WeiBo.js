@@ -481,7 +481,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		{
 			return O.Req(WeiBo).Map(function(B)
 			{
-				return WW.MF(/'nick']=.(.*).;/,B)
+				// return WW.MF(/'nick']=.(.*).;/,B)
+				return O.JOM(/\$CONFIG[= ]+/,B).user.screen_name
 			})
 		},
 		Map : [

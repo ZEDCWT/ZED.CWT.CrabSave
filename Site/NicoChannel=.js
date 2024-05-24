@@ -185,11 +185,7 @@ module.exports = O =>
 		},
 		Pack : O.PackM3U(
 		{
-			Pack : Q => (
-			{
-				URL : Q,
-				Head : {Referer : NicoChannel}
-			}),
+			Pack : Q => WN.ReqOH(Q,'Referer',NicoChannel),
 		}),
 		Range : false,
 	}

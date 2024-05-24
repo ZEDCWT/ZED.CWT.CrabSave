@@ -492,7 +492,10 @@ module.exports = O =>
 					Meta,
 					Reply,
 				)
-				return O.Part(Info.Part,Ext).Map(Part => (
+				return O.Part(Info.Part,
+				{
+					ReqB : Q => Ext.ReqB(WN.ReqOH(Q,'Referer',Twitter)),
+				}).Map(Part => (
 				{
 					...Info,
 					Part,
@@ -519,7 +522,10 @@ module.exports = O =>
 			return Info
 		}),
 		*/
-		Pack : O.PackM3U(),
+		Pack : O.PackM3U(
+		{
+			Pack : Q => WN.ReqOH(Q,'Referer',Twitter),
+		}),
 		Range : false,
 	}
 }
