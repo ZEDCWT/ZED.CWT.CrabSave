@@ -76,7 +76,15 @@ module.exports = O =>
 		var
 		Entity = {};
 		Text = Text.replace(/\u200B+$/,'')
-		WR.Each(V => Entity[V.short_url] = `<${V.url_title}> ${V.long_url || WeiBoPage(V.page_id)}`,URLStruct)
+		WR.Each(V =>
+		{
+			var
+			U = V.long_url;
+			if (!U) U =
+				V.page_id ? WeiBoPage(V.page_id) :
+				null
+			if (U) Entity[V.short_url] = `<${V.url_title}> ${U}`
+		},URLStruct)
 		return WR.Key(Entity).length ?
 			Text.replace(RegExp(WR.Map(WR.SafeRX,WR.Key(Entity)).join('|'),'g'),V => Entity[V]) :
 			Text

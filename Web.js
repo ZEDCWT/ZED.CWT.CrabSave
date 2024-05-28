@@ -1885,6 +1885,7 @@
 				var
 				S = WW.IsStr(Q) ? SolveInput(Q,true) : [Q],
 				S0,
+				InpPrefix,
 				K,B,C;
 				HintErr = false
 				if (WW.IsArr(S) && !(S0 = S[0]).Fuzzy && S0.Act.Hint)
@@ -1895,6 +1896,7 @@
 					KeywordHintLoad.K(K).E('')
 					Keyword.Hint(undefined,KeywordHintLoad.R)
 						.Drop()
+					InpPrefix = S0.InpAct || S0.Site.Name + ' ' + S0.Act.Name[0] + ' '
 					;(S0.Act[KeywordCache] || (S0.Act[KeywordCache] = WX.CacheM(S0.Act.Hint)))
 						(S0.ID)
 						.Now(function(V)
@@ -1908,8 +1910,8 @@
 									.Drop(WR.Map(function(B)
 									{
 										return WW.IsArr(B) ?
-											[(V.Jump ? '' : S0.InpAct) + B[0],B[1],0] :
-											[S0.InpAct + B,B,0]
+											[(V.Jump ? '' : InpPrefix) + B[0],B[1],0] :
+											[InpPrefix + B,B,0]
 									},V.Item),false)
 							}
 						},function(E)

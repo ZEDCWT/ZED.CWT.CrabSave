@@ -498,7 +498,8 @@ module.exports = Option =>
 							DB.ViewPart(Row,false).Map(WR.Pick(['Total','Part','Title'])) :
 							WX.Just({}) :
 						DB.ViewPart(Row,Part),
-					Working;
+					Working,
+					EmptyRetry = 0;
 					DownloadStatus.set(V.Row,H =>
 					{
 						H(Working ? Has + Working.Calc().Saved : Has)
@@ -607,7 +608,8 @@ module.exports = Option =>
 										if (!Size)
 										{
 											OnEnd()
-											O.E(DownloadErrEmpty())
+											O.E(EmptyRetry ? DownloadErrEmpty() : DownloadErrRetry())
+											++EmptyRetry
 											NotBigDeal(WN.Stat(Path)
 												.FMap(S => S.size ? WX.Empty : WN.Un(Path)))
 											return

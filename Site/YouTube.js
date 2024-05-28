@@ -527,7 +527,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 
 				return IsRenderer && I.push(
 				{
-					Non : V.upcomingEventData,
+					Non : V.upcomingEventData ||
+						WR.Any(function(B)
+						{
+							return 'BADGE_STYLE_TYPE_LIVE_NOW' === B.metadataBadgeRenderer.style
+						},V.badges),
 					ID : V.videoId,
 					Img : V.thumbnail.thumbnails[0].url,
 					Title : SolveFeedText(V.headline || V.title),
