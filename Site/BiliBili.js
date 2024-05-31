@@ -281,8 +281,24 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						].join('\n')
 						break
 					case 5 :
+						break
 					case 6 :
+						// Unordered List
+						SolveText(V.text)
+						Line = WR.RepS('	',V.format.list_format.level - 1) + '+ ' + Line
+						break
 					case 7 :
+						// Link Card
+						switch (V.link_card.card.link_type)
+						{
+							case 1 :
+								// Link to same site video
+								Line = BiliBiliVideo(V.link_card.card.biz_id)
+								break
+							default :
+								Line = WC.OTJ(V)
+						}
+						break
 					default :
 						Line = WC.OTJ(V)
 				}

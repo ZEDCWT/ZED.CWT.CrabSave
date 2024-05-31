@@ -17,6 +17,17 @@ GoogleAPIYouTubeVideo = WW.Tmpl(GoogleAPIYouTube,'videos?key=',GoogleAPIKey,'&pa
 module.exports = O =>
 {
 	var
+	Client =
+	{
+		IDToken : null,
+		APIKey : null,
+		Name : null,
+		Version : null,
+		SigTS : null,
+		BaseScript : null,
+	},
+	ClientLast,
+	ClientValid = () => null != ClientLast,
 	TransformParseExt,
 	TransformParse = WX.CacheL(Q => TransformParseExt.ReqB(O.Req(WN.JoinU(YouTube,Q))).Map(B =>
 	{
@@ -47,148 +58,164 @@ module.exports = O =>
 		URL : (ID,Ext) => Ext.ReqB(O.Req(GoogleAPIYouTubeVideo('snippet',ID))).FMap(Info =>
 		{
 			var
-			TransformSolve = Q => WX.Just(Q)
-				.FMap(B => (TransformParseExt = Ext) && TransformParse
-				(
-					WW.MF(/"([/\w]+player_ias[^"]+base.js)"/,B) ||
-					WC.JTO(WW.MF(/assets"[^}]+js":("[^"]+")/,B))
-				))
+			SolveClientInfo = () => ClientValid() ?
+				WX.Just(Client) :
+				Ext.ReqB(O.Coke(YouTubeWatch(ID))).Map(Watch =>
+				{
+					var
+					SolveJSONIfPresent = Q =>
+					{
+						Q = WW.MF(Q,Watch)
+						return Q && WC.JTO(Q)
+					};
+					Client.IDToken = SolveJSONIfPresent(/ID_TOKEN":("[^"]+")/)
+					Client.APIKey = SolveJSONIfPresent(/API_KEY":("[^"]+")/)
+					Client.Name = SolveJSONIfPresent(/CLIENT_NAME":("[^"]+")/)
+					Client.Version = SolveJSONIfPresent(/CLIENT_VERSION":("[^"]+")/)
+					Client.SigTS = SolveJSONIfPresent(/"STS":(\d+)/)
+					Client.BaseScript = WW.MF(/"([/\w]+player_ias[^"]+base.js)"/,Watch) ||
+						WC.JTO(WW.MF(/assets"[^}]+js":("[^"]+")/,Watch))
+					ClientLast = WW.Now()
+					return Client
+				}),
+
+			MakeI = (URL,Req,Now = WR.Floor(WW.Now() / 1E3)) => Ext.ReqB(O.Coke(
+			{
+				URL : URL,
+				Head :
+				{
+					Authorization : 'SAPISIDHASH ' +
+						Now + '_' +
+						WR.Low(WC.HEXS(WC.SHA1(
+						[
+							Now,
+							WC.CokeP(O.CokeRaw()).SAPISID,
+							YouTube.slice(0,-1)
+						].join(' ')))),
+					Origin : YouTube.slice(0,-1),
+				},
+				JSON :
+				{
+					context :
+					{
+						client :
+						{
+							clientName : Client.Name,
+							clientVersion : Client.Version,
+						},
+						request :
+						{
+							useSsl : true,
+						},
+					},
+					...Req
+				},
+			})),
+			MakeWebClient = Target => Ext.ReqB(O.Coke(
+			{
+				URL : Target,
+				Head :
+				{
+					'X-YouTube-Client-Name' : 1,
+					'X-YouTube-Client-Version' : Client.Version,
+					'X-YouTube-Identity-Token' : Client.IDToken,
+				}
+			})),
+
+			SolvePlayer = () => WX.TCO((_,I) =>
+			{
+				var
+				Valid = ClientValid();
+				return SolveClientInfo()
+					.FMap(() => MakeI(YouTubeIPlayer(Client.APIKey),
+					{
+						videoId : ID,
+						playbackContext :
+						{
+							contentPlaybackContext :
+							{
+								signatureTimestamp : Client.SigTS,
+							},
+						},
+					}))
+					.FMap(B =>
+					{
+						var
+						PlayStat = (B = WC.JTO(B)).playabilityStatus,
+						Stat = PlayStat && PlayStat.status;
+						return 'CONTENT_CHECK_REQUIRED' === Stat ?
+							MakeWebClient(YouTubeGetWithBPCTR(ID,0 | 4E3 + WW.Now() / 1E3)).Map(B =>
+							[
+								B = WC.JTO(B),
+								WR.Reduce((D,V) => D || V.playerResponse,null,B)
+							]) :
+							Stat && 'OK' !== Stat ?
+								O.Bad(WR.Pick(['status','reason'],PlayStat)) :
+								WX.Just([B,B])
+					})
+					.Map(B => [false,B])
+					.ErrAs(E => I < 1 && Valid ? WX.Throw(E) : WX.Just([true,ClientLast = null]))
+			}),
+
+			SolveTransform = () => (TransformParseExt = Ext) && TransformParse(Client.BaseScript)
 				.ErrAs(() => WX.Just(
 				{
 					S : WR.Id,
 					N : WR.Id,
 				}));
+
 			Info = WC.JTO(Info)
 			Info.error && O.Bad('#' + (Info.code || Info.error.code) + ' ' + WC.OTJ(Info.error))
 			Info = Info.items[0].snippet
-			return Ext.ReqB(O.Coke(YouTubeWatch(ID))).FMap(Watch =>
+
+			return SolvePlayer().FMap(B =>
 			{
 				var
-				SolveJSONIfPresent = Q =>
+				SortBest = Q => Q.sort((Q,S) => S.width * S.height - Q.width * Q.height ||
+					S.bitrate - Q.bitrate),
+				SolveURL = (H,Q,X) =>
 				{
-					Q = WW.MF(Q,Watch)
-					return Q && WC.JTO(Q)
+					Q = Q.filter(V => WR.StartW(H,V.mimeType) && +V.contentLength)
+					Q[0] || O.Bad(B)
+					Q = Q[0]
+					Size.push(+Q.contentLength || null)
+					Ext.push('.' + WW.MF(/\/(\w+)/,Q.mimeType) + (X || ''))
+					URL.push(
+						Q.cipher ? WC.QSP(Q.cipher) :
+						Q.signatureCipher ? WC.QSP(Q.signatureCipher) :
+						Q.url)
 				},
-				IDToken = SolveJSONIfPresent(/ID_TOKEN":("[^"]+")/),
-				APIKey = SolveJSONIfPresent(/API_KEY":("[^"]+")/),
-				ClientName = SolveJSONIfPresent(/CLIENT_NAME":("[^"]+")/),
-				ClientVersion = SolveJSONIfPresent(/CLIENT_VERSION":("[^"]+")/),
-				SigTS = SolveJSONIfPresent(/"STS":(\d+)/),
-				MakeI = (URL,Req,Now = WR.Floor(WW.Now() / 1E3)) => Ext.ReqB(O.Coke(
+				URL = [],Size = [],Ext = [],
+				T;
+				B[1] || O.Bad(B[0])
+				B = B[1].streamingData
+				if ((T = B.adaptiveFormats) && T.length)
 				{
-					URL : URL,
-					Head :
-					{
-						Authorization : 'SAPISIDHASH ' +
-							Now + '_' +
-							WR.Low(WC.HEXS(WC.SHA1(
-							[
-								Now,
-								WC.CokeP(O.CokeRaw()).SAPISID,
-								YouTube.slice(0,-1)
-							].join(' ')))),
-						Origin : YouTube.slice(0,-1),
-					},
-					JSON :
-					{
-						context :
-						{
-							client :
-							{
-								clientName : ClientName,
-								clientVersion : ClientVersion,
-							},
-							request :
-							{
-								useSsl : true,
-							},
-						},
-						...Req
-					},
-				})),
-				MakeWebClient = Target => Ext.ReqB(O.Coke(
+					T = SortBest(T)
+					SolveURL('video',T)
+					SolveURL('audio',T,'.mp3')
+				}
+				else if ((T = B.formats) && T.length)
 				{
-					URL : Target,
-					Head :
-					{
-						'X-YouTube-Client-Name' : 1,
-						'X-YouTube-Client-Version' : ClientVersion,
-						'X-YouTube-Identity-Token' : IDToken,
-					}
-				}));
-				return MakeI(YouTubeIPlayer(APIKey),
+					T = SortBest(T)
+					SolveURL('video',T)
+				}
+				else O.Bad(B)
+				return SolveTransform().Map(H => (
 				{
-					videoId : ID,
-					playbackContext :
+					Title : Info.title,
+					UP : Info.channelTitle,
+					Date : Info.publishedAt,
+					Meta : Info.description,
+					Cover : Info.thumbnails.high.url,
+					Part : [
 					{
-						contentPlaybackContext :
-						{
-							signatureTimestamp : SigTS,
-						},
-					},
-				}).FMap(B =>
-				{
-					var
-					PlayStat = (B = WC.JTO(B)).playabilityStatus,
-					Stat = PlayStat && PlayStat.status;
-					return 'CONTENT_CHECK_REQUIRED' === Stat ?
-						MakeWebClient(YouTubeGetWithBPCTR(ID,0 | 4E3 + WW.Now() / 1E3)).Map(B =>
-						[
-							B = WC.JTO(B),
-							WR.Reduce((D,V) => D || V.playerResponse,null,B)
-						]) :
-						Stat && 'OK' !== Stat ?
-							O.Bad(WR.Pick(['status','reason'],PlayStat)) :
-							WX.Just([B,B])
-				}).FMap(B =>
-				{
-					var
-					SortBest = Q => Q.sort((Q,S) => S.width * S.height - Q.width * Q.height ||
-						S.bitrate - Q.bitrate),
-					SolveURL = (H,Q,X) =>
-					{
-						Q = Q.filter(V => WR.StartW(H,V.mimeType) && +V.contentLength)
-						Q[0] || O.Bad(B)
-						Q = Q[0]
-						Size.push(+Q.contentLength || null)
-						Ext.push('.' + WW.MF(/\/(\w+)/,Q.mimeType) + (X || ''))
-						URL.push(
-							Q.cipher ? WC.QSP(Q.cipher) :
-							Q.signatureCipher ? WC.QSP(Q.signatureCipher) :
-							Q.url)
-					},
-					URL = [],Size = [],Ext = [],
-					T;
-					B[1] || O.Bad(B[0])
-					B = B[1].streamingData
-					if ((T = B.adaptiveFormats) && T.length)
-					{
-						T = SortBest(T)
-						SolveURL('video',T)
-						SolveURL('audio',T,'.mp3')
-					}
-					else if ((T = B.formats) && T.length)
-					{
-						T = SortBest(T)
-						SolveURL('video',T)
-					}
-					else O.Bad(B)
-					return TransformSolve(Watch).Map(H => (
-					{
-						Title : Info.title,
-						UP : Info.channelTitle,
-						Date : Info.publishedAt,
-						Meta : Info.description,
-						Cover : Info.thumbnails.high.url,
-						Part : [
-						{
-							URL : URL.map(V => (WW.IsObj(V) ? `${V.url}&${V.sp}=${H.S(V.s)}` : V)
-								.replace(/(?<=[?&]n=)[^&]+/,N => H.N(N))),
-							Size,
-							Ext,
-						}]
-					}))
-				})
+						URL : URL.map(V => (WW.IsObj(V) ? `${V.url}&${V.sp}=${H.S(V.s)}` : V)
+							.replace(/(?<=[?&]n=)[^&]+/,N => H.N(N))),
+						Size,
+						Ext,
+					}]
+				}))
 			})
 		}),
 		// RefSpeed : 90,

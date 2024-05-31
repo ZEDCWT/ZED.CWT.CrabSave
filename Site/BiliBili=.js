@@ -416,10 +416,26 @@ module.exports = O =>
 								].join`\n`
 								break
 							case 5 :
+								break
 							case 6 :
+								// Unordered List
+								SolveText(V.text)
+								Line = WR.RepS('	',V.format.list_format.level - 1) + '+ ' + Line
+								break
 							case 7 :
+								// Link Card
+								switch (V.link_card.card.link_type)
+								{
+									case 1 :
+										// Link to same site video
+										Line = BiliBiliVideo(V.link_card.card.biz_id)
+										break
+									default :
+										Line = O.Bad('Unknown LinkType #' + V.link_card.card.link_type + ' | ' + WC.OTJ(V))
+								}
+								break
 							default :
-								O.Bad('Unknown ParaType #' + V.para_type)
+								O.Bad('Unknown ParaType #' + V.para_type + ' | ' + WC.OTJ(V))
 						}
 						Line && Meta.push(Line.replace(/\n+$/,''))
 					})
