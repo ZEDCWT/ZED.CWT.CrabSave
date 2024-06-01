@@ -5,13 +5,13 @@ WW = require('@zed.cwt/wish'),
 
 YouTube = 'https://www.youtube.com/',
 YouTubeWatch = WW.Tmpl(YouTube,'watch?v=',undefined),
-YouTubeIPlayer = WW.Tmpl(YouTube,'youtubei/v1/player?key=',undefined),
+YouTubeIPlayer = YouTube + 'youtubei/v1/player?prettyPrint=false',
 // Example : B91P('?wmH{<|dG6`BhE')
 YouTubeGetWithBPCTR = WW.Tmpl(YouTube,'watch?v=',undefined,'&bpctr=',undefined,'&pbj=1'),
 GoogleAPIKey = '~GoogleAPIKey~',
 GoogleAPI = 'https://www.googleapis.com/',
 GoogleAPIYouTube = GoogleAPI + 'youtube/v3/',
-GoogleAPIYouTubeVideo = WW.Tmpl(GoogleAPIYouTube,'videos?key=',GoogleAPIKey,'&part=',undefined,'&id=',undefined);
+GoogleAPIYouTubeVideo = WW.Tmpl(GoogleAPIYouTube,'videos?prettyPrint=false&key=',GoogleAPIKey,'&part=',undefined,'&id=',undefined);
 
 /**@type {CrabSaveNS.SiteO}*/
 module.exports = O =>
@@ -92,7 +92,7 @@ module.exports = O =>
 							WC.CokeP(O.CokeRaw()).SAPISID,
 							YouTube.slice(0,-1)
 						].join(' ')))),
-					Origin : YouTube.slice(0,-1),
+					// Origin : YouTube.slice(0,-1),
 				},
 				JSON :
 				{
@@ -127,7 +127,7 @@ module.exports = O =>
 				var
 				Valid = ClientValid();
 				return SolveClientInfo()
-					.FMap(() => MakeI(YouTubeIPlayer(Client.APIKey),
+					.FMap(() => MakeI(YouTubeIPlayer,
 					{
 						videoId : ID,
 						playbackContext :
@@ -138,6 +138,7 @@ module.exports = O =>
 							},
 						},
 					}))
+					.ErrAs(E => I < 1 && Valid ? WX.Just([true,ClientLast = null]) : WX.Throw(E))
 					.FMap(B =>
 					{
 						var
@@ -154,7 +155,6 @@ module.exports = O =>
 								WX.Just([B,B])
 					})
 					.Map(B => [false,B])
-					.ErrAs(E => I < 1 && Valid ? WX.Throw(E) : WX.Just([true,ClientLast = null]))
 			}),
 
 			SolveTransform = () => (TransformParseExt = Ext) && TransformParse(Client.BaseScript)

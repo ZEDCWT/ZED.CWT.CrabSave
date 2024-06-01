@@ -15,7 +15,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	YouTubeFeedSubscriptionShort = YouTubeFeedSubscription + '/shorts',
 	YouTubeFeedChannel = YouTubeFeed + 'channels',
 	YouTubeI = YouTube + 'youtubei/v1/',
-	YouTubeIBrowse = YouTubeI + 'browse',
+	YouTubeIBrowse = YouTubeI + 'browse?prettyPrint=false',
 	// YouTubeIGuide = YouTubeI + 'guide',
 	YouTubeAccount = YouTube + 'account',
 	// YouTubeKey = YouTube + 'sw.js',
@@ -205,7 +205,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		return O.Req(
 		{
 			URL : URL,
-			QS : {key : APIKey},
+			// QS : {key : APIKey},
 			Head :
 			{
 				Authorization : 'SAPISIDHASH ' +
@@ -218,7 +218,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					].join(' ')))),
 				'X-Goog-AuthUser' : '0',
 				'X-Goog-PageId' : PageID,
-				Origin : YouTube.slice(0,-1)
+				'X-Origin' : YouTube.slice(0,-1)
 			},
 			JSON : WW.Merge(
 			{
