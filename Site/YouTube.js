@@ -475,7 +475,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				var All = [];
 				O.Walk(B,function(V,K)
 				{
-					'reelItemRenderer' === K && All.push(V.videoId)
+					/^(reelItemRenderer|reelWatchEndpoint)$/.test(K) &&
+						All.push(V.videoId)
 				})
 				return GoogleAPIReq(GoogleAPIYouTubeVideo('id,snippet,contentDetails',All))
 					.Map(function(N)

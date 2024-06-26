@@ -308,6 +308,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							Used to be a video
 					*/
 					break
+				case 'podcast_audio' : // 44
+					break
 				case 'webpage' : // 0 23
 					More.push(Q.page_desc)
 					break

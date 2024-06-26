@@ -68,7 +68,7 @@ module.exports = O =>
 											FanBoxUserPost('owo',V.postInfo.id)
 										break
 									default :
-										V = V.html
+										V = V.url || V.html
 								}
 								Meta.push('<URL> ' + V)
 								break

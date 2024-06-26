@@ -490,6 +490,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 										A slide of videos
 										And a link to an app
 								*/
+							case 'video_carousel_website' :
+								/*
+									1510127386850824192
+								*/
 							case 'video_website' :
 								/*
 									1763942349531398254

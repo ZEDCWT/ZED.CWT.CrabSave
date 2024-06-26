@@ -349,6 +349,7 @@ module.exports = O =>
 								case 'mixed_media_single_dest_carousel_website' :
 								case 'video_app' :
 								case 'video_carousel_app' :
+								case 'video_carousel_website' :
 								case 'video_website' :
 									WR.Each(V => SolveUnifiedCardComponent(UnifiedCard.component_objects[V]),UnifiedCard.components)
 									break

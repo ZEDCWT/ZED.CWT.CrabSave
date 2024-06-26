@@ -286,6 +286,13 @@ module.exports = O =>
 							// 	break
 							case 'panorama' : // 29
 								break
+							case 'podcast_audio' : // 44
+								Part.push(
+								{
+									URL : [Q.media_info.stream_url],
+									Title : Q.media_info.subtitle_preview,
+								})
+								break
 							case 'story' : // 31
 								T = WR.Pluck('play_info',Q.slide_cover.playback_list)
 								Part.push(

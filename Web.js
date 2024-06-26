@@ -4008,7 +4008,7 @@
 				},
 				Num : function(Q)
 				{
-					return RegExp('\\b(?:' + Q + ')(?![A-Z])(?:\\D*\\b)?(\\d+)\\b','i')
+					return RegExp('\\b(?:' + Q + ')(?![A-Z])(?:[^\\dA-Z]*\\b)?(\\d+)\\b','i')
 				},
 				NumR : function(Q)
 				{
