@@ -542,7 +542,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						}
 						break
 					default :
-						if (/^poll\d+choice_(text_only|video)$/.test(Card.name)) ~function()
+						if (/^poll\d+choice_(image|text_only|video)$/.test(Card.name)) ~function()
 						{
 							/*
 								1764169483302977708
@@ -550,6 +550,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								1014798461546348545
 									A video
 									The vote is hidden
+								1808712339413479926
 							*/
 							var
 							Vote,
@@ -576,6 +577,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 									' ' +
 									V[0])
 							},Vote)
+							T.image_original && Img.push(T.image_original.image_value.url)
 						}()
 						else More.push('Unknown Card #' + Card.name)
 				}

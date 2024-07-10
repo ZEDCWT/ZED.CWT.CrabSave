@@ -385,6 +385,9 @@ module.exports = O =>
 								case 1 :
 									Line += B.word.words || ''
 									break
+								case 4 :
+									Line += B.link.link
+									break
 								default :
 									O.Bad('Unknown NodeType #' + B.node_type)
 							}

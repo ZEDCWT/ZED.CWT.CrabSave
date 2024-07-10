@@ -42,14 +42,23 @@ module.exports = O =>
 			return D
 		},{},/([$\w]+):(.*?})/g,SMethod),
 		S = Q => SProcess.forEach(([V,B]) => SMap[V] && SMap[V](Q,B),Q = [...Q]) || Q.join``,
-		NProcess = WW.MF(/\.get\(.n.([^]+?)set\(.n./,B),
-		NMethod = WW.MF(/=([^()]+)\(/,NProcess),
+		NProcess = WW.MF(/\.get\(.n.([^]+?)set\(.n./,B) ||
+			WW.MF(/Code\(110[^{}]+\.get\(([^{}]+?)\.set\(/,B),
+		NMethod,
 		NFunc,
-		N;
-		if (NFunc = /([$\w]+)\[/.exec(NMethod))
-			NMethod = WW.MF(RegExp(WR.SafeRX(NFunc[1]) + '=\\[([$\\w]+)]'),B)
-		NFunc = WW.MF(RegExp(WR.SafeRX(NMethod) + '=(function[^]+?\\.join\\([^}]+})'),B)
-		N = WN.Evil(`(${NFunc})`)
+		N = () => WW.Throw('Unable to locate N Method');
+		/*
+			s/player/b22ef6e7/player_ias.vflset/ja_JP/base.js
+			a.D&&(b=String.fromCharCode(110),c=a.get(b))&&(c=IRa[0](c),a.set(b,c)
+		*/
+		if (NProcess)
+		{
+			NMethod = WW.MF(/=([^()]+)\(/,NProcess)
+			if (NFunc = /([$\w]+)\[/.exec(NMethod))
+				NMethod = WW.MF(RegExp(WR.SafeRX(NFunc[1]) + '=\\[([$\\w]+)]'),B)
+			NFunc = WW.MF(RegExp(WR.SafeRX(NMethod) + '=(function[^]+?\\.join(?:\\.call)?\\([^}]+})'),B)
+			N = WN.Evil(`(${NFunc})`)
+		}
 		SProcess = WW.MR((D,V) => D.push([V[1],+V[2]]) && D,[],/\.([$\w]+)[^)]+?(\d+)/g,SProcess)
 		return {S,N}
 	}));

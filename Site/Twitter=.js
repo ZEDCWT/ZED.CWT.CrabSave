@@ -372,7 +372,7 @@ module.exports = O =>
 							}
 							break
 						default :
-							if (/^poll\d+choice_(text_only|video)$/.test(Card.name)) (() =>
+							if (/^poll\d+choice_(image|text_only|video)$/.test(Card.name)) (() =>
 							{
 								var
 								Vote,
@@ -399,6 +399,11 @@ module.exports = O =>
 										' ' +
 										V[0])
 								},Vote)
+								if (T.image_original)
+								{
+									MediaURL.push(T.image_original.image_value.url)
+									MediaExt.push(null)
+								}
 								T.player_stream_url && SolveMediaAuto(T.player_stream_url.string_value,null)
 							})()
 							else WW.Throw('Unknown Card #' + Card.name + ' ' + WC.OTJ(T))

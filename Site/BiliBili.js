@@ -32,10 +32,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliAudio = BiliBili + 'audio/',
 	BiliBiliAudioURL = BiliBili + 'audio/au',
 	BiliBiliAudioMenu = BiliBili + 'audio/am',
-	BiliBiliAudioWeb = BiliBiliAudio + 'music-service-c/web/',
-	BiliBiliAudioWebInfo = WW.Tmpl(BiliBiliAudioWeb,'song/info?sid=',undefined),
-	BiliBiliAudioWebUp = WW.Tmpl(BiliBiliAudioWeb,'song/upper?uid=',undefined,'&pn=',undefined,'&ps=',O.Size,'&order=1'),
-	BiliBiliAudioWebMenu = WW.Tmpl(BiliBiliAudioWeb,'song/of-menu?sid=',undefined,'&pn=',undefined,'&ps=',O.Size),
+	BiliBiliMusicServiceC = BiliBiliAudio + 'music-service-c/web/',
+	BiliBiliMusicServiceSongInfo = WW.Tmpl(BiliBiliMusicServiceC,'song/info?sid=',undefined),
+	BiliBiliMusicServiceMenu = WW.Tmpl(BiliBiliMusicServiceC,'song/of-menu?sid=',undefined,'&pn=',undefined,'&ps=',O.Size),
+	BiliBiliMusicService = BiliBiliAudio + 'music-service/web/',
+	BiliBiliMusicServiceUp = WW.Tmpl(BiliBiliMusicService,'song/upper?uid=',undefined,'&pn=',undefined,'&ps=',O.Size,'&order=1'),
 	BiliBiliArticleRead = BiliBili + 'read/cv',
 	BiliBiliArticleReadList = BiliBili + 'read/readlist/rl',
 	// BiliBiliArticleReadContent = WW.Tmpl(BiliBili,'read/native?id=',undefined),
@@ -246,6 +247,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						{
 							case 1 :
 								Line += B.word.words || ''
+								break
+							case 4 :
+								// {node_type:4,link:{show_text:...,link:...,link_type:16,style:{}}}
+								Line += B.link.link
 								break
 							default :
 								Line += WC.OTJ(B)
@@ -1177,7 +1182,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			}
 		},{
 			Name : 'UserDynamic',
-			Judge : O.Num('Space(?=\\..*/Dynamic)'),
+			Judge : O.Num('Space(?:\\.\\w+)*(?=.*/Dynamic)'),
 			JudgeVal : O.ValNum,
 			Example :
 			[
@@ -1259,7 +1264,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			],
 			View : function(ID)
 			{
-				return O.Req(BiliBiliAudioWebInfo(ID)).Map(function(B)
+				return O.Req(BiliBiliMusicServiceSongInfo(ID)).Map(function(B)
 				{
 					B = Common(B)
 					return {
@@ -1287,12 +1292,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			],
 			View : function(ID,Page)
 			{
-				return O.API(BiliBiliAudioWebMenu(ID,-~Page))
+				return O.API(BiliBiliMusicServiceMenu(ID,-~Page))
 					.Map(SolveAUList)
 			}
 		},{
 			Name : 'UserAudio',
-			Judge : O.Num('Space(?=\\..*/Audio)'),
+			Judge : O.Num('Space(?:\\.\\w+)*(?=.*/Audio)'),
 			JudgeVal : O.ValNum,
 			Example :
 			[
@@ -1305,7 +1310,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			],
 			View : function(ID,Page)
 			{
-				return O.API(BiliBiliAudioWebUp(ID,-~Page))
+				return O.API(BiliBiliMusicServiceUp(ID,-~Page))
 					.Map(SolveAUList)
 			}
 		},{
@@ -1405,7 +1410,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			})
 		},{
 			Name : 'UserArticle',
-			Judge : O.Num('Space(?=\\..*/Article)'),
+			Judge : O.Num('Space(?:\\.\\w+)*(?=.*/Article)'),
 			JudgeVal : O.ValNum,
 			Example :
 			[
@@ -1766,7 +1771,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			}
 		},{
 			Name : 'User',
-			Judge : O.Num('Space'),
+			Judge : O.Num('Space(?:\\.\\w+)*'),
 			JudgeVal : O.ValNum,
 			Example :
 			[
