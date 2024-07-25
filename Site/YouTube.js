@@ -22,10 +22,17 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	GoogleAPIKey = '~GoogleAPIKey~',
 	GoogleAPI = 'https://www.googleapis.com/',
 	GoogleAPIYouTube = GoogleAPI + 'youtube/v3/',
-	GoogleAPIYouTubeVideo = WW.Tmpl(GoogleAPIYouTube,'videos?key=',GoogleAPIKey,'&part=',undefined,'&id=',undefined),
-	GoogleAPIYouTubeChannel = WW.Tmpl(GoogleAPIYouTube,'channels?key=',GoogleAPIKey,'&part=contentDetails&',undefined,'=',undefined),
-	GoogleAPIYouTubePlayList = WW.Tmpl(GoogleAPIYouTube,'playlistItems?key=',GoogleAPIKey,'&part=snippet,contentDetails&playlistId=',undefined,'&pageToken=',undefined,'&maxResults=',O.Size),
-	GoogleAPIYouTubeSearch = WW.Tmpl(GoogleAPIYouTube,'search?key=',GoogleAPIKey,'&part=id,snippet&q=',undefined,'&pageToken=',undefined,'&maxResults=',O.Size,'&type=video&safeSearch=none',undefined),
+	GoogleAPIYouTubeVideoPart =
+	[
+		'id',
+		'snippet',
+		'contentDetails',
+		'liveStreamingDetails'
+	].join(','),
+	GoogleAPIYouTubeVideo = WW.Tmpl(GoogleAPIYouTube,'videos?prettyPrint=false&key=',GoogleAPIKey,'&part=',GoogleAPIYouTubeVideoPart,'&id=',undefined),
+	GoogleAPIYouTubeChannel = WW.Tmpl(GoogleAPIYouTube,'channels?prettyPrint=false&key=',GoogleAPIKey,'&part=contentDetails&',undefined,'=',undefined),
+	GoogleAPIYouTubePlayList = WW.Tmpl(GoogleAPIYouTube,'playlistItems?prettyPrint=false&key=',GoogleAPIKey,'&part=snippet,contentDetails&playlistId=',undefined,'&pageToken=',undefined,'&maxResults=',O.Size),
+	GoogleAPIYouTubeSearch = WW.Tmpl(GoogleAPIYouTube,'search?prettyPrint=false&key=',GoogleAPIKey,'&part=id,snippet&q=',undefined,'&pageToken=',undefined,'&maxResults=',O.Size,'&type=video&safeSearch=none',undefined),
 	GoogleClient = 'https://clients1.google.com/',
 	GoogleClientYouTubeSuggestion = WW.Tmpl(GoogleClient,'complete/search?client=youtube&ds=yt&q=',undefined,'&callback=_'),
 	Common = function(B)
@@ -40,14 +47,22 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		null == R && O.BadR(B)
 		return R
 	},
-	SolveSnippet = function(B)
+	SolveSnippet = function(B,AllowUpcoming)
 	{
 		B = Common(B)
 		return {
 			Len : B.pageInfo.totalResults,
 			Item : WR.Map(function(V)
 			{
+				var
+				Live = V.liveStreamingDetails,
+				IsLivePending = Live &&
+				(
+					Live.activeLiveChatId ||
+					Live.scheduledStartTime && !Live.actualEndTime
+				);
 				return {
+					Non : !AllowUpcoming && IsLivePending,
 					Index : V.snippet.position,
 					ID : V.id,
 					Img : V.snippet.thumbnails.medium.url,
@@ -128,20 +143,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	SolveDetail = function(B)
 	{
 		B = Common(B)
-		return GoogleAPIReq(GoogleAPIYouTubeVideo('id,contentDetails',WR.Map(function(V)
+		return GoogleAPIReq(GoogleAPIYouTubeVideo(WR.Map(function(V)
 		{
 			return (V.contentDetails || V.id).videoId
 		},B.items)))
-			.Map(function(N)
-			{
-				N = Common(N)
-				WR.EachU(function(V,F)
-				{
-					V.id = N.items[F].id
-					V.contentDetails = N.items[F].contentDetails
-				},B.items)
-				return SolveSnippet(B)
-			})
+			.Map(function(N){return SolveSnippet(N)})
 	},
 	SolvePlayList = function(ID,Page)
 	{
@@ -455,8 +461,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			],
 			View : function(ID)
 			{
-				return GoogleAPIReq(GoogleAPIYouTubeVideo('id,snippet,contentDetails',ID))
-					.Map(SolveSnippet)
+				return GoogleAPIReq(GoogleAPIYouTubeVideo(ID))
+					.Map(function(B){return SolveSnippet(B,true)})
 			}
 		},{
 			Name : 'SubscriptionShort',
@@ -478,7 +484,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					/^(reelItemRenderer|reelWatchEndpoint)$/.test(K) &&
 						All.push(V.videoId)
 				})
-				return GoogleAPIReq(GoogleAPIYouTubeVideo('id,snippet,contentDetails',All))
+				return GoogleAPIReq(GoogleAPIYouTubeVideo(All))
 					.Map(function(N)
 					{
 						return [B,SolveSnippet(N)]

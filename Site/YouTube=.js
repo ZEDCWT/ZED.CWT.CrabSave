@@ -43,13 +43,16 @@ module.exports = O =>
 		},{},/([$\w]+):(.*?})/g,SMethod),
 		S = Q => SProcess.forEach(([V,B]) => SMap[V] && SMap[V](Q,B),Q = [...Q]) || Q.join``,
 		NProcess = WW.MF(/\.get\(.n.([^]+?)set\(.n./,B) ||
-			WW.MF(/Code\(110[^{}]+\.get\(([^{}]+?)\.set\(/,B),
+			WW.MF(/Code\(110[^{}]+\.get\(([^{}]+?)\.set\(/,B) ||
+			/([$\w]+)=([$\w]+)\.get\(([^,]+)\W+\1(=[^()]+\()\1\),\2\.set\(\3,\1\)/.exec(B)?.[4],
 		NMethod,
 		NFunc,
 		N = () => WW.Throw('Unable to locate N Method');
 		/*
 			s/player/b22ef6e7/player_ias.vflset/ja_JP/base.js
 			a.D&&(b=String.fromCharCode(110),c=a.get(b))&&(c=IRa[0](c),a.set(b,c)
+			s/player/3400486c/player_ias.vflset/ja_JP/base.js
+			a.D&&(b="nn"[+a.D],c=a.get(b))&&(c=rDa[0](c),a.set(b,c)
 		*/
 		if (NProcess)
 		{
@@ -64,7 +67,7 @@ module.exports = O =>
 	}));
 
 	return {
-		URL : (ID,Ext) => Ext.ReqB(O.Req(GoogleAPIYouTubeVideo('snippet',ID))).FMap(Info =>
+		URL : (ID,Ext) => Ext.ReqB(O.Req(GoogleAPIYouTubeVideo('id,snippet,contentDetails,liveStreamingDetails',ID))).FMap(Info =>
 		{
 			var
 			SolveClientInfo = () => ClientValid() ?
