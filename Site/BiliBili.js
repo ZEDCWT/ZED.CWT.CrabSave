@@ -782,18 +782,17 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	{
 		return O.API(WW.N.ReqOH(BiliBiliBgmEpisode(ID),'Cookie','stardustpgcv=0')).Map(function(B)
 		{
+			var T,R = [];
 			B = SolveInitState(B)
-			B = WR.Find(function(V)
+			WR.Each(function(V)
 			{
-				return /pgc\/view/.test(V.queryHash)
+				V = V.state.data
+				if (T = WR.Path(['seasonInfo','mediaInfo','episodes'],V))
+					R = [WR.Find(WR.PropEq('ep_id',+ID),T).aid,T.season_id]
+				else if (T = WR.Path(['result','play_view_business_info'],V))
+					R = [T.episode_info.aid,T.season_info.season_id]
 			},B.props.pageProps.dehydratedState.queries)
-				.state.data
-				.seasonInfo
-				.mediaInfo
-			return [
-				WR.Find(WR.PropEq('ep_id',+ID),B.episodes).aid,
-				B.season_id
-			]
+			return R
 		})
 	}),
 	ShowCID = function(CID,Downloaded)

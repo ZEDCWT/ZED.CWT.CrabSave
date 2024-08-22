@@ -315,6 +315,7 @@ module.exports = O =>
 									'audio', // 0
 									'cardlist', // 0
 									'event', // 5
+									'fangle', // 24
 									'file', // 2
 									'group', // 0
 									'shop', // 2

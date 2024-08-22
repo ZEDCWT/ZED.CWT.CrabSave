@@ -289,7 +289,6 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						Q.page_desc,
 						Q.tips)
 					break
-
 				case 'hudongvote' : // 23
 					Q = Card.vote_object
 					More.push(WW.Quo(Q.part_info) + Q.content,
@@ -330,6 +329,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						'audio', // 0
 						'cardlist', // 0
 						'event', // 5
+						'fangle', // 24 Fqe3CtiOB
 						'file', // 2
 						'group', // 0
 						'shop', // 2

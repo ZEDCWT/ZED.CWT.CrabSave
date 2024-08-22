@@ -43,8 +43,8 @@ module.exports = O =>
 		},{},/([$\w]+):(.*?})/g,SMethod),
 		S = Q => SProcess.forEach(([V,B]) => SMap[V] && SMap[V](Q,B),Q = [...Q]) || Q.join``,
 		NProcess = WW.MF(/\.get\(.n.([^]+?)set\(.n./,B) ||
-			WW.MF(/Code\(110[^{}]+\.get\(([^{}]+?)\.set\(/,B) ||
-			/([$\w]+)=([$\w]+)\.get\(([^,]+)\W+\1(=[^()]+\()\1\),\2\.set\(\3,\1\)/.exec(B)?.[4],
+			/([$\w]+)=([$\w]+)\.get\(([^,]+)\W+\1(=[^()]+\()\1\),\2\.set\(\3,\1\)/.exec(B)?.[4] ||
+			WW.MF(/[$\w]\.D&&\(([^{}]*?)set/,B),
 		NMethod,
 		NFunc,
 		N = () => WW.Throw('Unable to locate N Method');
@@ -53,12 +53,19 @@ module.exports = O =>
 			a.D&&(b=String.fromCharCode(110),c=a.get(b))&&(c=IRa[0](c),a.set(b,c)
 			s/player/3400486c/player_ias.vflset/ja_JP/base.js
 			a.D&&(b="nn"[+a.D],c=a.get(b))&&(c=rDa[0](c),a.set(b,c)
+			s/player/d2e656ee/player_ias.vflset/ja_JP/base.js
+			a.D&&(JL(a),b=a.j.n||null)&&(b=CDa[0](b),a.set("n",b),CDa.length||Dma(""))
 		*/
 		if (NProcess)
 		{
-			NMethod = WW.MF(/=([^()]+)\(/,NProcess)
+			NMethod = WW.MF(/=([^(),]+)\(/,NProcess)
 			if (NFunc = /([$\w]+)\[/.exec(NMethod))
 				NMethod = WW.MF(RegExp(WR.SafeRX(NFunc[1]) + '=\\[([$\\w]+)]'),B)
+		}
+		else
+			NMethod = WW.MF(/^var [$\w]+=\[([$\w]+)];/m,B)
+		if (NMethod)
+		{
 			NFunc = WW.MF(RegExp(WR.SafeRX(NMethod) + '=(function[^]+?\\.join(?:\\.call)?\\([^}]+})'),B)
 			N = WN.Evil(`(${NFunc})`)
 		}
@@ -104,7 +111,7 @@ module.exports = O =>
 							WC.CokeP(O.CokeRaw()).SAPISID,
 							YouTube.slice(0,-1)
 						].join(' ')))),
-					// Origin : YouTube.slice(0,-1),
+					Origin : YouTube.slice(0,-1),
 				},
 				JSON :
 				{
@@ -112,7 +119,7 @@ module.exports = O =>
 					{
 						client :
 						{
-							clientName : Client.Name,
+							clientName : 'MWEB', // Client.Name,
 							clientVersion : Client.Version,
 						},
 						request :

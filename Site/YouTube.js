@@ -530,9 +530,27 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						UPURL : O.SolU(T,YouTube)
 					})
 				}
+
+				if (IsRenderer && (T = V.shortsLockupViewModel))
+				{
+					IsRenderer = false
+					V = T
+					T = null
+					O.Walk(V,function(V)
+					{
+						return T = T || V.videoId
+					})
+					I.push(
+					{
+						ID : T,
+						Img : V.thumbnail.sources[0].url,
+						Title : V.overlayMetadata.primaryText.content,
+					})
+				}
+
 				V = V.reelItemRenderer || V
 
-				return IsRenderer && I.push(
+				return IsRenderer && WR.Has('videoId',V) && I.push(
 				{
 					Non : V.upcomingEventData ||
 						WR.Any(function(B)
