@@ -23,7 +23,7 @@ BiliBiliAPIArticle = BiliBiliAPI + 'x/article/',
 BiliBiliAPIArticleView = WW.Tmpl(BiliBiliAPIArticle,'view?id=',undefined),
 // BiliBiliAPIWebView = WW.Tmpl(BiliBiliAPI,'x/web-interface/view?aid=',undefined),
 BiliBiliAPIWebViewDetail = WW.Tmpl(BiliBiliAPI,'x/web-interface/view/detail?aid=',undefined),
-BiliBiliAPIPlayURL = WW.Tmpl(BiliBiliAPI,'x/player/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=4048&fourk=1'),
+BiliBiliAPIPlayURL = WW.Tmpl(BiliBiliAPI,'x/player/wbi/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=4048&fourk=1'),
 BiliBiliAPIPlayURLPGC = WW.Tmpl(BiliBiliAPI,'pgc/player/web/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=4048&fourk=1'),
 BiliBiliAPIPlayURLList =
 [
@@ -71,14 +71,97 @@ module.exports = O =>
 			var
 			Prefix,ID,CID,
 			PlayURL = (ID,CID,Quality) => WX.TCO((_,F) =>
-				Ext.ReqB(O.Coke(BiliBiliAPIPlayURLList[F](ID,CID,Quality || 120)))
+				Ext.ReqB(O.Coke(
+				{
+					URL : BiliBiliAPIPlayURLList[F](ID,CID,Quality || 120),
+					Head :
+					{
+						Referer : BiliBili,
+					},
+				}))
 					.Map(B => [0,Common(B)])
 					.RetryWhen(E => E.Map((V,F) =>
 						!F && V && -503 === V.code || WW.Throw(V))
 						.Delay(2E3))
 					.ErrAs(E => -~F < BiliBiliAPIPlayURLList.length ?
 						WX.Just([true]) :
-						WX.Throw(E)));
+						WX.Throw(E))),
+
+			SolvePart = B =>
+			{
+				var
+				/*
+					av1206729228
+					While trying to access the avc1.640034 format of the first part naming `1659277992-1-30120.m4s`, it returns
+					{"code":"EntityTooLarge","message":"Your proposed upload exceeds the maximum allowed object size.","requestId":"..."}
+
+					The first part is of `3:21:11`, and the second part is of `05:15:30`
+					For record, the of avc1.640034 of the second part naming `1659609666-1-30120.m4s` is accessible with ContentLength being 53088613213
+					But the hev1.1.6.L153.90 of both parts are 19814895657 and 36144310461 accordingly
+					So based on that the avc1.640034 of the longer second part is accessible, the first part should be so...
+					Weird...
+				*/
+				SolveURL = V => V.baseUrl || V.base_url,
+				Best = (V,Low = false) =>
+				{
+					var
+					MaxID = Math.max(...V.map(V => V.id));
+					return V.filter(B => B.id === MaxID)
+						.sort((Q,S) => (Low ? 1 : -1) * (Q.bandwidth - S.bandwidth))[0]
+				},
+				U,T;
+				if (T = B.durl)
+				{
+					WW.IsArr(T) || (T = [T])
+					U =
+					{
+						URL : WR.Pluck('url',T),
+						Size : WR.Pluck('size',T),
+						Ext : B.format ? '.' + B.format.replace(/hd/,'').replace(/^flv.+/,'flv') : null,
+					}
+				}
+				else if (T = B.dash)
+				{
+					U =
+					{
+						URL : [],
+						Ext : []
+					}
+					/*
+						Actually, videos may have higher bandwidth with lower resolution
+						So let us just trust that they arrange the quality by id in order
+						av816470741
+						{id : 120,bandwidth : 4732045,codecs : 'avc1.640034',width : 3840,height : 2160}
+						{id : 116,bandwidth : 5237452,codecs : 'avc1.640032',width : 1920,height : 1080}
+						{id : 80,bandwidth : 2625599,codecs : 'avc1.640032',width : 1920,height : 1080}
+						{id : 64,bandwidth : 1755296,codecs : 'avc1.640028',width : 1280,height : 720}
+						{id : 32,bandwidth : 789775,codecs : 'avc1.64001F',width : 852,height : 480}
+						{id : 16,bandwidth : 354406,codecs : 'avc1.64001E',width : 640,height : 360}
+					*/
+					if (T.video)
+					{
+						U.URL.push(SolveURL(Best(T.video)))
+						U.Ext.push('.mp4')
+					}
+					if (T.audio)
+					{
+						U.URL.push(SolveURL(O.Best('id',T.audio)))
+						U.Ext.push('.mp3')
+					}
+					if (T.flac?.audio)
+					{
+						U.URL.push(SolveURL(T.flac.audio))
+						U.Ext.push('.flac')
+					}
+					if (T.dolby?.audio)
+					{
+						U.URL.push(SolveURL(T.dolby.audio))
+						U.Ext.push('.Dolby.mp3')
+					}
+				}
+				else O.Bad(B)
+				return U
+			};
 
 			Q = Q.split('#')
 			ID = /^([A-Z]+)(\d+)$/i.exec(Q[0])
@@ -477,37 +560,7 @@ module.exports = O =>
 					})
 					.Map(B =>
 					{
-						var
-						Part = [],
-						U,T;
-						if (T = B.durl)
-						{
-							WW.IsArr(T) || (T = [T])
-							Part.push(
-							{
-								URL : WR.Pluck('url',T),
-								Size : WR.Pluck('size',T),
-							})
-						}
-						else if (T = B.dash)
-						{
-							Part.push(U =
-							{
-								URL : [],
-								Ext : [],
-							})
-							if (T.video)
-							{
-								U.URL.push(O.Best('id',T.video).base_url)
-								U.Ext.push('.mp4')
-							}
-							if (T.audio)
-							{
-								U.URL.push(O.Best('id',T.audio).base_url)
-								U.Ext.push('.mp3')
-							}
-						}
-						else O.Bad(B)
+						var Part = [SolvePart(B)];
 						return {
 							Title : Episode.title,
 							UP : Season.up_info.uname,
@@ -606,47 +659,7 @@ module.exports = O =>
 							WX.Throw(E))
 						.Tap(B =>
 						{
-							var U,T;
-							if (T = B.durl)
-							{
-								WW.IsArr(T) || (T = [T])
-								U =
-								{
-									URL : WR.Pluck('url',T),
-									Size : WR.Pluck('size',T),
-									Ext : '.' + B.format.replace(/hd/,'').replace(/^flv.+/,'flv')
-								}
-							}
-							else if (T = B.dash)
-							{
-								U =
-								{
-									URL : [],
-									Ext : []
-								}
-								/*
-									Actually, videos may have higher bandwidth with lower resolution
-									So let us just trust that they arrange the quality by id in order
-									av816470741
-									{id : 120,bandwidth : 4732045,codecs : 'avc1.640034',width : 3840,height : 2160}
-									{id : 116,bandwidth : 5237452,codecs : 'avc1.640032',width : 1920,height : 1080}
-									{id : 80,bandwidth : 2625599,codecs : 'avc1.640032',width : 1920,height : 1080}
-									{id : 64,bandwidth : 1755296,codecs : 'avc1.640028',width : 1280,height : 720}
-									{id : 32,bandwidth : 789775,codecs : 'avc1.64001F',width : 852,height : 480}
-									{id : 16,bandwidth : 354406,codecs : 'avc1.64001E',width : 640,height : 360}
-								*/
-								if (T.video)
-								{
-									U.URL.push(O.Best('id',T.video).baseUrl)
-									U.Ext.push('.mp4')
-								}
-								if (T.audio)
-								{
-									U.URL.push(O.Best('id',T.audio).baseUrl)
-									U.Ext.push('.mp3')
-								}
-							}
-							else O.Bad(B)
+							var U = SolvePart(B);
 							V[1] && AV.title !== V[1] && (U.Title = V[1])
 							/*
 								By specifying the CID, it is normally due to the video being updated
@@ -670,7 +683,7 @@ module.exports = O =>
 			{"code":-412,"message":"请求被拦截","ttl":1,"data":null}
 		*/
 		Is429 : E => WW.ErrIs(WW.Err.NetBadStatus,E) && 412 === E.Arg[0],
-		Pack : Q => WN.ReqOH(Q,'Referer',BiliBiliAPI),
+		Pack : Q => WN.ReqOH(Q,'Referer',BiliBili),
 		Range : false,
 	}
 }

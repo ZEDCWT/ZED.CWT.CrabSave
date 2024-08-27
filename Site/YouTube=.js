@@ -27,7 +27,7 @@ module.exports = O =>
 		BaseScript : null,
 	},
 	ClientLast,
-	ClientValid = () => null != ClientLast,
+	ClientValid = () => null != ClientLast && WW.Now() < 4 * 36E5 + ClientLast,
 	TransformParseExt,
 	TransformParse = WX.CacheL(Q => TransformParseExt.ReqB(O.Req(WN.JoinU(YouTube,Q))).Map(B =>
 	{
