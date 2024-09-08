@@ -142,7 +142,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						var
 						// IS = WC.JTO(WW.MU(/{img:[^}]+}/,Script).replace(/(\w+):/g,'"$1":')),
 						IS = Common(Nav,true).wbi_img,
-						Index = O.JOM(/\.subKey[^]+?(?=\[[\d,]+\])/,Script),
+						Index = O.JOM(/\.subKey[^}]+?(?=\[[\d,]+\])/,Script),
 						SolveFakeURL = function(Q){return WW.MF(/\/([^/.]+)\.\w+$/,Q)};
 						// IS = IS.img + IS.sub
 						IS = SolveFakeURL(IS.img_url) + SolveFakeURL(IS.sub_url)
@@ -872,7 +872,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	},
 	AVWithCID = function(ID)
 	{
-		return O.DB('CID',ID).FMap(function(CID)
+		return O.DB('CID',String(ID)).FMap(function(CID)
 		{
 			return AV(ID,CID)
 		})

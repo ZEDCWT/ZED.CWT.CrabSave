@@ -459,7 +459,7 @@ module.exports = Option =>
 					? <= ID and ID < ? and
 					0 <= Part and
 					0 = D.File
-			`,[ID,ID + '$'])
+			`,[String(ID),ID + '$'])
 				.Map(B => WR.Reduce((D,V) =>
 				{
 					V = WW.MF(/#(\d+$)/,V.ID) ||
