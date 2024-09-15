@@ -163,7 +163,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			}
 			return O.Req(Q).Map(function(B)
 			{
-				if (-403 === WC.JTO(B).code)
+				if (WR.Include(WC.JTO(B).code,[-352,-403]))
 					ReqWBILast = null
 				return Common(B)
 			})
@@ -629,6 +629,20 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					Card.Title = T.title
 					More.push(T.desc)
 					break
+				case 'MAJOR_TYPE_BLOCKED' :
+					/*
+						976312823100473346
+					*/
+					T = Major.blocked
+					Card.Non = true
+					Card.Img =
+					[
+						T.icon.img_day,
+						T.bg_img.img_day
+					]
+					Card.Title = T.hint_message
+					More.push(O.Ah(T.button.text,T.button.jump_url))
+					break
 				case 'MAJOR_TYPE_COMMON' :
 					T = Major.common
 					Card.Img = T.cover
@@ -953,7 +967,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		Min :
 		[
 			'SESSDATA',
-			'buvid3' // Required to read articles
+			'buvid3', // Required to read articles
+			/*
+				Required to load acc/info
+				{code:-352,message:'风控校验失败',ttl:1,data:{v_voucher:'voucher_...'}}
+			*/
+			'bili_jct'
 		],
 		Sign : function()
 		{

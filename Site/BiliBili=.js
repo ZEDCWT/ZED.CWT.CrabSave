@@ -256,6 +256,10 @@ module.exports = O =>
 								Card.Link = BiliBiliArticleRead + T.id
 								Meta.push(T.title)
 								break
+							case 'MAJOR_TYPE_BLOCKED' :
+								T = Major.blocked
+								O.Bad('{Blocked} ' + T.hint_message)
+								break
 							case 'MAJOR_TYPE_COMMON' :
 								T = Major.common
 								Meta.push
