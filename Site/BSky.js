@@ -289,6 +289,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					},Embed.images)
 					break
 				case 'app.bsky.embed.record#view' :
+				case 'app.bsky.embed.recordWithMedia#view' :
+					Embed.media && WR.Each(function(V)
+					{
+						Img.push(V.fullsize)
+					},Embed.media.images)
 					Record = Embed.record
 					switch (Record.$type)
 					{
@@ -320,6 +325,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								More : 'Unknown Record Type ' + Record.$type
 							})
 					}
+					break
+				case 'app.bsky.embed.video#view' :
+					Img.push(Embed.thumbnail)
+					More.push(Embed.aspectRatio.width,Embed.aspectRatio.height)
 					break
 				default :
 					More.push('Unknown Embed ' + Embed.$type)

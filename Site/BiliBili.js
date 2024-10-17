@@ -18,6 +18,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	PrefixBgmEpisode = 'ep',
 	PrefixCheeseSeason = 'CheeseSeason',
 	PrefixCheeseEpisode = 'CheeseEpisode',
+	PrefixMediaList = 'ml',
 	PrefixUGCSeries = 'UGCSeries',
 	PrefixUGCSeason = 'UGCSeason',
 
@@ -27,7 +28,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliBgmSeason = WW.Tmpl(BiliBili,'bangumi/play/ss',undefined),
 	BiliBiliBgmEpisode = WW.Tmpl(BiliBili,'bangumi/play/ep',undefined),
 	// BiliBiliOpus = WW.Tmpl(BiliBili,'opus/',undefined), // Basically a timeline
-	// BiliBiliMediaListFav = WW.Tmpl(BiliBili,'medialist/detail/ml',undefined),
+	BiliBiliMediaListFav = WW.Tmpl(BiliBili,'medialist/detail/ml',undefined),
 	// BiliBiliMyList = WW.Tmpl(BiliBili,'mylist/mylist-',undefined,'.js'),
 	BiliBiliAudio = BiliBili + 'audio/',
 	BiliBiliAudioURL = BiliBili + 'audio/au',
@@ -125,12 +126,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	// BiliBiliTimelineVote = WW.Tmpl(BiliBiliTimeline,'vote/h5/index/#/result?vote_id=',undefined),
 	BiliBiliLive = 'https://live.bilibili.com/',
 	// Appkey = '20bee1f7a18a425c',
+	ReqWEBID = '',
 	ReqWBISalt = 'bdab7be0a313f1d847ccd8999e1b4370',ReqWBILast,
 	ReqWBI = function(Q)
 	{
 		Q = WW.N.ReqOH(Q,'Referer',BiliBili)
 		return (ReqWBILast && WW.Now() < 144E5 + ReqWBILast ? WX.Just() : O.API(BiliBiliSpace + 2).FMap(function(Space)
 		{
+			ReqWEBID = WC.JTOO(WC.UD(WW.MF(/<script id="__RENDER_DATA__[^>]+>([^<]+)/,Space)))?.access_id
 			Space = WW.MR(function(D,V){return D.push(V[1]),D},[],/<script[^>]+src="([^"]+space[^"]+)/g,Space)
 			return WX.From(Space)
 				.FMap(O.API)
@@ -154,6 +157,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		{
 			if (WR.StartW(BiliBiliAPISpaceWBI,Q.URL))
 			{
+				if (ReqWEBID)
+					Q.URL += '&w_webid=' + ReqWEBID
 				Q.URL += '&wts=' + ~~(WW.Now() / 1E3)
 				Q.URL += '&w_rid=' + WR.Low(WC.HEXS(WC.MD5
 				(
@@ -677,6 +682,20 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					Card.Img = T.cover
 					More.push(O.Ah(T.area_id + ':' + T.area_name,BiliBiliLive + T.room_id))
 					break
+				case 'MAJOR_TYPE_MEDIALIST' :
+					T = Major.medialist
+					Card.Title = T.title
+					Card.Img = T.cover
+					More.push(O.Ah(T.badge.text + ' ' + PrefixMediaList + T.id,BiliBiliMediaListFav(T.id)),
+						T.sub_title)
+					break
+				case 'MAJOR_TYPE_MUSIC' :
+					T = Major.music
+					Card.ID = PrefixAudio + T.id
+					Card.Img = T.cover
+					Card.Title = T.title
+					More.push(T.label)
+					break
 				case 'MAJOR_TYPE_OPUS' :
 					T = Major.opus
 					Card.Img = WR.Pluck('url',T.pics)
@@ -740,8 +759,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				// 505308039164421683 Link to a bangumi
 			case 'DYNAMIC_TYPE_COURSES_SEASON' :
 			case 'DYNAMIC_TYPE_DRAW' :
-			case 'DYNAMIC_TYPE_LIVE' :
 			case 'DYNAMIC_TYPE_LIVE_RCMD' :
+			case 'DYNAMIC_TYPE_LIVE' :
+			case 'DYNAMIC_TYPE_MEDIALIST' :
+			case 'DYNAMIC_TYPE_MUSIC' :
 			case 'DYNAMIC_TYPE_PGC_UNION' :
 			case 'DYNAMIC_TYPE_UGC_SEASON' :
 			case 'DYNAMIC_TYPE_WORD' :
@@ -2115,6 +2136,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				PrefixBgmEpisode === Q[1] ? BiliBiliBgmEpisode(Q[2]) :
 				PrefixCheeseSeason === Q[1] ? BiliBiliCheeseSeason(Q[2]) :
 				PrefixCheeseEpisode === Q[1] ? BiliBiliCheeseEpisode(Q[2]) :
+				PrefixMediaList === Q[1] ? BiliBiliMediaListFav(Q[2]) :
 				BiliBiliVideo(Q[2].replace(/#\d+$/,''))
 		}
 	}

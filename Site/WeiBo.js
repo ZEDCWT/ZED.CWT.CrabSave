@@ -332,6 +332,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						'fangle', // 24 Fqe3CtiOB
 						'file', // 2
 						'group', // 0
+						'image', // 2 C3u48tdxX
+						'product', // 2 CpAXie5ma
 						'shop', // 2
 						'story', // 31
 						'topic', // 0

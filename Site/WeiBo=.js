@@ -34,6 +34,7 @@ VideoIgnoreDomain =
 	'qq.com',
 	'tudou.com',
 	'weibo.com',
+	'www.acfun.cn',
 ],
 VideoIgnoreDomainRX = RegExp(`//[^/]*(${VideoIgnoreDomain.map(WR.SafeRX).join`|`})/`);
 
@@ -133,6 +134,14 @@ module.exports = O =>
 						T;
 						Cover = Q.page_pic ||
 							Card && Card.pic_url
+						Cover = Cover && WR.RepL(
+						[
+							/*
+								JAcRs5olK
+									The page_pic has no domain part
+							*/
+							/^(?=\/assets\/artwork)/,'https://apps.apple.com',
+						],Cover)
 						switch (Q.object_type)
 						{
 							case 'adFeedVideo' :
@@ -318,6 +327,8 @@ module.exports = O =>
 									'fangle', // 24
 									'file', // 2
 									'group', // 0
+									'image', // 2
+									'product', // 2
 									'shop', // 2
 									'topic', // 0
 									'user', // 2
@@ -444,7 +455,7 @@ module.exports = O =>
 										(
 											'',
 											'\t' + WW.StrDate(B.created_at,WW.DateColS) + ' ' + B.user.idstr + ':' + B.user.screen_name,
-											'\t' + B.source + ' Like ' + B.like_count, // Why this field has no ending `s` as the main comment...
+											'\t' + (B.source ? B.source + ' ' : '') + 'Like ' + B.like_count, // Why this field has no ending `s` as the main comment...
 											'\t' + B.text_raw,
 										)
 									},V.comments)

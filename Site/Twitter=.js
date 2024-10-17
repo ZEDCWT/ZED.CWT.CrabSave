@@ -1,7 +1,7 @@
 'use strict'
 var
 WW = require('@zed.cwt/wish'),
-{R : WR,C : WC,N : WN} = WW,
+{R : WR,C : WC,N : WN,X : WX} = WW,
 
 // Twitter = 'https://twitter.com/',
 Twitter = 'https://x.com/',
@@ -169,6 +169,8 @@ module.exports = O =>
 					Part.push(Ext.ReqB(O.Coke(MakeHead(TwitterAPIBroadcastShow(V)))).FMap(Broadcast =>
 					{
 						Broadcast = Common(Broadcast).broadcasts[V]
+						if (Broadcast.tweet_id !== ID)
+							return WX.Empty
 						return Ext.ReqB(O.Coke(MakeHead(TwitterAPILiveStream(Broadcast.media_key)))).Map(Live =>
 						{
 							Live = Common(Live).source
@@ -268,7 +270,7 @@ module.exports = O =>
 						case 'broadcast' :
 							if (T.broadcast_thumbnail_original)
 								Cover = T.broadcast_thumbnail_original.image_value.url
-							Meta.push(Title = T.broadcast_title.string_value)
+							Meta.push(T.broadcast_title.string_value)
 							SolveMediaBroadcast(T.broadcast_id.string_value)
 							break
 						case 'live_event' :
@@ -281,7 +283,7 @@ module.exports = O =>
 						case 'periscope_broadcast' :
 							if (T.thumbnail_original)
 								Cover = T.thumbnail_original.image_value.url
-							Meta.push(Title = T.title.string_value)
+							Meta.push(T.title.string_value)
 							SolveMediaBroadcast(T.id.string_value)
 							break
 						case 'player' :

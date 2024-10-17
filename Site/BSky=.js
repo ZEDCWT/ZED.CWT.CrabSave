@@ -88,7 +88,7 @@ module.exports = O =>
 				};
 				return Ext.ReqB(PadAuth(Q,Coke[1])).Map(Common)
 			};
-			return Req({URL : BSkyMethodPost,QS : {uri : MakePostURI(ID)}}).Map(B =>
+			return Req({URL : BSkyMethodPost,QS : {uri : MakePostURI(ID)}}).FMap(B =>
 			{
 				var
 				Prelude = [],
@@ -104,7 +104,26 @@ module.exports = O =>
 					Title,
 					PostID,
 					Part = [],
-					PartURL,PartExt,
+					PartAddImage = Q =>
+					{
+						var URL = [],Ext = [];
+						WR.Each(V =>
+						{
+							URL.push(V = V.fullsize)
+							Ext.push(WN.ExtN(V.replace(/@(?=\w+$)/,'.')))
+						},Q)
+						WR.Any(V => V.alt,Q) ?
+							WR.EachU((V,F) =>
+							{
+								Part.push(
+								{
+									Title : V.alt,
+									URL : [URL[F]],
+									Ext : Ext[F],
+								})
+							},Q) :
+							Part.push({URL,Ext})
+					},
 					T;
 
 					switch (B.$type)
@@ -159,32 +178,13 @@ module.exports = O =>
 									T.thumb && Part.push({URL : [T.thumb],Ext : '.jpg'})
 									break
 								case 'app.bsky.embed.images#view' :
-									PartURL = []
-									PartExt = []
-									WR.Each(V =>
-									{
-										PartURL.push(V = V.fullsize)
-										PartExt.push(WN.ExtN(V.replace(/@(?=\w+$)/,'.')))
-									},Embed.images)
-
-									WR.Any(V => V.alt,Embed.images) ?
-										WR.EachU((V,F) =>
-										{
-											Part.push(
-											{
-												Title : V.alt,
-												URL : [PartURL[F]],
-												Ext : PartExt[F],
-											})
-										},Embed.images) :
-										Part.push(
-										{
-											URL : PartURL,
-											Ext : PartExt,
-										})
+									PartAddImage(Embed.images)
 									break
 								case 'app.bsky.embed.record#view' :
+								case 'app.bsky.embed.recordWithMedia#view' :
+									Embed.media && PartAddImage(Embed.media.images)
 									Record = Embed.record
+									Record = Record.$type ? Record : Record.record
 									switch (Record.$type)
 									{
 										case 'app.bsky.embed.record#viewNotFound' :
@@ -192,7 +192,7 @@ module.exports = O =>
 											SolvePost(
 											{
 												$type : 'app.bsky.feed.defs#threadViewPost',
-												post : Embed.record,
+												post : Record,
 											},Info ? Prelude : Meta,Prefix)
 											break
 										case 'app.bsky.feed.defs#generatorView' :
@@ -200,6 +200,10 @@ module.exports = O =>
 										default :
 											WW.Throw('Unknown Record Type ' + Record.$type)
 									}
+									break
+								case 'app.bsky.embed.video#view' :
+									Info.Cover = Embed.thumbnail
+									Part.push({URL : [Embed.playlist]})
 									break
 								default :
 									WW.Throw('Unknown Embed ' + Embed.$type)
@@ -220,7 +224,11 @@ module.exports = O =>
 					Meta,
 					Reply,
 				)
-				return Info
+				return O.Part(Info.Part,Ext).Map(Part => (
+				{
+					...Info,
+					Part,
+				}))
 			})
 		},
 		Range : false,

@@ -12,6 +12,7 @@ PrefixCheeseEpisode = 'CheeseEpisode',
 BiliBili = 'https://www.bilibili.com/',
 BiliBiliVideo = WW.Tmpl(BiliBili,'video/av',undefined),
 BiliBiliBgmEpisode = WW.Tmpl(BiliBili,'bangumi/play/ep',undefined),
+BiliBiliMediaListFav = WW.Tmpl(BiliBili,'medialist/detail/ml',undefined),
 BiliBiliAudio = BiliBili + 'audio/',
 BiliBiliAudioWeb = BiliBiliAudio + 'music-service-c/web/',
 BiliBiliAudioWebInfo = WW.Tmpl(BiliBiliAudioWeb,'song/info?sid=',undefined),
@@ -155,7 +156,7 @@ module.exports = O =>
 					}
 					if (T.dolby?.audio)
 					{
-						U.URL.push(SolveURL(T.dolby.audio))
+						U.URL.push(SolveURL(O.Best('id',T.dolby.audio)))
 						U.Ext.push('.Dolby.mp3')
 					}
 				}
@@ -306,6 +307,16 @@ module.exports = O =>
 									T.area_id + ':' + T.area_name,
 								)
 								break
+							case 'MAJOR_TYPE_MEDIALIST' :
+								T = Major.medialist
+								Card.Cover = T.cover
+								Meta.push
+								(
+									Card.Title = T.title,
+									BiliBiliMediaListFav(T.id),
+									T.sub_title
+								)
+								break
 							// case 'MAJOR_TYPE_OPUS' :
 							case 'MAJOR_TYPE_PGC' :
 								T = Major.pgc
@@ -353,13 +364,15 @@ module.exports = O =>
 						case 'DYNAMIC_TYPE_COMMON_VERTICAL' :
 						case 'DYNAMIC_TYPE_COURSES_SEASON' :
 						case 'DYNAMIC_TYPE_DRAW' :
-						case 'DYNAMIC_TYPE_LIVE' :
 						case 'DYNAMIC_TYPE_LIVE_RCMD' :
+						case 'DYNAMIC_TYPE_LIVE' :
+						case 'DYNAMIC_TYPE_MEDIALIST' :
 						case 'DYNAMIC_TYPE_WORD' :
 							SolveMajor()
 							break
 						case 'DYNAMIC_TYPE_ARTICLE' :
 						case 'DYNAMIC_TYPE_AV' :
+						case 'DYNAMIC_TYPE_MUSIC' :
 						case 'DYNAMIC_TYPE_PGC_UNION' :
 							NonTopCheck()
 							SolveMajor()
