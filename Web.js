@@ -1718,7 +1718,7 @@
 								WV.Attr(Img,'src',MakeImgURL(V.Img[ImgCurrent]))
 								WV.T(ImgMultiShow,WW.ShowLI(V.Img.length,ImgCurrent))
 							};
-							if (WW.IsFunc(URL))
+							if (WW.IsFunc(URL) && null != V.ID)
 								URL = URL(V.ID)
 							if (WW.IsArr(V.Img) && V.Img.length < 2)
 								V.Img = V.Img[0]

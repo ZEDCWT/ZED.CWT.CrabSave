@@ -94,6 +94,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		return O.API({URL : BSkySocialRPC + BSkyMethodResolveHandle,QS : {handle : Q}})
 			.Map(function(B){return Common(B).did})
 	}),
+	SolveUserName = function(Q)
+	{
+		return Q.displayName || Q.handle
+	},
 	MakeCursor = function(Q,S)
 	{
 		return O.More(function(ID)
@@ -208,7 +212,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			}]
 		}
 
-		if (TopPost.notFound) return R
+		if (TopPost.notFound ||
+			'app.bsky.feed.defs#blockedPost' === TopPost.$type) return R
 
 		/*
 			$type : 'app.bsky.feed.defs#threadViewPost'
@@ -260,7 +265,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Img : Img,
 			Title : Title,
 			TitleView : TitleView,
-			UP : TopPost.author.displayName,
+			UP : SolveUserName(TopPost.author),
 			UPURL : BSkyAppProfile + TopPost.author.handle,
 			Date : PostRecord.createdAt,
 			More : More
@@ -295,6 +300,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						Img.push(V.fullsize)
 					},Embed.media.images)
 					Record = Embed.record
+					Record = Record.$type ? Record : Record.record
 					switch (Record.$type)
 					{
 						case 'app.bsky.embed.record#viewNotFound' :
@@ -309,7 +315,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								ID : Record.did,
 								URL : Record.uri,
 								Title : Record.displayName,
-								UP : Record.creator.displayName,
+								UP : SolveUserName(Record.creator),
 								UPURL : BSkyAppProfile + Record.creator.handle,
 								Date : Record.indexedAt,
 								More :
@@ -317,6 +323,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 									Record.description
 								]
 							})
+							break
+						case 'app.bsky.embed.video#view' :
+							Img.push(Embed.thumbnail)
 							break
 						default :
 							R.push(

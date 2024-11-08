@@ -7,9 +7,11 @@ WW = require('@zed.cwt/wish'),
 {R : WR,X : WX,C : WC,N : WN} = WW,
 
 NicoChannel = 'https://nicochannel.jp/',
-NicoChannelAPI = 'https://nfc-api.nicochannel.jp/',
+// NicoChannelAPI = 'https://nfc-api.nicochannel.jp/',
+NicoChannelAPI = 'https://api.nicochannel.jp/',
 NicoChannelAPIFC = NicoChannelAPI + 'fc/',
-NicoChannelAPIFCContentProviderChannel = NicoChannelAPIFC + 'content_providers/channels',
+// NicoChannelAPIFCContentProviderChannel = NicoChannelAPIFC + 'content_providers/channels',
+NicoChannelAPIFCContentProviderChannelDomain = NicoChannelAPIFC + 'content_providers/channel_domain',
 NicoChannelAPIFCVideo = WW.Tmpl(NicoChannelAPIFC,'video_pages/',undefined),
 NicoChannelAPIFCVideoSession = WW.Tmpl(NicoChannelAPIFC,'video_pages/',undefined,'/session_ids'),
 NicoChannelAPIFCVideoCommentToken = WW.Tmpl(NicoChannelAPIFC,'video_pages/',undefined,'/comments_user_token'),
@@ -24,7 +26,7 @@ module.exports = O =>
 {
 	var
 	SiteToID = {},
-	SiteByID = {},
+	// SiteByID = {},
 	SolveCookieLast = '',SolveCookieCache = {},
 	SolveCookieToken = Site =>
 	{
@@ -63,6 +65,7 @@ module.exports = O =>
 				}
 			})).Map(Common),
 
+			/*
 			SolveSiteAll = () => Ext.ReqB(O.Req(NicoChannelAPIFCContentProviderChannel)).Map(B =>
 			{
 				Common(B).content_providers.forEach(V =>
@@ -75,6 +78,15 @@ module.exports = O =>
 			SolveSiteID = Site => WR.Has(Site,SiteToID) ?
 				WX.Just(SiteToID[Site]) :
 				SolveSiteAll().Map(() => SiteToID[Site] ?? WW.Throw('No Such Site #' + Site)),
+			*/
+			SolveSiteID = Site => WR.Has(Site,SiteToID) ?
+				WX.Just(SiteToID[Site]) :
+				Ext.ReqB(O.Req({URL : NicoChannelAPIFCContentProviderChannelDomain,QS : {current_site_domain : NicoChannel + Site}})).Map(B =>
+				{
+					B = Common(B).content_providers
+					B || WW.Throw('No Such Site #' + Site)
+					return SiteToID[Site] = B.id
+				}),
 
 			PadSiteInfo = R => SolveSiteID(Site)
 				.FMap(SiteID => Req(NicoChannelAPIFCFanClubSiteBaseInfo(SiteID)))

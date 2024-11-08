@@ -12,9 +12,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 
 	NicoChannel = 'https://nicochannel.jp/',
 	NicoChannelArticle = WW.Tmpl(NicoChannel,undefined,'/articles/news'),
-	NicoChannelAPI = 'https://nfc-api.nicochannel.jp/',
+	// NicoChannelAPI = 'https://nfc-api.nicochannel.jp/',
+	NicoChannelAPI = 'https://api.nicochannel.jp/',
 	NicoChannelAPIFC = NicoChannelAPI + 'fc/',
-	NicoChannelAPIFCContentProviderChannel = NicoChannelAPIFC + 'content_providers/channels',
+	// NicoChannelAPIFCContentProviderChannel = NicoChannelAPIFC + 'content_providers/channels',
+	NicoChannelAPIFCContentProviderChannelDomain = NicoChannelAPIFC + 'content_providers/channel_domain',
 	NicoChannelAPIFCVideo = WW.Tmpl(NicoChannelAPIFC,'video_pages/',undefined),
 	NicoChannelAPIFCFanClubSite = NicoChannelAPIFC + 'fanclub_sites/',
 	NicoChannelAPIFCFanClubSiteBaseInfo = WW.Tmpl(NicoChannelAPIFCFanClubSite,undefined,'/page_base_info'),
@@ -76,6 +78,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 	})
 	*/
 	SiteToID = {},
+	/*
 	SiteByID = {},
 	SolveSiteAll = function()
 	{
@@ -95,6 +98,18 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		{
 			return WR.Has(Site,SiteToID) ? SiteToID[Site] : WW.Throw('No Such Site #' + Site)
 		})
+	},
+	*/
+	SolveSiteID = function(Site)
+	{
+		return WR.Has(Site,SiteToID) ?
+			WX.Just(SiteToID[Site]) :
+			O.API({URL : NicoChannelAPIFCContentProviderChannelDomain,QS : {current_site_domain : NicoChannel + Site}}).Map(function(B)
+			{
+				B = Common(B).content_providers
+				B || WW.Throw('No Such Site #' + Site)
+				return SiteToID[Site] = B.id
+			})
 	},
 	SolveSiteMeta = WX.CacheL(function(Site)
 	{
