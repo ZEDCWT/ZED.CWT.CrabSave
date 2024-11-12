@@ -147,10 +147,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	},
 	SolveDetail = function(B)
 	{
+		B = Common(B)
 		return SolveVideoList(WR.Map(function(V)
 		{
 			return (V.contentDetails || V.id).videoId
-		},Common(B).items))
+		},B.items))
+			.Map(function(N)
+			{
+				N.Len = B.pageInfo.totalResults
+				return N
+			})
 	},
 	SolvePlayList = function(ID,Page)
 	{
