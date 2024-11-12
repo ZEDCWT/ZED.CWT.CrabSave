@@ -16,13 +16,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	// NicoRepo = WW.Tmpl(Nico,'api/nicorepo/timeline/my/followingUser?cursor=',undefined,'&client_app=pc_myrepo'),
 	NicoSearch = WW.Tmpl(Nico,'search/',undefined,'?page=',undefined,undefined),
 	NicoNVAPI = 'https://nvapi.nicovideo.jp/',
-	NicoNVAPIUser = WW.Tmpl(NicoNVAPI,'v1/users/',undefined,'/videos?sortKey=registeredAt&sortOrder=desc&pageSize=',O.Size,'&page=',undefined),
+	NicoNVAPIUser = WW.Tmpl(NicoNVAPI,'v3/users/',undefined,'/videos?sortKey=registeredAt&sortOrder=desc&pageSize=',O.Size,'&page=',undefined),
 	NicoNVAPIFollowing = WW.Tmpl(NicoNVAPI,'v1/users/me/following/users?pageSize=',O.Size,'&cursor=',undefined),
 	NicoNVAPIMyList = WW.Tmpl(NicoNVAPI,'v2/mylists/',undefined,'?pageSize=',O.Size,'&page=',undefined),
-	// NicoPublicAPI = 'https://public.api.nicovideo.jp/',
-	// NicoPublicAPITop = WW.Tmpl(NicoPublicAPI,'v1/timelines/nicorepo/last-1-month/my/pc/entries.json?list=followingUser&untilId=',undefined),
-	NicoPublicAPIRepo = 'https://api.repoline.nicovideo.jp/',
-	NicoPublicAPIRepoTop = WW.Tmpl(NicoPublicAPIRepo,'v1/timelines/nicorepo/last-1-month/my/pc/entries.json?untilId=',undefined),
+	// NicoAPIPublic = 'https://public.api.nicovideo.jp/',
+	// NicoAPIPublicTop = WW.Tmpl(NicoAPIPublic,'v1/timelines/nicorepo/last-1-month/my/pc/entries.json?list=followingUser&untilId=',undefined),
+	// NicoRepolineAPI = 'https://api.repoline.nicovideo.jp/',
+	// NicoRepolineAPITop = WW.Tmpl(NicoRepolineAPI,'v1/timelines/nicorepo/last-1-month/my/pc/entries.json?untilId=',undefined),
+	NicoAPIFeed = 'https://api.feed.nicovideo.jp/',
+	NicoAPIFeedActFollowingAll = WW.Tmpl(NicoAPIFeed,'v1/activities/followings/all?context=my_timeline&cursor=',undefined),
 	NicoChannel = 'https://ch.nicovideo.jp/',
 	NicoChannelCH = NicoChannel + 'ch',
 	NicoChannelVideo = WW.Tmpl(NicoChannel,undefined,'/video?sort=f&order=d&page=',undefined),
@@ -58,7 +60,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	{
 		return /^\d/.test(Q) ? PrefixChannel + Q : Q
 	},
-	MakeNV = function(Q)
+	MakeAPI = function(Q)
 	{
 		return WW.N.ReqOH(Q,'X-Frontend-Id',WW.Rnd(3389))
 	},
@@ -77,7 +79,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	{
 		return WR.Map(function(V,B)
 		{
-			B = V.video || V
+			B = V.video || V.essential || V
 			return {
 				ID : SolveSM(B.id),
 				Img : B.thumbnail.url,
@@ -338,7 +340,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			JudgeVal : O.ValNum,
 			View : function(ID,Page)
 			{
-				return O.Req(MakeNV(NicoNVAPIMyList(ID,-~Page))).Map(function(B)
+				return O.Req(MakeAPI(NicoNVAPIMyList(ID,-~Page))).Map(function(B)
 				{
 					B = CommonNV(B).mylist
 					return {
@@ -376,7 +378,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			JudgeVal : O.ValNum,
 			View : function(ID,Page)
 			{
-				return O.API(MakeNV(NicoNVAPIUser(ID,-~Page))).Map(function(B)
+				return O.API(MakeAPI(NicoNVAPIUser(ID,-~Page))).Map(function(B)
 				{
 					B = CommonNV(B)
 					return {
@@ -425,10 +427,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			JudgeVal : false,
 			View : O.More(function()
 			{
-				return O.Req(MakeNV(NicoNVAPIFollowing('')))
+				return O.Req(MakeAPI(NicoNVAPIFollowing('')))
 			},function(I,Page)
 			{
-				return O.Req(MakeNV(NicoNVAPIFollowing(I[Page])))
+				return O.Req(MakeAPI(NicoNVAPIFollowing(I[Page])))
 			},function(B)
 			{
 				B = CommonNV(B)
@@ -485,12 +487,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Name : 'Top',
 			Judge : /^$/,
 			JudgeVal : false,
+			/*
 			View : O.More(function()
 			{
-				return O.Req(NicoPublicAPIRepoTop(''))
+				return O.Req(NicoRepolineAPITop(''))
 			},function(I,Page)
 			{
-				return O.Req(NicoPublicAPIRepoTop(I[Page]))
+				return O.Req(NicoRepolineAPITop(I[Page]))
 			},function(B)
 			{
 				B = CommonMeta(B)
@@ -509,6 +512,41 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							More : WV.Parse(V.title)
 						} : null
 					},B.data)
+				}]
+			})
+			*/
+			View : O.More(function()
+			{
+				return O.Req(MakeAPI(NicoAPIFeedActFollowingAll('')))
+			},function(I,Page)
+			{
+				return O.Req(MakeAPI(NicoAPIFeedActFollowingAll(I[Page])))
+			},function(B)
+			{
+				B = WC.JTO(B)
+				'ok' === B.code || O.Bad(B.code,B.message)
+				return [B.nextCursor,
+				{
+					Item : WR.Map(function(V)
+					{
+						return {
+							ID : SolveSM(V.content.id),
+							URL : V.content.url,
+							Img : V.thumbnailUrl,
+							Title : V.content.title,
+							UP : V.actor.name,
+							UPURL : V.actor.url,
+							Date : V.createdAt,
+							More : WR.Unnest(
+							[
+								V.message.text,
+								WR.Map(function(B)
+								{
+									return O.Ah(B.title,B.url)
+								},V.relatedLinks || [])
+							])
+						}
+					},B.activities)
 				}]
 			})
 		}],
