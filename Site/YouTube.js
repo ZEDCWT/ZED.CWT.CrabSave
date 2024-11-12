@@ -140,14 +140,17 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			return U[1]
 		})
 	},
+	SolveVideoList = function(B)
+	{
+		return GoogleAPIReq(GoogleAPIYouTubeVideo(B))
+			.Map(function(N){return SolveSnippet(N)})
+	},
 	SolveDetail = function(B)
 	{
-		B = Common(B)
-		return GoogleAPIReq(GoogleAPIYouTubeVideo(WR.Map(function(V)
+		return SolveVideoList(WR.Map(function(V)
 		{
 			return (V.contentDetails || V.id).videoId
-		},B.items)))
-			.Map(function(N){return SolveSnippet(N)})
+		},Common(B).items))
 	},
 	SolvePlayList = function(ID,Page)
 	{
@@ -289,17 +292,35 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		{
 			var
 			Token,
-			Item = [];
+			Item = [],
+			NeedDetail = [],
+			NeedDetailIndex = {};
 			O.Walk(B,function(V,F)
 			{
 				return 'continuationCommand' === F ?
 					Token = V.token :
 					Map(Item,V,F)
 			})
-			return [Token,
+			WR.EachU(function(V,F)
 			{
-				Item : Item
-			}]
+				if (V.NeedDetail)
+				{
+					NeedDetail.push(V.ID)
+					NeedDetailIndex[V.ID] = F
+				}
+			},Item)
+			return (NeedDetail.length ? SolveVideoList(NeedDetail) : WX.Just([]))
+				.Map(function(B)
+				{
+					WR.Each(function(V)
+					{
+						Item[NeedDetailIndex[V.ID]] = V
+					},B.Item)
+					return [Token,
+					{
+						Item : Item
+					}]
+				})
 		})
 	},
 	Menu =
@@ -545,6 +566,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						ID : T,
 						Img : V.thumbnail.sources[0].url,
 						Title : V.overlayMetadata.primaryText.content,
+						NeedDetail : true,
 					})
 				}
 

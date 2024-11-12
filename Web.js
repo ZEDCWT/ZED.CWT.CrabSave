@@ -4092,10 +4092,10 @@
 						return (Cache && Page ?
 							S(Cache,Page,ID) :
 							Q(ID,Cache = [],Count = [],Len = 0))
+							.FMap(function(R){return WX.Any(M(R,Cache,Page))})
 							.Map(function(R)
 							{
 								var Index;
-								R = M(R,Cache,Page)
 								if (R[0]) Cache[-~Page] = R[0]
 								R = R[1]
 								Len -= (Count[Page] || 0) - (Count[Page] = R.Item.length)
