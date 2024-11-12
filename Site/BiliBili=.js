@@ -40,6 +40,7 @@ BiliBiliAPIPUGVPlayURL = WW.Tmpl(BiliBiliAPIPUGV,'player/web/playurl?ep_id=',und
 BiliBiliAPIPolymer = BiliBiliAPI + 'x/polymer/',
 BiliBiliAPIPolymerDynamic = BiliBiliAPIPolymer + 'web-dynamic/v1/',
 BiliBiliAPIPolymerDynamicDetail = WW.Tmpl(BiliBiliAPIPolymerDynamic,'detail?id=',undefined),
+BiliBiliAPIPolymerDynamicDetailOpus = WW.Tmpl(BiliBiliAPIPolymerDynamic,'detail?id=',undefined,'&features=itemOpusStyle'),
 // BiliBiliVCAPI = 'https://api.vc.bilibili.com/',
 // BiliBiliVCAPIDetail = WW.Tmpl(BiliBiliVCAPI,'clip/v1/video/detail?video_id=',undefined,'&need_playurl=1'),
 // BiliBiliVCAPIDynamicAPIRoot = BiliBiliVCAPI + 'dynamic_svr/v1/dynamic_svr/',
@@ -221,18 +222,23 @@ module.exports = O =>
 			})
 			*/
 
-			if (PrefixTimeline === Prefix) return Ext.ReqB(O.Coke(BiliBiliAPIPolymerDynamicDetail(ID))).Map(B =>
+			if (PrefixTimeline === Prefix) return WX.From(
+			[
+				BiliBiliAPIPolymerDynamicDetail(ID),
+				BiliBiliAPIPolymerDynamicDetailOpus(ID),
+			]).FMapE(V => Ext.ReqB(O.Coke(V)).Map(Common)).All().Map(([DynamicNormal,DynamicOpus]) =>
 			{
 				var
 				SetUnk = Q => O.Bad('Unknown ' + Q),
-				SolveCard = (B,IsTop) =>
+				SolveCard = (Normal,Opus,IsTop) =>
 				{
 					var
-					ModAuthor = B.modules.module_author,
-					ModDynamic = B.modules.module_dynamic,
+					ModAuthor = Normal.modules.module_author,
+					ModDynamic = Normal.modules.module_dynamic,
 					Meta = [],Part = [],
+					CommonTitle = [],
 					Card = {},
-					NonTopCheck = () => IsTop && O.Bad('BadTop ' + B.type),
+					NonTopCheck = () => IsTop && O.Bad('BadTop ' + Normal.type),
 					SolveMajor = () =>
 					{
 						var
@@ -328,6 +334,7 @@ module.exports = O =>
 						}
 					},
 					T;
+
 					if (ModAuthor) switch(ModAuthor.type)
 					{
 						case 'AUTHOR_TYPE_NORMAL' :
@@ -341,9 +348,16 @@ module.exports = O =>
 						default :
 							SetUnk(ModAuthor.type)
 					}
+
+					if (T = WR.Path(['modules','module_dynamic','major','opus','title'],Opus))
+					{
+						CommonTitle.push(T)
+						Meta.push(T)
+					}
 					if (T = ModDynamic && ModDynamic.desc)
 					{
-						Meta.push(Card.Title = T.text)
+						CommonTitle.push(T.text)
+						Meta.push(T.text)
 						WR.Each(V =>
 						{
 							switch (V.type)
@@ -354,8 +368,11 @@ module.exports = O =>
 							}
 						},T.rich_text_nodes)
 					}
-					Card.Link = BiliBiliTimeline + B.id_str
-					switch (B.type)
+
+					Card.Title = CommonTitle.join`\n`
+					Card.Link = BiliBiliTimeline + Normal.id_str
+
+					switch (Normal.type)
 					{
 						case 'DYNAMIC_TYPE_NONE' :
 							NonTopCheck()
@@ -378,7 +395,7 @@ module.exports = O =>
 							SolveMajor()
 							break
 						case 'DYNAMIC_TYPE_FORWARD' :
-							T = SolveCard(B.orig,false)
+							T = SolveCard(Normal.orig,Opus.orig,false)
 							Meta = O.MetaJoin(Meta,
 							[
 								...T.Link ? [T.Link] : [],
@@ -387,14 +404,13 @@ module.exports = O =>
 							])
 							break
 						default :
-							SetUnk(B.type)
+							SetUnk(Normal.type)
 					}
 					Card.Meta = Meta
 					Card.Part = Part
 					return Card
 				};
-				B = Common(B).item
-				return SolveCard(B,true)
+				return SolveCard(DynamicNormal.item,DynamicOpus.item,true)
 			})
 
 			/*

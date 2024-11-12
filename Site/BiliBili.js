@@ -72,12 +72,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliAPIPolymerDynamic = BiliBiliAPIPolymer + 'web-dynamic/v1/',
 	BiliBiliAPIPolymerDynamicFeature = '&features=' +
 	[
-		// 'itemOpusStyle', // Enabling this will convert `module_dynamic.major.type` to `MAJOR_TYPE_OPUS`
+		/*
+			Enabling this will convert `module_dynamic.major.type` to `MAJOR_TYPE_OPUS` if possible
+			We have to enable it since title field only exists in `MAJOR_TYPE_OPUS`
+		*/
+		'itemOpusStyle',
 		'listOnlyfans',
 		'opusBigCover',
 		'onlyfansVote'
 	],
-	BiliBiliAPIPolymerDynamicDetail = WW.Tmpl(BiliBiliAPIPolymerDynamic,'detail?id=',undefined),
+	BiliBiliAPIPolymerDynamicDetail = WW.Tmpl(BiliBiliAPIPolymerDynamic,'detail?id=',undefined,BiliBiliAPIPolymerDynamicFeature),
 	BiliBiliAPIPolymerDynamicNew = WW.Tmpl(BiliBiliAPIPolymerDynamic,'feed/all?type=all',BiliBiliAPIPolymerDynamicFeature,'&offset=',undefined),
 	BiliBiliAPIPolymerDynamicSpace = WW.Tmpl(BiliBiliAPIPolymerDynamic,'feed/space?',BiliBiliAPIPolymerDynamicFeature,'&host_mid=',undefined,'&offset=',undefined),
 	BiliBiliAPISeries = BiliBiliAPI + 'x/series/',
@@ -604,6 +608,21 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				return Ele || (Link ? WV.Ah(V.text,Link) : V.orig_text)
 			},Q)
 		},
+		SolveIDFromURL = function(U)
+		{
+			var
+			T;
+			if (!U) return
+
+			if (!WR.StartW('//www.bilibili.com',U))
+			{
+				More.push(U)
+				return
+			}
+
+			if (T = /read\/(cv\d+)/.exec(U))
+				Card.ID = T[1]
+		},
 		SolveMajor = function()
 		{
 			var
@@ -698,8 +717,18 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					break
 				case 'MAJOR_TYPE_OPUS' :
 					T = Major.opus
+					SolveIDFromURL(T.jump_url)
 					Card.Img = WR.Pluck('url',T.pics)
-					Card.Title = T.summary.text
+					Card.Title = WR.Where(WR.Id,
+					[
+						T.title,
+						T.summary.text
+					]).join('\n')
+					Card.TitleView =
+					[
+						WV.X(WV.T(WV.A('strong'),T.title)),
+						SolveRichText(T.summary.rich_text_nodes)
+					]
 					break
 				case 'MAJOR_TYPE_PGC' :
 					T = Major.pgc
