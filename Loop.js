@@ -379,6 +379,10 @@ module.exports = Option =>
 		}
 		else if (InfoDispatching) InfoDispatchAgain = true
 	},
+	/*
+		Currently if all info pending tasks are `paused` and `error`, it will not trigger even after some error interval is exceeded
+		Let us just treat it as a feature
+	*/
 	InfoDelay = MakeDelay(() => DB.TopErr(2),InfoDispatch),
 	InfoEnd = Q =>
 	{
@@ -739,11 +743,21 @@ module.exports = Option =>
 	DownloadDelay = MakeDelay(() => DB.TopErr(1),DownloadDispatch),
 	DownloadEnd = (Q,SuppressDispatch) =>
 	{
-		if (DownloadRunning.has(Q))
+		var
+		HasChanged,
+		Del = Q =>
 		{
 			DownloadRunning.get(Q)()
 			DownloadRunning.delete(Q)
 			DownloadStatus.delete(Q)
+			HasChanged = true
+		};
+		WW.IsArr(Q) ?
+			DownloadRunning.forEach((_,F) =>
+				Q[0] <= F && F < Q[1] && Del(F)) :
+			DownloadRunning.has(Q) && Del(Q)
+		if (HasChanged)
+		{
 			SuppressDispatch || DownloadDispatch()
 			Option.OnEnd()
 		}

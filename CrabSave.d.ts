@@ -40,6 +40,8 @@ declare module CrabSaveNS
 
 			Play(Row : number) : WishNS.Provider<any>
 			Pause(Row : number) : WishNS.Provider<any>
+			PlayRange(RowMinIncluded : number,RowMaxExcluded : number) : WishNS.Provider<any>
+			PauseRange(RowMinIncluded : number,RowMaxExcluded : number) : WishNS.Provider<any>
 
 			TopNoSize(Count : number,From : number) : WishNS.Provider<Pick<Task,'Row' | 'Site' | 'ID' | 'State' | 'Error' | 'Down'>[]>
 			SaveInfo(Row : number,Info : Omit<Task,'Size'> &

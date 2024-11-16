@@ -1,5 +1,5 @@
 
-è
+á
 Proto.proto"å
 DBTask
 Row (RRow
@@ -62,13 +62,15 @@
 Done (RDone"=
 TaskNew
 Ver (RVer 
-Task (2.DBTaskBriefRTask".
+Task (2.DBTaskBriefRTask"J
 TaskPlay
 Ver (RVer
-Row (RRow"/
+Row (RRow
+RowRange (RRowRange"K
 	TaskPause
 Ver (RVer
-Row (RRow"D
+Row (RRow
+RowRange (RRowRange"D
 
 TaskRemove
 Ver (RVer
@@ -98,8 +100,14 @@ TaskRemove
 State (RState
 At (RAt"
 ShortCut
-JSON (	RJSON"
-Tick"=
+JSON (	RJSON"F
+Tick
+
+TimeClient (R
+TimeClient
+
+TimeServer (R
+TimeServer"=
 Error
 Src (	RSrc
 Msg (	RMsg

@@ -89,12 +89,14 @@ message TaskPlay
 {
 	sint64 Ver = 1;
 	sint64 Row = 2;
+	repeated sint64 RowRange = 3;
 }
 
 message TaskPause
 {
 	sint64 Ver = 1;
 	sint64 Row = 2;
+	repeated sint64 RowRange = 3;
 }
 
 message TaskRemove
@@ -156,6 +158,8 @@ message ShortCut
 
 message Tick
 {
+	sint64 TimeClient = 1;
+	sint64 TimeServer = 2;
 }
 
 message Error

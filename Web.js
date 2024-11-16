@@ -46,6 +46,8 @@
 	ConfURLAPI = 'R/',
 	ConfURLReq = 'U?',
 
+	TimeOffset = 0,
+
 	Proto = {/*{Proto}*/},
 	ProtoInv = WR.Inv(Proto),
 	ProtoJar = WC.PBJ().S(WC.B91P({/*{ProtoPB}*/})),
@@ -391,7 +393,7 @@
 	WSSend = WSNotConnected,
 	WSAuthPrecheck = function(){return WSCipher || WSNotAuthed()},
 	WSNoti = Noti.O(),
-	WSTick = WW.To(3E5,function(){WSSend(Proto.Tick)},true).F(),
+	WSTick = WW.To(3E5,function(){WSSend(Proto.Tick,{TimeClient : WW.Now()})},true).F(),
 	TokenStepA = function(Q){return WC.HSHA512(Q,'j!ui+Ju8?j')},
 	TokenStepB = function(Q){return WC.HSHA512('!(|[.:O9;~',Q)},
 	WS = WB.WS(
@@ -458,7 +460,7 @@
 					ProgressMap[Type] = [Check,T]
 				}
 				WSOnProgress()
-				WSSend(Proto.Tick)
+				WSTick.C()
 				return
 			}
 
@@ -2455,13 +2457,15 @@
 					LoadErr,RenewLast,
 					OnTick = function(T)
 					{
+						var
+						ErrorEndAt = 1E3 * Setting.Delay + ErrorAt - TimeOffset;
 						if (S[0] && !WR.Has(S[0].Row,ProgressMap))
 						{
 							T = null == Task ? LangSolve('LstLoad') :
 								null != LoadErr ? LoadErr :
 								TaskRenewing[S[0].Row] ? LangSolve(WR.Has('Size',Task) ? 'HotRenew' : 'HotSolve') :
-								HasError && WW.Now() <= 1E3 * Setting.Delay + ErrorAt && (Task.State || !WR.Has('Size',Task)) ?
-									LangSolve('Err') + ' ' + RemainS(1E3 * Setting.Delay + ErrorAt - WW.Now()) :
+								HasError && WW.Now() <= ErrorEndAt && (Task.State || !WR.Has('Size',Task)) ?
+									LangSolve('Err') + ' ' + RemainS(ErrorEndAt - WW.Now()) :
 								HasError && ErrorToRenew ? LangSolve('HotReady') :
 								!WR.Has('Size',Task) ? LangSolve('HotReady') :
 								Task.State ? LangSolve('HotQueue') :
@@ -2593,7 +2597,23 @@
 						}
 					}
 				}
-			});
+			}),
+
+			PlayPause = function(H)
+			{
+				return function(Data)
+				{
+					WR.Has(Data.Row,HotShown) ?
+						HotShown[Data.Row].S(H) :
+						WR.Has(Data.RowRange) && WR.Each(function(Seg)
+						{
+							WR.EachU(function(V,F)
+							{
+								Seg[0] <= F && F < Seg[1] && V.S(H)
+							},HotShown)
+						},WR.SplitAll(2,Data.RowRange))
+				}
+			};
 
 			ToolbarSet(K,
 			[
@@ -2617,16 +2637,8 @@
 						BrowserUpdate([DBBriefKey(Data)])
 					}
 				})
-				.On(Proto.TaskPlay,function(Data)
-				{
-					WR.Has(Data.Row,HotShown) &&
-						HotShown[Data.Row].S(true)
-				})
-				.On(Proto.TaskPause,function(Data)
-				{
-					WR.Has(Data.Row,HotShown) &&
-						HotShown[Data.Row].S(false)
-				})
+				.On(Proto.TaskPlay,PlayPause(true))
+				.On(Proto.TaskPause,PlayPause(false))
 				.On(Proto.TaskHist,function(Data)
 				{
 					var T;
@@ -3713,6 +3725,15 @@
 
 		Proto.ShortCut,WSOnSC,
 
+		Proto.Tick,function(Data)
+		{
+			var Now = WW.Now();
+			if (WR.Has('TimeClient',Data) && WR.Has('TimeServer',Data))
+			{
+				TimeOffset = Data.TimeServer - (Data.TimeClient + Now) / 2
+				DebugLog('TimeOffset',TimeOffset,'|',Data.TimeClient,Data.TimeServer,Now)
+			}
+		},
 		Proto.Error,function(Data)
 		{
 			Noti.S(
@@ -4182,6 +4203,7 @@
 		}
 		Conf.Unsafe && WW.Merge(CrabSave.Unsafe = Unsafe,
 		{
+			TimeOffset : function(){return TimeOffset},
 			Proto : Proto,
 			SiteMap : SiteMap,
 			SiteAll : SiteAll,

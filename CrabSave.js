@@ -159,17 +159,24 @@ module.exports = Option =>
 	RecErrTaskList = [],
 	RecErrTask = (Row,Err,State,At) =>
 	{
+		var
+		ClearErr = Row =>
+		{
+			WR.Del(Row,RecErrTaskMap)
+			Err = RecErrTaskList.indexOf(Row)
+			~Err && RecErrTaskList.splice(Err,1)
+			WebSocketBroadcast(Proto.TaskErr,{Row})
+			WebSocketBroadcast(Proto.AuthErr,{Row})
+		},
+		F;
 		Err = ErrorS(Err)
 		if (null == Err)
 		{
-			if (WR.Has(Row,RecErrTaskMap))
+			if (WW.IsArr(Row)) WR.EachU((_,F) =>
 			{
-				WR.Del(Row,RecErrTaskMap)
-				Err = RecErrTaskList.indexOf(Row)
-				~Err && RecErrTaskList.splice(Err,1)
-				WebSocketBroadcast(Proto.TaskErr,{Row})
-				WebSocketBroadcast(Proto.AuthErr,{Row})
-			}
+				Row[0] <= F && F < Row[1] && ClearErr(F)
+			},RecErrTaskMap)
+			else WR.Has(Row,RecErrTaskMap) && ClearErr(Row)
 		}
 		else
 		{
@@ -554,6 +561,26 @@ module.exports = Option =>
 					}) :
 				Err(H,'ErrBadReq')
 		},
+		DBMultiSeg = (Q,S,E) =>
+		{
+			var
+			Seg = [],
+			SegCurr;
+
+			if (!WW.IsArr(Q))
+				return Err(H,'ErrBadReq')
+
+			Q.sort((Q,S) => Q - S).forEach(V =>
+			{
+				SegCurr && V === SegCurr[1] ?
+					++SegCurr[1] :
+					Seg.push(SegCurr = [V,1 + V])
+			})
+			DBMulti(Seg,S,E)
+		},
+
+		TickLastResponse = 0,
+
 		ActPlain =
 		{
 			[Proto.TaskOverview] : Data =>
@@ -573,9 +600,14 @@ module.exports = Option =>
 				)
 			},
 
-			[Proto.Tick] : () =>
+			[Proto.Tick] : Data =>
 			{
 				BriefOn = true
+				TickLastResponse + 3E5 < WW.Now() && Send(Proto.Tick,
+				{
+					...Data,
+					TimeServer : TickLastResponse = WW.Now(),
+				})
 			},
 
 			[Proto.DBBrief] : Data =>
@@ -779,22 +811,26 @@ module.exports = Option =>
 			}),
 			[Proto.AuthTaskPlay] : WithAuth(Data =>
 			{
-				DBMulti(Data.Row,V =>
-					DB.Play(V).Map(() => WebSocketBroadcast(Proto.TaskPlay,
+				DBMultiSeg(Data.Row,V =>
+					DB.PlayRange(...V).Map(() => WebSocketBroadcast(Proto.TaskPlay,
 					{
 						Ver : ++DBVersion,
-						Row : V,
-					})),Loop.Down)
+						RowRange : V,
+					})),() =>
+					{
+						Loop.Info()
+						Loop.Down()
+					})
 			}),
 			[Proto.AuthTaskPause] : WithAuth(Data =>
 			{
-				DBMulti(Data.Row,V =>
-					DB.Pause(V).Map(() =>
+				DBMultiSeg(Data.Row,V =>
+					DB.PauseRange(...V).Map(() =>
 					{
 						WebSocketBroadcast(Proto.TaskPause,
 						{
 							Ver : ++DBVersion,
-							Row : V,
+							RowRange : V,
 						})
 						RecErrTask(V)
 						Loop.Stop(V,true)

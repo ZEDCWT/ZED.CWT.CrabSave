@@ -235,6 +235,8 @@ module.exports = Option =>
 
 		Play : Row => Run(`update Task set State = 1 where ? = Row and 0 = State and Done is null`,[Row]),
 		Pause : Row => Run(`update Task set State = 0,Error = 0 where ? = Row and Done is null`,[Row]),
+		PlayRange : (RowMinIncluded,RowMaxExcluded) => Run(`update Task set State = 1 where ? <= Row and Row < ? and 0 = State and Done is null`,[RowMinIncluded,RowMaxExcluded]),
+		PauseRange : (RowMinIncluded,RowMaxExcluded) => Run(`update Task set State = 0,Error = 0 where ? <= Row and Row < ? and Done is null`,[RowMinIncluded,RowMaxExcluded]),
 
 		TopNoSize : (Count,From) => All(
 		`

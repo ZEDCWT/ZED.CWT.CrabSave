@@ -194,16 +194,18 @@ module.exports = O =>
 					S.bitrate - Q.bitrate),
 				SolveURL = (H,Q,X) =>
 				{
-					Q = Q.filter(V => WR.StartW(H,V.mimeType) && +V.contentLength)
-					Q[0] || O.Bad(B)
-					Q = Q[0]
+					Q = Q.filter(V => WR.StartW(H,V.mimeType) && +V.contentLength)[0]
+					if (!Q)
+						return false
 					Size.push(+Q.contentLength || null)
 					Ext.push('.' + WW.MF(/\/(\w+)/,Q.mimeType) + (X || ''))
 					URL.push(
 						Q.cipher ? WC.QSP(Q.cipher) :
 						Q.signatureCipher ? WC.QSP(Q.signatureCipher) :
 						Q.url)
+					return true
 				},
+				URLValid = false,
 				URL = [],Size = [],Ext = [],
 				T;
 				B[1] || O.Bad(B[0])
@@ -211,15 +213,23 @@ module.exports = O =>
 				if ((T = B.adaptiveFormats) && T.length)
 				{
 					T = SortBest(T)
-					SolveURL('video',T)
-					SolveURL('audio',T,'.mp3')
+					/*
+						OfQP7p8t5AU
+						gIRL5pcZNMk
+						Missing audio track
+					*/
+					URLValid = SolveURL('video',T) &&
+						SolveURL('audio',T,'.mp3')
 				}
-				else if ((T = B.formats) && T.length)
+				if (!URLValid)
 				{
-					T = SortBest(T)
-					SolveURL('video',T)
+					if ((T = B.formats) && T.length)
+					{
+						T = SortBest(T)
+						SolveURL('video',T)
+					}
+					else O.Bad(B)
 				}
-				else O.Bad(B)
 				return SolveTransform().Map(H => (
 				{
 					Title : Info.title,

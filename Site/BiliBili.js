@@ -562,6 +562,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	{
 		var
 		IsTop = !R,
+		Basic = B.basic,
 		ModAuthor = B.modules.module_author,
 		ModDynamic = B.modules.module_dynamic,
 		// ModInteraction = B.modules.module_interaction,
@@ -622,6 +623,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 
 			if (T = /read\/(cv\d+)/.exec(U))
 				Card.ID = T[1]
+			else if ('DYNAMIC_TYPE_ARTICLE' === B.type)
+			{
+				// A reposted article will not have the cv ID anywhere
+				if (Basic.rid_str)
+					Card.ID = PrefixArticle + Basic.rid_str
+				else
+					Card.Non = true
+			}
 		},
 		SolveMajor = function()
 		{
