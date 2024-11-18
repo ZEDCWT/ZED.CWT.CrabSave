@@ -51,12 +51,12 @@ declare module CrabSaveNS
 			H : (ID : string) => WishNS.Provider<U[]>,
 			ItemMap : (Q : U[],ID : string) => WishNS.Provider<SiteItem[]>
 		) : (ID : string,Page : number) => WishNS.Provider<SitePage>
-		More<U,N>
+		More<U,N,P>
 		(
-			Q : (ID : string,I : U[]) => WishNS.Provider<N>,
-			S : (I : U[],Page : number,ID : string) => WishNS.Provider<N>,
+			Q : (ID : string,I : U[],Pref : P) => WishNS.Provider<N>,
+			S : (I : U[],Page : number,ID : string,Pref : P) => WishNS.Provider<N>,
 			M : (Q : N,I : U[],Page : number) => [U,SitePage] | WishNS.Provider<[U,SitePage]>
-		) : WishNS.Provider<SitePage>
+		) : (ID : string,Page : number,Pref : P) => WishNS.Provider<SitePage>
 		Walk(Q : object,H : (V : object,F : string) => boolean) : void
 		SolU(Q : string,S? : string) : string
 		DTS(Q : string | number) : string

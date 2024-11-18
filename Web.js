@@ -1722,6 +1722,12 @@
 							};
 							if (WW.IsFunc(URL) && null != V.ID)
 								URL = URL(V.ID)
+							if (WW.IsArr(V.Img))
+							{
+								V.Img = WR.Where(WR.Id,V.Img)
+								if (!V.Img.length)
+									V.Img = null
+							}
 							if (WW.IsArr(V.Img) && V.Img.length < 2)
 								V.Img = V.Img[0]
 							if (V.Img)
@@ -1857,7 +1863,7 @@
 								GoPrefAction = Action
 								N = S.Pref(function()
 								{
-									Jump(PagerT.At())
+									Jump(0)
 								})
 								WV.Con(Pref,N.R)
 								GoPref = N.O
@@ -1940,7 +1946,7 @@
 										false !== B.Act.JudgeVal && WV.T(WV.Rock(ClassHintFuzzy,'span'),' ...') :
 										B.ID && WV.T(WV.Rock(ClassHintID,'span'),' ' + B.ID)
 								],
-								B.InpAct + (B.ID || '')
+								(B.InpAct || SiteSolveName(B.Site) + ' ' + B.Act.Name[0] + ' ') + (B.ID || '')
 							]
 						},S),false)
 						// Put Hint after Drop so that it does not cost an unnecessary hide & show
@@ -4108,11 +4114,11 @@
 				More : function(Q,S,M)
 				{
 					var Cache,Count,Len;
-					return function(ID,Page)
+					return function(ID,Page,Pref)
 					{
 						return (Cache && Page ?
-							S(Cache,Page,ID) :
-							Q(ID,Cache = [],Count = [],Len = 0))
+							S(Cache,Page,ID,Pref) :
+							Q(ID,Cache = [],Pref,Count = [],Len = 0))
 							.FMap(function(R){return WX.Any(M(R,Cache,Page))})
 							.Map(function(R)
 							{

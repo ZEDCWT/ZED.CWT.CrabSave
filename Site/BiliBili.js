@@ -44,6 +44,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliCheese = BiliBili + 'cheese/',
 	BiliBiliCheeseSeason = WW.Tmpl(BiliBiliCheese,'play/ss',undefined),
 	BiliBiliCheeseEpisode = WW.Tmpl(BiliBiliCheese,'play/ep',undefined),
+	BiliBiliTopic = WW.Tmpl(BiliBili,'v/topic/detail/?topic_id=',undefined),
 	BiliBiliAPI = 'https://api.bilibili.com/',
 	BiliBiliAPIArticle = BiliBiliAPI + 'x/article/',
 	BiliBiliAPIArticleList = WW.Tmpl(BiliBiliAPIArticle,'list/articles?id=',undefined),
@@ -82,8 +83,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		'onlyfansVote'
 	],
 	BiliBiliAPIPolymerDynamicDetail = WW.Tmpl(BiliBiliAPIPolymerDynamic,'detail?id=',undefined,BiliBiliAPIPolymerDynamicFeature),
-	BiliBiliAPIPolymerDynamicNew = WW.Tmpl(BiliBiliAPIPolymerDynamic,'feed/all?type=all',BiliBiliAPIPolymerDynamicFeature,'&offset=',undefined),
-	BiliBiliAPIPolymerDynamicSpace = WW.Tmpl(BiliBiliAPIPolymerDynamic,'feed/space?',BiliBiliAPIPolymerDynamicFeature,'&host_mid=',undefined,'&offset=',undefined),
+	BiliBiliAPIPolymerDynamicNew = WW.Tmpl(BiliBiliAPIPolymerDynamic,'feed/all?type=all&offset=',undefined,BiliBiliAPIPolymerDynamicFeature),
+	BiliBiliAPIPolymerDynamicSpace = WW.Tmpl(BiliBiliAPIPolymerDynamic,'feed/space?host_mid=',undefined,'&offset=',undefined,BiliBiliAPIPolymerDynamicFeature),
+	BiliBiliAPIPolymerDynamicTopic = WW.Tmpl(BiliBiliAPIPolymerDynamic,'feed/topic?topic_id=',undefined,'&sort_by=',undefined,'&offset=',undefined,'&page_size=',O.Size,BiliBiliAPIPolymerDynamicFeature),
 	BiliBiliAPISeries = BiliBiliAPI + 'x/series/',
 	// BiliBiliAPISeriesDetail = WW.Tmpl(BiliBiliAPISeries,'series?series_id=',undefined),
 	BiliBiliAPISeriesArchive = WW.Tmpl(BiliBiliAPISeries,'archives?mid=',undefined,'&series_id=',undefined,'&pn=',undefined,'&ps=',O.Size),
@@ -100,6 +102,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliAPIPUGVViewSeason = WW.Tmpl(BiliBiliAPIPUGV,'view/web/season?season_id=',undefined),
 	BiliBiliAPIPUGVViewSeasonByEP = WW.Tmpl(BiliBiliAPIPUGV,'view/web/season?ep_id=',undefined),
 	BiliBiliAPIPUGVByUser = WW.Tmpl(BiliBiliAPIPUGV,'app/web/season/page?mid=',undefined,'&pn=',undefined,'&ps=',O.Size),
+	BiliBiliAPP = 'https://app.bilibili.com/',
+	BiliBiliAPPTopicDetail = WW.Tmpl(BiliBiliAPP,'x/topic/web/details/top?topic_id=',undefined),
 	BiliBiliSearch = 'https://search.bilibili.com/',
 	BiliBiliSearchKeyword = WW.Tmpl(BiliBiliSearch,'all?keyword=',undefined),
 	BiliBiliSearchS = 'https://s.search.bilibili.com/',
@@ -811,6 +815,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				break
 			default :
 				SetUnk(B.type)
+		}
+		if (T = ModDynamic && ModDynamic.topic)
+		{
+			More.push(O.Ah(T.name,T.jump_url))
 		}
 		if (T = ModDynamic && ModDynamic.desc)
 		{
@@ -1964,6 +1972,77 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			{
 				return O.Req(BiliBiliAPIPolymerDynamicNew(I[Page]))
 			},SolvePolymerDynamicResponse)
+		},{
+			Name : 'Topic',
+			Judge : O.Num('Topic(?:_?ID)?'),
+			JudgeVal : O.ValNum,
+			Example :
+			[
+				'58849',
+				{
+					As : 'Inp',
+					Val : BiliBili + 'v/topic/detail/?topic_id=58849',
+					ID : '58849'
+				}
+			],
+			View : O.More(function(ID,I,Pref)
+			{
+				return O.Req(BiliBiliAPPTopicDetail(ID)).FMap(B =>
+				{
+					B = Common(B).top_details
+					I[0] =
+					{
+						Non : true,
+						ID : B.topic_item.id,
+						URL : BiliBiliTopic,
+						Img : B.topic_item.share_pic,
+						Title : B.topic_item.name,
+						UP : B.topic_creator.name,
+						UPURL : BiliBiliSpace + B.topic_creator.uid,
+						Date : 1E3 * B.topic_item.ctime,
+						Desc : B.topic_item.description,
+						More :
+						[
+							'View ' + B.topic_item.view,
+							'Discuss ' + B.topic_item.discuss
+						]
+					}
+					return O.Req(BiliBiliAPIPolymerDynamicTopic(ID,Pref && Pref.Sort || 0,''))
+				})
+			},function(I,Page,ID,Pref)
+			{
+				return O.Req(BiliBiliAPIPolymerDynamicTopic(ID,Pref && Pref.Sort || 0,I[Page]))
+			},function(B,I,Page)
+			{
+				B = Common(B).topic_card_list
+				return [B.has_more && B.offset,
+				{
+					Item : WR.Flatten(
+					[
+						Page ? [] : I[0],
+						WR.Map(function(V)
+						{
+							return SolvePolymerDynamic(V.dynamic_card_item)
+						},B.items)
+					]),
+					Pref : function(I)
+					{
+						var
+						Conf = B.topic_sort_by_conf,
+						R = WV.Pref({C : I});
+						R.S([['Sort',WV.Inp(
+						{
+							Inp : R.C('Sort'),
+							NoRel : O.NoRel
+						}).Drop(WR.Map(function(V)
+						{
+							return [V.sort_by,V.sort_name]
+						},Conf.all_sort_by))
+							.V(Conf.show_sort_by,true)]])
+						return R
+					}
+				}]
+			})
 		},{
 			Name : PrefixCheeseSeason,
 			Judge : O.Num('Cheese.*SS'),

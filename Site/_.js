@@ -160,24 +160,27 @@ module.exports = Option =>
 				var
 				Pack = Opt.Pack || WR.Id,
 				Req = Opt.Req || (Q => WN.Req(Option.Req(Q))),
-				T = Q.split` `,
+				U,T = Q.split` `,
 				Key,IV,Init;
 
-				if (1 === T.length)
+				if (T.length < 3)
 					return Pack(Q)
 
-				Q = T[0]
+				U = T[0]
 				Key = WC.Buff(WC.B91P(T[1]))
 				IV = WC.Buff(WC.B91P(T[2]))
 				Init = T[3]
 
-				return (Init ? Opt.Init(Q,Init) : WX.Just()).FMap(Init => WX.P(S =>
+				if (16 !== Key.length || 16 !== IV.length)
+					return Pack(Q)
+
+				return (Init ? Opt.Init(U,Init) : WX.Just()).FMap(Init => WX.P(S =>
 				{
 					var D = Crypto.createDecipheriv('AES-128-CBC',Key,IV);
 					Init && S.D(Init)
 					return Req(Pack(
 					{
-						URL : Q,
+						URL : U,
 						OnD : B => S.D(D.update(B)),
 						OnE : () => S.U(D.final()),
 					})).On('Err',S.E)
