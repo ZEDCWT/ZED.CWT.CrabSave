@@ -201,7 +201,7 @@ module.exports = Option =>
 		Lang : SettingMake('Lang',WW.IsStr,0),
 		Dir : SettingMake('Dir',WW.IsStr,PathSave),
 		Fmt : SettingMake('Fmt',WW.IsStr,'|Up|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?'),
-		Max : SettingMake('Max',Q => WW.IsIn(Q,1,25),4),
+		Max : SettingMake('Max',Q => WW.IsIn(Q,1,65),4),
 		Proxy : SettingMake('Proxy',WR.T,false),
 		ProxyURL : SettingMake('ProxyURL',WW.IsStr,undefined),
 		ProxyURLUpdate : Q =>

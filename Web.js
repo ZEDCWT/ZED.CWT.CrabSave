@@ -3520,7 +3520,7 @@
 				{
 					InpU : PC,
 					NoRel : InpNoRel
-				}).Drop(WR.Range(1,25)),
+				}).Drop(WR.Range(1,65)),
 				4
 			],[
 				LangSolve('SetProxy'),

@@ -21,6 +21,7 @@ module.exports = O =>
 	{
 		IDToken : null,
 		APIKey : null,
+		PageID : null,
 		Name : null,
 		Version : null,
 		SigTS : null,
@@ -89,6 +90,7 @@ module.exports = O =>
 					};
 					Client.IDToken = SolveJSONIfPresent(/ID_TOKEN":("[^"]+")/)
 					Client.APIKey = SolveJSONIfPresent(/API_KEY":("[^"]+")/)
+					Client.PageID = SolveJSONIfPresent(/DELEGATED_SESSION_ID":("[^"]+")/)
 					Client.Name = SolveJSONIfPresent(/CLIENT_NAME":("[^"]+")/)
 					Client.Version = SolveJSONIfPresent(/CLIENT_VERSION":("[^"]+")/)
 					Client.SigTS = SolveJSONIfPresent(/"STS":(\d+)/)
@@ -111,6 +113,8 @@ module.exports = O =>
 							WC.CokeP(O.CokeRaw()).SAPISID,
 							YouTube.slice(0,-1)
 						].join(' ')))),
+					'X-Goog-AuthUser' : '0',
+					'X-Goog-PageId' : Client.PageID,
 					Origin : YouTube.slice(0,-1),
 				},
 				JSON :
