@@ -14,6 +14,7 @@ BiliBiliVideo = WW.Tmpl(BiliBili,'video/av',undefined),
 BiliBiliBgmEpisode = WW.Tmpl(BiliBili,'bangumi/play/ep',undefined),
 BiliBiliMediaListFav = WW.Tmpl(BiliBili,'medialist/detail/ml',undefined),
 BiliBiliAudio = BiliBili + 'audio/',
+BiliBiliAudioURL = BiliBili + 'audio/au',
 BiliBiliAudioWeb = BiliBiliAudio + 'music-service-c/web/',
 BiliBiliAudioWebInfo = WW.Tmpl(BiliBiliAudioWeb,'song/info?sid=',undefined),
 BiliBiliAudioWebURL = WW.Tmpl(BiliBiliAudioWeb,'url?sid=',undefined,'&privilege=2&quality=2'),
@@ -31,8 +32,10 @@ BiliBiliAPIPlayURLList =
 	BiliBiliAPIPlayURL,
 	BiliBiliAPIPlayURLPGC,
 ],
-BiliBiliAPIPlayerSo = WW.Tmpl(BiliBiliAPI,'x/player.so?aid=',undefined,'&id=cid:',undefined),
-BiliBiliAPISteinNode = WW.Tmpl(BiliBiliAPI,'x/stein/nodeinfo?aid=',undefined,'&graph_version=',undefined,'&node_id=',undefined),
+// BiliBiliAPIPlayerSo = WW.Tmpl(BiliBiliAPI,'x/player.so?aid=',undefined,'&id=cid:',undefined),
+BiliBiliAPIPlayerWBI = WW.Tmpl(BiliBiliAPI,'x/player/wbi/v2?aid=',undefined,'&cid=',undefined),
+// BiliBiliAPISteinNode = WW.Tmpl(BiliBiliAPI,'x/stein/nodeinfo?aid=',undefined,'&graph_version=',undefined,'&node_id=',undefined),
+BiliBiliAPISteinEdge = WW.Tmpl(BiliBiliAPI,'x/stein/edgeinfo_v2?aid=',undefined,'&graph_version=',undefined,'&edge_id=',undefined),
 BiliBiliAPIPUGV = BiliBiliAPI + 'pugv/',
 BiliBiliAPIPUGVViewSeasonByEP = WW.Tmpl(BiliBiliAPIPUGV,'view/web/season?ep_id=',undefined),
 BiliBiliAPIPUGVPlayURL = WW.Tmpl(BiliBiliAPIPUGV,'player/web/playurl?ep_id=',undefined,'&qn=',undefined,'&fnver=0&fnval=4048&fourk=1'),
@@ -321,6 +324,17 @@ module.exports = O =>
 									Card.Title = T.title,
 									BiliBiliMediaListFav(T.id),
 									T.sub_title
+								)
+								break
+							case 'MAJOR_TYPE_MUSIC' :
+								NonTopCheck()
+								T = Major.music
+								Card.Cover = T.cover
+								Meta.push
+								(
+									BiliBiliAudioURL + T.id,
+									T.title,
+									T.label
 								)
 								break
 							// case 'MAJOR_TYPE_OPUS' :
@@ -627,6 +641,7 @@ module.exports = O =>
 				AV = B.View,
 				Part = [],
 				CIDFirst,
+				MetaExt = [],
 				R;
 				CIDFirst = AV.pages[0].cid
 				R =
@@ -634,36 +649,41 @@ module.exports = O =>
 					Title : AV.title,
 					UP : AV.owner.name,
 					Date : 1E3 * AV.pubdate,
-					Meta : O.MetaJoin
-					(
-						AV.dynamic,
-						[
-							AV.desc,
-							...B.Tags.map(V => WW.Quo(V.tag_id) + `#${V.tag_name}#` +
-								(V.jump_url ? ' ' + V.jump_url : '')),
-						]
-					),
 					Cover : AV.pic,
 					Part
 				}
 				return (AV.stein_guide_cid ?
-					Ext.ReqB(O.Coke(WN.ReqOH(BiliBiliAPIPlayerSo(ID,CIDFirst),'Referer',BiliBili))).FMap(G =>
+					Ext.ReqB(O.Coke(BiliBiliAPIPlayerWBI(ID,CIDFirst))).FMap(G =>
 					{
 						var
 						Graph = WW.MF(/graph_version":(\d+)/,G),
-						CID2Node = {[CIDFirst] : ''};
-						return WX.Exp(I =>
-							Ext.ReqB(O.Coke(BiliBiliAPISteinNode(ID,Graph,CID2Node[I])))
-								.Map(V =>
+						Visited = {},
+						All = [],
+						Enter = (Edge,CurrentCID) => Visited[CurrentCID] ?
+							WX.Empty :
+							Visited[CurrentCID] = Ext.ReqB(O.Coke(BiliBiliAPISteinEdge(ID,Graph,Edge))).FMap(B =>
+							{
+								var Next = [];
+								B = Common(B)
+								B.edges?.questions?.forEach(V => Next.push(...V.choices))
+								All.push(
 								{
-									V = Common(V)
-									return [V.title].concat(WR.Map(B =>
-									(
-										CID2Node[B.cid] = B.node_id,
-										B.cid
-									),V.edges ? V.edges.choices : []))
-								}),CIDFirst)
-							.Map(V => V[1].sort((Q,S) => Q[0] - S[0]))
+									CID : CurrentCID,
+									Title : B.title,
+									Next,
+								})
+								return WX.From(Next).FMapE(V => Enter(V.id,V.cid))
+							});
+						return Enter('',CIDFirst).Fin().Map(() =>
+						{
+							var Index = WR.ReduceU((D,V,F) => {D[V.CID] = F},{},All);
+							All.forEach((V,F) => MetaExt.push
+							(
+								`<${F}> CID ${V.CID} ${V.Title}`,
+								...V.Next.map(B => `	<${Index[B.cid]}> [${B.id}] ${B.option}`),
+							))
+							return All.map(V => [V.CID,V.Title])
+						})
 					}) :
 					WX.Just(WR.Map(V => [V.cid,V.part],AV.pages)))
 					.FMap(V =>
@@ -703,7 +723,20 @@ module.exports = O =>
 							Part.push(U)
 						}))
 					.Fin()
-					.Map(() => R)
+					.Map(() =>
+					{
+						R.Meta = O.MetaJoin
+						(
+							AV.dynamic,
+							[
+								AV.desc,
+								...B.Tags.map(V => WW.Quo(V.tag_id) + `#${V.tag_name}#` +
+									(V.jump_url ? ' ' + V.jump_url : '')),
+							],
+							MetaExt
+						)
+						return R
+					})
 			})
 		},
 		IDView : WR.RepL(

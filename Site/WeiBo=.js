@@ -328,6 +328,7 @@ module.exports = O =>
 									'file', // 2
 									'group', // 0
 									'image', // 2
+									'ny25_byebye', // 0
 									'product', // 2
 									'shop', // 2
 									'topic', // 0

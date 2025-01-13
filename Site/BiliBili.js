@@ -57,8 +57,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	// BiliBiliAPIWebView = WW.Tmpl(BiliBiliAPIWeb,'view?aid=',undefined),
 	BiliBiliAPIWebViewDetail = WW.Tmpl(BiliBiliAPIWeb,'view/detail?aid=',undefined),
 	BiliBiliAPIWebViewDetailBV = WW.Tmpl(BiliBiliAPIWeb,'view/detail?bvid=',undefined),
-	BiliBiliAPIPlayerSo = WW.Tmpl(BiliBiliAPI,'x/player.so?aid=',undefined,'&id=cid:',undefined),
-	BiliBiliAPISteinNode = WW.Tmpl(BiliBiliAPI,'x/stein/nodeinfo?aid=',undefined,'&graph_version=',undefined,'&node_id=',undefined),
+	// BiliBiliAPIPlayerSo = WW.Tmpl(BiliBiliAPI,'x/player.so?aid=',undefined,'&id=cid:',undefined),
+	BiliBiliAPIPlayerWBI = WW.Tmpl(BiliBiliAPI,'x/player/wbi/v2?aid=',undefined,'&cid=',undefined),
+	// BiliBiliAPISteinNode = WW.Tmpl(BiliBiliAPI,'x/stein/nodeinfo?aid=',undefined,'&graph_version=',undefined,'&node_id=',undefined),
+	BiliBiliAPISteinEdge = WW.Tmpl(BiliBiliAPI,'x/stein/edgeinfo_v2?aid=',undefined,'&graph_version=',undefined,'&edge_id=',undefined),
 	BiliBiliAPIFo = WW.Tmpl(BiliBiliAPI,'x/relation/followings?vmid=',undefined,'&ps=',O.Size,'&pn=',undefined),
 	BiliBiliAPISpace = BiliBiliAPI + 'x/space/',
 	BiliBiliAPISpaceNavNum = WW.Tmpl(BiliBiliAPISpace,'navnum?mid=',undefined),
@@ -1546,68 +1548,66 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					{
 						var CID = R[1].CID;
 						R.pop()
-						return O.API(WW.N.ReqOH(BiliBiliAPIPlayerSo(ID,CID),'Referer',BiliBili)).FMap(function(B)
+						return O.API(BiliBiliAPIPlayerWBI(ID,CID)).FMap(function(B)
 						{
 							var
-							Loaded = 0,Max = 0,
+							Loaded = 0,
 							Graph = WW.MF(/graph_version":(\d+)/,B),
-							CID2Node = WR.OfObj(CID,[1]),
-							Node2CID = {1 : CID};
-							Graph || O.Bad('Unable to acquire GraphVersion')
-							R[0].More.push('Graph ' + Graph)
-							return WX.Exp(function(I)
+							Visited = {},
+							AllCID = WR.OfObj(CID,true),AllCIDCount = 1,
+							Enter = function(Edge,CurrentCID)
 							{
-								return O.API(BiliBiliAPISteinNode(ID,Graph,CID === I ? '' : CID2Node[I][0])).Map(function(V)
+								return Visited[CurrentCID] ? WX.Empty : Visited[CurrentCID] = O.API(BiliBiliAPISteinEdge(ID,Graph,Edge)).FMap(B =>
 								{
-									V = Common(V)
-									++Loaded
+									var Next = [];
+									B = Common(B)
+									B.edges && WR.Each(function(V)
+									{
+										WR.Each(function(N)
+										{
+											if (!WR.Has(N.cid,AllCID))
+											{
+												AllCID[N.cid] = true
+												++AllCIDCount
+											}
+											Next.push(N)
+										},V.choices)
+									},B.edges.questions)
 									R.push(
 									{
-										ID : ID + '#' + I,
+										ID : ID + '#' + CurrentCID,
 										URL : BiliBiliVideo(ID),
-										Img : V.story_list[0].cover.replace(CID,I),
-										Title : V.title,
+										Img : B.story_list[0].cover.replace(CID,CurrentCID),
+										Title : B.title,
 										More :
 										[
-											ShowCID(I,CIDDB)
+											ShowCID(CurrentCID,CIDDB)
 										],
-										Next : V.edges && V.edges.choices,
-										CID : I,
-										Node : CID2Node[I]
+										Next : Next,
+										CID : CurrentCID
 									})
-									V = V.edges && WR.Map(function(B)
+									++Loaded
+									O.Progress('SteinEdge ' + Loaded + ' / ' + AllCIDCount)
+									return WX.From(Next).FMapE(function(V)
 									{
-										Node2CID[B.node_id] = B.cid
-										CID2Node[B.cid] ?
-											CID2Node[B.cid].push(B.node_id) :
-											CID2Node[++Max,B.cid] = [B.node_id]
-										return B.cid
-									},V.edges.choices)
-									O.Progress('Node ' + Loaded + ' / ' + Max)
-									return V
+										return Enter(V.id,V.cid)
+									})
 								})
-							},CID,true)
-						}).Map(function(C)
+							};
+							Graph || O.Bad('Unable to acquire GraphVersion')
+							R[0].More.push('Graph ' + Graph)
+							return Enter('',CID).Fin()
+						}).Map(function(Index)
 						{
-							WR.EachU(function(V){V.Node.sort(WR.Sub)})
-							R.sort(function(Q,S)
-							{
-								return !Q.Len - !S.Len ||
-									Q.Node[0] - S.Node[0]
-							})
-							C = WR.ReduceU(function(D,V,F){D[V.CID] = F},{},R)
+							Index = WR.ReduceU(function(D,V,F){D[V.CID] = F},{},R)
 							WR.EachU(function(V,F)
 							{
-								if (F)
-									V.More = WR.Flatten(
-									[
-										'Node' + WW.Quo(V.Node.length) + V.Node.join(' '),
-										WR.Map(function(B)
-										{
-											return WW.Quo(C[B.cid] + ':' + B.node_id) + B.option
-										},V.Next),
-										V.More
-									])
+								if (F) V.More = WR.Cat(V.More,WR.Map(function(B)
+								{
+									return '<' + Index[B.cid] + '> ' +
+										WW.Quo(B.id) +
+										B.option
+								},V.Next))
 							},R)
 							return R
 						})

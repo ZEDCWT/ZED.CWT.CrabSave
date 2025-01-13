@@ -44,14 +44,29 @@ TwitterAPIGraphQLFeature = WC.OTJ(
 module.exports = O =>
 {
 	var
+	IDNotFound = [],
+	IDNotFoundSet = new Set,
+
 	CommonErrorIgnore = new Set(
 	[
 		37,
 		214,
 	]),
-	Common = Q =>
+	Common = (Q,ID) =>
 	{
 		Q = WC.JTO(Q)
+		Q.errors?.forEach(V =>
+		{
+			switch (V.code)
+			{
+				case 144 :
+					null != ID &&
+						IDNotFoundSet.size - IDNotFoundSet.add(ID).size &&
+						2048 < IDNotFound.push(ID) &&
+						IDNotFoundSet.delete(IDNotFound.shift())
+					break
+			}
+		})
 		Q.errors?.some(V => !CommonErrorIgnore.has(V.code)) && O.Bad(Q.errors)
 		return Q
 	},
@@ -208,6 +223,17 @@ module.exports = O =>
 							Meta.push(
 								D.title.content,
 								'\t' + UnifiedCard.destination_objects[D.destination].data.url_data.url)
+							break
+						case 'grok_share' :
+							D.conversation_preview.forEach(V =>
+							{
+								Meta.push(('USER' === V.sender ? '> ' : '< ') + V.message)
+								V.mediaUrls?.forEach(B =>
+								{
+									MediaURL.push(B)
+									MediaExt.push(null)
+								})
+							})
 							break
 						case 'media' :
 							SolveMedia(UnifiedCard.media_entities[D.id])
@@ -437,6 +463,9 @@ module.exports = O =>
 				}
 			};
 
+			IDNotFoundSet.has(ID) &&
+				WW.Throw('144 Status Not Found')
+
 			return Ext.ReqB(O.Coke(MakeGraphQL(TwitterAPIGraphQLTweetDetail,
 			{
 				focalTweetId : ID,
@@ -479,7 +508,7 @@ module.exports = O =>
 						Legacy.retweeted_status_result?.result,
 					])
 				};
-				B = Common(B)
+				B = Common(B,ID)
 				O.Walk(B,V => 'TimelineAddEntries' === V.type && WR.Each(V =>
 				{
 					/*

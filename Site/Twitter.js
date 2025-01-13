@@ -76,6 +76,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					// {message:'Authorization: unauthorized',locations:[{line:2348,column:3}],path:['threaded_conversation_with_injections_v2','instructions',0,'entries',1,'content','itemContent','tweet_results','result','voiceInfo'],extensions:{name:'AuthorizationError',source:'Client',code:37,kind:'Permissions',tracing:{trace_id:'...'}},code:37,kind:'Permissions',name:'AuthorizationError',source:'Client',tracing:{trace_id:'...'}}
 				case 131 :
 					// {message:'Dependency: Internal error. (131)',locations:[{line:2606,column:3}],path:['user','result','timeline_v2','timeline','instructions',1,'entries',13,'content','itemContent','tweet_results','result','tweet','legacy','retweeted_status_result','result','tweet','quoted_status_result','result'],extensions:{name:'DependencyError',source:'Server',retry_after:0,code:131,kind:'Operational',tracing:{trace_id:...}},code:131,kind:'Operational',name:'DependencyError',source:'Server',retry_after:0,tracing:{trace_id:...}}
+					// {message:'_Missing: No status found with that ID.',locations:[{line:5,column:3}],path:['threaded_conversation_with_injections_v2'],extensions:{name:'GenericError',source:'Server',code:144,kind:'NonFatal',tracing:{trace_id:...}},code:144,kind:'NonFatal',name:'GenericError',source:'Server',tracing:{trace_id:...}}
 				case 214 :
 					// {message:'BadRequest: Failed to get part of the tweet',locations:[{line:2317,column:3}],path:['user','result','timeline','timeline','instructions',0,'entries',5,'content','itemContent','tweet_results','result','legacy','retweeted_status_result','result','vibe'],extensions:{name:'BadRequestError',source:'Client',code:214,kind:'Validation',tracing:{trace_id:'...'}},code:214,kind:'Validation',name:'BadRequestError',source:'Client',tracing:{trace_id:'...'}}
 					break
@@ -273,6 +274,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					*/
 					More.push(O.Ah(D.title.content,D = UnifiedCard.destination_objects[D.destination].data.url_data.url))
 					SolveLink(D)
+					break
+				case 'grok_share' :
+					/*
+						1866726746072174974
+					*/
+					WR.Each(function(V)
+					{
+						More.push(('USER' === V.sender ? '> ' : '< ') + V.message)
+						WR.Each(function(B){Img.push(B)},V.mediaUrls)
+					},D.conversation_preview)
 					break
 				case 'media' :
 					SolveMedia(UnifiedCard.media_entities[D.id])

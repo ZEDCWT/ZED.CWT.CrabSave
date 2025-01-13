@@ -63,8 +63,7 @@ module.exports = O =>
 			if (NFunc = /([$\w]+)\[/.exec(NMethod))
 				NMethod = WW.MF(RegExp(WR.SafeRX(NFunc[1]) + '=\\[([$\\w]+)]'),B)
 		}
-		else
-			NMethod = WW.MF(/^var [$\w]+=\[([$\w]+)];/m,B)
+		NMethod ||= WW.MF(/^var [$\w]+=\[([$\w]+)];/m,B)
 		if (NMethod)
 		{
 			NFunc = WW.MF(RegExp(WR.SafeRX(NMethod) + '=(function[^]+?\\.join(?:\\.call)?\\([^}]+})'),B)

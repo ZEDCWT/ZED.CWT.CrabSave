@@ -333,6 +333,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						'file', // 2
 						'group', // 0
 						'image', // 2 C3u48tdxX
+						'ny25_byebye', // 0 P6d9Wb5fg
 						'product', // 2 CpAXie5ma
 						'shop', // 2
 						'story', // 31
