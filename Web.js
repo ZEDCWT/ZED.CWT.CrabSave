@@ -11,6 +11,7 @@
 	Top = Wish.Top,
 	RegExp = Top.RegExp,
 	TopSet = Top.Set,
+	TopMap = Top.Map,
 	CrabSave = Top.CrabSave,
 	ConsoleLog = WR.Bind(Top.console.log,Top.console),
 	Unsafe = {},
@@ -553,23 +554,35 @@
 
 	MultiMap = function()
 	{
+		/*
+			Weird behavior in Chrome 132.0.6834.83
+			First added data (in this case, the top record of the history DB) cannot be accessed
+			And the size of the object is only 234E4
+			It was still fine in 131.0.6778.265
+		*/
 		var
-		D = {};
+		D = TopMap ? new TopMap : {};
 		return {
-			H : function(Q){return WR.Has(Q,D)},
-			G : function(Q){return D[Q]},
-			C : function(){D = {}},
+			H : function(Q){return TopMap ? D.has(Q) : WR.Has(Q,D)},
+			G : function(Q){return TopMap ? D.get(Q) : D[Q]},
+			C : function(){D = TopMap ? new TopMap : {}},
 			D : function(S,Q)
 			{
-				WW.SetAdd(D[S] || (D[S] = WW.Set()),Q)
+				var T;
+				if (TopMap)
+					(T = D.get(S)) || D.set(S,T = WW.Set())
+				else
+					T = D[S] || (D[S] = WW.Set())
+				WW.SetAdd(T,Q)
 				return Q
 			},
 			E : function(S,Q,T)
 			{
-				if (T = D[S])
+				if (T = TopMap ? D.get(S) : D[S])
 				{
 					WW.SetDel(T,Q)
-					WW.Size(T) || WR.Del(S,D)
+					if (!WW.Size(T))
+						TopMap ? D.delete(S) : WR.Del(S,D)
 				}
 			}
 		}

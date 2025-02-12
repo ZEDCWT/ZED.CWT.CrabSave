@@ -119,6 +119,9 @@ declare module CrabSaveNS
 			Pack? : SitePack
 			Range? : boolean
 			RefSpeed? : number
+			OnReq?(Q : WishNS.ReqO) : boolean
+			OnReq?(Q : WishNS.ReqO,S : string,H : import('http').IncomingHttpHeaders,Meta : string[]) : any
+			OnFin?() : any
 		}
 	}
 	interface SiteExt
@@ -164,6 +167,18 @@ declare module CrabSaveNS
 			D(Q : string) : ReturnType<SiteO>
 			P(Q : string) : WishNS.Provider<ReturnType<SiteO>>
 			F() : any
+
+			MakeReqRec() :
+			{
+				OnReq(Q : WishNS.ReqAccept) : (H : WishNS.ReqH,B : WishNS.ReqData) => any
+				Fill() : string[]
+			}
+			OnReq(Q : WishNS.ReqO) :
+			{
+				H(H : import('http').IncomingMessage) : any
+				D(Q : Buffer) : any
+				E() : any
+			} | null
 		}
 	}
 }

@@ -1,5 +1,6 @@
 'use strict'
 var
+Timers = require('timers'),
 WW = require('@zed.cwt/wish'),
 {R : WR,C : WC,N : WN,X : WX} = WW,
 
@@ -83,7 +84,49 @@ module.exports = O =>
 			variables : WC.OTJ(Data),
 			features : TwitterAPIGraphQLFeature,
 		}
-	});
+	}),
+
+	SolveAllEntry = B =>
+	{
+		var R = [];
+		O.Walk(B,V => 'TimelineAddEntries' === V.type && R.push(...V.entries))
+		return R
+	},
+
+	/**@type {Map<string,{At : number,Data : object}>}*/
+	TweetCache = new Map,
+	TweetCacheTimeout = 30 * 6E4,
+	TweetCacheTimer,
+	TweetCacheUpdateTimer = () =>
+	{
+		var
+		Now = WW.Now(),
+		First,
+		V;
+		for (V of TweetCache)
+		{
+			if (V[1].At + TweetCacheTimeout <= Now)
+				TweetCache.delete(V[0])
+			else
+				First = V[1]
+		}
+		if (!TweetCacheTimer && First)
+			TweetCacheTimer = Timers.setTimeout(() =>
+			{
+				TweetCacheTimer = null
+				TweetCacheUpdateTimer()
+			},First.At + TweetCacheTimeout - Now).unref()
+	},
+	TweetCacheSet = (ID,Entry,Meta) =>
+	{
+		TweetCache.has(ID) && TweetCache.delete(ID)
+		TweetCache.set(ID,
+		{
+			At : WW.Now(),
+			Data : [Entry,Meta],
+		})
+		TweetCacheTimer || TweetCacheUpdateTimer()
+	};
 
 	return {
 		URL : (ID,Ext) =>
@@ -461,12 +504,19 @@ module.exports = O =>
 					Info.Date = Legacy.created_at
 					Info.Part = Part
 				}
-			};
+			},
+
+			Req;
 
 			IDNotFoundSet.has(ID) &&
 				WW.Throw('144 Status Not Found')
 
-			return Ext.ReqB(O.Coke(MakeGraphQL(TwitterAPIGraphQLTweetDetail,
+			if (TweetCache.has(ID))
+			{
+				Req = WX.Just(TweetCache.get(ID).Data)
+				TweetCache.delete(ID)
+			}
+			else Req = Ext.ReqB(O.Coke(MakeGraphQL(TwitterAPIGraphQLTweetDetail,
 			{
 				focalTweetId : ID,
 				includePromotedContent : false,
@@ -476,7 +526,17 @@ module.exports = O =>
 				withQuickPromoteEligibilityTweetFields : true,
 				withVoice : true,
 				withV2Timeline : true
-			}))).FMap(B =>
+			}))).Map(B => [SolveAllEntry(Common(B,ID)).filter(V =>
+			{
+				/*
+				{component:'related_tweet',details:{conversationDetails:{conversationSection:'RelatedTweet'}}}
+				Though we could check `content.item[...].item.clientEventInfo` to see if we care it or not
+				Well, let us do it the easy (unstable?) way
+				*/
+				return /^(Tweet|ConversationThread)-/i.test(V.entryId)
+			})])
+
+			return Req.FMap(([Entry,MetaCache]) =>
 			{
 				var
 				Prelude = [],
@@ -508,26 +568,18 @@ module.exports = O =>
 						Legacy.retweeted_status_result?.result,
 					])
 				};
-				B = Common(B,ID)
-				O.Walk(B,V => 'TimelineAddEntries' === V.type && WR.Each(V =>
+				Entry.forEach(V => O.Walk(V,V =>
 				{
-					/*
-					{component:'related_tweet',details:{conversationDetails:{conversationSection:'RelatedTweet'}}}
-					Though we could check `content.item[...].item.clientEventInfo` to see if we care it or not
-					Well, let us do it the easy (unstable?) way
-					*/
-					/^(Tweet|ConversationThread)-/i.test(V.entryId) && O.Walk(V,V =>
-					{
-						var R = V.promotedMetadata;
-						R = R || AddMaybe(V)
-						return R
-					})
-				},V.entries))
+					var R = V.promotedMetadata;
+					R = R || AddMaybe(V)
+					return R
+				}))
 				Info.Meta = O.MetaJoin
 				(
 					Prelude,
 					Meta,
 					Reply,
+					MetaCache,
 				)
 				return O.Part(Info.Part,
 				{
@@ -564,5 +616,32 @@ module.exports = O =>
 			Pack : Q => WN.ReqOH(Q,'Referer',Twitter),
 		}),
 		Range : false,
+		OnReq : (Q,S,H,Meta) =>
+		{
+			if (Q.URL?.startsWith(TwitterAPIGraphQL))
+			{
+				if (!Meta) return true
+				S = Common(S)
+				SolveAllEntry(S).forEach(Entry => O.Walk(Entry,V =>
+				{
+					var Tweet;
+					switch (V?.__typename)
+					{
+						case 'Tweet' :
+							Tweet = V
+							break
+						case 'TweetWithVisibilityResults' :
+							Tweet = V.tweet
+							break
+					}
+					Tweet?.rest_id && TweetCacheSet(Tweet.rest_id,[Entry],Meta)
+				}))
+			}
+		},
+		OnFin : () =>
+		{
+			TweetCache.clear()
+			TweetCacheTimer && Timers.clearTimeout(TweetCacheTimer)
+		},
 	}
 }

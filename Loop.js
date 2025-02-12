@@ -151,40 +151,13 @@ module.exports = Option =>
 					SettingProxy = Setting.Proxy(),
 					SettingProxyURL = Setting.ProxyURL(),
 
-					ExtReqRecordCount = 0,
-					ExtReqRecord = [],
-					ExtReqRecordIndex = [],
-					ExtReqRecordHeadOmit = new Set(
-					[
-						'authorization',
-						'cookie',
-						'set-cookie'
-					]),
+					ExtReqRec = Option.Site.MakeReqRec(),
 					ExtReq = Q => WX.Just().FMap(() =>
 					{
-						var
-						ID = ExtReqRecordCount++,
-						Save = WW.IsObj(Q) ? WR.MapU((V,F) => 'Head' === F ?
-							WR.WhereU((_,F) => !ExtReqRecordHeadOmit.has(WR.Low(F)),V) :
-							V,Q) : Q;
-						ExtReqRecordIndex.push([ExtReqRecord.length,ID])
-						ExtReqRecord.push
-						(
-							WW.StrDate() + ' {Req} ',
-							WC.OTJ(Save).replace(/,"Head":{}|,"AC":false/g,'')
-						)
+						var ExtReqRecOnRes = ExtReqRec.OnReq(Q);
 						return WN.ReqU({...Q,AC : true}).Tap(([H,B]) =>
 						{
-							H = WR.Omit(['H'],H)
-							H.W = WR.SplitAll(2,H.W).filter(V => !ExtReqRecordHeadOmit.has(WR.Low(V[0]))).flat()
-							ExtReqRecordIndex.push([ExtReqRecord.length,ID])
-							ExtReqRecord.push
-							(
-								WW.StrDate() + ' {Res} ',
-								WC.OTJ(H),
-								B.length
-							)
-							WW.IsStr(B) && ExtReqRecord.push(B)
+							ExtReqRecOnRes(H,B)
 							if (!Q.AC && !/^[23]/.test(H.Code))
 								WW.Throw(WW.Err.NetBadStatus(H.Code))
 						})
@@ -201,6 +174,7 @@ module.exports = Option =>
 						{
 							var
 							Meta,
+							ExtReqMeta,
 							Cover,
 							Size = 0,
 							Part = [],
@@ -213,12 +187,12 @@ module.exports = Option =>
 								Meta = U.Meta || ''
 								if (WW.IsArr(Meta))
 									Meta = Meta.join`\n`
-								if (ExtReqRecordCount)
+								ExtReqMeta = ExtReqRec.Fill()
+								if (ExtReqMeta?.length)
 								{
-									ExtReqRecordIndex.forEach(V => ExtReqRecord[V[0]] += WW.ShowLI(ExtReqRecordCount,V[1]))
 									Meta = Meta ?
-										Meta + '\n\n\n' + ExtReqRecord.join`\n` :
-										ExtReqRecord.join`\n`
+										Meta + '\n\n\n' + ExtReqMeta.join`\n` :
+										ExtReqMeta.join`\n`
 								}
 								if (Meta)
 								{

@@ -282,7 +282,7 @@ module.exports = Option =>
 
 	RequestComm = SiteO.Req = LoopO.Req = Q =>
 	{
-		Q = WW.IsObj(Q) ? Q : {URL : Q}
+		Q = WW.IsObj(Q) ? {...Q} : {URL : Q}
 		;/^\w+:\/\//.test(Q.URL) || (Q.URL = Q.URL.replace(/^\/*/,'https://'))
 		if (WW.IsStr(Q.URL) && WR.StartW('https://www.googleapis.com/',Q.URL))
 			Q.URL = Q.URL.replace(/~GoogleAPIKey~/,Option.GoogleAPIKey || WC.B91S('DaXh66^N/%57mxMn{1D.V0}uQVa!PO~XvMDFm4<68%w7_Pck'))
@@ -392,7 +392,9 @@ module.exports = Option =>
 				for (;F < Q.length;F += 2)
 					WebServerProxyOmit.has(WR.Low(Q[F])) || S.setHeader(Q[F],Q[-~F])
 			},
-			Q;
+			Q,
+			ReqO,ReqU,
+			OnReq;
 			try
 			{
 				if (WR.StartW('~',Param))
@@ -407,23 +409,33 @@ module.exports = Option =>
 					Q = Param
 				}
 				else Q = Param
-				Q = RequestComm(Q)
-				Q.GZ = false
-				Q.Enc = false
-				Q.AC = true
-				Q.OnD = D => Res.write(D)
-				Q.OnE = () => Res.end()
-				Q = WN.Req(Q)
+				ReqO = RequestComm(Q)
+				ReqO.GZ = false
+				ReqO.Enc = false
+				ReqO.AC = true
+				OnReq = Site.OnReq(Q)
+				ReqO.OnD = D =>
+				{
+					Res.write(D)
+					OnReq?.D(D)
+				}
+				ReqO.OnE = () =>
+				{
+					Res.end()
+					OnReq?.E()
+				}
+				ReqU = WN.Req(ReqO)
 					.On('Req',O => WithHead && HeadWrite(Req,O))
 					.On('Res',O =>
 					{
 						WithHead && HeadWrite(O,Res)
 						Res.writeHead(O.statusCode,O.statusMessage)
+						OnReq?.H(O)
 					})
 					.On('Err',() => Res.destroy())
 				Res
-					.once('error',Q.End)
-					.once('close',Q.End)
+					.once('error',ReqU.End)
+					.once('close',ReqU.End)
 			}
 			catch(_)
 			{
@@ -435,20 +447,31 @@ module.exports = Option =>
 			var
 			Opt = WebServerProxyReq.get(Param),
 			Cipher,
-			Q;
+			ReqO,ReqU,
+			OnReq;
 			if (!Opt)
 				return WebServer404(Req,Res,Next)
 			try
 			{
 				Opt.To.F().C()
 				Cipher = Crypto.createCipheriv(ConfCryptoMethod,Opt.Key,Opt.IV)
-				Q = RequestComm(Opt.Req)
-				Q.Enc = false
-				Q.AC = true
-				Q.TO = 3E4
-				Q.OnD = D => Cipher.write(D)
-				Q.OnE = () => Cipher.end()
-				Q = WN.Req(Q)
+				ReqO = RequestComm(Opt.Req)
+				ReqO.Enc = false
+				ReqO.AC = true
+				ReqO.TO = 3E4
+				OnReq = Site.OnReq(Opt.Req)
+				ReqO.OnD = D =>
+				{
+					Cipher.write(D)
+					OnReq?.D(D)
+				}
+				ReqO.OnE = () =>
+				{
+					Cipher.end()
+					OnReq?.E()
+				}
+				ReqU = WN.Req(ReqO)
+					.On('Res',O => OnReq?.H(O))
 					.On('Head',O =>
 					{
 						var
@@ -468,10 +491,10 @@ module.exports = Option =>
 					})
 					.On('Err',() => Res.destroy())
 				Cipher
-					.once('error',Q.End)
+					.once('error',ReqU.End)
 					.pipe(Res)
-					.once('error',Q.End)
-					.once('close',Q.End)
+					.once('error',ReqU.End)
+					.once('close',ReqU.End)
 			}
 			catch(_)
 			{

@@ -84,6 +84,54 @@ module.exports = Option =>
 			URL : Q,
 			Raw : [],
 		})
+	},
+
+	ReqRecHeadOmit = new Set(
+	[
+		'authorization',
+		'cookie',
+		'set-cookie'
+	]),
+	MakeReqRec = () =>
+	{
+		var
+		Count = 0,
+		Record = [],
+		RecordIndex = [];
+		return {
+			OnReq : Q =>
+			{
+				var
+				ID = Count++,
+				Save = WW.IsObj(Q) ? WR.MapU((V,F) => 'Head' === F ?
+					WR.WhereU((_,F) => !ReqRecHeadOmit.has(WR.Low(F)),V) :
+					V,Q) : Q;
+				RecordIndex.push([Record.length,ID])
+				Record.push
+				(
+					WW.StrDate() + ' {Req} ',
+					WC.OTJ(Save).replace(/,"Head":{}|,"AC":false/g,'')
+				)
+				return (H,B) =>
+				{
+					H = WR.Omit(['H'],H)
+					H.W = WR.SplitAll(2,H.W).filter(V => !ReqRecHeadOmit.has(WR.Low(V[0]))).flat()
+					RecordIndex.push([Record.length,ID])
+					Record.push
+					(
+						WW.StrDate() + ' {Res} ',
+						WC.OTJ(H),
+						B.length
+					)
+					WW.IsStr(B) && Record.push(B)
+				}
+			},
+			Fill : () =>
+			{
+				RecordIndex.forEach(V => Record[V[0]] += WW.ShowLI(Count,V[1]))
+				return Record
+			},
+		}
 	};
 
 	WR.Each((V,S) =>
@@ -224,8 +272,41 @@ module.exports = Option =>
 		P : Q => WR.Has(Q,SiteMap) ? WX.Just(SiteMap[Q]) : WX.Throw(['ErrUnkSite',Q]),
 		F : () =>
 		{
+			All.forEach(V => V.OnFin?.())
 			WR.EachU((_,F) => WR.Del(require.resolve(`./${F}=`),require.cache),SiteMap)
 			WR.Del(__filename,require.cache)
-		}
+		},
+
+		MakeReqRec,
+		OnReq : Q =>
+		{
+			var Hit = All.filter(V => V.OnReq?.(Q));
+			if (!Hit.length) return
+
+			var
+			Head,
+			Buff = [],
+			Rec = MakeReqRec(),
+			RecOnRes = Rec.OnReq(Q);
+			return {
+				H : H => Head = H,
+				D : D => Buff.push(D),
+				E : () =>
+				{
+					var
+					Body = Buffer.concat(Buff).toString('UTF8'),
+					Meta;
+					RecOnRes(
+					{
+						Ver : Head.httpVersion,
+						Code : Head.statusCode,
+						Msg : Head.statusMessage,
+						W : Head.rawHeaders,
+					},Body)
+					Meta = Rec.Fill()
+					Hit.forEach(V => WW.Try(V.OnReq,[Q,Body,Head,Meta]))
+				},
+			}
+		},
 	}
 }
