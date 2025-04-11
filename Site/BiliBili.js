@@ -57,6 +57,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	// BiliBiliAPIWebView = WW.Tmpl(BiliBiliAPIWeb,'view?aid=',undefined),
 	BiliBiliAPIWebViewDetail = WW.Tmpl(BiliBiliAPIWeb,'view/detail?aid=',undefined),
 	BiliBiliAPIWebViewDetailBV = WW.Tmpl(BiliBiliAPIWeb,'view/detail?bvid=',undefined),
+	BiliBiliAPIWebSearchSquare = BiliBiliAPIWeb + 'wbi/search/square?limit=50',
 	// BiliBiliAPIPlayerSo = WW.Tmpl(BiliBiliAPI,'x/player.so?aid=',undefined,'&id=cid:',undefined),
 	BiliBiliAPIPlayerWBI = WW.Tmpl(BiliBiliAPI,'x/player/wbi/v2?aid=',undefined,'&cid=',undefined),
 	// BiliBiliAPISteinNode = WW.Tmpl(BiliBiliAPI,'x/stein/nodeinfo?aid=',undefined,'&graph_version=',undefined,'&node_id=',undefined),
@@ -314,6 +315,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							case 1 :
 								// Link to same site video
 								Line = BiliBiliVideo(V.link_card.card.biz_id)
+								break
+							case 15 :
+								// Link to same site article
+								Line = BiliBiliArticleRead + V.link_card.card.biz_id
 								break
 							default :
 								Line = WC.OTJ(V)
@@ -1211,6 +1216,34 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							]
 						},WR.Unnest(WR.Val(B.result)))
 						// Desc : WR.MapU(WR.Join(' '),WR.Ent(B.cost.about)).join(', ')
+					}
+				})
+			}
+		},{
+			Name : 'SearchSquare',
+			JudgeVal : false,
+			Example :
+			[
+				''
+			],
+			View : function()
+			{
+				return O.API(BiliBiliAPIWebSearchSquare).Map(function(B)
+				{
+					B = Common(B)
+					return {
+						Item : WR.Map(function(V)
+						{
+							return {
+								Non : true,
+								ID : V.keyword,
+								URL : BiliBiliSearchKeyword(WC.UE(V.keyword)),
+								UP : V.show_name,
+								UPURL : BiliBiliSearchKeyword(WC.UE(V.keyword)),
+								Img : V.icon,
+								More : V.heat_score
+							}
+						},B.trending.list)
 					}
 				})
 			}

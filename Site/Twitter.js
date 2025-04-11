@@ -223,6 +223,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		More = [],
 		Card,
 		UnifiedCard,
+		Note,
 
 		U = [],
 
@@ -311,6 +312,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		Title = SolveRichText(Title,Tweet.entities)
 		TitleView = Title[1]
 		Title = Title[0]
+		if (Ext && (Note = Ext.note_tweet))
+		{
+			TitleView =
+			Title = Note.note_tweet_results.result.text
+		}
 
 		Retweet && More.push(O.Ah('RT ' + Retweet,TwitterTweet(Retweet)))
 

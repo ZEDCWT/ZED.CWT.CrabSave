@@ -191,13 +191,13 @@ module.exports = Option =>
 					'',
 					...WW.IsArr(V) ? V : [V]
 				] : V),
-			Part : (Q,Ext = WN) => WX.From(Q)
+			Part : (Q,Ext = WN,Opt = {}) => WX.From(Q)
 				.FMapE(V => WX.Any(V).FMap(V =>
 				{
 					if (/\.m3u8?(\?.*)?$/i.test(V.URL[0]))
 					{
 						1 < V.length && Bad('Unexpected content following M3U')
-						return M3U(V.URL[0],Ext)
+						return M3U(V.URL[0],Ext,Opt)
 							.Map(B => ({...V,...B}))
 					}
 					return WX.Just(V)

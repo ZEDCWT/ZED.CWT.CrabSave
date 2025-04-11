@@ -560,8 +560,10 @@ module.exports = O =>
 								switch (V.link_card.card.link_type)
 								{
 									case 1 :
-										// Link to same site video
 										Line = BiliBiliVideo(V.link_card.card.biz_id)
+										break
+									case 15 :
+										Line = BiliBiliArticleRead + V.link_card.card.biz_id
 										break
 									default :
 										Line = O.Bad('Unknown LinkType #' + V.link_card.card.link_type + ' | ' + WC.OTJ(V))

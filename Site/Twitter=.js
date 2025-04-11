@@ -137,6 +137,7 @@ module.exports = O =>
 				var
 				Legacy = Tweet.legacy,
 				Card = Tweet.card,
+				Note = Tweet.note_tweet,
 				UnifiedCard,
 
 				Retweet = Legacy.retweeted_status_id_str ||
@@ -302,9 +303,19 @@ module.exports = O =>
 					TwitterTweetFull(User.screen_name,Legacy.id_str),
 					WW.StrDate(Legacy.created_at,WW.DateColS) + ' ' + User.name,
 				)
-				Title = SolveRichText(Title,Legacy.entities)
-				Meta.push(...Title)
-				Title = Title[0]
+
+				if (Note)
+				{
+					Title = Note.note_tweet_results.result.text
+					Meta.push(Title)
+				}
+				else
+				{
+					Title = SolveRichText(Title,Legacy.entities)
+					Meta.push(...Title)
+					Title = Title[0]
+				}
+
 				WR.EachU((V,F) =>
 				{
 					WR.EachU((B,G) =>

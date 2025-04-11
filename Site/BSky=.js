@@ -8,6 +8,8 @@ DIDPrefix = 'did:plc:',
 BSkyApp = 'https://bsky.app/',
 BSkyAppProfile = BSkyApp + 'profile/',
 BSkyAppProfilePost = WW.Tmpl(BSkyAppProfile,undefined,'/post/',undefined),
+BSkyCDNCard = 'https://ogcard.cdn.bsky.app/',
+BSkyCDNCardStart = BSkyCDNCard + 'start/',
 BSkySocial = 'https://bsky.social/',
 BSkySocialRPC = BSkySocial + 'xrpc/',
 BSkyMethodPost = 'app.bsky.feed.getPostThread';
@@ -17,6 +19,7 @@ module.exports = O =>
 {
 	var
 	PadDID = Q => Q.replace(/^(?!did:)/,DIDPrefix),
+	SolveID = Q => WW.MU(/[^/]+$/,Q),
 	MakePostURI = Q =>
 	(
 		Q = WW.IsArr(Q) ? Q : Q.split('/'),
@@ -196,6 +199,9 @@ module.exports = O =>
 											},Info ? Prelude : Meta,Prefix)
 											break
 										case 'app.bsky.feed.defs#generatorView' :
+											break
+										case 'app.bsky.graph.defs#starterPackViewBasic' :
+											Part.push({URL : [BSkyCDNCardStart + Record.creator.did + '/' + SolveID(Record.uri)],Ext : '.png'})
 											break
 										default :
 											WW.Throw('Unknown Record Type ' + Record.$type)

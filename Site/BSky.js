@@ -22,9 +22,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BSkyMethodSearchPost = 'app.bsky.feed.searchPosts?limit=' + O.Size,
 	BSkyMethodSearchActor = 'app.bsky.actor.searchActorsTypeahead?limit=' + O.Size,
 	BSkyMethodFollow = 'app.bsky.graph.getFollows?limit=' + O.Size,
+	BSkyCDNCard = 'https://ogcard.cdn.bsky.app/',
+	BSkyCDNCardStart = BSkyCDNCard + 'start/',
 	PadDID = function(Q)
 	{
 		return Q.replace(/^(?!did:)/,DIDPrefix)
+	},
+	SolveID = function(Q)
+	{
+		return WW.MU(/[^/]+$/,Q)
 	},
 	MakePostURI = function(Q)
 	{
@@ -326,6 +332,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							break
 						case 'app.bsky.embed.video#view' :
 							Img.push(Embed.thumbnail)
+							break
+						case 'app.bsky.graph.defs#starterPackViewBasic' :
+							// z72i7hdynmk6r22z27h6tvur/3ljt2oqrny22s
+							Img.push(BSkyCDNCardStart + Record.creator.did + '/' + SolveID(Record.uri))
 							break
 						default :
 							R.push(

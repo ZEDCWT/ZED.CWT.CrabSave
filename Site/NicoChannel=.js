@@ -52,7 +52,7 @@ module.exports = O =>
 				B.error && O.Bad(B.error.message)
 				return B.data
 			},
-			Req = (URL,Data,Auth = SolveCookieToken(Site)) => Ext.ReqB(O.Req(
+			Req = (URL,Data,Auth = SolveCookieToken(Site)) => SolveSiteID(Site).FMap(SiteID => Ext.ReqB(O.Req(
 			{
 				URL : URL,
 				JSON : Data,
@@ -60,10 +60,10 @@ module.exports = O =>
 				{
 					Authorization : Auth && 'Bearer ' + Auth,
 					Origin : NicoChannel,
-					FC_Site_ID : 0,
+					FC_Site_ID : SiteID,
 					FC_Use_Device : 'null'
 				}
-			})).Map(Common),
+			}))).Map(Common),
 
 			/*
 			SolveSiteAll = () => Ext.ReqB(O.Req(NicoChannelAPIFCContentProviderChannel)).Map(B =>

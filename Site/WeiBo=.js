@@ -35,6 +35,7 @@ VideoIgnoreDomain =
 	'tudou.com',
 	'weibo.com',
 	'www.acfun.cn',
+	'xiaoka.tv',
 ],
 VideoIgnoreDomainRX = RegExp(`//[^/]*(${VideoIgnoreDomain.map(WR.SafeRX).join`|`})/`);
 
@@ -155,9 +156,13 @@ module.exports = O =>
 										if (27401 === N.error_code)
 											return WX.Empty
 										N.error_code && O.Bad(N)
+
+										N = N.data.replay_origin_url
+										if (VideoIgnoreDomainRX.test(N))
+											return WX.Empty
 										return WX.Just(
 										{
-											URL : [N.data.replay_origin_url]
+											URL : [N]
 										})
 									}))
 								else if (T = Q.media_info)
@@ -472,7 +477,10 @@ module.exports = O =>
 								},Comment)
 							}
 						}))
-						.FP(O.Part(Part,Ext))
+						.FP(O.Part(Part,Ext,
+						{
+							ReqB : Q => Ext.ReqB(O.Req(WN.ReqOH(Q,'Referer',WeiBo))),
+						}))
 						.Map(Part =>
 						{
 							PicMeta.forEach(V => V[0] = `	[${WR.PadL(PicAll.length,V[0])}] ${V.pop()}`)

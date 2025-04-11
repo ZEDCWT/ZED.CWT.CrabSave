@@ -1631,7 +1631,12 @@
 					R : Reload,
 					A : function(Opt)
 					{
-						(BarNone === State || BarHistory === State && BarAddOptHis & Opt) &&
+						var
+						IsSubHistory = Q.More && WR.Any(function(V){return /^{Downloaded \d+}$/m.test(V)},Q.More);
+						(
+							BarNone === State && !IsSubHistory ||
+							(BarHistory === State || BarNone === State && IsSubHistory) && BarAddOptHis & Opt
+						) &&
 							(!(BarAddOptFocus & Opt) || SettingIsSPUP(Q.UP) || SettingIsSPUP(Q.UPURL)) &&
 							Add()
 					},

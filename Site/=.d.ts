@@ -94,18 +94,12 @@ declare module CrabSaveNS
 			JOM(S : RegExp,Q : string) : object
 			Walk(Q : object,H : (V : object,F : string) => boolean) : void
 			Text(Q : string,Collect? : {Img? : string[]}) : string
-			M3U(Q : string,Ext? : SiteExtM3U,Opt? :
-			{
-				ReqB(Q : WishNS.ReqAccept) : string
-				Init?(V : WishNS.M3UPropINF) : string
-				IV?(V : WishNS.M3UPropINF,F : number) : WishNS.Buff
-				Ext? : string
-			}) : WishNS.Provider<SitePart &
+			M3U(Q : string,Ext? : SiteExtM3U,Opt? : OptM3U) : WishNS.Provider<SitePart &
 			{
 				Raw : WishNS.M3U[]
 			}>
 			MetaJoin(...Q : (string | string[])[]) : string[]
-			Part(Q : (SitePart | WishNS.Provider<SitePart>)[],Ext? : SiteExtM3U) : WishNS.Provider<SitePart[]>
+			Part(Q : (SitePart | WishNS.Provider<SitePart>)[],Ext? : SiteExtM3U,Opt? : OptM3U) : WishNS.Provider<SitePart[]>
 			PackM3U(Opt? :
 			{
 				Pack? : SitePack
@@ -150,6 +144,13 @@ declare module CrabSaveNS
 		Size? : number[]
 		Ext? : string | string[]
 		ExtDefault? : string
+	}
+	interface OptM3U
+	{
+		ReqB(Q : WishNS.ReqAccept) : string
+		Init?(V : WishNS.M3UPropINF) : string
+		IV?(V : WishNS.M3UPropINF,F : number) : WishNS.Buff
+		Ext? : string
 	}
 
 	interface SiteAll
