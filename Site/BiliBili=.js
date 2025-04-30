@@ -51,8 +51,10 @@ BiliBiliAPIPolymerDynamicDetailOpus = WW.Tmpl(BiliBiliAPIPolymerDynamic,'detail?
 BiliBiliTimeline = 'https://t.bilibili.com/',
 BiliBiliLive = 'https://live.bilibili.com/',
 
-Common = V => (V = WC.JTO(V)).code ?
-	WW.Throw(V) :
+Common = (V,ErrAsNull = false) => (V = WC.JTO(V)).code ?
+	ErrAsNull ?
+		null :
+		WW.Throw(V) :
 	V.data || V.result;
 
 /*
@@ -229,19 +231,29 @@ module.exports = O =>
 			[
 				BiliBiliAPIPolymerDynamicDetail(ID),
 				BiliBiliAPIPolymerDynamicDetailOpus(ID),
-			]).FMapE(V => Ext.ReqB(O.Coke(V)).Map(Common)).All().Map(([DynamicNormal,DynamicOpus]) =>
+			]).FMapE((V,F) => Ext.ReqB(O.Coke(V)).Map(B => Common(B,!F))).All().Map(([DynamicNormal,DynamicOpus]) =>
 			{
 				var
 				SetUnk = Q => O.Bad('Unknown ' + Q),
 				SolveCard = (Normal,Opus,IsTop) =>
 				{
 					var
-					ModAuthor = Normal.modules.module_author,
-					ModDynamic = Normal.modules.module_dynamic,
+					Info = Normal || Opus,
+					ModAuthor = Info.modules.module_author,
+					ModDynamic = Info.modules.module_dynamic,
 					Meta = [],Part = [],
 					CommonTitle = [],
 					Card = {},
-					NonTopCheck = () => IsTop && O.Bad('BadTop ' + Normal.type),
+					NonTopCheck = () => IsTop && O.Bad('BadTop ' + Info.type),
+					SolveRichText = Q => WR.Each(V =>
+					{
+						switch (V.type)
+						{
+							case 'RICH_TEXT_NODE_TYPE_VIEW_PICTURE' :
+								Part.push({URL : WR.Pluck('src',V.pics)})
+								break
+						}
+					},Q.rich_text_nodes),
 					SolveMajor = () =>
 					{
 						var
@@ -337,7 +349,23 @@ module.exports = O =>
 									T.label
 								)
 								break
-							// case 'MAJOR_TYPE_OPUS' :
+							case 'MAJOR_TYPE_OPUS' :
+								T = Major.opus
+								if (!/\/opus\/\d+$/.test(T.jump_url))
+									Meta.push(T.jump_url)
+								if (T.title)
+								{
+									CommonTitle.push(T.title)
+									Meta.push(T.title)
+								}
+								if (T.summary.text)
+								{
+									CommonTitle.push(T.summary.text)
+									Meta.push(T.summary.text)
+								}
+								Part.push({URL : WR.Pluck('url',T.pics)})
+								SolveRichText(T.summary)
+								break
 							case 'MAJOR_TYPE_PGC' :
 								T = Major.pgc
 								Card.Link = BiliBiliBgmEpisode(T.epid)
@@ -363,30 +391,24 @@ module.exports = O =>
 							SetUnk(ModAuthor.type)
 					}
 
-					if (T = WR.Path(['modules','module_dynamic','major','opus','title'],Opus))
+					if (Normal)
 					{
-						CommonTitle.push(T)
-						Meta.push(T)
-					}
-					if (T = ModDynamic && ModDynamic.desc)
-					{
-						CommonTitle.push(T.text)
-						Meta.push(T.text)
-						WR.Each(V =>
+						if (T = WR.Path(['modules','module_dynamic','major','opus','title'],Opus))
 						{
-							switch (V.type)
-							{
-								case 'RICH_TEXT_NODE_TYPE_VIEW_PICTURE' :
-									Part.push({URL : WR.Pluck('src',V.pics)})
-									break
-							}
-						},T.rich_text_nodes)
+							CommonTitle.push(T)
+							Meta.push(T)
+						}
+						if (T = ModDynamic && ModDynamic.desc)
+						{
+							CommonTitle.push(T.text)
+							Meta.push(T.text)
+							SolveRichText(T)
+						}
 					}
 
-					Card.Title = CommonTitle.join`\n`
-					Card.Link = BiliBiliTimeline + Normal.id_str
+					Card.Link = BiliBiliTimeline + Info.id_str
 
-					switch (Normal.type)
+					switch (Info.type)
 					{
 						case 'DYNAMIC_TYPE_NONE' :
 							NonTopCheck()
@@ -409,7 +431,7 @@ module.exports = O =>
 							SolveMajor()
 							break
 						case 'DYNAMIC_TYPE_FORWARD' :
-							T = SolveCard(Normal.orig,Opus.orig,false)
+							T = SolveCard(Info.orig,Opus.orig,false)
 							Meta = O.MetaJoin(Meta,
 							[
 								...T.Link ? [T.Link] : [],
@@ -418,13 +440,14 @@ module.exports = O =>
 							])
 							break
 						default :
-							SetUnk(Normal.type)
+							SetUnk(Info.type)
 					}
+					Card.Title ||= CommonTitle.join`\n`
 					Card.Meta = Meta
 					Card.Part = Part
 					return Card
 				};
-				return SolveCard(DynamicNormal.item,DynamicOpus.item,true)
+				return SolveCard(DynamicNormal?.item,DynamicOpus.item,true)
 			})
 
 			/*
