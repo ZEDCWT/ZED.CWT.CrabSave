@@ -132,10 +132,16 @@ module.exports = O =>
 					switch (B.$type)
 					{
 						case 'app.bsky.feed.defs#threadViewPost' : break
+
+						case 'app.bsky.feed.defs#blockedPost' :
+							Meta.length && Meta.push('')
+							Meta.push(Prefix + '{Blocked} ' + B.uri)
+							return
 						case 'app.bsky.feed.defs#notFoundPost' :
 							Meta.length && Meta.push('')
 							Meta.push(Prefix + '{NotFound} ' + B.uri)
 							return
+
 						default : O.Bad(B)
 					}
 

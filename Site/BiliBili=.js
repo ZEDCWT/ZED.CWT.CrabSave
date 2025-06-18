@@ -241,6 +241,7 @@ module.exports = O =>
 					Info = Normal || Opus,
 					ModAuthor = Info.modules.module_author,
 					ModDynamic = Info.modules.module_dynamic,
+					OpusMajor = Opus.modules.module_dynamic.major?.opus,
 					Meta = [],Part = [],
 					CommonTitle = [],
 					Card = {},
@@ -304,7 +305,9 @@ module.exports = O =>
 								break
 							case 'MAJOR_TYPE_DRAW' :
 								T = Major.draw
-								Part.push({URL : WR.Pluck('src',T.items)})
+								Part.push({URL : OpusMajor ?
+									OpusMajor.pics.map(V => V.live_url || V.url) :
+									WR.Pluck('src',T.items)})
 								break
 							case 'MAJOR_TYPE_LIVE' :
 								T = Major.live
@@ -363,7 +366,7 @@ module.exports = O =>
 									CommonTitle.push(T.summary.text)
 									Meta.push(T.summary.text)
 								}
-								Part.push({URL : WR.Pluck('url',T.pics)})
+								Part.push({URL : T.pics.map(V => V.live_url || V.url)})
 								SolveRichText(T.summary)
 								break
 							case 'MAJOR_TYPE_PGC' :

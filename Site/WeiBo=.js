@@ -308,11 +308,14 @@ module.exports = O =>
 								})
 								break
 							case 'story' : // 31
-								T = WR.Pluck('play_info',Q.slide_cover.playback_list)
-								Part.push(
+								if (Q.slide_cover.playback_list)
 								{
-									URL : [O.Best('bitrate',T.filter(V => V.bitrate)).url]
-								})
+									T = WR.Pluck('play_info',Q.slide_cover.playback_list)
+									Part.push(
+									{
+										URL : [O.Best('bitrate',T.filter(V => V.bitrate)).url]
+									})
+								}
 								break
 							case 'wenda' : // 24
 								Meta.push('')
@@ -386,7 +389,7 @@ module.exports = O =>
 									// Video is much smaller
 								case 'livephoto' : // N9YWhzARq
 									// Image contains EXIF
-									PicVariant.push(V.video)
+									PicVariant.push(V.video_hd || V.video)
 									break
 								default :
 									WW.Throw('Unknown Pic Type #' + V.type)

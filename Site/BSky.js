@@ -209,7 +209,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		if (B.$type) switch(B.$type)
 		{
 			case 'app.bsky.feed.defs#threadViewPost' : break
+
+			case 'app.bsky.feed.defs#blockedPost' :
 			case 'app.bsky.feed.defs#notFoundPost' : return R
+
 			default : return [
 			{
 				Non : true,

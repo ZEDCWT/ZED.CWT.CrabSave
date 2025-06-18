@@ -71,14 +71,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliAPISpaceWBIUpload = WW.Tmpl(BiliBiliAPISpaceWBI,'arc/search?mid=',undefined,'&ps=',O.Size,'&pn=',undefined),
 	BiliBiliAPISpaceArticle = WW.Tmpl(BiliBiliAPISpace,'article?mid=',undefined,'&pn=',undefined,'&ps=',O.Size),
 	BiliBiliAPIPolymer = BiliBiliAPI + 'x/polymer/',
-	BiliBiliAPIPolymerSeries = WW.Tmpl(BiliBiliAPIPolymer,'space/seasons_series_list?mid=',undefined,'&page_num=',undefined,'&page_size=20'),
-	BiliBiliAPIPolymerArchive = WW.Tmpl(BiliBiliAPIPolymer,'space/seasons_archives_list?mid=0&season_id=',undefined,'&page_num=',undefined,'&page_size=',O.Size),
+	BiliBiliAPIPolymerSeries = WW.Tmpl(BiliBiliAPIPolymer,'web-space/seasons_series_list?mid=',undefined,'&page_num=',undefined,'&page_size=20'),
+	BiliBiliAPIPolymerArchive = WW.Tmpl(BiliBiliAPIPolymer,'web-space/seasons_archives_list?mid=0&season_id=',undefined,'&page_num=',undefined,'&page_size=',O.Size),
 	BiliBiliAPIPolymerDynamic = BiliBiliAPIPolymer + 'web-dynamic/v1/',
 	BiliBiliAPIPolymerDynamicFeature = '&features=' +
 	[
 		/*
 			Enabling this will convert `module_dynamic.major.type` to `MAJOR_TYPE_OPUS` if possible
 			We have to enable it since title field only exists in `MAJOR_TYPE_OPUS`
+			Also, for those `DRAW`s with live format, the live target will only exists in `OPUS` (1062003639770415105)
 		*/
 		'itemOpusStyle',
 		'listOnlyfans',
@@ -115,9 +116,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliSpaceDynamic = WW.Tmpl(BiliBiliSpace,undefined,'/dynamic'),
 	BiliBiliSpaceAudio = WW.Tmpl(BiliBiliSpace,undefined,'/audio'),
 	BiliBiliSpaceArticle = WW.Tmpl(BiliBiliSpace,undefined,'/article'),
-	BiliBiliSpaceChannel = WW.Tmpl(BiliBiliSpace,undefined,'/channel/series'),
-	BiliBiliSpaceChannelSeason = WW.Tmpl(BiliBiliSpace,undefined,'/channel/collectiondetail?sid=',undefined),
-	BiliBiliSpaceChannelSeries = WW.Tmpl(BiliBiliSpace,undefined,'/channel/seriesdetail?sid=',undefined),
+	// BiliBiliSpaceChannel = WW.Tmpl(BiliBiliSpace,undefined,'/channel/series'),
+	// BiliBiliSpaceChannelSeason = WW.Tmpl(BiliBiliSpace,undefined,'/channel/collectiondetail?sid=',undefined),
+	// BiliBiliSpaceChannelSeries = WW.Tmpl(BiliBiliSpace,undefined,'/channel/seriesdetail?sid=',undefined),
+	BiliBiliSpaceSSList = WW.Tmpl(BiliBiliSpace,undefined,'/lists'),
+	BiliBiliSpaceSSListSeason = WW.Tmpl(BiliBiliSpace,undefined,'/lists/',undefined/*,'?type=season'*/),
+	BiliBiliSpaceSSListSeries = WW.Tmpl(BiliBiliSpace,undefined,'/lists/',undefined,'?type=series'),
 	BiliBiliSpacePUGV = WW.Tmpl(BiliBiliSpace,undefined,'/pugv'),
 	BiliBiliSpaceFavList = WW.Tmpl(BiliBiliSpace,undefined,'/favlist'),
 	BiliBiliSpaceFav = WW.Tmpl(BiliBiliSpace,undefined,'/favlist?fid=',undefined),
@@ -139,9 +143,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	// Appkey = '20bee1f7a18a425c',
 	ReqWEBID = '',
 	ReqWBISalt = 'bdab7be0a313f1d847ccd8999e1b4370',ReqWBILast,
+	ReqRef = function(Q){return WW.N.ReqOH(Q,'Referer',BiliBili)},
 	ReqWBI = function(Q)
 	{
-		Q = WW.N.ReqOH(Q,'Referer',BiliBili)
+		Q = ReqRef(Q)
 		return (ReqWBILast && WW.Now() < 144E5 + ReqWBILast ? WX.Just() : O.API(BiliBiliSpace + 2).FMap(function(Space)
 		{
 			ReqWEBID = WC.JTOO(WC.UD(WW.MF(/<script id="__RENDER_DATA__[^>]+>([^<]+)/,Space)))?.access_id
@@ -156,7 +161,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						var
 						// IS = WC.JTO(WW.MU(/{img:[^}]+}/,Script).replace(/(\w+):/g,'"$1":')),
 						IS = Common(Nav,true).wbi_img,
-						Index = O.JOM(/\.subKey[^}]+?(?=\[[\d,]+\])/,Script),
+						Index = O.JOM(/(?=\[\d+(,\d+){63,}\][^{}]+forEach[^}]+push)/,Script),
 						SolveFakeURL = function(Q){return WW.MF(/\/([^/.]+)\.\w+$/,Q)};
 						// IS = IS.img + IS.sub
 						IS = SolveFakeURL(IS.img_url) + SolveFakeURL(IS.sub_url)
@@ -237,7 +242,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						O.Ah('Stein ' + V.stein_guide_cid + ' (' + V.videos + ')',
 							BiliBiliVideo(V.aid) + '#Stein'),
 					(EP = V.redirect_url) && O.Ah(EP = WW.MU(/ep\d+/,V.redirect_url),BiliBiliBgmEpisode(EP = EP.slice(2))),
-					!!V.season_id && O.Ah(PrefixUGCSeason + V.season_id,BiliBiliSpaceChannelSeason(UP,V.season_id)),
+					!!V.season_id && O.Ah(PrefixUGCSeason + V.season_id,BiliBiliSpaceSSListSeason(UP,V.season_id)),
 					V.is_union_video ? '{UnionVideo}' : ''
 				]
 			],
@@ -1763,39 +1768,19 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				})
 			}
 		},{
-			Name : PrefixUGCSeason,
-			Judge : O.Num('Collection.*?SID='),
-			JudgeVal : O.ValNum,
-			Example :
-			[
-				'523',
-				{
-					As : 'Inp',
-					Val : BiliBiliSpaceChannelSeason(1868902080,523),
-					ID : '523'
-				}
-			],
-			View : function(ID,Page)
-			{
-				return O.API(BiliBiliAPIPolymerArchive(ID,-~Page)).Map(function(B)
-				{
-					B = Common(B)
-					return {
-						Len : B.page.total,
-						Item : WR.Map(SolveAV,B.archives)
-					}
-				})
-			}
-		},{
 			Name : PrefixUGCSeries,
-			Judge : /\b(\d+)\b.*Series.*?SID=(\d+)/i,
+			Judge :
+			[
+				/\b(\d+)\b.*Series.*?SID=(\d+)/i,
+				/(\d+)\D+\bLists?\b\D+(\d+).*\bType=Series\b/i
+			],
 			JudgeVal : /(\d+)\D+(\d+)/,
 			Example :
 			[
 				'15773384 1211579',
 				{
 					As : 'Inp',
-					Val : BiliBiliSpaceChannelSeries(15773384,1211579),
+					Val : BiliBiliSpaceSSListSeries(15773384,1211579),
 					ID : '15773384 1211579'
 				}
 			],
@@ -1813,6 +1798,35 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				})
 			}
 		},{
+			Name : PrefixUGCSeason,
+			Judge :
+			[
+				O.Num('Collection.*?SID='),
+				O.Num('Lists'),
+			],
+			JudgeVal : O.ValNum,
+			Example :
+			[
+				'523',
+				{
+					As : 'Inp',
+					Val : BiliBiliSpaceSSListSeason(1868902080,523),
+					ID : '523'
+				}
+			],
+			View : function(ID,Page)
+			{
+				return O.API(ReqRef(BiliBiliAPIPolymerArchive(ID,-~Page))).Map(function(B)
+				{
+					B = Common(B)
+					return {
+						Len : B.page.total,
+						Item : WR.Map(SolveAV,B.archives)
+					}
+				})
+			}
+		},{
+			/*
 			Name : 'Channel',
 			Judge : O.NumR('Channel'),
 			JudgeVal : O.ValNum,
@@ -1825,9 +1839,26 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					ID : '15773384'
 				}
 			],
+			*/
+			Name : 'SSList',
+			Judge :
+			[
+				O.NumR('Lists'),
+				O.Num('SSList')
+			],
+			JudgeVal : O.ValNum,
+			Example :
+			[
+				'15773384',
+				{
+					As : 'Inp',
+					Val : BiliBiliSpaceSSList(15773384),
+					ID : '15773384'
+				}
+			],
 			View : function(ID,Page)
 			{
-				return O.API(BiliBiliAPIPolymerSeries(ID,-~Page)).Map(function(B)
+				return O.API(ReqRef(BiliBiliAPIPolymerSeries(ID,-~Page))).Map(function(B)
 				{
 					B = Common(B).items_lists
 					return {
@@ -1842,8 +1873,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 									PrefixUGCSeason + V.season_id :
 									PrefixUGCSeries + V.series_id,
 								URL : V.season_id ?
-									BiliBiliSpaceChannelSeason(V.mid,V.season_id) :
-									BiliBiliSpaceChannelSeries(V.mid,V.series_id),
+									BiliBiliSpaceSSListSeason(V.mid,V.season_id) :
+									BiliBiliSpaceSSListSeries(V.mid,V.series_id),
 								Img : V.cover,
 								Title : V.name,
 								Date : 1E3 * (V.mtime || V.ptime),
@@ -1904,7 +1935,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			{
 				return (Page ? WX.Just([]) : ReqWBI(BiliBiliAPISpaceWBIInfo(ID)).FMap(function(UP)
 				{
-					return O.Req(WW.N.ReqOH(BiliBiliAPISpaceNavNum(ID),'Referer',BiliBili)).Map(function(Nav)
+					return O.Req(ReqRef(BiliBiliAPISpaceNavNum(ID))).Map(function(Nav)
 					{
 						Nav = Common(Nav)
 						return [
@@ -1921,7 +1952,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								O.Ah('Dynamic',BiliBiliSpaceDynamic(ID)),
 								O.Ah('Audio ' + Nav.audio,BiliBiliSpaceAudio(ID)),
 								O.Ah('Article',BiliBiliSpaceArticle(ID)),
-								O.Ah('Channel',BiliBiliSpaceChannel(ID)),
+								O.Ah('SSList',BiliBiliSpaceSSList(ID)),
 								O.Ah('PUGV',BiliBiliSpacePUGV(ID)),
 								O.Ah('Fav',BiliBiliSpaceFavList(ID))
 							]
