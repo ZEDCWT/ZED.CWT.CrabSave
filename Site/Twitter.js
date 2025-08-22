@@ -305,6 +305,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				case 'media' :
 					SolveMedia(UnifiedCard.media_entities[D.id])
 					break
+				case 'media_with_details_horizontal' :
+					/*
+						1954517252742791468
+					*/
+					SolveMedia(UnifiedCard.media_entities[D.media_id])
+					More.push(D.topic_detail.title.content,D.topic_detail.subtitle.content)
+					break
 				case 'swipeable_media' :
 					WR.Each(function(V)
 					{
@@ -763,7 +770,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					},[],RegExp('<svg[^>]+' + PageClass + '[^]+?</svg','g'),Page)
 						[3 & PageVerify[5]]
 						[15 & PageVerify[ScriptConstIndex[0]]],
-					VerifyfTS = WR.Product(WR.Map(function(V){return 15 & PageVerify[V]},ScriptConstIndex.slice(1))),
+					VerifyTS = WR.Product(WR.Map(function(V){return 15 & PageVerify[V]},ScriptConstIndex.slice(1))),
 
 					CSSColorStart = VerifyRow.slice(0,3),
 					CSSColorEnd = VerifyRow.slice(3,6),
@@ -774,7 +781,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						return +(F + (1 - F) * V / 255).toFixed(2)
 					},VerifyRow.slice(7)),
 
-					EndY = SolveCurveY(CSSCubic,VerifyfTS / 4096),
+					EndY = SolveCurveY(CSSCubic,VerifyTS / 4096),
 					EndColor = WR.MapU(function(V,F)
 					{
 						F = CSSColorEnd[F]
@@ -829,7 +836,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			})
 			.Tap(null,function(E)
 			{
-				if (WW.ErrIs(WW.Err.NetBadStatus,E) &&
+				if (/GraphQL/.test(Q.URL) &&
+					WW.ErrIs(WW.Err.NetBadStatus,E) &&
 					404 === E.Arg[0])
 					SignMed = null
 			})

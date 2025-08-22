@@ -8,6 +8,8 @@ WW = require('@zed.cwt/wish'),
 Twitter = 'https://x.com/',
 TwitterTweet = WW.Tmpl(Twitter,'_/status/',undefined),
 TwitterTweetFull = WW.Tmpl(Twitter,undefined,'/status/',undefined),
+TwImgAbs = 'https://abs.twimg.com/',
+TwImgAbsSign = WW.Tmpl(TwImgAbs,'responsive-web/client-web/ondemand.s.',undefined,'a.js'),
 // TwitterAPI = 'https://api.twitter.com/',
 TwitterAPI = 'https://api.x.com/',
 // TwitterAPITimelineConversation = WW.Tmpl(TwitterAPI,'2/timeline/conversation/',undefined,'.json?tweet_mode=extended&count=20'),
@@ -75,11 +77,11 @@ module.exports = O =>
 	SignMed,
 	MakeSign = Ext => SignMed ?
 		WX.Just(SignMed) :
-		Ext.ReqB(Twitter).FMap(Page =>
+		Ext.ReqB(O.Req(Twitter)).FMap(Page =>
 		{
 			var
 			ScriptHash = WW.MF(/"ondemand\.s":"([^"]+)"/,Page);
-			return Ext.ReqB(TwImgAbsSign(ScriptHash)).Map(Script =>
+			return Ext.ReqB(O.Req(TwImgAbsSign(ScriptHash))).Map(Script =>
 			{
 				var
 				SolveCurveY = (C,T) =>
@@ -121,7 +123,7 @@ module.exports = O =>
 				},[],RegExp('<svg[^>]+' + PageClass + '[^]+?</svg','g'),Page)
 					[3 & PageVerify[5]]
 					[15 & PageVerify[ScriptConstIndex[0]]],
-				VerifyfTS = WR.Product(WR.Map(V => 15 & PageVerify[V],ScriptConstIndex.slice(1))),
+				VerifyTS = WR.Product(WR.Map(V => 15 & PageVerify[V],ScriptConstIndex.slice(1))),
 
 				CSSColorStart = VerifyRow.slice(0,3),
 				CSSColorEnd = VerifyRow.slice(3,6),
@@ -132,7 +134,7 @@ module.exports = O =>
 					return +(F + (1 - F) * V / 255).toFixed(2)
 				},VerifyRow.slice(7)),
 
-				EndY = SolveCurveY(CSSCubic,VerifyfTS / 4096),
+				EndY = SolveCurveY(CSSCubic,VerifyTS / 4096),
 				EndColor = WR.MapU((V,F) =>
 				{
 					F = CSSColorEnd[F]
@@ -184,9 +186,10 @@ module.exports = O =>
 				Sign(Q.Method || 'GET',Q.URL.replace(/^[^/]+\/\/[^/]+/,''))))))
 			.Tap(null,E =>
 			{
-				if (WW.ErrIs(WW.Err.NetBadStatus,E) &&
+				if (/GraphQL/.test(Q.URL) &&
+					WW.ErrIs(WW.Err.NetBadStatus,E) &&
 					404 === E.Arg[0])
-					CTIMed = null
+					SignMed = null
 			})
 	},
 	MakeGraphQL = (Ext,URL,Data) => MakeHead(Ext,
@@ -303,16 +306,24 @@ module.exports = O =>
 				},
 				SolveMediaBroadcast = V =>
 				{
-					Part.push(Ext.ReqB(O.Coke(MakeHead(TwitterAPIBroadcastShow(V)))).FMap(Broadcast =>
+					Part.push(MakeHead(Ext,TwitterAPIBroadcastShow(V)).FMap(Broadcast =>
 					{
 						Broadcast = Common(Broadcast).broadcasts[V]
 						if (Broadcast.tweet_id !== ID)
 							return WX.Empty
-						return Ext.ReqB(O.Coke(MakeHead(TwitterAPILiveStream(Broadcast.media_key)))).Map(Live =>
-						{
-							Live = Common(Live).source
-							return {URL : [Live.noRedirectPlaybackUrl]}
-						})
+						return MakeHead(Ext,TwitterAPILiveStream(Broadcast.media_key))
+							.Map(Live =>
+							{
+								Live = Common(Live).source
+								return {URL : [Live.noRedirectPlaybackUrl]}
+							})
+							.ErrAs(E =>
+							{
+								if (WW.ErrIs(WW.Err.NetBadStatus,E) &&
+									404 === E.Arg[0])
+									return WX.Empty
+								return WX.Throw(E)
+							})
 					}))
 				},
 				SolveMediaAuto = (URL,Type) =>
@@ -359,6 +370,12 @@ module.exports = O =>
 							break
 						case 'media' :
 							SolveMedia(UnifiedCard.media_entities[D.id])
+							break
+						case 'media_with_details_horizontal' :
+							SolveMedia(UnifiedCard.media_entities[D.media_id])
+							Meta.push(
+								D.topic_detail.title.content,
+								'\t' + D.topic_detail.subtitle.content)
 							break
 						case 'swipeable_media' :
 							WR.Each(V => SolveMedia(UnifiedCard.media_entities[V.id]),D.media_list)
@@ -604,7 +621,7 @@ module.exports = O =>
 			{
 				Req = WX.Just(Req)
 			}
-			else Req = MakeGraphQL(TwitterAPIGraphQLTweetDetail,
+			else Req = MakeGraphQL(Ext,TwitterAPIGraphQLTweetDetail,
 			{
 				focalTweetId : ID,
 				includePromotedContent : false,
