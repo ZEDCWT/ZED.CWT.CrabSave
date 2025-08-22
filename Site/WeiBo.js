@@ -101,7 +101,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	}),
 	Req = function(Q)
 	{
-		return O.Req(Q).FMap(function(B)
+		return O.Req(WW.N.ReqOH(Q,'Referer',WeiBo)).FMap(function(B)
 		{
 			return /'islogin'][ =]*'0'|login\.php/.test(B) && WC.CokeP(O.Coke()).ALC ?
 				TryLogin().FMap(function(Y)
@@ -283,6 +283,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						WR.Path(['media_info','duration'],Q)
 					break
 
+				case 'ai_summary' : // 0
+					// PCKA1fH5P
+					More.push(Q.title_sub)
+					break
+
 				case 'campaign' : // 0
 					More.push(
 						Q.page_title,
@@ -331,6 +336,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						'event', // 5
 						'fangle', // 24 Fqe3CtiOB
 						'file', // 2
+						'gameArticle', // 2 Cdnipx7KQ
 						'group', // 0
 						'image', // 2 C3u48tdxX
 						'ny25_byebye', // 0 P6d9Wb5fg
@@ -404,10 +410,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			},T.items)
 		}
 		else if (B.pic_num)
-			Img = WR.Map(function(V)
+		{
+			if (B.pic_infos) Img = WR.Map(function(V)
 			{
 				return B.pic_infos[V].bmiddle.url
 			},B.pic_ids)
+		}
 		else if (T = B.page_info)
 		{
 			Img = []
@@ -580,8 +588,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					URL : WeiBoSearchSugg(WC.UE(Q)),
 					Head :
 					{
-						'X-Requested-With' : 'XMLHttpRequest',
-						Referer : WeiBo
+						'X-Requested-With' : 'XMLHttpRequest'
 					}
 				}).Map(function(B)
 				{

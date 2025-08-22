@@ -2,7 +2,8 @@
 var
 WW = require('@zed.cwt/wish'),
 {R : WR,X : WX,C : WC,N : WN} = WW,
-Crypto = require('crypto');
+Crypto = require('crypto'),
+Timers = require('timers');
 
 /**@type {CrabSaveNS.SiteAll}*/
 module.exports = Option =>
@@ -234,6 +235,62 @@ module.exports = Option =>
 					})).On('Err',S.E)
 						.End
 				}))
+			},
+			MakePostCache : () =>
+			{
+				var
+				ConfTimeout = 2 * 60 * 6E4,
+
+				Cache = new Map,
+				CacheTimer,
+				UpdateTimer = () =>
+				{
+					var
+					Now = WW.Now(),
+					First,
+					V;
+					for (V of Cache)
+					{
+						if (V[1].At + ConfTimeout <= Now)
+							Cache.delete(V[0])
+						else
+							First = V[1]
+					}
+					if (!CacheTimer && First)
+						CacheTimer = Timers.setTimeout(() =>
+						{
+							CacheTimer = null
+							UpdateTimer()
+						},First.At + ConfTimeout - Now).unref()
+				};
+				return {
+					Set : (ID,Entry,Meta) =>
+					{
+						// Force the item to add to the back
+						Cache.delete(ID)
+						Cache.set(ID,
+						{
+							At : WW.Now(),
+							Data : [Entry,Meta],
+						})
+						CacheTimer || UpdateTimer()
+					},
+					Get : ID =>
+					{
+						var R = Cache.get(ID);
+						if (R)
+						{
+							Cache.delete(ID)
+							R = R.Data
+						}
+						return R
+					},
+					Fin : () =>
+					{
+						Cache.clear()
+						CacheTimer && Timers.clearTimeout(CacheTimer)
+					},
+				}
 			},
 		})
 		All.push(S)

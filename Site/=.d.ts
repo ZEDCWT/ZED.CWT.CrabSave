@@ -106,6 +106,12 @@ declare module CrabSaveNS
 				Init?(Base : string,Init : string) : WishNS.Provider<WishNS.Buff>
 				Req?(Q : WishNS.ReqAccept) : WishNS.ReqU
 			}) : SitePack
+			MakePostCache<U>() :
+			{
+				Set(ID : string,Entry : U,Meta : string[]) : void
+				Get(ID : string) : [Entry : U,Meta : string[]] | null
+				Fin() : void
+			}
 		}) : {
 			URL(ID : string,Ext : SiteExt) : WishNS.Provider<SiteURL>
 			IDView?(Q : string) : string
@@ -113,8 +119,7 @@ declare module CrabSaveNS
 			Pack? : SitePack
 			Range? : boolean
 			RefSpeed? : number
-			OnReq?(Q : WishNS.ReqO) : boolean
-			OnReq?(Q : WishNS.ReqO,S : string,H : import('http').IncomingHttpHeaders,Meta : string[]) : any
+			OnReq?(Q : WishNS.ReqO,S? : string,H? : import('http').IncomingHttpHeaders,Meta? : string[]) : any
 			OnFin?() : any
 		}
 	}

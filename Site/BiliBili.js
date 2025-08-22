@@ -49,6 +49,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliAPIArticle = BiliBiliAPI + 'x/article/',
 	BiliBiliAPIArticleList = WW.Tmpl(BiliBiliAPIArticle,'list/articles?id=',undefined),
 	BiliBiliAPIArticleView = WW.Tmpl(BiliBiliAPIArticle,'view?id=',undefined),
+	BiliBiliAPIArticleCard = WW.Tmpl(BiliBiliAPIArticle,'cards?ids=co',undefined),
 	// BiliBiliAPIArticleInfo = WW.Tmpl(BiliBiliAPI,'x/article/viewinfo?id=',undefined,'&mobi_app=unknown'),
 	BiliBiliAPIFavList = WW.Tmpl(BiliBiliAPI,'x/v3/fav/folder/created/list-all?up_mid=',undefined),
 	BiliBiliAPIFav = WW.Tmpl(BiliBiliAPI,'medialist/gateway/base/spaceDetail?media_id=',undefined,'&pn=',undefined,'&ps=20'),
@@ -249,14 +250,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			EP : EP
 		}
 	},
-	SolveCV = function(B)
+	SolveCV = function(Article,Card)
 	{
 		var
-		Img = B.banner_url || B.origin_image_urls,
-		Article;
+		Img = Article.banner_url || Article.origin_image_urls,
+		ArticleShow;
 		WW.IsArr(Img) || (Img = Img ? [Img] : [])
-		if (Article = B.opus)
-			Article = WR.Map(function(V)
+		if (ArticleShow = Article.opus)
+			ArticleShow = WR.Map(function(V)
 			{
 				var
 				Line = '',
@@ -325,6 +326,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								// Link to same site article
 								Line = BiliBiliArticleRead + V.link_card.card.biz_id
 								break
+							case 35 :
+								// cv35867277 Link to mall
+								if (Line = WR.Find(function(B){return V.link_card.card.biz_id === B.itemIdStr},Card))
+								{
+									Img.push(Line.img)
+									Line = '[' + Line.name + '](' + Line.jumpLink + ')'
+								}
+								else Line = WC.OTJ(V)
+								break
 							default :
 								Line = WC.OTJ(V)
 						}
@@ -333,21 +343,21 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						Line = WC.OTJ(V)
 				}
 				return Line.replace(/\n+$/,'')
-			},Article.content.paragraphs).join('\n')
-		else Article = O.Text(B.content)
+			},ArticleShow.content.paragraphs).join('\n')
+		else ArticleShow = O.Text(Article.content)
 		return {
 			NonAV : true,
-			ID : PrefixArticle + B.id,
+			ID : PrefixArticle + Article.id,
 			Img : Img,
-			Title : B.title,
-			UP : B.author.name,
-			UPURL : BiliBiliSpace + B.author.mid,
-			Date : 1E3 * B.publish_time,
-			Desc : Article,
+			Title : Article.title,
+			UP : Article.author.name,
+			UPURL : BiliBiliSpace + Article.author.mid,
+			Date : 1E3 * Article.publish_time,
+			Desc : ArticleShow,
 			More :
 			[
-				SolveCTime(B.ctime),
-				B.summary
+				SolveCTime(Article.ctime),
+				Article.summary
 			]
 		}
 	},
@@ -875,17 +885,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	{
 		return O.API(WW.N.ReqOH(BiliBiliBgmEpisode(ID),'Cookie','stardustpgcv=0')).Map(function(B)
 		{
-			var T,R = [];
+			var R;
 			B = SolveInitState(B)
-			WR.Each(function(V)
+			O.Walk(B,function(V,F)
 			{
-				V = V.state.data
-				if (T = WR.Path(['seasonInfo','mediaInfo','episodes'],V))
-					R = [WR.Find(WR.PropEq('ep_id',+ID),T).aid,T.season_id]
-				else if (T = WR.Path(['result','play_view_business_info'],V))
-					R = [T.episode_info.aid,T.season_info.season_id]
-			},B.props.pageProps.dehydratedState.queries)
-			return R
+				return 'play_view_business_info' === F && V.episode_info && V.season_info ?
+					R = R || [V.episode_info.aid,V.season_info.season_id] :
+					0
+			})
+			return R || []
 		})
 	}),
 	ShowCID = function(CID,Downloaded)
@@ -1486,12 +1494,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			*/
 			View : function(ID)
 			{
-				return O.ReqAPI(BiliBiliAPIArticleView(ID)).Map(function(B)
+				return O.ReqAPI(BiliBiliAPIArticleView(ID)).FMap(function(Article)
 				{
-					B = Common(B)
-					return {
-						Item : [SolveCV(B)]
-					}
+					Article = Common(Article)
+					return O.ReqAPI(BiliBiliAPIArticleCard(ID)).Map(function(Card)
+					{
+						Card = WR.Flatten(WR.Val(Common(Card)))
+						return {
+							Item : [SolveCV(Article,Card)]
+						}
+					})
 				})
 			}
 		},{
@@ -2001,8 +2013,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								UP : V.uname,
 								UPURL : BiliBiliSpace + V.mid,
 								Date : 1E3 * V.mtime,
-								Desc : V.sign,
-								More : V.official_verify && V.official_verify.desc
+								More :
+								[
+									V.official_verify && V.official_verify.desc,
+									V.sign
+								]
 							}
 						},B.list)
 					}

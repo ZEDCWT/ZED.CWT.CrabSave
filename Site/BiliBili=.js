@@ -23,6 +23,7 @@ BiliBiliArticleRead = BiliBili + 'read/cv',
 BiliBiliAPI = 'https://api.bilibili.com/',
 BiliBiliAPIArticle = BiliBiliAPI + 'x/article/',
 BiliBiliAPIArticleView = WW.Tmpl(BiliBiliAPIArticle,'view?id=',undefined),
+BiliBiliAPIArticleCard = WW.Tmpl(BiliBiliAPIArticle,'cards?ids=co',undefined),
 // BiliBiliAPIWebView = WW.Tmpl(BiliBiliAPI,'x/web-interface/view?aid=',undefined),
 BiliBiliAPIWebViewDetail = WW.Tmpl(BiliBiliAPI,'x/web-interface/view/detail?aid=',undefined),
 BiliBiliAPIPlayURL = WW.Tmpl(BiliBiliAPI,'x/player/wbi/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=4048&fourk=1'),
@@ -396,7 +397,8 @@ module.exports = O =>
 
 					if (Normal)
 					{
-						if (T = WR.Path(['modules','module_dynamic','major','opus','title'],Opus))
+						if (T = WR.Path(['modules','module_dynamic','major','opus','summary','text'],Opus) ||
+							WR.Path(['modules','module_dynamic','major','opus','title'],Opus))
 						{
 							CommonTitle.push(T)
 							Meta.push(T)
@@ -520,7 +522,10 @@ module.exports = O =>
 			})
 			*/
 
-			if (PrefixArticle === Prefix) return Ext.ReqB(O.Coke(BiliBiliAPIArticleView(ID))).Map(Article =>
+			if (PrefixArticle === Prefix) return Ext.ReqB(O.Coke(BiliBiliAPIArticleView(ID))).FMap(Article =>
+			{
+				return Ext.ReqB(O.Coke(BiliBiliAPIArticleCard(ID))).Map(Card => [Article,Card])
+			}).Map(([Article,Card]) =>
 			{
 				var
 				Meta = [],
@@ -528,6 +533,7 @@ module.exports = O =>
 				Img = [],
 				T;
 				Article = Common(Article)
+				Card = WR.Flatten(WR.Val(Common(Card)))
 				if (T = Article.opus)
 				{
 					T.content.paragraphs.forEach(V =>
@@ -590,6 +596,14 @@ module.exports = O =>
 										break
 									case 15 :
 										Line = BiliBiliArticleRead + V.link_card.card.biz_id
+										break
+									case 35 :
+										if (Line = Card.find(B => V.link_card.card.biz_id === B.itemIdStr))
+										{
+											Img.push(Line.img)
+											Line = `[${Line.name}](${Line.jumpLink})`
+										}
+										else Line = WC.OTJ(V)
 										break
 									default :
 										Line = O.Bad('Unknown LinkType #' + V.link_card.card.link_type + ' | ' + WC.OTJ(V))

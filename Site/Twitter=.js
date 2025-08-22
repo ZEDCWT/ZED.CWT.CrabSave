@@ -45,6 +45,7 @@ TwitterAPIGraphQLFeature = WC.OTJ(
 module.exports = O =>
 {
 	var
+	TweetCache = O.MakePostCache(),
 	IDNotFound = [],
 	IDNotFoundSet = new Set,
 
@@ -71,12 +72,124 @@ module.exports = O =>
 		Q.errors?.some(V => !CommonErrorIgnore.has(V.code)) && O.Bad(Q.errors)
 		return Q
 	},
-	MakeHead = Q => WN.ReqOH(Q,
-	[
-		'X-CSRF-Token',WC.CokeP(O.CokeRaw()).ct0,
-		'Authorization','Bearer ' + TwitterAuth
-	]),
-	MakeGraphQL = (URL,Data) => MakeHead(
+	SignMed,
+	MakeSign = Ext => SignMed ?
+		WX.Just(SignMed) :
+		Ext.ReqB(Twitter).FMap(Page =>
+		{
+			var
+			ScriptHash = WW.MF(/"ondemand\.s":"([^"]+)"/,Page);
+			return Ext.ReqB(TwImgAbsSign(ScriptHash)).Map(Script =>
+			{
+				var
+				SolveCurveY = (C,T) =>
+				{
+					var Low = 0,High = 1,Mid,MidT,F;
+					for (F = 30;F--;)
+					{
+						Mid = (Low + High) / 2
+						MidT = 3 * Mid * (1 - Mid) * (1 - Mid) * C[0] +
+							3 * Mid * Mid * (1 - Mid) * C[2] +
+							Mid * Mid * Mid
+						MidT < T ?
+							Low = Mid :
+							High = Mid
+					}
+					F = (Low + High) / 2
+					return 3 * F * (1 - F) * (1 - F) * C[1] +
+						3 * F * F * (1 - F) * C[3] +
+						F * F * F
+				},
+
+				ScriptConst = WW.MF(/const\[[^,]+,[^,]+\]=\[([^;{}]+?)\],[$\w]+=[^;{}]+;new/,Script),
+				ScriptConstIndex = WW.MR((D,V) =>
+				{
+					D.push(V[1])
+					return D
+				},[],/\([$\w]+\[(\d+)\],16\)/g,ScriptConst),
+
+				PageVerify = WC.B64P(WW.MF(/<meta[^>]+"tw[^>]+content="([^"]+)"/,Page)),
+				PageClass = WW.MF(/\.([^.{]+){position:absolute;visibility:hidden/,Page),
+				VerifyRow = WW.MR((D,V) =>
+				{
+					D.push(
+						WR.Map(B => WR.Map(Number,WR.Match(/\d+/g,B)),
+						V.match(/ d="[^"]+"/g)[1]
+							.split('C')
+							.slice(1)))
+					return D
+				},[],RegExp('<svg[^>]+' + PageClass + '[^]+?</svg','g'),Page)
+					[3 & PageVerify[5]]
+					[15 & PageVerify[ScriptConstIndex[0]]],
+				VerifyfTS = WR.Product(WR.Map(V => 15 & PageVerify[V],ScriptConstIndex.slice(1))),
+
+				CSSColorStart = VerifyRow.slice(0,3),
+				CSSColorEnd = VerifyRow.slice(3,6),
+				CSSRotateEnd = 0 | 60 + 300 * VerifyRow[6] / 255,
+				CSSCubic = WR.MapU((V,F) =>
+				{
+					F = 1 & F ? -1 : 0
+					return +(F + (1 - F) * V / 255).toFixed(2)
+				},VerifyRow.slice(7)),
+
+				EndY = SolveCurveY(CSSCubic,VerifyfTS / 4096),
+				EndColor = WR.MapU((V,F) =>
+				{
+					F = CSSColorEnd[F]
+					V += (F - V) * EndY
+					return WR.Round(WR.Fit(0,V,255))
+				},CSSColorStart),
+				EndRotate = EndY * CSSRotateEnd * Math.PI / 180,
+				EndSalt = WR.Map(V => WR.HEX(V.toFixed(2)),
+					WR.Concat(EndColor,
+					[
+						Math.cos(EndRotate),
+						Math.sin(EndRotate),
+						-Math.sin(EndRotate),
+						Math.cos(EndRotate),
+						0,0
+					]))
+					.join('')
+					.replace(/[-.]/g,'');
+
+				return SignMed = (Method,Path) =>
+				{
+					var
+					Now = WR.Floor((WW.Now() - 16829244E5) / 1E3),
+					R = WC.BV()
+						.U(0)
+						.W(PageVerify)
+						.u4(Now)
+						.W(WC.Slice(WC.SHA256(
+						[
+							Method,
+							Path,
+							Now
+						].join('!') + 'obfiowerehiring' + EndSalt),0,16))
+						.U(3)
+						.B();
+					return WC.B64S(R).replace(/=+/,'')
+				}
+			})
+		}),
+	MakeHead = (Ext,Q) =>
+	{
+		Q = WN.ReqOH(Q,
+		[
+			'X-CSRF-Token',WC.CokeP(O.CokeRaw()).ct0,
+			'Authorization','Bearer ' + TwitterAuth
+		])
+		return MakeSign(Ext)
+			.FMap(Sign => Ext.ReqB(O.Coke(WW.N.ReqOH(Q,'X-Client-Transaction-ID',
+				Sign(Q.Method || 'GET',Q.URL.replace(/^[^/]+\/\/[^/]+/,''))))))
+			.Tap(null,E =>
+			{
+				if (WW.ErrIs(WW.Err.NetBadStatus,E) &&
+					404 === E.Arg[0])
+					CTIMed = null
+			})
+	},
+	MakeGraphQL = (Ext,URL,Data) => MakeHead(Ext,
 	{
 		URL : URL,
 		QS :
@@ -91,41 +204,6 @@ module.exports = O =>
 		var R = [];
 		O.Walk(B,V => 'TimelineAddEntries' === V.type && R.push(...V.entries))
 		return R
-	},
-
-	/**@type {Map<string,{At : number,Data : object}>}*/
-	TweetCache = new Map,
-	TweetCacheTimeout = 30 * 6E4,
-	TweetCacheTimer,
-	TweetCacheUpdateTimer = () =>
-	{
-		var
-		Now = WW.Now(),
-		First,
-		V;
-		for (V of TweetCache)
-		{
-			if (V[1].At + TweetCacheTimeout <= Now)
-				TweetCache.delete(V[0])
-			else
-				First = V[1]
-		}
-		if (!TweetCacheTimer && First)
-			TweetCacheTimer = Timers.setTimeout(() =>
-			{
-				TweetCacheTimer = null
-				TweetCacheUpdateTimer()
-			},First.At + TweetCacheTimeout - Now).unref()
-	},
-	TweetCacheSet = (ID,Entry,Meta) =>
-	{
-		TweetCache.has(ID) && TweetCache.delete(ID)
-		TweetCache.set(ID,
-		{
-			At : WW.Now(),
-			Data : [Entry,Meta],
-		})
-		TweetCacheTimer || TweetCacheUpdateTimer()
 	};
 
 	return {
@@ -522,12 +600,11 @@ module.exports = O =>
 			IDNotFoundSet.has(ID) &&
 				WW.Throw('144 Status Not Found')
 
-			if (TweetCache.has(ID))
+			if (Req = TweetCache.Get(ID))
 			{
-				Req = WX.Just(TweetCache.get(ID).Data)
-				TweetCache.delete(ID)
+				Req = WX.Just(Req)
 			}
-			else Req = Ext.ReqB(O.Coke(MakeGraphQL(TwitterAPIGraphQLTweetDetail,
+			else Req = MakeGraphQL(TwitterAPIGraphQLTweetDetail,
 			{
 				focalTweetId : ID,
 				includePromotedContent : false,
@@ -537,7 +614,7 @@ module.exports = O =>
 				withQuickPromoteEligibilityTweetFields : true,
 				withVoice : true,
 				withV2Timeline : true
-			}))).Map(B => [SolveAllEntry(Common(B,ID)).filter(V =>
+			}).Map(B => [SolveAllEntry(Common(B,ID)).filter(V =>
 			{
 				/*
 				{component:'related_tweet',details:{conversationDetails:{conversationSection:'RelatedTweet'}}}
@@ -645,14 +722,13 @@ module.exports = O =>
 							Tweet = V.tweet
 							break
 					}
-					Tweet?.rest_id && TweetCacheSet(Tweet.rest_id,[Entry],Meta)
+					Tweet?.rest_id && TweetCache.Set(Tweet.rest_id,[Entry],Meta)
 				}))
 			}
 		},
 		OnFin : () =>
 		{
-			TweetCache.clear()
-			TweetCacheTimer && Timers.clearTimeout(TweetCacheTimer)
+			TweetCache.Fin()
 		},
 	}
 }

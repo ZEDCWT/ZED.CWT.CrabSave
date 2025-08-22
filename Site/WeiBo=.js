@@ -8,7 +8,7 @@ WeiBoPage = WW.Tmpl(WeiBo,'p/',undefined),
 WeiBoAJAX = WeiBo + 'ajax/',
 WeiBoAJAXStatusShow = WW.Tmpl(WeiBoAJAX,'statuses/show?id=',undefined),
 WeiBoAJAXStatusLong = WW.Tmpl(WeiBoAJAX,'statuses/longtext?id=',undefined),
-WeiBoAJAXStatusComment = WW.Tmpl(WeiBoAJAX,'statuses/buildComments?is_show_bulletin=2&id=',undefined),
+WeiBoAJAXStatusComment = WW.Tmpl(WeiBoAJAX,'statuses/buildComments?is_show_bulletin=',undefined,'&id=',undefined),
 WeiBoPostHistory = WW.Tmpl(WeiBo,'p/aj/v6/history?mid=',undefined,'&page_size=',undefined,'&page=1'),
 WeiBoLiveShow = WW.Tmpl(WeiBo,'l/!/2/wblive/room/show_pc_live.json?live_id=',undefined),
 WeiBoCard = 'https://card.weibo.com/',
@@ -31,9 +31,13 @@ VideoIgnoreDomain =
 	'iqiyi.com',
 	'ku6.com',
 	'letv.com',
+	'my.tv.sohu.com',
 	'qq.com',
 	'tudou.com',
+	'v.ifeng.com',
+	'v.mobile.163.com',
 	'weibo.com',
+	'www.56.com',
 	'www.acfun.cn',
 	'xiaoka.tv',
 ],
@@ -64,6 +68,7 @@ VideoIgnoreDomainRX = RegExp(`//[^/]*(${VideoIgnoreDomain.map(WR.SafeRX).join`|`
 module.exports = O =>
 {
 	var
+	PostCache = O.MakePostCache(),
 	Common = B =>
 	{
 		B = WW.IsObj(B) ? B : WC.JTO(B)
@@ -95,19 +100,34 @@ module.exports = O =>
 	return {
 		URL : (ID,Ext) =>
 		{
+			var
+			ReqWithRef = Q => Ext.ReqB(O.Coke(WN.ReqOH(Q,'Referer',WeiBo))),
+			GetStatus;
 			ID = /^\d+\/(\w+)$/.exec(ID) || [ID]
 			if (!ID[1]) return WX.Throw('Bad ID ' + ID[0])
-			return Ext.ReqB(O.Coke(WeiBoAJAXStatusShow(ID[1]))).FMap(Status =>
+
+			if (GetStatus = PostCache.Get(ID[0]))
 			{
-				Status = WC.JTO(Status)
-				Status.error_code && O.Bad(WW.Quo(Status.error_code) + Status.message)
-				// {ok:0,msg:'访问频次过高，请稍后再试',error_type:'toast'}
-				Status.error_type && O.Bad(WW.Quo(Status.error_type) + Status.msg)
-				// LlJq26YJu	Unexpected `isLongText` flag
-				return (Status.isLongText ? Ext.ReqB(O.Coke(WeiBoAJAXStatusLong(ID[1]))) : WX.Just()).FMap(Long =>
+				GetStatus = WX.Just(GetStatus)
+			}
+			else
+			{
+				GetStatus = ReqWithRef(WeiBoAJAXStatusShow(ID[1])).Map(Status =>
+				{
+					Status = WC.JTO(Status)
+					Status.error_code && O.Bad(WW.Quo(Status.error_code) + Status.message)
+					// {ok:0,msg:'访问频次过高，请稍后再试',error_type:'toast'}
+					Status.error_type && O.Bad(WW.Quo(Status.error_type) + Status.msg)
+					// LlJq26YJu	Unexpected `isLongText` flag
+					return [Status]
+				})
+			}
+
+			return GetStatus.FMap(([Status,MetaCache]) =>
+			{
+				return (Status.isLongText ? ReqWithRef(WeiBoAJAXStatusLong(ID[1])) : WX.Just()).FMap(Long =>
 				{
 					var
-					ReqWithRef = V => Ext.ReqB(O.Coke(WN.ReqOH(V,'Referer',WeiBo))),
 					Forwarded = Status.retweeted_status,
 					Title,
 					Meta = [],
@@ -158,7 +178,7 @@ module.exports = O =>
 										N.error_code && O.Bad(N)
 
 										N = N.data.replay_origin_url
-										if (VideoIgnoreDomainRX.test(N))
+										if (!N || VideoIgnoreDomainRX.test(N))
 											return WX.Empty
 										return WX.Just(
 										{
@@ -181,9 +201,15 @@ module.exports = O =>
 											T.mp4_sd_url
 									if (Q)
 										Part.push({URL : [Q]})
-									else if (!VideoIgnoreDomainRX.test(T.h5_url))
+									else
+										VideoIgnoreDomainRX.test(T.h5_url) ||
+										/\.s?html$/.test(T.h5_url) ||
 										WW.Throw('Unable to solve video URL')
 								}
+								break
+
+							case 'ai_summary' : // 0
+								Meta.push(Q.title_sub)
 								break
 
 							case 'campaign' : // 0
@@ -222,7 +248,7 @@ module.exports = O =>
 												content : WW.MF(/WBA_content[^>]+>([^]+)<\/div>\s*(<\/div>|<div class="link")/,N),
 											}
 										}) :
-										[120001].includes(B.code) ?
+										[120001,120002].includes(B.code) ?
 											Meta.push
 											(
 												'',
@@ -334,6 +360,7 @@ module.exports = O =>
 									'event', // 5
 									'fangle', // 24
 									'file', // 2
+									'gameArticle', // 2
 									'group', // 0
 									'image', // 2
 									'ny25_byebye', // 0
@@ -389,7 +416,8 @@ module.exports = O =>
 									// Video is much smaller
 								case 'livephoto' : // N9YWhzARq
 									// Image contains EXIF
-									PicVariant.push(V.video_hd || V.video)
+									if (V = V.video_hd || V.video)
+										PicVariant.push(V)
 									break
 								default :
 									WW.Throw('Unknown Pic Type #' + V.type)
@@ -402,7 +430,7 @@ module.exports = O =>
 						}),Status.url_struct)
 					else if (T = Status.page_info)
 						ProcessObject(T)
-					return (Status.edit_count ? Ext.ReqB(O.Coke(WeiBoPostHistory(UnZip(ID[1]),-~Status.edit_count))).Map(His =>
+					return (Status.edit_count ? ReqWithRef(WeiBoPostHistory(UnZip(ID[1]),-~Status.edit_count)).Map(His =>
 					{
 						var
 						HTS = Q => Q.split(/<[^>]+>/)
@@ -427,7 +455,7 @@ module.exports = O =>
 								},[],/<[^>]+WB_pic[^]+?src="([^"]+)"/g,V)
 							))
 					}) : WX.Just())
-						.FMap(() => Ext.ReqB(O.Coke(WeiBoAJAXStatusComment(ID[1]))).Map(Comment =>
+						.FMap(() => ReqWithRef(WeiBoAJAXStatusComment(Status.is_show_bulletin && 2,UnZip(ID[1]))).Map(Comment =>
 						{
 							Comment = WC.JTO(Comment).data
 							if (Comment.length)
@@ -493,7 +521,11 @@ module.exports = O =>
 								Title : Title,
 								UP : Status.user.screen_name,
 								Date : Status.created_at,
-								Meta,
+								Meta : O.MetaJoin
+								(
+									Meta,
+									MetaCache,
+								),
 								Cover : Cover && ImgEnlarge(Cover),
 								Part,
 							}
@@ -504,7 +536,7 @@ module.exports = O =>
 				WW.ErrIs(WW.Err.NetBadStatus,E) &&
 					400 == E.Arg[0] ||
 					WW.Throw(E)
-				return Ext.ReqB(O.Coke(WeiBo + ID[0])).FMap(B =>
+				return ReqWithRef(WeiBo + ID[0]).FMap(B =>
 				{
 					var
 					Title,
@@ -529,8 +561,8 @@ module.exports = O =>
 					{
 						URL = WC.QSP(T).url
 						URL || O.Bad(T)
-						URL = Ext.ReqB(O.Coke(URL))
-							.FMap(B => Ext.ReqB(O.Coke(WN.JoinU(WeiBo,WW.MF(/<iframe[^>]+src="([^"]+)/,B)))))
+						URL = ReqWithRef(URL)
+							.FMap(B => ReqWithRef(WN.JoinU(WeiBo,WW.MF(/<iframe[^>]+src="([^"]+)/,B))))
 							.Map(B => WC.JTO(WW.MF(/play_url:(".*")/,B)),Ext)
 					}
 					else if (T = WW.MF(/li_story.*?action-data="([^"]+)/,B))
@@ -558,5 +590,26 @@ module.exports = O =>
 			/频次过高/.test(E[1]),
 		Pack : Q => WN.ReqOH(Q,'Referer',WeiBo),
 		Range : false,
+		OnReq : (Q,S,H,Meta) =>
+		{
+			if (Q.URL?.startsWith(WeiBoAJAX))
+			{
+				if (!Meta) return true
+				O.Walk(WC.JTO(S),V =>
+				{
+					if (WW.IsStr(V.mblogid) &&
+						WW.IsObj(V.user) &&
+						WW.IsStr(V.text))
+					{
+						PostCache.Set(V.user.idstr + '/' + V.mblogid,V,Meta)
+						return true
+					}
+				})
+			}
+		},
+		OnFin : () =>
+		{
+			PostCache.Fin()
+		},
 	}
 }

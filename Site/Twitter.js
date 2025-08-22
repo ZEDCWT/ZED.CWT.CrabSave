@@ -12,6 +12,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	TwitterUserMedia = WW.Tmpl(Twitter,undefined,'/media'),
 	TwitterHashTag = WW.Tmpl(Twitter,'hashtag/',undefined),
 	TwitterSearch = WW.Tmpl(Twitter,'search?q=',undefined),
+	TwImgAbs = 'https://abs.twimg.com/',
+	TwImgAbsSign = WW.Tmpl(TwImgAbs,'responsive-web/client-web/ondemand.s.',undefined,'a.js'),
 	// TwitterAPI = 'https://api.twitter.com/',
 	TwitterAPI = 'https://api.x.com/',
 	// TwitterAPITypeHome = 'timeline/home',
@@ -35,8 +37,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	TwitterAPIGraphQLSearchTimeline = TwitterAPIGraphQL + 'NA567V_8AFwu0cZEkAAKcw/SearchTimeline',
 	TwitterAPIGraphQLFeature = WC.OTJ(
 	{
+		articles_preview_enabled : true,
 		blue_business_profile_image_shape_enabled : false,
 		c9s_tweet_anatomy_moderator_badge_enabled : true,
+		communities_web_enable_tweet_community_results_fetch : true,
+		creator_subscriptions_quote_tweet_preview_enabled : false,
 		creator_subscriptions_tweet_preview_api_enabled : true,
 		freedom_of_speech_not_reach_fetch_enabled : false,
 		graphql_is_translatable_rweb_tweet_is_translatable_enabled : false,
@@ -45,16 +50,27 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		longform_notetweets_inline_media_enabled : true,
 		longform_notetweets_rich_text_read_enabled : true,
 		longform_notetweets_richtext_consumption_enabled : false,
+		premium_content_api_read_enabled : false,
+		profile_label_improvements_pcf_label_in_post_enabled : true,
 		responsive_web_edit_tweet_api_enabled : true,
 		responsive_web_enhance_cards_enabled : false,
 		responsive_web_graphql_exclude_directive_enabled : false,
 		responsive_web_graphql_skip_user_profile_image_extensions_enabled : false,
 		responsive_web_graphql_timeline_navigation_enabled : false,
+		responsive_web_grok_analysis_button_from_backend : false,
+		responsive_web_grok_analyze_button_fetch_trends_enabled : false,
+		responsive_web_grok_analyze_post_followups_enabled : true,
+		responsive_web_grok_image_annotation_enabled : true,
+		responsive_web_grok_share_attachment_enabled : true,
+		responsive_web_grok_show_grok_translated_post : false,
+		responsive_web_jetfuel_frame : false,
 		responsive_web_media_download_video_enabled : true,
 		responsive_web_text_conversations_enabled : false,
 		responsive_web_twitter_article_tweet_consumption_enabled : false,
 		responsive_web_twitter_blue_verified_badge_is_enabled : false,
 		rweb_lists_timeline_redesign_enabled : true,
+		rweb_tipjar_consumption_enabled : true,
+		rweb_video_screen_enabled : false,
 		rweb_video_timestamps_enabled : true,
 		standardized_nudges_misinfo : true,
 		tweet_awards_web_tipping_enabled : false,
@@ -695,17 +711,132 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		})
 		return R
 	},
-	MakeHead = function(Q)
+	SignMed,
+	MakeSign = function()
 	{
-		return WW.N.ReqOH(Q,
+		return SignMed ?
+			WX.Just(SignMed) :
+			O.Req(Twitter).FMap(function(Page)
+			{
+				var
+				ScriptHash = WW.MF(/"ondemand\.s":"([^"]+)"/,Page);
+				return O.API(TwImgAbsSign(ScriptHash)).Map(function(Script)
+				{
+					var
+					SolveCurveY = function(C,T)
+					{
+						var Low = 0,High = 1,Mid,MidT,F;
+						for (F = 30;F--;)
+						{
+							Mid = (Low + High) / 2
+							MidT = 3 * Mid * (1 - Mid) * (1 - Mid) * C[0] +
+								3 * Mid * Mid * (1 - Mid) * C[2] +
+								Mid * Mid * Mid
+							MidT < T ?
+								Low = Mid :
+								High = Mid
+						}
+						F = (Low + High) / 2
+						return 3 * F * (1 - F) * (1 - F) * C[1] +
+							3 * F * F * (1 - F) * C[3] +
+							F * F * F
+					},
+
+					ScriptConst = WW.MF(/const\[[^,]+,[^,]+\]=\[([^;{}]+?)\],[$\w]+=[^;{}]+;new/,Script),
+					ScriptConstIndex = WW.MR(function(D,V)
+					{
+						D.push(V[1])
+						return D
+					},[],/\([$\w]+\[(\d+)\],16\)/g,ScriptConst),
+
+					PageVerify = WC.B64P(WW.MF(/<meta[^>]+"tw[^>]+content="([^"]+)"/,Page)),
+					PageClass = WW.MF(/\.([^.{]+){position:absolute;visibility:hidden/,Page),
+					VerifyRow = WW.MR(function(D,V)
+					{
+						D.push(WR.Map(function(B)
+						{
+							return WR.Map(Number,WR.Match(/\d+/g,B))
+						},V.match(/ d="[^"]+"/g)[1]
+							.split('C')
+							.slice(1)))
+						return D
+					},[],RegExp('<svg[^>]+' + PageClass + '[^]+?</svg','g'),Page)
+						[3 & PageVerify[5]]
+						[15 & PageVerify[ScriptConstIndex[0]]],
+					VerifyfTS = WR.Product(WR.Map(function(V){return 15 & PageVerify[V]},ScriptConstIndex.slice(1))),
+
+					CSSColorStart = VerifyRow.slice(0,3),
+					CSSColorEnd = VerifyRow.slice(3,6),
+					CSSRotateEnd = 0 | 60 + 300 * VerifyRow[6] / 255,
+					CSSCubic = WR.MapU(function(V,F)
+					{
+						F = 1 & F ? -1 : 0
+						return +(F + (1 - F) * V / 255).toFixed(2)
+					},VerifyRow.slice(7)),
+
+					EndY = SolveCurveY(CSSCubic,VerifyfTS / 4096),
+					EndColor = WR.MapU(function(V,F)
+					{
+						F = CSSColorEnd[F]
+						V += (F - V) * EndY
+						return WR.Round(WR.Fit(0,V,255))
+					},CSSColorStart),
+					EndRotate = EndY * CSSRotateEnd * Math.PI / 180,
+					EndSalt = WR.Map(function(V)
+					{
+						return WR.HEX(V.toFixed(2))
+					},WR.Concat(EndColor,
+					[
+						Math.cos(EndRotate),
+						Math.sin(EndRotate),
+						-Math.sin(EndRotate),
+						Math.cos(EndRotate),
+						0,0
+					])).join('').replace(/[-.]/g,'');
+
+					return SignMed = function(Method,Path)
+					{
+						var
+						Now = WR.Floor((WW.Now() - 16829244E5) / 1E3),
+						R = WC.BV()
+							.U(0)
+							.W(PageVerify)
+							.u4(Now)
+							.W(WC.Slice(WC.SHA256(
+							[
+								Method,
+								Path,
+								Now
+							].join('!') + 'obfiowerehiring' + EndSalt),0,16))
+							.U(3)
+							.B();
+						return WC.B64S(R).replace(/=+/,'')
+					}
+				})
+			})
+	},
+	MakeReqWithHead = function(Q)
+	{
+		Q = WW.N.ReqOH(Q,
 		[
 			'X-CSRF-Token',WC.CokeP(O.Coke()).ct0,
 			'Authorization','Bearer ' + TwitterAuth
 		])
+		return MakeSign()
+			.FMap(function(Sign)
+			{
+				return O.Req(WW.N.ReqOH(Q,'X-Client-Transaction-ID',Sign(Q.Method || 'GET',Q.URL.replace(/^[^/]+\/\/[^/]+/,''))))
+			})
+			.Tap(null,function(E)
+			{
+				if (WW.ErrIs(WW.Err.NetBadStatus,E) &&
+					404 === E.Arg[0])
+					SignMed = null
+			})
 	},
 	MakeGraphQL = function(URL,Data)
 	{
-		return O.Req(MakeHead(
+		return MakeReqWithHead(
 		{
 			URL : URL,
 			QS :
@@ -713,7 +844,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				variables : WC.OTJ(Data),
 				features : TwitterAPIGraphQLFeature
 			}
-		}))
+		})
 	},
 	SolveGraphQLTweet = function(B,I,Page)
 	{
@@ -917,7 +1048,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			},SolveGraphQLTweet),
 			Hint : function(Q)
 			{
-				return O.Req(MakeHead(TwitterAPISearchSug(WC.UE(Q)))).Map(function(B)
+				return MakeReqWithHead(TwitterAPISearchSug(WC.UE(Q))).Map(function(B)
 				{
 					B = Common(B)
 					return {
@@ -1090,14 +1221,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			],
 			View : O.More(function(_,I)
 			{
-				return O.Req(MakeHead(TwitterAPIJSON(TwitterAPITypeGuide))).FMap(function(U)
+				return MakeReqWithHead(TwitterAPIJSON(TwitterAPITypeGuide)).FMap(function(U)
 				{
 					I[0] = WW.MU(/\d+/,Common(U).timeline.id)
-					return O.Req(MakeHead(TwitterAPIFollowing(I[0],-1)))
+					return MakeReqWithHead(TwitterAPIFollowing(I[0],-1))
 				})
 			},function(I,Page)
 			{
-				return O.Req(MakeHead(TwitterAPIFollowing(I[0],I[Page])))
+				return MakeReqWithHead(TwitterAPIFollowing(I[0],I[Page]))
 			},function(B)
 			{
 				B = Common(B)
