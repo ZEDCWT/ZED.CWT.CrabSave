@@ -58,6 +58,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	// BiliBiliAPIWebView = WW.Tmpl(BiliBiliAPIWeb,'view?aid=',undefined),
 	BiliBiliAPIWebViewDetail = WW.Tmpl(BiliBiliAPIWeb,'view/detail?aid=',undefined),
 	BiliBiliAPIWebViewDetailBV = WW.Tmpl(BiliBiliAPIWeb,'view/detail?bvid=',undefined),
+	BiliBiliAPIWebSearchAll = WW.Tmpl(BiliBiliAPIWeb,'wbi/search/all/v2?highlight=1&keyword=',undefined,'&page=',undefined,'&page_size=',O.Size,undefined),
 	BiliBiliAPIWebSearchSquare = BiliBiliAPIWeb + 'wbi/search/square?limit=50',
 	// BiliBiliAPIPlayerSo = WW.Tmpl(BiliBiliAPI,'x/player.so?aid=',undefined,'&id=cid:',undefined),
 	BiliBiliAPIPlayerWBI = WW.Tmpl(BiliBiliAPI,'x/player/wbi/v2?aid=',undefined,'&cid=',undefined),
@@ -95,11 +96,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliAPISeries = BiliBiliAPI + 'x/series/',
 	// BiliBiliAPISeriesDetail = WW.Tmpl(BiliBiliAPISeries,'series?series_id=',undefined),
 	BiliBiliAPISeriesArchive = WW.Tmpl(BiliBiliAPISeries,'archives?mid=',undefined,'&series_id=',undefined,'&pn=',undefined,'&ps=',O.Size),
-	BiliBiliAPISearchTypeVideo = 'video',
-	BiliBiliAPISearchTypeBgm = 'media_bangumi',
-	BiliBiliAPISearchTypeFilm = 'media_ft',
-	BiliBiliAPISearchTypeUser = 'bili_user',
-	BiliBiliAPISearch = WW.Tmpl(BiliBiliAPIWeb,'search/type?search_type=',undefined,'&keyword=',undefined,'&page=',undefined,'&highlight=1',undefined),
+	// BiliBiliAPISearchTypeVideo = 'video',
+	// BiliBiliAPISearchTypeBgm = 'media_bangumi',
+	// BiliBiliAPISearchTypeFilm = 'media_ft',
+	// BiliBiliAPISearchTypeUser = 'bili_user',
+	// BiliBiliAPISearch = WW.Tmpl(BiliBiliAPIWeb,'search/type?search_type=',undefined,'&keyword=',undefined,'&page=',undefined,'&highlight=1',undefined),
 	BiliBiliAPIPGC = BiliBiliAPI + 'pgc/',
 	BiliBiliAPIPGCMedia = WW.Tmpl(BiliBiliAPIPGC,'view/web/media?media_id=',undefined),
 	BiliBiliAPIPGCSeason = WW.Tmpl(BiliBiliAPIPGC,'view/web/season?season_id=',undefined),
@@ -896,7 +897,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								WV.Ah(P.member.uname,BiliBiliSpace + P.member.mid),
 							],
 							' \u25B2 ' + P.like,
-							P.content.message)
+							WC.HED(P.content.message))
 					},V.replies)
 					R.push(WW.Merge(
 						V.dynamic_id ?
@@ -909,7 +910,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						},
 						{
 							Img : WR.Pluck('img_src',V.content.pictures || []),
-							Title : V.content.message,
+							Title : WC.HED(V.content.message),
 							UP : V.member.uname,
 							UPURL : BiliBiliSpace + V.member.mid,
 							Date : 1000 * V.ctime,
@@ -1140,6 +1141,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			[
 				'メイドインアビス'
 			],
+			/*
 			View : function(ID,Page,Pref)
 			{
 				var
@@ -1269,6 +1271,141 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 									return [V[F],V.name]
 								},V)).V(WR.Default('',V[0] && V[0][F]),true)]])
 							},Menu)
+							return R
+						}
+					}
+				})
+			},
+			*/
+			View : function(ID,Page,Pref)
+			{
+				return ReqWBI(BiliBiliAPIWebSearchAll(ID,-~Page,'&' + WC.QSS(Pref ||
+				{
+					duration : 0
+				}))).Map(function(B)
+				{
+					return {
+						Max : B.numPages,
+						Len : B.numResults,
+						Item : WR.Each(function(V)
+						{
+							if (V.Title)
+							{
+								V.TitleView = SolveHighLight(V.Title)
+								V.Title = SolveHighLightRaw
+							}
+						},WR.Flatten(WR.Map(function(Type)
+						{
+							return WR.Map(function(V)
+							{
+								switch (V.type || Type.result_type)
+								{
+									case 'video' : return SolveAV(V)
+
+									case 'activity' : return V.url ?
+									{
+										Non : true,
+										ID : V.id,
+										URL : false,
+										Img : V.cover,
+										UP : V.title,
+										UPURL : V.url,
+										More : V.desc
+									} : []
+									case 'bili_user' : return {
+										Non : true,
+										ID : V.mid,
+										URL : BiliBiliSpace + V.mid,
+										Img : V.upic,
+										UP : V.uname,
+										UPURL : BiliBiliSpace + V.mid,
+										More : V.usign
+									}
+									case 'ketang' : return {
+										Non : true,
+										ID : PrefixCheeseSeason + V.id,
+										URL : BiliBiliCheeseSeason(V.id),
+										Img : V.pic,
+										Title : V.title,
+										UP : V.author,
+										UPURL : BiliBiliSpace + V.mid,
+										More :
+										[
+											V.subtitle,
+											V.episode_count_text
+										]
+									}
+									case 'live_room' : return {
+										Non : true,
+										ID : V.roomid,
+										URL : BiliBiliLive + V.roomid,
+										Img : V.cover,
+										Title : V.title,
+										UP : V.uname,
+										UPURL : BiliBiliSpace + V.uid,
+										More :
+										[
+											V.cate_name,
+											V.watched_show.text_large
+										]
+									}
+									case 'media_bangumi' :
+									case 'media_ft' : return {
+										Non : true,
+										ID : PrefixBgmSeason + V.season_id,
+										URL : BiliBiliBgmSeason(V.season_id),
+										Img : V.cover,
+										Title : V.title,
+										UP : PrefixBgmMedia + V.media_id,
+										UPURL : BiliBiliBgmMedia(V.media_id),
+										Date : 1E3 * V.pub_time,
+										More :
+										[
+											SolveHighLight(V.org_title || ''),
+											V.areas,
+											V.styles,
+											V.desc,
+										]
+									}
+									case 'web_game' : return {
+										Non : true,
+										ID : V.game_base_id,
+										URL : V.game_link,
+										Img : V.game_icon,
+										UP : V.game_name_v2,
+										UPURL : BiliBiliSpace + V.official_account,
+										More :
+										[
+											V.game_tags,
+											V.summary
+										]
+									}
+
+									default :
+										return {
+											Non : true,
+											ID : Type.result_type,
+											URL : false,
+											More : WC.OTJ(V)
+										}
+								}
+							},Type.data)
+						},B.result))),
+						Pref : function(I)
+						{
+							var
+							R = WV.Pref({C : I});
+							WR.EachU(function(V,F)
+							{
+								R.S([[O.Pascal(F),WV.Inp(
+								{
+									Inp : R.C(F),
+									NoRel : O.NoRel
+								}).Drop(V).V(V[0][0],true)]])
+							},{
+								order : [['','綜合排序'],['click','最新播放'],['pubdate','最新發佈'],['dm','最多彈幕'],['stow','最多收藏']],
+								duration : [[0,'全部時長'],[1,'10分鐘以下'],[2,'10~30分鐘'],[3,'30~60分鐘'],[4,'60分鐘以上']],
+							})
 							return R
 						}
 					}

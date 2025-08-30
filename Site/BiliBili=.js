@@ -191,7 +191,7 @@ module.exports = O =>
 							{
 								Part.push(
 								{
-									Title : V.content.message,
+									Title : WC.HED(V.content.message),
 									URL : V.content.pictures.map(V => V.img_src),
 								})
 							}
@@ -201,7 +201,7 @@ module.exports = O =>
 							(
 								Indent + WW.StrDate(1E3 * V.ctime,WW.DateColS) + ' ' + V.member.mid + ':' + V.member.uname,
 								Indent + '\u25B2 ' + V.like + ' Reply ' + V.rcount,
-								Indent + V.content.message
+								Indent + WC.HED(V.content.message)
 							)
 							V.replies?.forEach(P => Add(P,'\t' + Indent))
 						}
