@@ -45,6 +45,7 @@ BiliBiliAPIPolymer = BiliBiliAPI + 'x/polymer/',
 BiliBiliAPIPolymerDynamic = BiliBiliAPIPolymer + 'web-dynamic/v1/',
 BiliBiliAPIPolymerDynamicDetail = WW.Tmpl(BiliBiliAPIPolymerDynamic,'detail?id=',undefined),
 BiliBiliAPIPolymerDynamicDetailOpus = WW.Tmpl(BiliBiliAPIPolymerDynamic,'detail?id=',undefined,'&features=itemOpusStyle'),
+BiliBiliAPIReply = WW.Tmpl(BiliBiliAPI,'x/v2/reply?sort=2&oid=',undefined,'&type=',undefined),
 // BiliBiliVCAPI = 'https://api.vc.bilibili.com/',
 // BiliBiliVCAPIDetail = WW.Tmpl(BiliBiliVCAPI,'clip/v1/video/detail?video_id=',undefined,'&need_playurl=1'),
 // BiliBiliVCAPIDynamicAPIRoot = BiliBiliVCAPI + 'dynamic_svr/v1/dynamic_svr/',
@@ -169,6 +170,60 @@ module.exports = O =>
 				}
 				else O.Bad(B)
 				return U
+			},
+
+			PadComment = (R,User,ID,Type) =>
+			{
+				var
+				Part = R.Part ??= [],
+				Reply = [];
+				return Ext.ReqB(O.Coke(BiliBiliAPIReply(ID,Type))).Map(Comment =>
+				{
+					var
+					AddedID = new Set,
+					Add = (V,Indent = '') =>
+					{
+						if (V && !AddedID.has(V.rpid_str))
+						{
+							AddedID.add(V.rpid_str)
+							if (User === +V.member.mid &&
+								V.content.pictures?.length)
+							{
+								Part.push(
+								{
+									Title : V.content.message,
+									URL : V.content.pictures.map(V => V.img_src),
+								})
+							}
+							Reply.length && !Indent && Reply.push('')
+							V.dynamic_id && Reply.push(Indent + BiliBiliTimeline + V.dynamic_id_str)
+							Reply.push
+							(
+								Indent + WW.StrDate(1E3 * V.ctime,WW.DateColS) + ' ' + V.member.mid + ':' + V.member.uname,
+								Indent + '\u25B2 ' + V.like + ' Reply ' + V.rcount,
+								Indent + V.content.message
+							)
+							V.replies?.forEach(P => Add(P,'\t' + Indent))
+						}
+					};
+					Comment = Common(Comment)
+
+					// WBI response
+					Add(WR.Path(['top','admin'],Comment))
+					Add(WR.Path(['top','upper'],Comment))
+					// Non WBI response
+					Add(WR.Path(['upper','top'],Comment))
+
+					WR.Each(Add,Comment.top_replies)
+					WR.Each(Add,Comment.replies)
+
+					R.Meta = O.MetaJoin
+					(
+						R.Meta,
+						Reply,
+					)
+					return R
+				})
 			};
 
 			Q = Q.split('#')
@@ -232,7 +287,7 @@ module.exports = O =>
 			[
 				BiliBiliAPIPolymerDynamicDetail(ID),
 				BiliBiliAPIPolymerDynamicDetailOpus(ID),
-			]).FMapE((V,F) => Ext.ReqB(O.Coke(V)).Map(B => Common(B,!F))).All().Map(([DynamicNormal,DynamicOpus]) =>
+			]).FMapE((V,F) => Ext.ReqB(O.Coke(V)).Map(B => Common(B,!F))).All().FMap(([DynamicNormal,DynamicOpus]) =>
 			{
 				var
 				SetUnk = Q => O.Bad('Unknown ' + Q),
@@ -240,6 +295,7 @@ module.exports = O =>
 				{
 					var
 					Info = Normal || Opus,
+					Basic = Info.basic,
 					ModAuthor = Info.modules.module_author,
 					ModDynamic = Info.modules.module_dynamic,
 					OpusMajor = Opus.modules.module_dynamic.major?.opus,
@@ -450,7 +506,9 @@ module.exports = O =>
 					Card.Title ||= CommonTitle.join`\n`
 					Card.Meta = Meta
 					Card.Part = Part
-					return Card
+					return IsTop ?
+						PadComment(Card,ModAuthor.mid,Basic.comment_id_str,Basic.comment_type) :
+						Card
 				};
 				return SolveCard(DynamicNormal?.item,DynamicOpus.item,true)
 			})
@@ -474,22 +532,23 @@ module.exports = O =>
 			if (PrefixAudio === Prefix) return Ext.ReqB(O.Coke(BiliBiliAudioWebInfo(ID))).FMap(Audio =>
 			{
 				Audio = Common(Audio)
-				return Ext.ReqB(O.Coke(BiliBiliAudioWebURL(ID))).Map(URL =>
+				return Ext.ReqB(O.Coke(BiliBiliAudioWebURL(ID))).FMap(URL =>
 				{
 					URL = Common(URL)
-					return {
+					return PadComment(
+					{
 						Title : (Audio.author && Audio.author !== Audio.uname ? Audio.author + '.' : '') +
 							Audio.title,
 						UP : Audio.uname,
 						Date : 1E3 * Audio.passtime,
-						Meta : Audio.intro,
+						Meta : [Audio.intro],
 						Cover : Audio.cover,
 						Part : [
 						{
 							URL : [URL.cdns[0]],
 							Size : [URL.size]
 						}]
-					}
+					},Audio.uid,ID,12)
 				})
 			})
 
@@ -525,7 +584,7 @@ module.exports = O =>
 			if (PrefixArticle === Prefix) return Ext.ReqB(O.Coke(BiliBiliAPIArticleView(ID))).FMap(Article =>
 			{
 				return Ext.ReqB(O.Coke(BiliBiliAPIArticleCard(ID))).Map(Card => [Article,Card])
-			}).Map(([Article,Card]) =>
+			}).FMap(([Article,Card]) =>
 			{
 				var
 				Meta = [],
@@ -621,14 +680,15 @@ module.exports = O =>
 					Meta.push(O.Text(T,{Img : Img}))
 				}
 				Img.length && Part.push({URL : Img})
-				return {
+				return PadComment(
+				{
 					Title : Article.title,
 					UP : Article.author.name,
 					Date : 1E3 * Article.publish_time,
 					Meta,
 					Cover : Article.origin_image_urls?.[0],
 					Part,
-				}
+				},Article.author.mid,ID,12)
 			})
 
 			if (PrefixCheeseEpisode === Prefix) return Ext.ReqB(O.Coke(BiliBiliAPIPUGVViewSeasonByEP(ID))).FMap(Season =>
@@ -765,7 +825,7 @@ module.exports = O =>
 							Part.push(U)
 						}))
 					.Fin()
-					.Map(() =>
+					.FMap(() =>
 					{
 						R.Meta = O.MetaJoin
 						(
@@ -777,7 +837,7 @@ module.exports = O =>
 							],
 							MetaExt
 						)
-						return R
+						return PadComment(R,AV.owner.mid,ID,1)
 					})
 			})
 		},

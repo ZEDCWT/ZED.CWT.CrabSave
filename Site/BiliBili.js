@@ -91,6 +91,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliAPIPolymerDynamicNew = WW.Tmpl(BiliBiliAPIPolymerDynamic,'feed/all?type=all&offset=',undefined,BiliBiliAPIPolymerDynamicFeature),
 	BiliBiliAPIPolymerDynamicSpace = WW.Tmpl(BiliBiliAPIPolymerDynamic,'feed/space?host_mid=',undefined,'&offset=',undefined,BiliBiliAPIPolymerDynamicFeature),
 	BiliBiliAPIPolymerDynamicTopic = WW.Tmpl(BiliBiliAPIPolymerDynamic,'feed/topic?topic_id=',undefined,'&sort_by=',undefined,'&offset=',undefined,'&page_size=',O.Size,BiliBiliAPIPolymerDynamicFeature),
+	BiliBiliAPIReply = WW.Tmpl(BiliBiliAPI,'x/v2/reply?sort=2&oid=',undefined,'&type=',undefined),
 	BiliBiliAPISeries = BiliBiliAPI + 'x/series/',
 	// BiliBiliAPISeriesDetail = WW.Tmpl(BiliBiliAPISeries,'series?series_id=',undefined),
 	BiliBiliAPISeriesArchive = WW.Tmpl(BiliBiliAPISeries,'archives?mid=',undefined,'&series_id=',undefined,'&pn=',undefined,'&ps=',O.Size),
@@ -172,7 +173,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				})
 		})).FMap(function()
 		{
-			if (WR.StartW(BiliBiliAPISpaceWBI,Q.URL))
+			if (/\/wbi\//.test(Q.URL))
 			{
 				if (ReqWEBID)
 					Q.URL += '&w_webid=' + ReqWEBID
@@ -788,6 +789,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		R.push(Card)
 
 		Card.ID = PrefixTimeline + B.id_str
+		Card.Reply = [Basic.comment_id_str,Basic.comment_type]
 		if (ModAuthor) switch (ModAuthor.type)
 		{
 			case 'AUTHOR_TYPE_NORMAL' :
@@ -870,6 +872,64 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		{
 			Item : WR.Flatten(WR.Map(SolvePolymerDynamic,B.items))
 		}]
+	},
+	SolveComment = function(ID,Type)
+	{
+		return O.ReqAPI(BiliBiliAPIReply(ID,Type)).Map(function(B)
+		{
+			var
+			AddedID = WW.Set(),
+			R = [],
+			Add = function(V)
+			{
+				var More = [];
+				if (V && !WW.SetHas(AddedID,V.rpid_str))
+				{
+					WW.SetAdd(AddedID,V.rpid_str)
+					More.push('\u25B2 ' + V.like + ' Reply ' + V.rcount)
+					WR.Each(function(P)
+					{
+						More.push(
+							[
+								O.DTS(1E3 * P.ctime),
+								' ',
+								WV.Ah(P.member.uname,BiliBiliSpace + P.member.mid),
+							],
+							' \u25B2 ' + P.like,
+							P.content.message)
+					},V.replies)
+					R.push(WW.Merge(
+						V.dynamic_id ?
+						{
+							ID : PrefixTimeline + V.dynamic_id_str,
+						} : {
+							Non : true,
+							ID : 'Reply' + V.rpid_str,
+							URL : false,
+						},
+						{
+							Img : WR.Pluck('img_src',V.content.pictures || []),
+							Title : V.content.message,
+							UP : V.member.uname,
+							UPURL : BiliBiliSpace + V.member.mid,
+							Date : 1000 * V.ctime,
+							More : More
+						}))
+				}
+			};
+
+			B = Common(B)
+
+			// WBI response
+			Add(WR.Path(['top','admin'],B))
+			Add(WR.Path(['top','upper'],B))
+			// Non WBI response
+			Add(WR.Path(['upper','top'],B))
+
+			WR.Each(Add,B.top_replies)
+			WR.Each(Add,B.replies)
+			return R
+		})
 	},
 	SolveHighLightRaw,
 	SolveHighLight = function(V)
@@ -1107,7 +1167,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							V.Index = Index + WR.PadL(B.result.length + ~-B.page * B.pagesize,F + ~-B.page * B.pagesize)
 							return V
 						},B.result)]
-					}).ErrAs(function(){return WX.Just([0,[]])})
+					}).ErrAs(function(){return WX.Just([0,[],[]])})
 				};
 				ID = WC.UE(ID)
 				return WX.Merge
@@ -1305,12 +1365,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			*/
 			View : function(ID)
 			{
-				return O.ReqAPI(BiliBiliAPIPolymerDynamicDetail(ID)).Map(function(B)
+				return O.ReqAPI(BiliBiliAPIPolymerDynamicDetail(ID)).FMap(function(B)
 				{
 					B = Common(B)
-					return {
-						Item : SolvePolymerDynamic(B.item)
-					}
+					B = SolvePolymerDynamic(B.item)
+					return SolveComment(B[0].Reply[0],B[0].Reply[1]).Map(function(Comment)
+					{
+						return {
+							Item : WR.Cat(B,Comment)
+						}
+					})
 				})
 			}
 		},{
@@ -1397,12 +1461,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			],
 			View : function(ID)
 			{
-				return O.Req(BiliBiliMusicServiceSongInfo(ID)).Map(function(B)
+				return O.Req(BiliBiliMusicServiceSongInfo(ID)).FMap(function(B)
 				{
 					B = Common(B)
-					return {
-						Item : [SolveAU(B)]
-					}
+					// s1.hdslb.com/bfs/static/audio/song/static/js/app.cd09ff6cdce5419cfcf3.js
+					return SolveComment(ID,14).Map(function(Comment)
+					{
+						return {
+							Item : WR.Pre(SolveAU(B),Comment)
+						}
+					})
 				})
 			}
 		},{
@@ -1497,12 +1565,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				return O.ReqAPI(BiliBiliAPIArticleView(ID)).FMap(function(Article)
 				{
 					Article = Common(Article)
-					return O.ReqAPI(BiliBiliAPIArticleCard(ID)).Map(function(Card)
+					return O.ReqAPI(BiliBiliAPIArticleCard(ID)).FMap(function(Card)
 					{
 						Card = WR.Flatten(WR.Val(Common(Card)))
-						return {
-							Item : [SolveCV(Article,Card)]
-						}
+						// s1.hdslb.com/bfs/static/jinkela/article-web/article-web.edafa5287d8cb30516960961a1974c68baa22b96.js
+						return SolveComment(ID,12).Map(function(Comment)
+						{
+							return {
+								Item : WR.Pre(SolveCV(Article,Card),Comment)
+							}
+						})
 					})
 				})
 			}

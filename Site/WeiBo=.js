@@ -467,7 +467,7 @@ module.exports = O =>
 									(
 										'',
 										WW.StrDate(V.created_at,WW.DateColS) + ' ' + V.user.idstr + ':' + V.user.screen_name,
-										(V.source ? V.source + ' ' : '') + 'Like ' + V.like_counts,
+										(V.source ? V.source + ' ' : '') + '\u25B2 ' + V.like_counts,
 										V.text_raw,
 									)
 									WR.Each(B =>
