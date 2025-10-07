@@ -31,7 +31,11 @@ VideoIgnoreDomain =
 	'iqiyi.com',
 	'ku6.com',
 	'letv.com',
+	'livecbing.alicdn.com',
+	'livenging.alicdn.com',
+	'miaopai.com',
 	'my.tv.sohu.com',
+	'qianmo.com',
 	'qq.com',
 	'tudou.com',
 	'v.ifeng.com',
@@ -81,8 +85,12 @@ module.exports = O =>
 	SolveTextWithStruct = (Text,URLStruct) =>
 	{
 		var
-		Entity = {};
-		Text = Text.replace(/\u200B+$/,'')
+		EntityWithURL = {},
+		EntityWithoutURL = {},
+		SolveEntity = H => WR.Key(H).length ?
+			Text.replace(RegExp(WR.Map(WR.SafeRX,WR.Key(H)).join('|'),'g'),V => H[V]) :
+			Text;
+		Text = Text.replace(/[ \u200B]+$/,'')
 		WR.Each(V =>
 		{
 			var
@@ -90,18 +98,23 @@ module.exports = O =>
 			if (!U) U =
 				V.page_id ? WeiBoPage(V.page_id) :
 				null
-			if (U) Entity[V.short_url] = `<${V.url_title}> ${U}`
+			if (U) EntityWithURL[V.short_url] =
+				(EntityWithoutURL[V.short_url] = /\/\//.test(V.short_url) ?
+					`<${V.url_title}>` :
+					V.url_title) + `{${U}}`
 		},URLStruct)
-		return WR.Key(Entity).length ?
-			Text.replace(RegExp(WR.Map(WR.SafeRX,WR.Key(Entity)).join('|'),'g'),V => Entity[V]) :
-			Text
+		return [SolveEntity(EntityWithoutURL),SolveEntity(EntityWithURL)]
 	};
 
 	return {
 		URL : (ID,Ext) =>
 		{
 			var
-			ReqWithRef = Q => Ext.ReqB(O.Coke(WN.ReqOH(Q,'Referer',WeiBo))),
+			ReqWithRef = Q => Ext.ReqB(O.Coke(WN.ReqOH(Q,
+			[
+				'Accept','application/json, text/plain, */*',
+				'Referer',WeiBo,
+			]))),
 			GetStatus;
 			ID = /^\d+\/(\w+)$/.exec(ID) || [ID]
 			if (!ID[1]) return WX.Throw('Bad ID ' + ID[0])
@@ -211,7 +224,12 @@ module.exports = O =>
 							case 'ai_summary' : // 0
 								Meta.push(Q.title_sub)
 								break
-
+							case 'answer' : // 23
+								Meta.push(
+									'',
+									Q.page_title,
+									Q.page_desc)
+								break
 							case 'campaign' : // 0
 								Meta.push(
 									'',
@@ -324,14 +342,19 @@ module.exports = O =>
 								break
 							// case 'media_abstract' : // 0
 							// 	break
-							case 'panorama' : // 29
-								break
 							case 'podcast_audio' : // 44
 								Part.push(
 								{
 									URL : [Q.media_info.stream_url],
 									Title : Q.media_info.subtitle_preview,
 								})
+								break
+							case 'stock' : // 17
+								Meta.push(
+									Q.page_url,
+									Q.content1,
+									Q.content2,
+									Q.content3)
 								break
 							case 'story' : // 31
 								if (Q.slide_cover.playback_list)
@@ -349,6 +372,18 @@ module.exports = O =>
 									.forEach(V => /^content\d+$/.test(V) && Meta.push(Q[V]))
 								break
 
+							case undefined :
+								switch (Q.type)
+								{
+									case '49' :
+										Meta.push(
+											'',
+											Q.page_title,
+											Q.page_desc)
+										break
+								}
+								break
+
 							default :
 								WR.Include(Q.object_type,
 								[
@@ -357,6 +392,7 @@ module.exports = O =>
 									'appItem', // 2
 									'audio', // 0
 									'cardlist', // 0
+									'collection', // 2
 									'event', // 5
 									'fangle', // 24
 									'file', // 2
@@ -364,13 +400,13 @@ module.exports = O =>
 									'group', // 0
 									'image', // 2
 									'ny25_byebye', // 0
+									'panorama', // 29
 									'product', // 2
 									'shop', // 2
 									'topic', // 0
 									'user', // 2
 									'wbox', // 0
 									'webpage', // 0 23
-									undefined
 								]) || WW.Throw('Unknown Type #' + Q.type + ':' + Q.object_type)
 						}
 					},
@@ -381,7 +417,8 @@ module.exports = O =>
 					Title = Long ?
 						SolveTextWithStruct(WC.HED(Long.longTextContent),Long.url_struct) :
 						SolveTextWithStruct(Status.text_raw,Status.url_struct)
-					Meta.push(Title)
+					Meta.push(Title[1])
+					Title = Title[0]
 					if (Forwarded)
 						Title = Title.replace(/\/\/@.*/,'')
 
@@ -507,6 +544,12 @@ module.exports = O =>
 									)
 								},Comment)
 							}
+						}).ErrAs(E =>
+						{
+							if (WW.ErrIs(WW.Err.NetBadStatus,E) &&
+								432 == E.Arg[0])
+								return WX.Just()
+							WW.Throw(E)
 						}))
 						.FP(O.Part(Part,Ext,
 						{

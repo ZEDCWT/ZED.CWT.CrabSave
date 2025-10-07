@@ -103,7 +103,8 @@ module.exports = O =>
 						F * F * F
 				},
 
-				ScriptConst = WW.MF(/const\[[^,]+,[^,]+\]=\[([^;{}]+?)\],[$\w]+=[^;{}]+;new/,Script),
+				ScriptConst = WW.MF(/const\[[^,]+,[^,]+\]=\[([^;{}]+?)\],[$\w]+=[^;{}]+;new/,Script) ||
+					WW.MU(/(\(\w\[\d+\],16\)[^; ]+)+/,Script),
 				ScriptConstIndex = WW.MR((D,V) =>
 				{
 					D.push(V[1])
@@ -663,7 +664,7 @@ module.exports = O =>
 				{
 					var
 					Legacy = V.legacy,
-					User = V.core.user_results.result.legacy;
+					User = V.core.user_results.result.core || V.core.user_results.result.legacy;
 					Legacy.id_str === ID ?
 						SolveTweet(V,User,Meta = [],Info) :
 						SolveTweet(V,User,Meta ? Reply : Prelude)

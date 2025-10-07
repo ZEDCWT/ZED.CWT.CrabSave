@@ -240,7 +240,7 @@ module.exports = Option =>
 
 		TopNoSize : (Count,From) => All(
 		`
-			select Row,Site,ID,Title,State,Error from Task
+			select * from Task
 			where
 				Done is null
 				and

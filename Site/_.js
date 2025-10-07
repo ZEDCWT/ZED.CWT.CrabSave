@@ -203,7 +203,7 @@ module.exports = Option =>
 					}
 					return WX.Just(V)
 				}))
-				.Reduce((D,V) => D.push(V) && D,[]),
+				.All(),
 			PackM3U : (Opt = {}) => Q =>
 			{
 				var
@@ -239,7 +239,7 @@ module.exports = Option =>
 			MakePostCache : () =>
 			{
 				var
-				ConfTimeout = 2 * 60 * 6E4,
+				ConfTimeout = 3 * 60 * 6E4,
 
 				Cache = new Map,
 				CacheTimer,

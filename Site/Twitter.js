@@ -27,7 +27,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	TwitterAPIGraphQL = TwitterAPI + 'graphql/',
 	TwitterAPIGraphQLTweetDetail = TwitterAPIGraphQL + '3XDB26fBve-MmjHaWTUZxA/TweetDetail',
 	// TwitterAPIGraphQLUserTweet = TwitterAPIGraphQL + 'UsDw2UjYF5JE6-KyC7MDGw/UserTweets',
-	TwitterAPIGraphQLUserTweetReply = TwitterAPIGraphQL + '3GeIaLmNhTm1YsUmxR57tg/UserTweetsAndReplies',
+	TwitterAPIGraphQLUserTweetReply = TwitterAPIGraphQL + 'V-upWd0yOl6uMgrfJvf5zQ/UserTweetsAndReplies',
 	TwitterAPIGraphQLUserTweet = TwitterAPIGraphQL + 'PoZUz38XdT-pXNk0FRfKSw/UserTweets',
 	TwitterAPIGraphQLUserMedia = TwitterAPIGraphQL + 'YqiE3JL1KNgf9nSljYdxaA/UserMedia',
 	TwitterAPIGraphQLUserByScreen = TwitterAPIGraphQL + 'G6Lk7nZ6eEKd7LBBZw9MYw/UserByScreenName',
@@ -762,7 +762,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							F * F * F
 					},
 
-					ScriptConst = WW.MF(/const\[[^,]+,[^,]+\]=\[([^;{}]+?)\],[$\w]+=[^;{}]+;new/,Script),
+					ScriptConst = WW.MF(/const\[[^,]+,[^,]+\]=\[([^;{}]+?)\],[$\w]+=[^;{}]+;new/,Script) ||
+						WW.MU(/(\(\w\[\d+\],16\)[^; ]+)+/,Script),
 					ScriptConstIndex = WW.MR(function(D,V)
 					{
 						D.push(V[1])
@@ -908,7 +909,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},
 		AddTweet = function(V)
 		{
-			WR.Each(function(V){R.push(V)},SolveTweet(V.legacy,V.core.user_results.result.legacy,V.rest_id,V))
+			WR.Each(function(V){R.push(V)},SolveTweet
+			(
+				V.legacy,
+				V.core.user_results.result.core || V.core.user_results.result.legacy,
+				V.rest_id,
+				V
+			))
 			WR.Each(CheckTypeTweet,
 			[
 				WR.Path(['quoted_status_result','result'],V),

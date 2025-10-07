@@ -101,7 +101,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	}),
 	Req = function(Q)
 	{
-		return O.Req(WW.N.ReqOH(Q,'Referer',WeiBo)).FMap(function(B)
+		return O.Req(WW.N.ReqOH(Q,
+		[
+			'Accept','application/json, text/plain, */*',
+			'Referer',WeiBo
+		])).FMap(function(B)
 		{
 			return /'islogin'][ =]*'0'|login\.php/.test(B) && WC.CokeP(O.Coke()).ALC ?
 				TryLogin().FMap(function(Y)
@@ -287,7 +291,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					// PCKA1fH5P
 					More.push(Q.title_sub)
 					break
-
+				case 'answer' : // 23
+					More.push(
+						Q.page_title,
+						Q.page_desc)
+					break
 				case 'campaign' : // 0
 					More.push(
 						Q.page_title,
@@ -312,7 +320,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							Used to be a video
 					*/
 					break
-				case 'podcast_audio' : // 44
+				case 'stock' : // 17 GvDCqEdd7
+					More.push(
+						Q.content1,
+						Q.content2,
+						Q.content3)
 					break
 				case 'webpage' : // 0 23
 					More.push(Q.page_desc)
@@ -324,6 +336,17 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					},WR.Key(Q).sort())
 					break
 
+				case undefined :
+					switch (Q.type)
+					{
+						case '49' : // PaT2oDazC
+							More.push(
+								Q.page_title,
+								Q.page_desc)
+							break
+					}
+					break
+
 				default :
 					WR.Include(Q.object_type,
 					[
@@ -333,6 +356,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						'article', // 2 5
 						'audio', // 0
 						'cardlist', // 0
+						'collection', // 2 AgrOi58vq
 						'event', // 5
 						'fangle', // 24 Fqe3CtiOB
 						'file', // 2
@@ -340,6 +364,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						'group', // 0
 						'image', // 2 C3u48tdxX
 						'ny25_byebye', // 0 P6d9Wb5fg
+						'podcast_audio', // 44
 						'product', // 2 CpAXie5ma
 						'shop', // 2
 						'story', // 31
@@ -801,6 +826,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			},function(B)
 			{
 				B = WC.JTO(B)
+				1 === B.ok || O.Bad(B.ok,B.url)
 				return [B.max_id_str,
 				{
 					Size : 25,

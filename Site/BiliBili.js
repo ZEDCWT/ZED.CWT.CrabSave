@@ -92,7 +92,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	BiliBiliAPIPolymerDynamicNew = WW.Tmpl(BiliBiliAPIPolymerDynamic,'feed/all?type=all&offset=',undefined,BiliBiliAPIPolymerDynamicFeature),
 	BiliBiliAPIPolymerDynamicSpace = WW.Tmpl(BiliBiliAPIPolymerDynamic,'feed/space?host_mid=',undefined,'&offset=',undefined,BiliBiliAPIPolymerDynamicFeature),
 	BiliBiliAPIPolymerDynamicTopic = WW.Tmpl(BiliBiliAPIPolymerDynamic,'feed/topic?topic_id=',undefined,'&sort_by=',undefined,'&offset=',undefined,'&page_size=',O.Size,BiliBiliAPIPolymerDynamicFeature),
-	BiliBiliAPIReply = WW.Tmpl(BiliBiliAPI,'x/v2/reply?sort=2&oid=',undefined,'&type=',undefined),
+	// BiliBiliAPIReply = WW.Tmpl(BiliBiliAPI,'x/v2/reply?sort=2&oid=',undefined,'&type=',undefined),
+	BiliBiliAPIReplyWBI = WW.Tmpl(BiliBiliAPI,'x/v2/reply/wbi/main?mode=3&oid=',undefined,'&type=',undefined),
 	BiliBiliAPISeries = BiliBiliAPI + 'x/series/',
 	// BiliBiliAPISeriesDetail = WW.Tmpl(BiliBiliAPISeries,'series?series_id=',undefined),
 	BiliBiliAPISeriesArchive = WW.Tmpl(BiliBiliAPISeries,'archives?mid=',undefined,'&series_id=',undefined,'&pn=',undefined,'&ps=',O.Size),
@@ -200,6 +201,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		{
 			V.code && O.Bad(V.code,V.msg || V.message)
 			false === V.status && O.Bad(V.data)
+			V.data && V.data.v_voucher && 1 === WR.Key(V.data).length &&
+				O.Bad(V.data)
 		}
 		return V.data || V.result
 	},
@@ -271,6 +274,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						{
 							case 1 :
 								Line += B.word.words || ''
+								break
+							case 3 :
+								// Vote cv35303429
 								break
 							case 4 :
 								// {node_type:4,link:{show_text:...,link:...,link_type:16,style:{}}}
@@ -874,13 +880,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			Item : WR.Flatten(WR.Map(SolvePolymerDynamic,B.items))
 		}]
 	},
-	SolveComment = function(ID,Type)
+	PadComment = function(R,ID,Type)
 	{
-		return O.ReqAPI(BiliBiliAPIReply(ID,Type)).Map(function(B)
+		return ReqWBI(BiliBiliAPIReplyWBI(ID,Type)).Map(function(B)
 		{
 			var
 			AddedID = WW.Set(),
-			R = [],
 			Add = function(V)
 			{
 				var More = [];
@@ -899,7 +904,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							' \u25B2 ' + P.like,
 							WC.HED(P.content.message))
 					},V.replies)
-					R.push(WW.Merge(
+					R.Item.push(WW.Merge(
 						V.dynamic_id ?
 						{
 							ID : PrefixTimeline + V.dynamic_id_str,
@@ -919,8 +924,6 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				}
 			};
 
-			B = Common(B)
-
 			// WBI response
 			Add(WR.Path(['top','admin'],B))
 			Add(WR.Path(['top','upper'],B))
@@ -930,6 +933,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			WR.Each(Add,B.top_replies)
 			WR.Each(Add,B.replies)
 			return R
+		}).ErrAs(function(E)
+		{
+			if (WR.Contain(E && E.code,
+			[
+				12002,
+				12061
+			])) return WX.Just(R)
+			WW.Throw(E)
 		})
 	},
 	SolveHighLightRaw,
@@ -1403,7 +1414,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 									NoRel : O.NoRel
 								}).Drop(V).V(V[0][0],true)]])
 							},{
-								order : [['','綜合排序'],['click','最新播放'],['pubdate','最新發佈'],['dm','最多彈幕'],['stow','最多收藏']],
+								order : [['','綜合排序'],['click','最多播放'],['pubdate','最新發佈'],['dm','最多彈幕'],['stow','最多收藏']],
 								duration : [[0,'全部時長'],[1,'10分鐘以下'],[2,'10~30分鐘'],[3,'30~60分鐘'],[4,'60分鐘以上']],
 							})
 							return R
@@ -1506,12 +1517,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				{
 					B = Common(B)
 					B = SolvePolymerDynamic(B.item)
-					return SolveComment(B[0].Reply[0],B[0].Reply[1]).Map(function(Comment)
+					return PadComment(
 					{
-						return {
-							Item : WR.Cat(B,Comment)
-						}
-					})
+						Item : B
+					},B[0].Reply[0],B[0].Reply[1])
 				})
 			}
 		},{
@@ -1602,12 +1611,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				{
 					B = Common(B)
 					// s1.hdslb.com/bfs/static/audio/song/static/js/app.cd09ff6cdce5419cfcf3.js
-					return SolveComment(ID,14).Map(function(Comment)
+					return PadComment(
 					{
-						return {
-							Item : WR.Pre(SolveAU(B),Comment)
-						}
-					})
+						Item : [SolveAU(B)]
+					},ID,14)
 				})
 			}
 		},{
@@ -1706,12 +1713,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					{
 						Card = WR.Flatten(WR.Val(Common(Card)))
 						// s1.hdslb.com/bfs/static/jinkela/article-web/article-web.edafa5287d8cb30516960961a1974c68baa22b96.js
-						return SolveComment(ID,12).Map(function(Comment)
+						return PadComment(
 						{
-							return {
-								Item : WR.Pre(SolveCV(Article,Card),Comment)
-							}
-						})
+							Item : [SolveCV(Article,Card)]
+						},ID,12)
 					})
 				})
 			}

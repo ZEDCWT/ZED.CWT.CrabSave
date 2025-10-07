@@ -332,7 +332,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			Judge :
 			[
 				/^\d+$/,
-				O.Num('Illust|Artworks?')
+				O.Num('Illust(?:_?ID)?|Artworks?')
 			],
 			JudgeVal : O.ValNum,
 			View : function(ID)

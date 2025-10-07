@@ -113,7 +113,7 @@ declare module CrabSaveNS
 				Fin() : void
 			}
 		}) : {
-			URL(ID : string,Ext : SiteExt) : WishNS.Provider<SiteURL>
+			URL(ID : string,Ext : SiteExt,Full : Task) : WishNS.Provider<SiteURL>
 			IDView?(Q : string) : string
 			Is429?(E : any) : boolean
 			Pack? : SitePack

@@ -24,8 +24,10 @@ BiliBiliAPI = 'https://api.bilibili.com/',
 BiliBiliAPIArticle = BiliBiliAPI + 'x/article/',
 BiliBiliAPIArticleView = WW.Tmpl(BiliBiliAPIArticle,'view?id=',undefined),
 BiliBiliAPIArticleCard = WW.Tmpl(BiliBiliAPIArticle,'cards?ids=co',undefined),
-// BiliBiliAPIWebView = WW.Tmpl(BiliBiliAPI,'x/web-interface/view?aid=',undefined),
-BiliBiliAPIWebViewDetail = WW.Tmpl(BiliBiliAPI,'x/web-interface/view/detail?aid=',undefined),
+BiliBiliAPIWeb = BiliBiliAPI + 'x/web-interface/',
+BiliBiliAPIWebNav = BiliBiliAPIWeb + 'nav',
+// BiliBiliAPIWebView = WW.Tmpl(BiliBiliAPIWeb,'view?aid=',undefined),
+BiliBiliAPIWebViewDetail = WW.Tmpl(BiliBiliAPIWeb,'view/detail?aid=',undefined),
 BiliBiliAPIPlayURL = WW.Tmpl(BiliBiliAPI,'x/player/wbi/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=4048&fourk=1'),
 BiliBiliAPIPlayURLPGC = WW.Tmpl(BiliBiliAPI,'pgc/player/web/playurl?avid=',undefined,'&cid=',undefined,'&qn=',undefined,'&fnval=4048&fourk=1'),
 BiliBiliAPIPlayURLList =
@@ -45,7 +47,9 @@ BiliBiliAPIPolymer = BiliBiliAPI + 'x/polymer/',
 BiliBiliAPIPolymerDynamic = BiliBiliAPIPolymer + 'web-dynamic/v1/',
 BiliBiliAPIPolymerDynamicDetail = WW.Tmpl(BiliBiliAPIPolymerDynamic,'detail?id=',undefined),
 BiliBiliAPIPolymerDynamicDetailOpus = WW.Tmpl(BiliBiliAPIPolymerDynamic,'detail?id=',undefined,'&features=itemOpusStyle'),
-BiliBiliAPIReply = WW.Tmpl(BiliBiliAPI,'x/v2/reply?sort=2&oid=',undefined,'&type=',undefined),
+BiliBiliAPIReplyWBI = WW.Tmpl(BiliBiliAPI,'x/v2/reply/wbi/main?mode=3&oid=',undefined,'&type=',undefined),
+BiliBiliAPIVoteInfo = WW.Tmpl(BiliBiliAPI,'x/vote/vote_info?vote_id=',undefined),
+BiliBiliSpace = 'https://space.bilibili.com/',
 // BiliBiliVCAPI = 'https://api.vc.bilibili.com/',
 // BiliBiliVCAPIDetail = WW.Tmpl(BiliBiliVCAPI,'clip/v1/video/detail?video_id=',undefined,'&need_playurl=1'),
 // BiliBiliVCAPIDynamicAPIRoot = BiliBiliVCAPI + 'dynamic_svr/v1/dynamic_svr/',
@@ -53,11 +57,17 @@ BiliBiliAPIReply = WW.Tmpl(BiliBiliAPI,'x/v2/reply?sort=2&oid=',undefined,'&type
 BiliBiliTimeline = 'https://t.bilibili.com/',
 BiliBiliLive = 'https://live.bilibili.com/',
 
-Common = (V,ErrAsNull = false) => (V = WC.JTO(V)).code ?
-	ErrAsNull ?
-		null :
-		WW.Throw(V) :
-	V.data || V.result;
+Common = (V,ErrAsNull = false) =>
+{
+	V = WW.IsObj(V) ? V : WC.JTO(V)
+	if (V.code ||
+		false === V.status ||
+		V.data?.v_voucher && 1 === WR.Key(V.data).length)
+		return ErrAsNull ?
+			null :
+			WW.Throw(V)
+	return V.data || V.result
+};
 
 /*
 	av6777232
@@ -71,13 +81,53 @@ Common = (V,ErrAsNull = false) => (V = WC.JTO(V)).code ?
 /**@type {CrabSaveNS.SiteO}*/
 module.exports = O =>
 {
-	// var
+	var
 	// SolveInitState = B => O.JOM(/__INITIAL_STATE__=/,B);
+	ReqWEBID = '',
+	ReqWBISalt;
 
 	return {
-		URL : (Q,Ext) =>
+		URL : (Q,Ext,Full) =>
 		{
 			var
+			ReqWBI = Q => (ReqWBISalt ? WX.Just() : Ext.ReqB(O.Req(BiliBiliSpace + 2)).FMap(Space =>
+			{
+				ReqWEBID = WC.JTOO(WC.UD(WW.MF(/<script id="__RENDER_DATA__[^>]+>([^<]+)/,Space)))?.access_id
+				Space = WW.MR((D,V) => (D.push(V[1]),D),[],/<script[^>]+src="([^"]+space[^"]+)/g,Space)
+				return WX.From(Space)
+					.FMap(V => Ext.ReqB(O.Req({URL : V,Enc : false})))
+					.Reduce((D,V) => D + WC.U16S(V),'')
+					.FMap(Script => Ext.ReqB(O.Req(BiliBiliAPIWebNav)).Map(Nav =>
+					{
+						var
+						IS = WC.JTO(Nav).data.wbi_img,
+						Index = O.JOM(/(?=\[\d+(,\d+){63,}\][^{}]+forEach[^}]+push)/,Script),
+						SolveFakeURL = Q => WW.MF(/\/([^/.]+)\.\w+$/,Q);
+						IS = SolveFakeURL(IS.img_url) + SolveFakeURL(IS.sub_url)
+						ReqWBISalt = WR.Map(V => IS.charAt(V) || '',Index).join('').slice(0,32)
+					}))
+			})).FMap(() =>
+			{
+				Q = WW.N.ReqOH(Q,'Referer',BiliBili)
+				if (/\/wbi\//.test(Q.URL))
+				{
+					if (ReqWEBID)
+						Q.URL += '&w_webid=' + ReqWEBID
+					Q.URL += '&wts=' + ~~(WW.Now() / 1E3)
+					Q.URL += '&w_rid=' + WR.Low(WC.HEXS(WC.MD5
+					(
+						Q.URL.split('?')[1].split('&').sort().join('&') +
+						ReqWBISalt
+					)))
+				}
+				return Ext.ReqB(O.Coke(Q)).Map(B =>
+				{
+					if (WR.Include(WC.JTO(B).code,[-352,-403]))
+						ReqWBISalt = null
+					return Common(B)
+				})
+			}),
+
 			Prefix,ID,CID,
 			PlayURL = (ID,CID,Quality) => WX.TCO((_,F) =>
 				Ext.ReqB(O.Coke(
@@ -177,7 +227,11 @@ module.exports = O =>
 				var
 				Part = R.Part ??= [],
 				Reply = [];
-				return Ext.ReqB(O.Coke(BiliBiliAPIReply(ID,Type))).Map(Comment =>
+
+				if (Full.File)
+					return WX.Just(R)
+
+				return ReqWBI(BiliBiliAPIReplyWBI(ID,Type)).Map(Comment =>
 				{
 					var
 					AddedID = new Set,
@@ -206,7 +260,6 @@ module.exports = O =>
 							V.replies?.forEach(P => Add(P,'\t' + Indent))
 						}
 					};
-					Comment = Common(Comment)
 
 					// WBI response
 					Add(WR.Path(['top','admin'],Comment))
@@ -223,6 +276,23 @@ module.exports = O =>
 						Reply,
 					)
 					return R
+				}).ErrAs(E =>
+				{
+					if (
+					[
+						-404,
+						12002,
+						12061,
+					].includes(E?.code))
+					{
+						R.Meta = O.MetaJoin
+						(
+							R.Meta,
+							`[${E.code}] ${E.message}`,
+						)
+						return WX.Just(R)
+					}
+					WW.Throw(E)
 				})
 			};
 
@@ -548,7 +618,7 @@ module.exports = O =>
 							URL : [URL.cdns[0]],
 							Size : [URL.size]
 						}]
-					},Audio.uid,ID,12)
+					},Audio.uid,ID,14)
 				})
 			})
 
@@ -588,6 +658,7 @@ module.exports = O =>
 			{
 				var
 				Meta = [],
+				MetaExt = [],
 				Part = [],
 				Img = [],
 				T;
@@ -653,6 +724,24 @@ module.exports = O =>
 									case 1 :
 										Line = BiliBiliVideo(V.link_card.card.biz_id)
 										break
+									case 3 :
+										Part.push(Ext.ReqB(O.Coke(BiliBiliAPIVoteInfo(V.link_card.card.biz_id))).FMap(B =>
+										{
+											B = Common(B).vote_info
+											MetaExt.push
+											(
+												`{${B.vote_id}} [${B.join_num}] ${B.title}`,
+												[B.ctime,B.end_time].map(V => WW.StrDate(1E3 * V,WW.DateColS)).join` => `,
+												...B.options.map((V,F) =>
+												[
+													'	' + WW.ShowLI(B.options.length,F),
+													V.cnt + ':' + +(100 * V.cnt / B.join_num).toFixed(2) + '%',
+													V.opt_desc,
+												].join` `),
+											)
+											return WX.Empty
+										}))
+										break
 									case 15 :
 										Line = BiliBiliArticleRead + V.link_card.card.biz_id
 										break
@@ -680,15 +769,19 @@ module.exports = O =>
 					Meta.push(O.Text(T,{Img : Img}))
 				}
 				Img.length && Part.push({URL : Img})
-				return PadComment(
+				return O.Part(Part).FMap(Part => PadComment(
 				{
 					Title : Article.title,
 					UP : Article.author.name,
 					Date : 1E3 * Article.publish_time,
-					Meta,
+					Meta : O.MetaJoin
+					(
+						Meta,
+						MetaExt,
+					),
 					Cover : Article.origin_image_urls?.[0],
 					Part,
-				},Article.author.mid,ID,12)
+				},Article.author.mid,ID,12))
 			})
 
 			if (PrefixCheeseEpisode === Prefix) return Ext.ReqB(O.Coke(BiliBiliAPIPUGVViewSeasonByEP(ID))).FMap(Season =>
