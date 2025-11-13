@@ -400,7 +400,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 			}
 		},{
 			Name : 'Novel',
-			Judge : O.Num('N|Novel'),
+			Judge : O.Num('N|Novel(?:\\W*Show\\S*?ID)?'),
 			JudgeVal : O.ValNum,
 			View : function(ID)
 			{

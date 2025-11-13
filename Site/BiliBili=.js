@@ -47,6 +47,7 @@ BiliBiliAPIPolymer = BiliBiliAPI + 'x/polymer/',
 BiliBiliAPIPolymerDynamic = BiliBiliAPIPolymer + 'web-dynamic/v1/',
 BiliBiliAPIPolymerDynamicDetail = WW.Tmpl(BiliBiliAPIPolymerDynamic,'detail?id=',undefined),
 BiliBiliAPIPolymerDynamicDetailOpus = WW.Tmpl(BiliBiliAPIPolymerDynamic,'detail?id=',undefined,'&features=itemOpusStyle'),
+BiliBiliAPIPolymerDynamicDetailPic = WW.Tmpl(BiliBiliAPIPolymerDynamic,'detail/pic?id=',undefined),
 BiliBiliAPIReplyWBI = WW.Tmpl(BiliBiliAPI,'x/v2/reply/wbi/main?mode=3&oid=',undefined,'&type=',undefined),
 BiliBiliAPIVoteInfo = WW.Tmpl(BiliBiliAPI,'x/vote/vote_info?vote_id=',undefined),
 BiliBiliSpace = 'https://space.bilibili.com/',
@@ -378,7 +379,14 @@ module.exports = O =>
 						switch (V.type)
 						{
 							case 'RICH_TEXT_NODE_TYPE_VIEW_PICTURE' :
-								Part.push({URL : WR.Pluck('src',V.pics)})
+								if (WW.IsArr(V.pics))
+									Part.push({URL : WR.Pluck('src',V.pics)})
+								else if (V.rid)
+								{
+									// 991837283011264531
+									Part.push(Ext.ReqB(O.Coke(BiliBiliAPIPolymerDynamicDetailPic(V.rid)))
+										.Map(B => ({URL : WR.Pluck('src',Common(B))})))
+								}
 								break
 						}
 					},Q.rich_text_nodes),
@@ -575,9 +583,12 @@ module.exports = O =>
 					}
 					Card.Title ||= CommonTitle.join`\n`
 					Card.Meta = Meta
-					Card.Part = Part
 					return IsTop ?
-						PadComment(Card,ModAuthor.mid,Basic.comment_id_str,Basic.comment_type) :
+						O.Part(Part).FMap(Part =>
+						{
+							Card.Part = Part
+							return PadComment(Card,ModAuthor.mid,Basic.comment_id_str,Basic.comment_type)
+						}) :
 						Card
 				};
 				return SolveCard(DynamicNormal?.item,DynamicOpus.item,true)

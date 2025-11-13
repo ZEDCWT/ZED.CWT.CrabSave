@@ -101,11 +101,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	}),
 	Req = function(Q)
 	{
-		return O.Req(WW.N.ReqOH(Q,
+		var K = WW.Key();
+		return O.Req(WW.MakeO(WW.N.ReqOH(Q,
 		[
 			'Accept','application/json, text/plain, */*',
-			'Referer',WeiBo
-		])).FMap(function(B)
+			'Referer',WeiBo,
+			'X-XSRF-TOKEN',K,
+			'Cookie','XSRF-TOKEN=' + K + '; ' + O.Coke()
+		]),'Cookie',false)).FMap(function(B)
 		{
 			return /'islogin'][ =]*'0'|login\.php/.test(B) && WC.CokeP(O.Coke()).ALC ?
 				TryLogin().FMap(function(Y)
@@ -514,7 +517,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		Name : '\u65B0\u6D6A\u5FAE\u535A',
 		Alias : 'WB',
 		Judge : /\bWeiBo\b/i,
-		Min : 'ALC SUB SUBP',
+		/*
+			WBPSESS is required for some endpoints like mymblog or it will response with HTTP 432 without message
+		*/
+		Min : 'ALC SUB SUBP WBPSESS',
 		Sign : function()
 		{
 			return O.Req(WeiBo).Map(function(B)

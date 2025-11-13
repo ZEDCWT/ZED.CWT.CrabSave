@@ -110,11 +110,17 @@ module.exports = O =>
 		URL : (ID,Ext) =>
 		{
 			var
-			ReqWithRef = Q => Ext.ReqB(O.Coke(WN.ReqOH(Q,
-			[
-				'Accept','application/json, text/plain, */*',
-				'Referer',WeiBo,
-			]))),
+			ReqWithRef = Q =>
+			{
+				var K = WW.Key();
+				return Ext.ReqB(O.Req(WN.ReqOH(Q,
+				[
+					'Accept','application/json, text/plain, */*',
+					'Referer',WeiBo,
+					'X-XSRF-TOKEN',K,
+					'Cookie',`XSRF-TOKEN=${K}; ${O.CokeRaw()}`,
+				])))
+			},
 			GetStatus;
 			ID = /^\d+\/(\w+)$/.exec(ID) || [ID]
 			if (!ID[1]) return WX.Throw('Bad ID ' + ID[0])
@@ -441,6 +447,7 @@ module.exports = O =>
 					else if (Status.pic_num)
 						WR.Each(V =>
 						{
+							var T;
 							V = Status.pic_infos[V]
 							PicPush(V.largest.url)
 							switch (V.type)
@@ -453,8 +460,15 @@ module.exports = O =>
 									// Video is much smaller
 								case 'livephoto' : // N9YWhzARq
 									// Image contains EXIF
-									if (V = V.video_hd || V.video)
-										PicVariant.push(V)
+									T = V.video_hd
+									if (T?.endsWith('%2F.mov'))
+									{
+										// Q9nMndOjF
+										// HD field filled with absurd value `play?livephoto=https%3A%2F%2Fus.sinaimg.cn%2F.mov`
+										T = null
+									}
+									if (T ||= V.video)
+										PicVariant.push(T)
 									break
 								default :
 									WW.Throw('Unknown Pic Type #' + V.type)

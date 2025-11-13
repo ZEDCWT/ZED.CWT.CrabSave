@@ -417,8 +417,42 @@ module.exports = Option =>
 		}
 		return R
 	},
+	FormatNameLenShift = new WeakMap,
 	FormatName = (Format,O,Count,MaxLen) => Format.split(/([\\\/])/)
-		.map((V,F) => 1 & F ? V : FormatNameSingle(V,O,Count,MaxLen)).join``,
+		.map((V,F) =>
+		{
+			var
+			ShiftOpt = FormatNameLenShift.get(O),
+			CurrentMaxLen = MaxLen;
+			if (1 & F)
+				return V
+			V = V.replace(/\?([^?]+)\?/g,(_,S) =>
+			{
+				var
+				HasHole = 0,
+				Plain = '',
+				Shift = '';
+				S.split('|').forEach((B,G) =>
+				{
+					if (1 & G)
+					{
+						if (!O[B])
+						{
+							++HasHole
+							Shift += ShiftOpt?.[B] ?? ''
+						}
+					}
+					else
+					{
+						Plain += B
+					}
+				})
+				if (HasHole)
+					[...Plain + Shift].forEach(V => CurrentMaxLen -= Count(V))
+				return HasHole ? '' : S
+			})
+			return FormatNameSingle(V,O,Count,CurrentMaxLen)
+		}).join``,
 	SolveFileNameLimit = WX.CacheL(Root =>
 	{
 		var
@@ -437,8 +471,6 @@ module.exports = Option =>
 	}),
 	SolveName = (Format,O,Root,Ext) =>
 	{
-		Format = Format.replace(/\?([^?]+)\?/g,
-			(Q,S) => WW.MR((D,V) => D && O[V[1]],true,/\|([^|]+)\|/g,Q) ? S : '')
 		Ext = Ext || ''
 		return SolveFileNameLimit(Root).Map(([IsUnicode,Len]) => WN.JoinP(Root,FormatName
 		(
@@ -474,7 +506,7 @@ module.exports = Option =>
 					SolvePart = /**@type {WishNS.TypeR<CrabSaveNS.DB>['ViewPart']}*/ (Row,Part) => Part < 0 ?
 						TaskIsSingleMultiPart[V.Site]?.(V.ID) ?
 							DB.ViewPart(Row,false).Map(WR.Pick(['Total','Part','Title'])) :
-							WX.Just({}) :
+							DB.ViewPart(Row,false).Map(V => V ? WR.Pick(['Total'],V) : {}) :
 						DB.ViewPart(Row,Part),
 					Working,
 					EmptyRetry = 0;
@@ -505,7 +537,9 @@ module.exports = Option =>
 									N : WW.Pad02(UPAt.getMinutes()),
 									S : WW.Pad02(UPAt.getSeconds()),
 									MS : WW.Pad03(UPAt.getMilliseconds()),
-									PartIndex : 1 < Part.Total && WR.PadL(Part.Total,Part.Part),
+									PartIndex : WR.Has('Part',Part) ?
+										1 < Part.Total && WR.PadL(Part.Total,Part.Part) :
+										'',
 									PartTitle : WR.SafeFile(Part.Title || ''),
 									FileIndex : 1 < Part.File &&
 										Down.ExtCount !== Part.File &&
@@ -513,6 +547,10 @@ module.exports = Option =>
 									Type : PartSpecialTypeInv[Down.Part],
 								},
 								SizeChanged;
+								FormatNameLenShift.set(NameO,
+								{
+									PartIndex : 1 < Part.Total && '' + ~-Part.Total,
+								})
 								return SolveName(V.Format,NameO,V.Root,Down.Ext).FMap(Dest => WN.MakeDir(WN.DirN(Dest)).FMap(() => WX.Provider(O =>
 								{
 									var

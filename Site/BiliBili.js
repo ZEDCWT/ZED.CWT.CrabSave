@@ -630,13 +630,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						})
 						break
 					case 'RICH_TEXT_NODE_TYPE_VIEW_PICTURE' :
-						Link = V.pics[0].src
-						Card.Img = Card.Img || []
-						WR.Each(function(B)
+						if (WW.IsArr(V.pics))
 						{
-							Card.Img.push(B.src)
-						},V.pics)
-						break
+							Link = V.pics[0].src
+							Card.Img = Card.Img || []
+							WR.Each(function(B)
+							{
+								Card.Img.push(B.src)
+							},V.pics)
+							break
+						}
 					default :
 						Link = V.jump_url
 				}
