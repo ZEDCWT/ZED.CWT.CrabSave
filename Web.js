@@ -140,6 +140,7 @@
 	ClassDetail = WW.Key(),
 	ClassDetailPart = WW.Key(),
 	ClassConfirm = WW.Key(),
+
 	MakeHigh = function(V)
 	{
 		return WV.T(WV.Rock(ClassHighLight,'span'),V)
@@ -1339,10 +1340,13 @@
 			ClassList = WW.Key(),
 			ClassCard = WW.Key(),
 			ClassCardGroup = WW.Key(),
+			ClassCardImg = WW.Key(),
 			ClassCardContent = WW.Key(),
+			ClassCardLen = WW.Key(),
 			ClassCardUP = WW.Key(),
 			ClassCardClick = WW.Key(),
 			ClassCardBar = WW.Key(),
+			ClassCardMore = WW.Key(),
 			ClassImgMulti = WW.Key(),
 			ClassImgMultiLR = WW.Key(),
 
@@ -1737,9 +1741,22 @@
 								ImgCurrent = (ImgCurrent + Q % ImgCurrent) % ImgCurrent
 								WV.Attr(Img,'src',MakeImgURL(V.Img[ImgCurrent]))
 								WV.T(ImgMultiShow,WW.ShowLI(V.Img.length,ImgCurrent))
-							};
+							},
+							More = !!V.More && WV.Con
+							(
+								WV.Rock(ClassCardMore + ' ' + WV.FmtW),
+								WW.IsArr(V.More) ?
+									WR.MapU(function(B,F)
+									{
+										return B && -~F < V.More.length && WW.IsStr(B) ?
+											B + '\n' :
+											B
+									},V.More) :
+									V.More
+							);
 							if (WW.IsFunc(URL) && null != V.ID)
 								URL = URL(V.ID)
+							Img.loading = 'lazy'
 							if (WW.IsArr(V.Img))
 							{
 								V.Img = WR.Where(WR.Id,V.Img)
@@ -1765,32 +1782,32 @@
 							[
 								WV.Con(WV.A('legend'),
 								[
-									V.Index = WR.Default(S.Size * Q + F,V.Index),
-									' | ',
+									WV.X(V.Index = WR.Default(S.Size * Q + F,V.Index),'span'),
+									' ',
 									URL ? WV.Ah(IDView,URL,V.Title) : IDView,
 								]),
 								!!V.Group && WV.CSS(WV.Rock(ClassCardGroup),'background',RndColorGet(V.Group)),
+								WV.Con(Click,
+								[
+									V.Img && WV.Con(WV.Rock(ClassCardImg),
+									[
+										Img,
+									]),
+								]),
+								WW.IsArr(V.Img) && WV.ApR(
+								[
+									ImgMultiShow,
+									ImgMultiL,
+									ImgMultiR
+								],ImgMulti),
 								WV.Con(WV.Rock(ClassCardContent),
 								[
-									WV.Con(Click,
-									[
-										V.Img && Img
-									]),
-									WW.IsArr(V.Img) && WV.ApR(
-									[
-										ImgMultiShow,
-										ImgMultiL,
-										ImgMultiR
-									],ImgMulti),
 									!!V.Len && WW.IsNum(V.Len) ?
-										WV.X(WW.StrS(V.Len)) :
+										WV.T(WV.Rock(ClassCardLen),WW.StrS(V.Len)) :
 										WW.IsStr(V.Len) &&
-											WV.X(/^\d+(:\d+){1,2}$/.test(V.Len) ?
+											WV.T(WV.Rock(ClassCardLen),/^\d+(:\d+){1,2}$/.test(V.Len) ?
 												WW.StrS(WR.Reduce(function(D,V){return 60 * D - -V},0,V.Len.split(':'))) :
 												V.Len),
-									V.TitleView ?
-										WV.Con(WV.Rock(WV.FmtW),V.TitleView) :
-										!!V.Title && WV.T(WV.Rock(WV.FmtW),V.Title),
 									WV.ClsA
 									(
 										WV.X(V.UPURL ?
@@ -1809,6 +1826,12 @@
 										else R = DTS(Q)
 										return R
 									}(V.Date)),
+								]),
+								WV.Con(WV.Rock(ClassCardContent),
+								[
+									V.TitleView ?
+										WV.Con(WV.Rock(WV.FmtW),V.TitleView) :
+										!!V.Title && WV.T(WV.Rock(WV.FmtW),V.Title),
 									!!V.Desc && WV.But(
 									{
 										X : LangSolve('BroDesc'),
@@ -1825,19 +1848,8 @@
 											})
 										}
 									}).R,
-									!!V.More && WV.Con
-									(
-										WV.Rock(WV.FmtW),
-										WW.IsArr(V.More) ?
-											WR.MapU(function(B,F)
-											{
-												return B && -~F < V.More.length && WW.IsStr(B) ?
-													B + '\n' :
-													B
-											},V.More) :
-											V.More
-									)
-								])
+									!!More.childNodes.length && More,
+								]),
 							]),List)
 							NonDownload || MakeBar(Site,V,Click)
 							NonDownload && Img && URL && WV.On('click',function()
@@ -2133,25 +2145,31 @@
 							'text-align:start;' +
 							'word-break:break-all' +
 						'}' +
-						'.`C` legend{padding:0 `l`px `l`px;font-weight:bold}' +
+						'.`C` legend{padding:0 2px 4px;font-weight:bold}' +
+						'.`C` legend span{color:#888888}' +
+						'.`G`{width:100%;height:`h`px}' +
+						'.`I`{text-align:center}' +
+						'.`I` img{width:100%;max-height:`m`px;object-fit:contain}' +
+						'.`C` .`B`{padding:0;min-width:0}' +
 						'.`N`' +
 						'{' +
-							'padding:0 `h`px `h`px `h`px;' +
+							'padding:0 8px 8px 8px;' +
 							/*
 								This is required so that sub content like `、`.repeat(100) would not expand the container,
 								even though we already have word-break set.
 								Well, there may be a more elegant way...
 							*/
-							'width:`c`px' +
+							'width:`c`px;' +
+							'max-height:600px;' +
+							'overflow-y:auto' +
 						'}' +
+						'.`T`{text-align:right}' +
 						'.`U`,.`U`>.`B`{color:#ECA100}' +
 						'.`K`{cursor:pointer}' +
 						'.`S`{color:#F7F7F7;font-weight:bold;text-align:center}' +
 						'.`K`:hover .`S`,.`K`.`A` .`S`{background:rgba(102,175,224,.7)}' +
 						'.`K`.`O` .`S`{background:#66AFE0}' +
-						'.`C` img{width:100%;max-height:`m`px}' +
-						'.`C` .`B`{padding:0;min-width:0}' +
-						'.`G`{width:100%;height:`h`px}' +
+						'.`P`{border-top:2px solid #DDDDDD}' +
 
 						'.`M`{position:relative;text-align:center}' +
 						'.`LR`{position:absolute;top:0;width:50%;height:100%}',
@@ -2165,7 +2183,7 @@
 
 							p : ConfPadding,
 							h : ConfPaddingHalf,
-							l : ConfPaddingHalf / 2,
+							l : ConfPaddingQuarter,
 
 							HS : ClassHintSite,
 							HA : ClassHintAct,
@@ -2176,10 +2194,13 @@
 							L : ClassList,
 							C : ClassCard,
 							G : ClassCardGroup,
+							I : ClassCardImg,
 							N : ClassCardContent,
+							T : ClassCardLen,
 							U : ClassCardUP,
 							K : ClassCardClick,
 							S : ClassCardBar,
+							P : ClassCardMore,
 							c : ConfSizeCardWidth,
 							m : 2 * ConfSizeCardWidth,
 							M : ClassImgMulti,
@@ -4184,7 +4205,14 @@
 				},
 				Img : function(URL,Title)
 				{
-					return URL && WV.Ti(WV.Attr(WV.A('img'),'src',MakeImgURL(URL)),Title || '')
+					var R;
+					if (URL)
+					{
+						R = WV.A('img')
+						R.loading = 'lazy'
+						WV.Ti(WV.Attr(R,'src',MakeImgURL(URL)),Title || '')
+					}
+					return R
 				},
 				Text : function(Q)
 				{

@@ -561,7 +561,7 @@ module.exports = O =>
 						}).ErrAs(E =>
 						{
 							if (WW.ErrIs(WW.Err.NetBadStatus,E) &&
-								432 == E.Arg[0])
+								[414,432].includes(E.Arg[0]))
 								return WX.Just()
 							WW.Throw(E)
 						}))

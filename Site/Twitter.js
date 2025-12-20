@@ -22,17 +22,18 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	// TwitterAPITypeSearch = 'search/adaptive',
 	TwitterAPITypeGuide = 'guide',
 	TwitterAPISearchSug = WW.Tmpl(TwitterAPI,'1.1/search/typeahead.json?q=',undefined,'&tweet_mode=extended&count=',O.Size),
-	TwitterAPIFollowing = WW.Tmpl(TwitterAPI,'1.1/friends/list.json?user_id=',undefined,'&cursor=',undefined,'&count=',O.Size),
+	// TwitterAPIFollowing = WW.Tmpl(TwitterAPI,'1.1/friends/list.json?user_id=',undefined,'&cursor=',undefined,'&count=',O.Size),
 	TwitterAPIJSON = WW.Tmpl(TwitterAPI,'2/',undefined,'.json?tweet_mode=extended&count=',O.Size),
 	TwitterAPIGraphQL = TwitterAPI + 'graphql/',
 	TwitterAPIGraphQLTweetDetail = TwitterAPIGraphQL + '3XDB26fBve-MmjHaWTUZxA/TweetDetail',
 	// TwitterAPIGraphQLUserTweet = TwitterAPIGraphQL + 'UsDw2UjYF5JE6-KyC7MDGw/UserTweets',
-	TwitterAPIGraphQLUserTweetReply = TwitterAPIGraphQL + 'V-upWd0yOl6uMgrfJvf5zQ/UserTweetsAndReplies',
+	TwitterAPIGraphQLUserTweetReply = TwitterAPIGraphQL + 'gXCeOBFsTOuimuCl1qXimg/UserTweetsAndReplies',
 	TwitterAPIGraphQLUserTweet = TwitterAPIGraphQL + 'PoZUz38XdT-pXNk0FRfKSw/UserTweets',
 	TwitterAPIGraphQLUserMedia = TwitterAPIGraphQL + 'YqiE3JL1KNgf9nSljYdxaA/UserMedia',
 	TwitterAPIGraphQLUserByScreen = TwitterAPIGraphQL + 'G6Lk7nZ6eEKd7LBBZw9MYw/UserByScreenName',
 	// TwitterAPIGraphQLUserByRestID = TwitterAPIGraphQL + 'tD8zKvQzwY3kdx5yz6YmOw/UserByRestId', // {userId}
 	// TwitterAPIGraphQLHomeTimeline = TwitterAPIGraphQL + '6VUR2qFhg6jw55JEvJEmmA/HomeTimeline',
+	TwitterAPIGraphQLFollowing = TwitterAPIGraphQL + 'S5xUN9s2v4xk50KWGGvyvQ/Following',
 	TwitterAPIGraphQLHomeLatestTimeline = TwitterAPIGraphQL + 'AKmCZTyU1gWxo41b4PrQGA/HomeLatestTimeline',
 	TwitterAPIGraphQLSearchTimeline = TwitterAPIGraphQL + '4fpceYZ6-YQCx_JSl_Cn_A/SearchTimeline',
 	TwitterAPIGraphQLFeature = WC.OTJ(
@@ -68,6 +69,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		responsive_web_grok_show_grok_translated_post : false,
 		responsive_web_jetfuel_frame : false,
 		responsive_web_media_download_video_enabled : true,
+		responsive_web_profile_redirect_enabled : false,
 		responsive_web_text_conversations_enabled : false,
 		responsive_web_twitter_article_tweet_consumption_enabled : false,
 		responsive_web_twitter_blue_verified_badge_is_enabled : false,
@@ -1035,6 +1037,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			querySource : '',
 			product : 'Top'
 		})
+	},
+	SolveSelfUID = function()
+	{
+		return MakeReqWithHead(TwitterAPIJSON(TwitterAPITypeGuide)).Map(function(U)
+		{
+			return WW.MU(/\d+/,Common(U).timeline.id)
+		})
 	};
 	return {
 		ID : 'Twitter',
@@ -1249,6 +1258,29 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			],
 			View : O.More(function(_,I)
 			{
+				return SolveSelfUID().FMap(UID =>
+				{
+					I[0] = UID
+					return MakeGraphQL(TwitterAPIGraphQLFollowing,
+					{
+						userId : UID,
+						count : O.Size,
+						includePromotedContent : false
+					})
+				})
+			},function(I,Page)
+			{
+				return MakeGraphQL(TwitterAPIGraphQLFollowing,
+				{
+					userId : I[0],
+					count : O.Size,
+					cursor : I[Page],
+					includePromotedContent : false
+				})
+			},SolveGraphQLTweet)
+			/*
+			View : O.More(function(_,I)
+			{
 				return MakeReqWithHead(TwitterAPIJSON(TwitterAPITypeGuide)).FMap(function(U)
 				{
 					I[0] = WW.MU(/\d+/,Common(U).timeline.id)
@@ -1265,6 +1297,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					Item : WR.Map(SolveUser,B.users)
 				}]
 			})
+			*/
 		}],
 		IDURL : TwitterTweet
 	}
