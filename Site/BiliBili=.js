@@ -85,7 +85,26 @@ module.exports = O =>
 	var
 	// SolveInitState = B => O.JOM(/__INITIAL_STATE__=/,B);
 	ReqWEBID = '',
-	ReqWBISalt;
+	ReqWBISalt,
+
+	SolveID = Q =>
+	{
+		var Prefix,ID,CID;
+		Q = Q.split('#')
+		ID = /^([A-Z]+)(\d+)$/i.exec(Q[0])
+		CID = Q[1]
+		if (ID)
+		{
+			Prefix = ID[1]
+			ID = ID[2]
+		}
+		else
+		{
+			Prefix = ''
+			ID = Q[0]
+		}
+		return [Prefix,ID,CID]
+	};
 
 	return {
 		URL : (Q,Ext,Full) =>
@@ -129,7 +148,7 @@ module.exports = O =>
 				})
 			}),
 
-			Prefix,ID,CID,
+			[Prefix,ID,CID] = SolveID(Q),
 			PlayURL = (ID,CID,Quality) => WX.TCO((_,F) =>
 				Ext.ReqB(O.Coke(
 				{
@@ -296,16 +315,6 @@ module.exports = O =>
 					WW.Throw(E)
 				})
 			};
-
-			Q = Q.split('#')
-			ID = /^([A-Z]+)(\d+)$/i.exec(Q[0])
-			CID = Q[1]
-			if (ID)
-			{
-				Prefix = ID[1]
-				ID = ID[2]
-			}
-			else ID = Q[0]
 
 			/*
 			if (PrefixTimeline === Prefix) return Ext.ReqB(O.Coke(BiliBiliVCAPIDynamicDetail(ID))).Map(B =>
@@ -680,8 +689,13 @@ module.exports = O =>
 					T.content.paragraphs.forEach(V =>
 					{
 						var
+						LinkCard,
 						Line = '',
-						SolveText = Q => Q.nodes.forEach(B =>
+						/*
+							Text property may be an empty object
+							{para_type:1,format:{indent:{}},text:{}}
+						*/
+						SolveText = Q => WR.Each(B =>
 						{
 							switch (B.node_type)
 							{
@@ -694,7 +708,7 @@ module.exports = O =>
 								default :
 									O.Bad('Unknown NodeType #' + B.node_type)
 							}
-						});
+						},Q.nodes);
 						switch (V.para_type)
 						{
 							case 1 :
@@ -730,13 +744,14 @@ module.exports = O =>
 								break
 							case 7 :
 								// Link Card
-								switch (V.link_card.card.link_type)
+								LinkCard = V.link_card.card
+								switch (LinkCard.link_type)
 								{
 									case 1 :
-										Line = BiliBiliVideo(V.link_card.card.biz_id)
+										Line = BiliBiliVideo(LinkCard.biz_id)
 										break
 									case 3 :
-										Part.push(Ext.ReqB(O.Coke(BiliBiliAPIVoteInfo(V.link_card.card.biz_id))).FMap(B =>
+										Part.push(Ext.ReqB(O.Coke(BiliBiliAPIVoteInfo(LinkCard.biz_id))).FMap(B =>
 										{
 											B = Common(B).vote_info
 											MetaExt.push
@@ -754,19 +769,30 @@ module.exports = O =>
 										}))
 										break
 									case 15 :
-										Line = BiliBiliArticleRead + V.link_card.card.biz_id
+										Line = BiliBiliArticleRead + LinkCard.biz_id
 										break
 									case 35 :
-										if (Line = Card.find(B => V.link_card.card.biz_id === B.itemIdStr))
+										if (Line = Card.find(B => LinkCard.biz_id === B.itemIdStr))
 										{
 											Img.push(Line.img)
 											Line = `[${Line.name}](${Line.jumpLink})`
 										}
 										else Line = WC.OTJ(V)
 										break
+
+									case 4 :
+									case 21 :
+									case 39 :
+									case 41 :
+										Line = '[' + LinkCard.show_text + '](' + LinkCard.link + ')'
+										break
 									default :
-										Line = O.Bad('Unknown LinkType #' + V.link_card.card.link_type + ' | ' + WC.OTJ(V))
+										Line = O.Bad('Unknown LinkType #' + LinkCard.link_type + ' | ' + WC.OTJ(V))
 								}
+								break
+							case 9 :
+								Line = '# '
+								SolveText(V.text)
 								break
 							default :
 								O.Bad('Unknown ParaType #' + V.para_type + ' | ' + WC.OTJ(V))
@@ -950,6 +976,7 @@ module.exports = O =>
 			/^(?=\d)/,'av',
 			/#\d+$/,'',
 		]),
+		IDGroup : Q => SolveID(Q)[0],
 		/*
 			HTTP/1.1 412 Precondition Failed
 			{"code":-412,"message":"请求被拦截","ttl":1,"data":null}

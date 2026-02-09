@@ -1740,7 +1740,7 @@
 								ImgCurrent = V.Img.length
 								ImgCurrent = (ImgCurrent + Q % ImgCurrent) % ImgCurrent
 								WV.Attr(Img,'src',MakeImgURL(V.Img[ImgCurrent]))
-								WV.T(ImgMultiShow,WW.ShowLI(V.Img.length,ImgCurrent))
+								WV.T(ImgMultiShow,WW.ShowLI(V.Img.length,ImgCurrent).replace('/',' / '))
 							},
 							More = !!V.More && WV.Con
 							(
@@ -1848,7 +1848,7 @@
 											})
 										}
 									}).R,
-									!!More.childNodes.length && More,
+									More && !!More.childNodes.length && More,
 								]),
 							]),List)
 							NonDownload || MakeBar(Site,V,Click)
@@ -2148,8 +2148,8 @@
 						'.`C` legend{padding:0 2px 4px;font-weight:bold}' +
 						'.`C` legend span{color:#888888}' +
 						'.`G`{width:100%;height:`h`px}' +
-						'.`I`{text-align:center}' +
-						'.`I` img{width:100%;max-height:`m`px;object-fit:contain}' +
+						'.`Y`{text-align:center}' +
+						'.`Y` img{width:100%;max-height:`m`px;object-fit:contain}' +
 						'.`C` .`B`{padding:0;min-width:0}' +
 						'.`N`' +
 						'{' +
@@ -2171,7 +2171,7 @@
 						'.`K`.`O` .`S`{background:#66AFE0}' +
 						'.`P`{border-top:2px solid #DDDDDD}' +
 
-						'.`M`{position:relative;text-align:center}' +
+						'.`M`{position:relative;text-align:center;font-weight:bold}' +
 						'.`LR`{position:absolute;top:0;width:50%;height:100%}',
 						{
 							R : ID,
@@ -2194,7 +2194,7 @@
 							L : ClassList,
 							C : ClassCard,
 							G : ClassCardGroup,
-							I : ClassCardImg,
+							Y : ClassCardImg,
 							N : ClassCardContent,
 							T : ClassCardLen,
 							U : ClassCardUP,
@@ -3430,6 +3430,12 @@
 				if (Data = WSSolveJSON(Data.JSON))
 					WR.EachU(function(V,F){V(Data[F])},SCC)
 			}
+			WR.Each(function(V)
+			{
+				SC.On(V,WV.PrevDef,WB.SCD | WB.SCI)
+			},[
+				'Ctrl+s',
+			])
 			SC.On('Shift+Ctrl+Alt+Space+p+-+]',function()
 			{
 				DebugMake()

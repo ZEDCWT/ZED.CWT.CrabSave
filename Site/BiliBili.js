@@ -206,6 +206,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		}
 		return V.data || V.result
 	},
+	SolveSelf = O.CokeC(function()
+	{
+		return O.Req(BiliBiliAPIWebNav).Map(Common)
+	}),
 	SolveInitState = function(B)
 	{
 		return O.JOM(/__INITIAL_STATE__=|<script[^>]+__NEXT_DATA__[^>]+>/,B)
@@ -265,6 +269,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			ArticleShow = WR.Map(function(V)
 			{
 				var
+				LinkCard,
 				Line = '',
 				SolveText = function(Q)
 				{
@@ -324,28 +329,60 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						break
 					case 7 :
 						// Link Card
-						switch (V.link_card.card.link_type)
+						LinkCard = V.link_card.card
+						switch (LinkCard.link_type)
 						{
 							case 1 :
 								// Link to same site video
-								Line = BiliBiliVideo(V.link_card.card.biz_id)
+								Line = BiliBiliVideo(LinkCard.biz_id)
 								break
 							case 15 :
 								// Link to same site article
-								Line = BiliBiliArticleRead + V.link_card.card.biz_id
+								Line = BiliBiliArticleRead + LinkCard.biz_id
 								break
 							case 35 :
 								// cv35867277 Link to mall
-								if (Line = WR.Find(function(B){return V.link_card.card.biz_id === B.itemIdStr},Card))
+								if (Line = WR.Find(function(B){return LinkCard.biz_id === B.itemIdStr},Card))
 								{
 									Img.push(Line.img)
 									Line = '[' + Line.name + '](' + Line.jumpLink + ')'
 								}
 								else Line = WC.OTJ(V)
 								break
+
+							case 4 :
+								/*
+								Live
+								{"para_type":7,"link_card":{"card":{"show_text":"...","link":"https://live.bilibili.com/...","link_type":4,"biz_id":"...","style":{"font_level":"regular"}},"default_text":"..."}}
+								*/
+							case 21 :
+								/*
+								Game
+								{"para_type":7,"link_card":{"card":{"show_text":"...","link":"https://www.biligame.com/detail/?id=...","link_type":21,"biz_id":"...","style":{"font_level":"regular"}},"default_text":"..."}}
+								*/
+							case 39 :
+								/*
+								Link to same site Opus
+								{"para_type":7,"link_card":{"card":{"show_text":"...","link":"https://www.bilibili.com/opus/...","link_type":39,"biz_id":"...","style":{"font_level":"regular"}},"default_text":"..."}}
+								*/
+							case 41 :
+								/*
+								Link to same site video with cover card
+								{"para_type":7,"link_card":{"card":{"show_text":"...","link":"https://www.bilibili.com/video/...","link_type":41,"biz_id":"...","style":{"font_level":"regular"},"content_card":{"card_style":1,"card_info":{"content_video":{"video_type":1,"cid":...}}}},"default_text":"视频"}}
+								*/
+								Line = '[' + LinkCard.show_text + '](' + LinkCard.link + ')'
+								break
 							default :
 								Line = WC.OTJ(V)
 						}
+						break
+					case 9 :
+						/*
+						h1 > strong
+						{"para_type":9,"format":{"indent":{},"heading_type":1},"text":{"nodes":[{"node_type":1,"word":{"words":"...","font_size":24,"style":{"bold":true},"font_level":"xxLarge"}}]}}
+						*/
+						Line = '# '
+						SolveText(V.text)
 						break
 					default :
 						Line = WC.OTJ(V)
@@ -630,7 +667,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						})
 						break
 					case 'RICH_TEXT_NODE_TYPE_VIEW_PICTURE' :
-						if (WW.IsArr(V.pics))
+						if (WW.IsArr(V.pics) && V.pics.length)
 						{
 							Link = V.pics[0].src
 							Card.Img = Card.Img || []
@@ -885,6 +922,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	},
 	PadComment = function(R,ID,Type)
 	{
+		var Item = WW.IsArr(R) ? R : R.Item;
 		return ReqWBI(BiliBiliAPIReplyWBI(ID,Type)).Map(function(B)
 		{
 			var
@@ -907,7 +945,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							' \u25B2 ' + P.like,
 							WC.HED(P.content.message))
 					},V.replies)
-					R.Item.push(WW.Merge(
+					Item.push(WW.Merge(
 						V.dynamic_id ?
 						{
 							ID : PrefixTimeline + V.dynamic_id_str,
@@ -938,11 +976,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			return R
 		}).ErrAs(function(E)
 		{
-			if (WR.Contain(E && E.code,
-			[
-				12002,
-				12061
-			])) return WX.Just(R)
+			if (/\[(12002|12061)\]/.test(E)) return WX.Just(R)
 			WW.Throw(E)
 		})
 	},
@@ -1051,6 +1085,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		return O.DB('CID',String(ID)).FMap(function(CID)
 		{
 			return AV(ID,CID)
+		}).FMap(function(R)
+		{
+			return PadComment(R,ID,1)
 		})
 	},
 	SolveAU = function(V)
@@ -1119,8 +1156,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				}
 			},B.episodes)
 		}
-	},
-	Menu;
+	};
 	return {
 		ID : 'BiliBili',
 		Name : '\u55F6\u54E9\u55F6\u54E9',
@@ -2178,8 +2214,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							More :
 							[
 								UP.sign,
+								UP.live_room && O.Ah('Live ' + WW.Quo(UP.live_room.roomid) + UP.live_room.title,
+									BiliBiliLive + UP.live_room.roomid),
 								O.Ah('Dynamic',BiliBiliSpaceDynamic(ID)),
-								O.Ah('Audio ' + Nav.audio,BiliBiliSpaceAudio(ID)),
+								O.Ah('Audio ×' + Nav.audio,BiliBiliSpaceAudio(ID)),
 								O.Ah('Article',BiliBiliSpaceArticle(ID)),
 								O.Ah('SSList',BiliBiliSpaceSSList(ID)),
 								O.Ah('PUGV',BiliBiliSpacePUGV(ID)),
@@ -2212,9 +2250,9 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			],
 			View : function(_,Page)
 			{
-				return O.Req(BiliBiliAPIWebNav).FMap(function(B)
+				return SolveSelf().FMap(function(B)
 				{
-					return O.Req(BiliBiliAPIFo(Common(B).mid,-~Page))
+					return O.Req(BiliBiliAPIFo(B.mid,-~Page))
 				}).Map(function(B)
 				{
 					B = Common(B)

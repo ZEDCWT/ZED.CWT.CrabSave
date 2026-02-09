@@ -115,6 +115,7 @@ declare module CrabSaveNS
 		}) : {
 			URL(ID : string,Ext : SiteExt,Full : Task) : WishNS.Provider<SiteURL>
 			IDView?(Q : string) : string
+			IDGroup?(Q : string) : string
 			Is429?(E : any) : boolean
 			Pack? : SitePack
 			Range? : boolean

@@ -66,19 +66,19 @@ module.exports = Option =>
 	PartSpecialTypeInv = WR.Inv(PartSpecialType),
 
 	HTTP429Store = new Map,
-	HTTP429Prepare = (Site,Proxy,ProxyURL) =>
+	HTTP429Prepare = (ID,Proxy,ProxyURL) =>
 	{
 		var
-		Store = HTTP429Store.get(Site),
+		Store = HTTP429Store.get(ID),
 		Key = Proxy && ProxyURL || false;
-		Store || HTTP429Store.set(Site,Store = new Map)
+		Store || HTTP429Store.set(ID,Store = new Map)
 		return [Store,Key]
 	},
-	HTTP429Check = (Site,Proxy,ProxyURL) =>
+	HTTP429Check = (ID,Proxy,ProxyURL) =>
 	{
 		var
 		Now = WW.Now(),
-		[Store,Key] = HTTP429Prepare(Site,Proxy,ProxyURL),
+		[Store,Key] = HTTP429Prepare(ID,Proxy,ProxyURL),
 		Last,
 		After;
 		Last = Store.get(Key)
@@ -100,11 +100,11 @@ module.exports = Option =>
 		}
 		return HTTP429CandidateCache
 	},
-	HTTP429Record = (Site,Proxy,ProxyURL) =>
+	HTTP429Record = (ID,Proxy,ProxyURL) =>
 	{
 		var
 		Now = WW.Now(),
-		[Store,Key] = HTTP429Prepare(Site,Proxy,ProxyURL),
+		[Store,Key] = HTTP429Prepare(ID,Proxy,ProxyURL),
 		Cand,
 		CandCurrent,
 		CandValid,
@@ -150,6 +150,15 @@ module.exports = Option =>
 					var
 					SettingProxy = Setting.Proxy(),
 					SettingProxyURL = Setting.ProxyURL(),
+					HTTP429Param = () =>
+					{
+						var Group = Option.Site.D(V.Site)?.IDGroup?.(V.ID);
+						return [
+							V.Site + (Group ? '|' + Group : ''),
+							SettingProxy,
+							SettingProxyURL,
+						]
+					},
 
 					ExtReqRec = Option.Site.MakeReqRec(),
 					ExtReq = Q => WX.Just().FMap(() =>
@@ -292,7 +301,7 @@ module.exports = Option =>
 					V.Error && Option.ErrT(V.Row)
 					Option.OnRenew(V.Row)
 
-					if (T = HTTP429Check(V.Site,SettingProxy,SettingProxyURL))
+					if (T = HTTP429Check(...HTTP429Param()))
 						Run = WX.Throw(Err429 = ['ErrHTTP429',WW.StrDate(T),SettingProxy && SettingProxyURL])
 							.Delay(5E2)
 
@@ -305,7 +314,7 @@ module.exports = Option =>
 								WW.ErrIs(WW.Err.NetBadStatus,E) && 429 === E.Arg[0] ||
 								Option.Site.D(V.Site).Is429?.(E))
 							{
-								HTTP429Record(V.Site,SettingProxy,SettingProxyURL)
+								HTTP429Record(...HTTP429Param())
 							}
 							InfoRunning.set(V.Row,DB.Err(V.Row,2,At).Now(null,O =>
 							{

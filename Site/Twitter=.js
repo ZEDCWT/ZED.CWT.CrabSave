@@ -187,7 +187,7 @@ module.exports = O =>
 				Sign(Q.Method || 'GET',Q.URL.replace(/^[^/]+\/\/[^/]+/,''))))))
 			.Tap(null,E =>
 			{
-				if (/GraphQL/.test(Q.URL) &&
+				if (/GraphQL/i.test(Q.URL) &&
 					WW.ErrIs(WW.Err.NetBadStatus,E) &&
 					404 === E.Arg[0])
 					SignMed = null
