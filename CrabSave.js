@@ -199,6 +199,7 @@ module.exports = Option =>
 	Setting =
 	{
 		Lang : SettingMake('Lang',WW.IsStr,0),
+		Unload : SettingMake('Unload',WR.T,false),
 		Dir : SettingMake('Dir',WW.IsStr,PathSave),
 		Fmt : SettingMake('Fmt',WW.IsStr,'|Up|.|Date|.|Title|?.|PartIndex|??.|PartTitle|??.|FileIndex|?'),
 		Max : SettingMake('Max',Q => WW.IsIn(Q,1,65),4),

@@ -595,7 +595,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						}
 						break
 					default :
-						if (/^poll\d+choice_(image|text_only|video)$/.test(Card.name)) ~function()
+						if (/^(poll\d+|\d+:poll_)choice_(images?|text_only|video)$/.test(Card.name)) ~function()
 						{
 							/*
 								1764169483302977708
@@ -612,13 +612,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							Vote = WR.ReduceU(function(D,V,F)
 							{
 								var C;
-								if (C = /^choice(\d+)_(count|label)$/.exec(F))
+								if (C = /^choice(\d+)_(count|label|image_original)$/.exec(F))
 								{
 									D[C[1] = ~-C[1]] || (D[C[1]] = ['',0])
 									if ('label' === C[2])
 										D[C[1]][0] = V.string_value
-									else
+									else if ('count' === C[2])
 										Sum += D[C[1]][1] = +V.string_value
+									else
+										Img.push(V.image_value.url)
 								}
 							},[],T)
 							WR.EachU(function(V,F)

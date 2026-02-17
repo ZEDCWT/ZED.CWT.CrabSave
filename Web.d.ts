@@ -75,6 +75,7 @@ declare module CrabSaveNS
 	interface Setting
 	{
 		Dir : string
+		Unload : boolean
 		Fmt : string
 		Max : number
 		Proxy : boolean

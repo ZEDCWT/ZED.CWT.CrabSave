@@ -3532,6 +3532,15 @@
 				},WR.Ent(Lang))),
 				'EN'
 			],[
+				LangSolve('SetUnload'),
+				Key('Unload'),
+				WV.Cho(
+				{
+					Set : ChoOF,
+					Inp : PC
+				}),
+				false
+			],[
 				LangSolve('SetDir'),
 				Key('Dir'),
 				WV.Inp(
@@ -3987,6 +3996,13 @@
 		{
 			Req.unshift([Q,S]) < ConfDebugLimitObj || Req.pop()
 		};
+
+		WV.On('beforeunload',function(E)
+		{
+			if (Setting.Unload)
+				WV.PrevDef(E)
+		},Top)
+
 		WV.Ap(Rainbow[0],WV.Body)
 		WS.H || WSNoti(LangSolve('GenNoSock'))
 		WS.C()
