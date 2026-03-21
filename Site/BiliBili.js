@@ -280,8 +280,13 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							case 1 :
 								Line += B.word.words || ''
 								break
+							case 2 :
+								// {node_type:2,emote:{raw_text:'...'}}
+								Line += B.emote.raw_text
+								break
 							case 3 :
-								// Vote cv35303429
+								// {node_type:3,link:{show_text:'...',link:'https://space.bilibili.com/...',link_type:13,biz_id:'...',style:{}}}
+								Line += WW.Quo(B.link.show_text,true) + WW.QuoP(B.link.link,true)
 								break
 							case 4 :
 								// {node_type:4,link:{show_text:...,link:...,link_type:16,style:{}}}
@@ -1164,6 +1169,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		Judge : /\bBiliBili\b|\b[AB]V\d+/i,
 		Min :
 		[
+			'DedeUserID', // `feed/space` will report 412 if not present
 			'SESSDATA',
 			'buvid3', // Required to read articles
 			/*

@@ -702,6 +702,12 @@ module.exports = O =>
 								case 1 :
 									Line += B.word.words || ''
 									break
+								case 2 :
+									Line += B.emote.raw_text
+									break
+								case 3 :
+									Line += `[${B.link.show_text}](${B.link.link})`
+									break
 								case 4 :
 									Line += B.link.link
 									break

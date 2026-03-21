@@ -80,7 +80,16 @@ module.exports = O =>
 		Ext.ReqB(O.Req(Twitter)).FMap(Page =>
 		{
 			var
-			ScriptHash = WW.MF(/"ondemand\.s":"([^"]+)"/,Page);
+			ScriptHash = (() =>
+			{
+				var R = WW.MF(/"ondemand\.s":"([^"]+)"/,Page);
+				if (R) return R
+
+				if (R = WW.MF(/,(\d+):"ondemand\.s",/,Page))
+					return WW.MF(RegExp(',' + R + ':"([\\w]{7})",'),Page)
+
+				WW.Throw('Unable to locate OnDemand script')
+			})();
 			return Ext.ReqB(O.Req(TwImgAbsSign(ScriptHash))).Map(Script =>
 			{
 				var

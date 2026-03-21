@@ -113,7 +113,7 @@ module.exports = O =>
 						WR.Each(V =>
 						{
 							URL.push(V = V.fullsize)
-							Ext.push(WN.ExtN(V.replace(/@(?=\w+$)/,'.')))
+							Ext.push(WN.ExtN(V.replace(/@(?=\w+$)/,'.')) || '.jpg')
 						},Q)
 						WR.Any(V => V.alt,Q) ?
 							WR.EachU((V,F) =>

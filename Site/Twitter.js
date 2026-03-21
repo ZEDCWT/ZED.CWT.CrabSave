@@ -739,6 +739,17 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	{
 		return SignMed ? WX.Just(SignMed) : O.Req(Twitter).FMap(function(Page)
 		{
+			var
+			ScriptHash = function()
+			{
+				var R = WW.MF(/"ondemand\.s":"([^"]+)"/,Page);
+				if (R) return R
+
+				if (R = WW.MF(/,(\d+):"ondemand\.s",/,Page))
+					return WW.MF(RegExp(',' + R + ':"([\\w]{7})",'),Page)
+
+				WW.Throw('Unable to locate OnDemand script')
+			}();
 			return WX.From(
 			[
 				[WW.MF(/<script[^>]+src="([^"]+\/main\.[^"]+)"/,Page),function(Script)
@@ -758,7 +769,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 							OperationInfo[T.operationName] = T
 					},null,/({queryId:)/g,Script)
 				}],
-				[TwImgAbsSign(WW.MF(/"ondemand\.s":"([^"]+)"/,Page)),function(Script)
+				[TwImgAbsSign(ScriptHash),function(Script)
 				{
 					var
 					SolveCurveY = function(C,T)
@@ -950,7 +961,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},
 		AddTweet = function(V)
 		{
-			WR.Each(function(V){R.push(V)},SolveTweet
+			/*
+				In rare occations the `retweeted_status_result` does not contain the user infomation
+			*/
+			if (V.core.user_results.result) WR.Each(function(V){R.push(V)},SolveTweet
 			(
 				V.legacy,
 				V.core.user_results.result.core || V.core.user_results.result.legacy,
