@@ -157,16 +157,26 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		All = [],
 		Pos = 0;
 		Q = SolveStringSpread(Q)
-		WR.EachU(function(V,F)
-		{
-			WR.Each(function(B)
+		WW.IsArr(S) ?
+			WR.Each(function(V)
 			{
-				WR.Each(function(N)
+				All.push(
+				[
+					[V.fromIndex,V.toIndex],
+					V.ref.type,
+					V.ref
+				])
+			},S) :
+			WR.EachU(function(V,F)
+			{
+				WR.Each(function(B)
 				{
-					All.push([N,F,B])
-				},WR.SplitAll(2,B.indices))
-			},V)
-		},S)
+					WR.Each(function(N)
+					{
+						All.push([N,F,B])
+					},WR.SplitAll(2,B.indices))
+				},V)
+			},S)
 		All.sort(function(Q,S)
 		{
 			return Q[0][0] - S[0][0] || Q[0][1] - S[0][1]
@@ -207,6 +217,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					case 'symbols' :
 						// CashTag
 						SingleView = WV.Ah('$' + V.text,TwitterSearch(WC.UE('$' + V.text)))
+						break
+
+					case 'TimelineUrl' :
+						SingleView = WV.Ah(SingleText,V.url)
 						break
 				}
 				if (SingleText)
@@ -348,7 +362,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		Title = SolveRichText(Title,Tweet.entities)
 		TitleView = Title[1]
 		Title = Title[0]
-		if (Ext && (Note = Ext.note_tweet))
+		if (Ext && (Note = Ext.note_tweet) && Note.note_tweet_results.result)
 		{
 			TitleView =
 			Title = Note.note_tweet_results.result.text
@@ -360,9 +374,8 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 
 		if (!Retweet && Ext)
 		{
-			if (Card = Ext.card)
+			if (Card = Ext.card && Ext.card.legacy)
 			{
-				Card = Card.legacy
 				T = WR.FromPair(WR.Map(function(V)
 				{
 					return [V.key,V.value]
@@ -767,7 +780,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						T = WC.JTOO(Script.slice(V.index,F).replace(/\w+(?=:)/g,'"$&"'))
 						if (T.operationName)
 							OperationInfo[T.operationName] = T
-					},null,/({queryId:)/g,Script)
+					},null,/({queryId:")/g,Script)
 				}],
 				[TwImgAbsSign(ScriptHash),function(Script)
 				{
@@ -933,16 +946,22 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 
 				Also the direct premium prompt...
 				{"contentType":"TimelineInlinePrompt","headerText":"広告をなくす","bodyText":"Xプレミアムプラスで [おすすめ] と [フォロー中] に表示される広告をなくす","primaryButtonAction":{"text":"サブスクライブする","action":{"url":"https://x.com/i/premium_sign_up?referring_page=timeline_prompt","dismissOnClick":true,"onClickCallbacks":[{"endpoint":"/1.1/onboarding/fatigue.json?flow_name=premium-plus-upsell-prompt&fatigue_group_name=PremiumPlusUpsellFatigueGroup&action_name=click&scribe_name=primary_cta&display_location=home_latest&served_time_secs=1710247323&injection_type=inline_message"}],"clientEventInfo":{"action":"primary_cta"}}},"headerRichText":{"text":"広告をなくす","entities":[]},"bodyRichText":{"text":"Xプレミアムプラスで [おすすめ] と [フォロー中] に表示される広告をなくす","entities":[]}}
+
+				{"bodyRichText":{"entities":[{"fromIndex":21,"ref":{"type":"TimelineUrl","url":"https://help.twitter.com/rules-and-policies/twitter-rules","urlType":"ExternalUrl"},"toIndex":25},{"fromIndex":132,"ref":{"type":"TimelineUrl","url":"https://help.x.com/forms/general","urlType":"ExternalUrl"},"toIndex":141}],"text":"慎重に審査したところ、ご利用のアカウントはXルールに違反していると判断しました。そのため、ご利用のアカウントは永続的に読み取り専用モードになっています。つまり、ポスト、リポスト、いいねすることができません。新しいアカウントも作成できません。何らかの手違いの場合は、異議申し立てを送信できます。"},"bodyText":"慎重に審査したところ、ご利用のアカウントはXルールに違反していると判断しました。そのため、ご利用のアカウントは永続的に読み取り専用モードになっています。つまり、ポスト、リポスト、いいねすることができません。新しいアカウントも作成できません。何らかの手違いの場合は、異議申し立てを送信できます。","contentType":"TimelineInlinePrompt","headerRichText":{"entities":[],"text":"ご利用のアカウントは凍結されています"},"headerText":"ご利用のアカウントは凍結されています"}
+
 			*/
 			return V && 'TimelineMessagePrompt' === V.__typename &&
 				Prompt.push(
 				{
 					Non : true,
 					Title : V.content.headerText,
+					TitleView : V.content.headerRichText && SolveRichText(V.content.headerRichText.text,V.content.headerRichText.entities)[1],
 					More :
 					[
-						V.content.bodyText,
-						O.Ah(V.content.primaryButtonAction.text,V.content.primaryButtonAction.action.url)
+						V.content.bodyRichText ?
+							SolveRichText(V.content.bodyRichText.text,V.content.bodyRichText.entities)[1] :
+							V.content.bodyText,
+						V.content.primaryButtonAction && O.Ah(V.content.primaryButtonAction.text,V.content.primaryButtonAction.action.url)
 					]
 				})
 		},
@@ -961,13 +980,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		},
 		AddTweet = function(V)
 		{
-			/*
-				In rare occations the `retweeted_status_result` does not contain the user infomation
-			*/
-			if (V.core.user_results.result) WR.Each(function(V){R.push(V)},SolveTweet
+			var User = WR.Path(['core','user_results','result'],V);
+			User && WR.Each(function(V){R.push(V)},SolveTweet
 			(
 				V.legacy,
-				V.core.user_results.result.core || V.core.user_results.result.legacy,
+				User.core || User.legacy,
 				V.rest_id,
 				V
 			))

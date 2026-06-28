@@ -59,11 +59,18 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 		return B.data
 	},
 	PackImg = function(V){return {URL : V,Head : {Referer : Pixiv}}},
+	PackImgByPage = function(Q,S)
+	{
+		return WR.Times(function(P)
+		{
+			return PackImg(Q.replace(/p0/,'p' + P))
+		},S)
+	},
 	SolveIllustBrief = function(V)
 	{
 		return {
 			ID : V.id,
-			Img : PackImg(V.url),
+			Img : PackImgByPage(V.url,V.pageCount),
 			Title : V.title,
 			UP : V.userName,
 			UPURL : PixivUser(V.userId),
@@ -344,10 +351,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX)
 						Item : [
 						{
 							ID : B.id,
-							Img : WR.Times(function(P)
-							{
-								return PackImg(B.urls.original.replace(/p0/,'p' + P))
-							},B.pageCount),
+							Img : PackImgByPage(B.urls.original,B.pageCount),
 							Title : B.title,
 							UP : B.userName,
 							UPURL : PixivUser(B.userId),

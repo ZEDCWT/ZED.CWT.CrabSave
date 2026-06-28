@@ -103,8 +103,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	// BiliBiliAPISearchTypeUser = 'bili_user',
 	// BiliBiliAPISearch = WW.Tmpl(BiliBiliAPIWeb,'search/type?search_type=',undefined,'&keyword=',undefined,'&page=',undefined,'&highlight=1',undefined),
 	BiliBiliAPIPGC = BiliBiliAPI + 'pgc/',
+	BiliBiliAPIPGCEpisode = WW.Tmpl(BiliBiliAPIPGC,'view/web/ep/list?ep_id=',undefined),
 	BiliBiliAPIPGCMedia = WW.Tmpl(BiliBiliAPIPGC,'view/web/media?media_id=',undefined),
 	BiliBiliAPIPGCSeason = WW.Tmpl(BiliBiliAPIPGC,'view/web/season?season_id=',undefined),
+	BiliBiliAPIPGCSeasonByEpisode = WW.Tmpl(BiliBiliAPIPGC,'view/web/season?ep_id=',undefined),
 	BiliBiliAPIPGCSeasonSection = WW.Tmpl(BiliBiliAPIPGC,'web/season/section?season_id=',undefined),
 	BiliBiliAPIPUGV = BiliBiliAPI + 'pugv/',
 	BiliBiliAPIPUGVViewSeason = WW.Tmpl(BiliBiliAPIPUGV,'view/web/season?season_id=',undefined),
@@ -210,10 +212,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 	{
 		return O.Req(BiliBiliAPIWebNav).Map(Common)
 	}),
+	/*
 	SolveInitState = function(B)
 	{
 		return O.JOM(/__INITIAL_STATE__=|<script[^>]+__NEXT_DATA__[^>]+>/,B)
 	},
+	*/
 	SolveCTime = function(V)
 	{
 		return null != V && 'CTime ' + O.DTS(1E3 * V)
@@ -995,6 +999,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			return 1 & F ? O.High(V) : V
 		},V.split(/<em[^>]+>([^<]+)<\/em>/))
 	},
+	/*
 	EP2AV = WX.CacheM(function(ID)
 	{
 		return O.API(WW.N.ReqOH(BiliBiliBgmEpisode(ID),'Cookie','stardustpgcv=0')).Map(function(B)
@@ -1010,6 +1015,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			return R || []
 		})
 	}),
+	*/
 	ShowCID = function(CID,Downloaded)
 	{
 		return 'CID ' + CID +
@@ -1078,9 +1084,10 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					},V.episodes)
 				},T.sections)
 			}
-			return (R[0].EP ? EP2AV(R[0].EP).Tap(function(Q)
+			return (R[0].EP ? O.API(BiliBiliAPIPGCSeasonByEpisode(R[0].EP)).Tap(function(B)
 			{
-				R[0].More.push(O.Ah(PrefixBgmSeason + Q[1],BiliBiliBgmSeason(Q[1])))
+				B = Common(B).season_id
+				R[0].More.push(O.Ah(PrefixBgmSeason + B,BiliBiliBgmSeason(B)))
 			}) : WX.Just())
 				.Map(WR.Const(R))
 		})
@@ -2432,9 +2439,14 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 			],
 			View : O.Less(function(ID)
 			{
-				return EP2AV(ID).FMap(function(Q)
+				return O.API(BiliBiliAPIPGCEpisode(ID)).FMap(function(B)
 				{
-					return AVWithCID(Q[0])
+					B = WR.Find(function(V)
+					{
+						return +ID === V.id
+					},Common(B).episodes)
+					B || WW.Throw('Unable to resolve AVID from EPID')
+					return AVWithCID(B.aid)
 				})
 			})
 		},{

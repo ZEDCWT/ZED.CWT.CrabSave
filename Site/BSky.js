@@ -296,6 +296,20 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						O.Ah(Embed.external.title,Embed.external.uri),
 						Embed.external.description)
 					break
+				case 'app.bsky.embed.gallery#view' :
+					WR.Each(function(V,F)
+					{
+						switch (V.$type)
+						{
+							case 'app.bsky.embed.gallery#viewImage' :
+								Img.push(V.fullsize)
+								More.push(WW.Quo(F) + V.alt)
+								break
+							default :
+								More.push('Unknown Gallery ' + V.$type)
+						}
+					},Embed.items)
+					break
 				case 'app.bsky.embed.images#view' :
 					WR.Each(function(V)
 					{
@@ -350,7 +364,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					break
 				case 'app.bsky.embed.video#view' :
 					Img.push(Embed.thumbnail)
-					More.push(Embed.aspectRatio.width,Embed.aspectRatio.height)
+					Embed.aspectRatio && More.push(Embed.aspectRatio.width,Embed.aspectRatio.height)
 					break
 				default :
 					More.push('Unknown Embed ' + Embed.$type)

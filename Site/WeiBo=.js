@@ -29,6 +29,7 @@ VideoIgnoreDomain =
 [
 	'acg.tv',
 	'iqiyi.com',
+	'kan.sina.com.cn',
 	'ku6.com',
 	'letv.com',
 	'livecbing.alicdn.com',
@@ -182,6 +183,11 @@ module.exports = O =>
 							*/
 							/^(?=\/assets\/artwork)/,'https://apps.apple.com',
 						],Cover)
+						if (!/\/\//.test(Cover))
+						{
+							// QyOW3jG1l With an absurd pic value, filled as the title
+							Cover = null
+						}
 						switch (Q.object_type)
 						{
 							case 'adFeedVideo' :
@@ -242,6 +248,13 @@ module.exports = O =>
 									Q.page_title,
 									Q.page_desc,
 									Q.tips)
+								break
+							case 'common' : // 2
+								Meta.push(
+									'',
+									WC.QSP(Q.page_url).url,
+									Q.page_title,
+									Q.content2)
 								break
 
 							case 'article' : // 2 5

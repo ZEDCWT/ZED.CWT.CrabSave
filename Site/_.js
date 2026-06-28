@@ -135,8 +135,9 @@ module.exports = Option =>
 		}
 	};
 
-	WR.Each((V,S) =>
+	WR.Each(V =>
 	{
+		var
 		S = require(`./${V}=`)(
 		{
 			Cmp : D => Option.Cmp.D(V,D),
@@ -292,7 +293,19 @@ module.exports = Option =>
 					},
 				}
 			},
-		})
+		}),
+		OriPack = S.Pack;
+		S.Pack = Q =>
+		{
+			var T;
+			if (/^data:/.test(Q))
+			{
+				T = WW.Try(WC.DUP,[Q])
+				if (WW.TryE !== T)
+					return WX.Just(WC.Buff(T.Data))
+			}
+			return OriPack ? OriPack(Q) : Q
+		}
 		All.push(S)
 		SiteMap[S.ID = V] = S
 	},[
@@ -332,6 +345,7 @@ module.exports = Option =>
 			All.forEach(V => V.OnFin?.())
 			WR.EachU((_,F) => WR.Del(require.resolve(`./${F}=`),require.cache),SiteMap)
 			WR.Del(__filename,require.cache)
+			WR.Del(require.resolve('@zed.cwt/wish'),require.cache)
 		},
 
 		MakeReqRec,

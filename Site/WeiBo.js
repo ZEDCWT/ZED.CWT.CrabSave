@@ -305,6 +305,11 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 						Q.page_desc,
 						Q.tips)
 					break
+				case 'common' : // 2
+					// Qy8MmijEG
+					More.push(O.Ah(Q.page_title,WC.QSP(Q.page_url).url),
+						Q.content2)
+					break
 				case 'hudongvote' : // 23
 					Q = Card.vote_object
 					More.push(WW.Quo(Q.part_info) + Q.content,
@@ -428,7 +433,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				switch (V.type)
 				{
 					case 'pic' :
-						Img.push(V.data.bmiddle.url)
+						Img.push(V.data.largest.url)
 						break
 					default :
 						WW.IsStr(WR.Path(['data','object_type'],V)) ?
@@ -441,7 +446,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		{
 			if (B.pic_infos) Img = WR.Map(function(V)
 			{
-				return B.pic_infos[V].bmiddle.url
+				return B.pic_infos[V].largest.url
 			},B.pic_ids)
 		}
 		else if (T = B.page_info)

@@ -186,6 +186,19 @@ module.exports = O =>
 									)
 									T.thumb && Part.push({URL : [T.thumb],Ext : '.jpg'})
 									break
+								case 'app.bsky.embed.gallery#view' :
+									Embed.items.forEach(V =>
+									{
+										switch (V.$type)
+										{
+											case 'app.bsky.embed.gallery#viewImage' :
+												PartAddImage([V])
+												break
+											default :
+												More.push('Unknown Gallery ' + V.$type)
+										}
+									})
+									break
 								case 'app.bsky.embed.images#view' :
 									PartAddImage(Embed.images)
 									break

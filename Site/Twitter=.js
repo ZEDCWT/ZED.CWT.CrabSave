@@ -77,7 +77,7 @@ module.exports = O =>
 	SignMed,
 	MakeSign = Ext => SignMed ?
 		WX.Just(SignMed) :
-		Ext.ReqB(O.Req(Twitter)).FMap(Page =>
+		Ext.ReqB(O.Coke(Twitter)).FMap(Page =>
 		{
 			var
 			ScriptHash = (() =>
@@ -227,7 +227,7 @@ module.exports = O =>
 			{
 				var
 				Legacy = Tweet.legacy,
-				Card = Tweet.card,
+				Card = Tweet.card?.legacy,
 				Note = Tweet.note_tweet,
 				UnifiedCard,
 
@@ -330,7 +330,7 @@ module.exports = O =>
 							.ErrAs(E =>
 							{
 								if (WW.ErrIs(WW.Err.NetBadStatus,E) &&
-									404 === E.Arg[0])
+									WR.Include(E.Arg[0],[403,404]))
 									return WX.Empty
 								return WX.Throw(E)
 							})
@@ -409,7 +409,7 @@ module.exports = O =>
 					WW.StrDate(Legacy.created_at,WW.DateColS) + ' ' + User.name,
 				)
 
-				if (Note)
+				if (Note?.note_tweet_results.result)
 				{
 					Title = Note.note_tweet_results.result.text
 					Meta.push(Title)
@@ -444,7 +444,6 @@ module.exports = O =>
 				if (!Retweet && Card)
 				{
 					Meta.length && Meta.push('')
-					Card = Card.legacy
 					T = WR.FromPair(Card.binding_values.map(V => [V.key,V.value]))
 					switch (Card.name.replace(/^\d+:/,''))
 					{
