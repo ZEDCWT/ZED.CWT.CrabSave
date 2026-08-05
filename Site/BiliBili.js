@@ -345,8 +345,15 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 								// Link to same site video
 								Line = BiliBiliVideo(LinkCard.biz_id)
 								break
+							case 8 :
+								// cv3363923
 							case 15 :
 								// Link to same site article
+							case 26 :
+								// cv3549687
+							case 31 :
+								// cv4144825
+							case 34 :
 								Line = BiliBiliArticleRead + LinkCard.biz_id
 								break
 							case 35 :
@@ -839,6 +846,16 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 					SetUnk(Major.type)
 			}
 		},
+		ShowAdditional = function(B)
+		{
+			WR.EachU(function(V,F)
+			{
+				if (V && WR.StartW('desc',F))
+					More.push(WW.IsStr(V) ? V : V.text)
+			},B)
+			B.button && B.button.jump_url &&
+				More.push(O.Ah(B.button.jump_style.text,B.button.jump_url))
+		},
 		T;
 
 		R = R || []
@@ -914,7 +931,25 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 		}
 		if (T = ModDynamic && ModDynamic.additional)
 		{
-			// We may handle this to display more content
+			switch (T.type)
+			{
+				case 'ADDITIONAL_TYPE_COMMON' :
+					if (T = T.common)
+					{
+						More.push(WW.Quo(T.id_str) + T.title)
+						ShowAdditional(T)
+					}
+					break
+				case 'ADDITIONAL_TYPE_GOODS' :
+					break
+				case 'ADDITIONAL_TYPE_RESERVE' :
+					T = T.reserve
+					More.push(WW.Quo(T.rid) + T.title)
+					ShowAdditional(T)
+					break
+				default :
+					SetUnk(T.type)
+			}
 		}
 
 		if (IsTop && 1 < R.length)

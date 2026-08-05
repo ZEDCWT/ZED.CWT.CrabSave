@@ -774,7 +774,11 @@ module.exports = O =>
 											return WX.Empty
 										}))
 										break
+									case 8 :
 									case 15 :
+									case 26 :
+									case 31 :
+									case 34 :
 										Line = BiliBiliArticleRead + LinkCard.biz_id
 										break
 									case 35 :

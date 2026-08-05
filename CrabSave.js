@@ -339,7 +339,7 @@ module.exports = Option =>
 			{
 				if (Next)
 				{
-					Res.sendFile(B)
+					Res.sendFile(WN.BaseN(B),{root : WN.DirN(B)})
 					return WX.Empty
 				}
 				/\.js$/.test(B) && Res.setHeader('Content-Type','application/javascript; charset=UTF-8')

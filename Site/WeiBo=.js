@@ -487,10 +487,15 @@ module.exports = O =>
 									WW.Throw('Unknown Pic Type #' + V.type)
 							}
 						},Status.pic_ids)
+					/*
+						UDScl Absurd infomation
+					*/
 					if (Forwarded)
 						WR.Each(V => V.pic_infos && Part.push(
 						{
-							URL : V.pic_ids.map(B => V.pic_infos[B].large.url)
+							URL : V.pic_ids
+								.map(B => WR.Path(['pic_infos',B,'large','url'],V))
+								.filter(V => V)
 						}),Status.url_struct)
 					else if (T = Status.page_info)
 						ProcessObject(T)
