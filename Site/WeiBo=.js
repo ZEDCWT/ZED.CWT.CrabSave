@@ -9,8 +9,9 @@ WeiBoAJAX = WeiBo + 'ajax/',
 WeiBoAJAXStatusShow = WW.Tmpl(WeiBoAJAX,'statuses/show?id=',undefined),
 WeiBoAJAXStatusLong = WW.Tmpl(WeiBoAJAX,'statuses/longtext?id=',undefined),
 WeiBoAJAXStatusComment = WW.Tmpl(WeiBoAJAX,'statuses/buildComments?is_show_bulletin=',undefined,'&id=',undefined),
+WeiBoAJAXLiveInfo = WW.Tmpl(WeiBoAJAX,'multimedia/getLiveInfo?live_id=',undefined),
 WeiBoPostHistory = WW.Tmpl(WeiBo,'p/aj/v6/history?mid=',undefined,'&page_size=',undefined,'&page=1'),
-WeiBoLiveShow = WW.Tmpl(WeiBo,'l/!/2/wblive/room/show_pc_live.json?live_id=',undefined),
+// WeiBoLiveShow = WW.Tmpl(WeiBo,'l/!/2/wblive/room/show_pc_live.json?live_id=',undefined),
 WeiBoCard = 'https://card.weibo.com/',
 WeiBoCardArticle = WeiBoCard + 'article/m/aj/',
 WeiBoCardArticleDetail = WW.Tmpl(WeiBoCardArticle,'detail?id=',undefined),
@@ -28,6 +29,8 @@ ImgEnlarge = V => V.replace(/(?<=\.sinaimg\.cn\/)(?:\w+|crop[\d.]+)(?=\/\w+\.\w+
 VideoIgnoreDomain =
 [
 	'acg.tv',
+	'baomihua.com',
+	'changba.com',
 	'iqiyi.com',
 	'kan.sina.com.cn',
 	'ku6.com',
@@ -36,6 +39,7 @@ VideoIgnoreDomain =
 	'livenging.alicdn.com',
 	'miaopai.com',
 	'my.tv.sohu.com',
+	'pptv.com',
 	'qianmo.com',
 	'qq.com',
 	'tudou.com',
@@ -76,11 +80,14 @@ module.exports = O =>
 	PostCache = O.MakePostCache(),
 	Common = B =>
 	{
+		var
+		Code = B.code || B.error_type || B.ok,
+		Message = B.msg || B.message;
 		B = WW.IsObj(B) ? B : WC.JTO(B)
-		B.msg &&
-			'success' !== B.msg &&
-			'ok' !== B.msg &&
-			O.Bad(WW.Quo(B.code || B.error_type) + B.msg)
+		Message &&
+			'success' !== Message &&
+			'ok' !== Message &&
+			O.Bad(WW.Quo(Code) + Message)
 		return B.data
 	},
 	SolveTextWithStruct = (Text,URLStruct) =>
@@ -195,6 +202,8 @@ module.exports = O =>
 							case 'movie' :
 							case 'video' : // 5 11
 								if ('live' === Q.object_type)
+								{
+									/*
 									Part.push(ReqWithRef(WeiBoLiveShow(Q.page_id)).FMap(N =>
 									{
 										N = WC.JTO(N)
@@ -210,6 +219,18 @@ module.exports = O =>
 											URL : [N]
 										})
 									}))
+									*/
+									Part.push(ReqWithRef(WeiBoAJAXLiveInfo(Q.object_id)).FMap(N =>
+									{
+										N = Common(N)
+										if (N.stime && !N.etime || !N.stream)
+											return WX.Empty
+										return WX.Just(
+										{
+											URL : [N.stream[0].url],
+										})
+									}))
+								}
 								else if (T = Q.media_info)
 								{
 									if ((Q = T.playback_list) && Q.length)
@@ -229,7 +250,7 @@ module.exports = O =>
 									else
 										VideoIgnoreDomainRX.test(T.h5_url) ||
 										/\.s?html$/.test(T.h5_url) ||
-										WW.Throw('Unable to solve video URL')
+										WW.Throw('Unable to solve video URL ' + WC.OTJ(T.h5_url,{Apos : true}))
 								}
 								break
 
@@ -376,9 +397,10 @@ module.exports = O =>
 									Q.content3)
 								break
 							case 'story' : // 31
-								if (Q.slide_cover.playback_list)
+								T = Q.slide_cover.playback_list
+								if (T && T.length)
 								{
-									T = WR.Pluck('play_info',Q.slide_cover.playback_list)
+									T = WR.Pluck('play_info',T)
 									Part.push(
 									{
 										URL : [O.Best('bitrate',T.filter(V => V.bitrate)).url]

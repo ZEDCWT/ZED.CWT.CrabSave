@@ -759,7 +759,7 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				if (R) return R
 
 				if (R = WW.MF(/,(\d+):"ondemand\.s",/,Page))
-					return WW.MF(RegExp(',' + R + ':"([\\w]{7})",'),Page)
+					return WW.MF(RegExp(',' + R + ':"([\\w]{7,})",'),Page)
 
 				WW.Throw('Unable to locate OnDemand script')
 			}();
