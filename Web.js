@@ -2149,7 +2149,7 @@
 						'.`C` legend span{color:#888888}' +
 						'.`G`{width:100%;height:`h`px}' +
 						'.`Y`{text-align:center}' +
-						'.`Y` img{width:100%;max-height:`m`px;object-fit:contain}' +
+						'.`Y` img{width:100%;min-height:1px;max-height:`m`px;object-fit:contain}' +
 						'.`C` .`B`{padding:0;min-width:0}' +
 						'.`N`' +
 						'{' +

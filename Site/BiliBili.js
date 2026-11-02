@@ -943,9 +943,12 @@ CrabSave.Site(function(O,WW,WC,WR,WX,WV)
 				case 'ADDITIONAL_TYPE_GOODS' :
 					break
 				case 'ADDITIONAL_TYPE_RESERVE' :
-					T = T.reserve
-					More.push(WW.Quo(T.rid) + T.title)
-					ShowAdditional(T)
+					// It may not contain data 817770964410433555
+					if (T = T.reserve)
+					{
+						More.push(WW.Quo(T.rid) + T.title)
+						ShowAdditional(T)
+					}
 					break
 				default :
 					SetUnk(T.type)

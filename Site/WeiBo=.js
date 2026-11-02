@@ -80,10 +80,10 @@ module.exports = O =>
 	PostCache = O.MakePostCache(),
 	Common = B =>
 	{
+		B = WW.IsObj(B) ? B : WC.JTO(B)
 		var
 		Code = B.code || B.error_type || B.ok,
 		Message = B.msg || B.message;
-		B = WW.IsObj(B) ? B : WC.JTO(B)
 		Message &&
 			'success' !== Message &&
 			'ok' !== Message &&

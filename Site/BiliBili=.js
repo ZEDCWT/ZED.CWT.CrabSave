@@ -518,6 +518,11 @@ module.exports = O =>
 								Card.Link = BiliBiliBgmEpisode(T.epid)
 								Meta.push(T.title)
 								break
+							case 'MAJOR_TYPE_UGC_SEASON' :
+								T = Major.ugc_season
+								Card.Link = BiliBiliVideo(T.aid)
+								Meta.push(T.title)
+								break
 							default :
 								SetUnk(Major.type)
 						}
@@ -531,6 +536,7 @@ module.exports = O =>
 							Card.Date = 1E3 * ModAuthor.pub_ts
 							break
 						case 'AUTHOR_TYPE_PGC' :
+						case 'AUTHOR_TYPE_UGC_SEASON' :
 							Card.UP = ModAuthor.name
 							Card.Date = ModAuthor.pub_time
 							break
@@ -575,6 +581,7 @@ module.exports = O =>
 						case 'DYNAMIC_TYPE_AV' :
 						case 'DYNAMIC_TYPE_MUSIC' :
 						case 'DYNAMIC_TYPE_PGC_UNION' :
+						case 'DYNAMIC_TYPE_UGC_SEASON' :
 							NonTopCheck()
 							SolveMajor()
 							break
