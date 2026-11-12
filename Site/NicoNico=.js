@@ -39,6 +39,41 @@ NicoScriptInfo =
 {
 	ID : 6,
 	Ver : 0,
+},
+
+CMFInitMake = O =>
+{
+	var
+	InitCache = new Map,
+	CokeDomandROI = new Set(['domand_bid']),
+	CokeDomandCurrent = {},
+	CokeDomand = Q => O.Req(WN.ReqOH(Q,'Cookie',WC.CokeS(CokeDomandCurrent,WR.Id)));
+
+	return {
+		OnHead : H =>
+		{
+			WR.Each(V =>
+				WR.EachU((V,F) => {CokeDomandROI.has(F) && (CokeDomandCurrent[F] = V)},WC.CokeP(V,WR.Id)),
+				H.H['set-cookie'])
+		},
+		CokeDomand,
+		Init : Q =>
+		{
+			return InitCache.has(Q) ?
+			(
+				Q = InitCache.get(Q),
+				Q[1].D(),
+				WX.Just(Q[0])
+			) : WN.ReqB(CokeDomand({URL : Q,Enc : false})).Tap(B =>
+			{
+				InitCache.set(Q,
+				[
+					B,
+					WW.TOD(6E4,() => InitCache.delete(Q))
+				])
+			})
+		},
+	}
 };
 
 /**@type {CrabSaveNS.SiteO}*/
@@ -62,29 +97,9 @@ module.exports = O =>
 		Q.Head.Cookie += '; watch_flash=0; skip_fetish_warning=1; webp_supported=true'
 		return Q
 	},
-	CokeDomandROI = new Set(['domand_bid']),
-	CokeDomandCurrent = {},
-	CokeDomand = Q => O.Req(WN.ReqOH(Q,'Cookie',WC.CokeS(CokeDomandCurrent,WR.Id))),
 
 	CMFPathRX = /^(.*?\/)([^/?]+)(\?.+)$/,
-	CMFInitCache = new Map,
-	CMFInitSolve = (Q,S) =>
-	{
-		Q = Q.replace(CMFPathRX,`$1${S}$3`)
-		return CMFInitCache.has(Q) ?
-		(
-			Q = CMFInitCache.get(Q),
-			Q[1].D(),
-			WX.Just(Q[0])
-		) : WN.ReqB(CokeDomand({URL : Q,Enc : false})).Tap(B =>
-		{
-			CMFInitCache.set(Q,
-			[
-				B,
-				WW.TOD(6E4,() => CMFInitCache.delete(Q))
-			])
-		})
-	};
+	CMFInit = CMFInitMake(O);
 	return {
 		URL : (Q,Ext) =>
 		{
@@ -316,7 +331,7 @@ module.exports = O =>
 					{
 						var Opt =
 						{
-							ReqB : Q => Ext.ReqB(CokeDomand(Q)),
+							ReqB : Q => Ext.ReqB(CMFInit.CokeDomand(Q)),
 							Init : V =>
 							{
 								var
@@ -327,9 +342,7 @@ module.exports = O =>
 									WW.Throw('Unhandled M3U Structure')
 							},
 						};
-						WR.Each(V =>
-							WR.EachU((V,F) => {CokeDomandROI.has(F) && (CokeDomandCurrent[F] = V)},WC.CokeP(V,WR.Id)),
-							H.H['set-cookie'])
+						CMFInit.OnHead(H)
 						return O.M3U(Common(B).contentUrl,Ext,{...Opt,Ext : '.mp4'}).FMap(PartMP4 =>
 						{
 							var T;
@@ -365,9 +378,11 @@ module.exports = O =>
 		IDView : PadSM,
 		Pack : O.PackM3U(
 		{
-			Init : CMFInitSolve,
-			Req : Q => WN.Req(CokeDomand(Q)),
+			Init : (Q,S) => CMFInit.Init(Q.replace(CMFPathRX,`$1${S}$3`)),
+			Req : Q => WN.Req(CMFInit.CokeDomand(Q)),
 		}),
 		Range : false,
 	}
 }
+
+module.exports.CMFInitMake = CMFInitMake

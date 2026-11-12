@@ -154,6 +154,7 @@ declare module CrabSaveNS
 	interface OptM3U
 	{
 		ReqB(Q : WishNS.ReqAccept) : string
+		// Given a `segment`, return a string for later `Pack` to use to create the `init` request
 		Init?(V : WishNS.M3UPropINF) : string
 		IV?(V : WishNS.M3UPropINF,F : number) : WishNS.Buff
 		Ext? : string

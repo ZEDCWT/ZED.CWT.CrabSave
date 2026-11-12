@@ -5,6 +5,7 @@ PrefixArticle = 'ar',
 
 WW = require('@zed.cwt/wish'),
 {R : WR,X : WX,C : WC,N : WN} = WW,
+NicoNico = require('./NicoNico='),
 
 NicoChannel = 'https://nicochannel.jp/',
 // NicoChannelAPI = 'https://nfc-api.nicochannel.jp/',
@@ -15,10 +16,12 @@ NicoChannelAPIFCContentProviderChannelDomain = NicoChannelAPIFC + 'content_provi
 NicoChannelAPIFCVideo = WW.Tmpl(NicoChannelAPIFC,'video_pages/',undefined),
 NicoChannelAPIFCVideoSession = WW.Tmpl(NicoChannelAPIFC,'video_pages/',undefined,'/session_ids'),
 NicoChannelAPIFCVideoCommentToken = WW.Tmpl(NicoChannelAPIFC,'video_pages/',undefined,'/comments_user_token'),
+NicoChannelAPIFCVideoDomand = WW.Tmpl(NicoChannelAPIFC,'video_pages/',undefined,'/domand_content_access'),
 NicoChannelAPIFCFanClubSite = NicoChannelAPIFC + 'fanclub_sites/',
 NicoChannelAPIFCFanClubSiteBaseInfo = WW.Tmpl(NicoChannelAPIFCFanClubSite,undefined,'/page_base_info'),
 NicoChannelAPIFCFanClubSiteArticleRead = WW.Tmpl(NicoChannelAPIFCFanClubSite,undefined,'/article_themes/news/articles/',undefined),
-SheetaAPI = 'https://comm-api.sheeta.com/',
+// SheetaAPI = 'https://comm-api.sheeta.com/',
+SheetaAPI = 'https://api.messaging.sheeta.com/',
 SheetaAPIMessageHistory = WW.Tmpl(SheetaAPI,'messages.history?inclusive=true&sort_direction=asc&limit=1000&oldest_playback_time=',undefined);
 
 /**@type {CrabSaveNS.SiteO}*/
@@ -37,7 +40,9 @@ module.exports = O =>
 				WC.JTOO(WC.JTOO(SolveCookieLast).totalUserInformation))
 		}
 		return Site ? WR.Path([Site,'userInformation','accessToken'],SolveCookieCache) : SolveCookieCache
-	};
+	},
+
+	CMFInit = NicoNico.CMFInitMake(O);
 
 	return {
 		URL : (ID,Ext) =>
@@ -52,7 +57,8 @@ module.exports = O =>
 				B.error && O.Bad(B.error.message)
 				return B.data
 			},
-			Req = (URL,Data,Auth = SolveCookieToken(Site)) => SolveSiteID(Site).FMap(SiteID => Ext.ReqB(O.Req(
+			ReqHead,
+			Req = (URL,Data,Auth = SolveCookieToken(Site)) => SolveSiteID(Site).FMap(SiteID => Ext.ReqU(O.Req(
 			{
 				URL : URL,
 				JSON : Data,
@@ -63,7 +69,11 @@ module.exports = O =>
 					FC_Site_ID : SiteID,
 					FC_Use_Device : 'null'
 				}
-			}))).Map(Common),
+			}))).Map(([H,B]) =>
+			{
+				ReqHead = H
+				return Common(B)
+			}),
 
 			/*
 			SolveSiteAll = () => Ext.ReqB(O.Req(NicoChannelAPIFCContentProviderChannel)).Map(B =>
@@ -143,15 +153,33 @@ module.exports = O =>
 							return [New,[New && B.at(-1).playback_time,Seen]]
 						}),[0,new Set]))
 						.FP(WX.Empty),
-					Req(NicoChannelAPIFCVideoSession(ID),{})
-						.FMap(Session => O.M3U(Video.video_stream.authenticated_url.replace(/{session_id}/,Session.session_id),Ext,
+					Video.video_stream ?
+						Req(NicoChannelAPIFCVideoSession(ID),{})
+							.FMap(Session => O.M3U(Video.video_stream.authenticated_url.replace(/{session_id}/,Session.session_id),Ext,
+							{
+								// createInitializationVector
+								IV : (_,F) => WC.BV()
+									.U4(0).U4(0)
+									.U4(0).U4(1 + F)
+									.B(),
+							})) :
+						Req(NicoChannelAPIFCVideoDomand(ID)).FMap(B =>
 						{
-							// createInitializationVector
-							IV : (_,F) => WC.BV()
-								.U4(0).U4(0)
-								.U4(0).U4(1 + F)
-								.B(),
-						})),
+							var Opt =
+							{
+								ReqB : Q => Ext.ReqB(CMFInit.CokeDomand(Q)),
+								Init : V => V[3].MAP.URI,
+							};
+							CMFInit.OnHead(ReqHead)
+							return O.M3U(B.content_url,Ext,{...Opt,Ext : '.mp4'}).FMap(PartMP4 =>
+							{
+								var T;
+								T = PartMP4.Raw.find(V => V.MEDIA).MEDIA[0]
+								'AUDIO' === T.TYPE || WW.Throw('Unable to solve audio')
+								return O.M3U(T.URI,Ext,{...Opt,Ext : '.mp3'})
+									.FMap(PartMP3 => WX.From([PartMP4,PartMP3]))
+							})
+						}),
 				)
 				return O.Part(Part,Ext).FMap(Part => PadSiteInfo(
 				{
@@ -197,7 +225,8 @@ module.exports = O =>
 		},
 		Pack : O.PackM3U(
 		{
-			Pack : Q => WN.ReqOH(Q,'Referer',NicoChannel),
+			Init : (_,S) => CMFInit.Init(S),
+			Pack : Q => CMFInit.CokeDomand(WN.ReqOH(Q,'Referer',NicoChannel)),
 		}),
 		Range : false,
 	}
